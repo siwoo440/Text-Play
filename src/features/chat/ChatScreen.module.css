@@ -1,0 +1,167 @@
+.chat /* 채팅 화면 */
+{ /* 화면 시작 */
+    display: grid; /* 그리드 배치 */
+    grid-template-areas: "scene story controls"; /* 기본 영역 */
+    grid-template-columns: minmax(280px, 0.9fr) minmax(360px, 1.2fr) minmax(190px, 0.5fr); /* 기본 열 */
+    gap: 18px; /* 영역 간격 */
+    min-height: calc(100vh - 64px); /* 화면 높이 */
+    padding: 20px; /* 화면 여백 */
+} /* 화면 종료 */
+
+.scene /* 장면 영역 */
+{ /* 장면 시작 */
+    grid-area: scene; /* 장면 위치 */
+} /* 장면 종료 */
+
+.scene figure /* 장면 그림 */
+{ /* 그림 시작 */
+    margin: 0; /* 기본 여백 제거 */
+} /* 그림 종료 */
+
+.scene img /* 장면 이미지 */
+{ /* 이미지 시작 */
+    width: 100%; /* 이미지 너비 */
+    height: min(65vh, 620px); /* 이미지 높이 */
+    border-radius: 22px; /* 둥근 모서리 */
+    object-fit: cover; /* 이미지 채움 */
+} /* 이미지 종료 */
+
+.story /* 대화 영역 */
+{ /* 대화 시작 */
+    grid-area: story; /* 대화 위치 */
+    display: flex; /* 세로 배치 */
+    flex-direction: column; /* 세로 방향 */
+    min-height: 620px; /* 최소 높이 */
+    padding: 22px; /* 내부 여백 */
+    border: 1px solid #292f3d; /* 대화 테두리 */
+    border-radius: 22px; /* 둥근 모서리 */
+    background: #11141c; /* 대화 배경 */
+} /* 대화 종료 */
+
+.story header /* 캐릭터 헤더 */
+{ /* 헤더 시작 */
+    display: flex; /* 가로 배치 */
+    justify-content: space-between; /* 양끝 정렬 */
+} /* 헤더 종료 */
+
+.story ol /* 메시지 목록 */
+{ /* 목록 시작 */
+    display: flex; /* 세로 배치 */
+    flex: 1; /* 남은 공간 */
+    flex-direction: column; /* 세로 방향 */
+    gap: 12px; /* 메시지 간격 */
+    overflow-y: auto; /* 세로 스크롤 */
+    padding: 18px 0; /* 목록 여백 */
+    list-style: none; /* 번호 제거 */
+} /* 목록 종료 */
+
+.story li /* 메시지 항목 */
+{ /* 항목 시작 */
+    max-width: 82%; /* 메시지 너비 */
+    padding: 12px 14px; /* 내부 여백 */
+    border-radius: 16px; /* 말풍선 모서리 */
+    background: #1a1f2b; /* 말풍선 배경 */
+} /* 항목 종료 */
+
+.story li[data-role="user"] /* 사용자 메시지 */
+{ /* 사용자 시작 */
+    align-self: flex-end; /* 오른쪽 정렬 */
+    background: #6d42c7; /* 사용자 배경 */
+} /* 사용자 종료 */
+
+.story form /* 입력 양식 */
+{ /* 양식 시작 */
+    display: grid; /* 그리드 배치 */
+    grid-template-columns: 1fr auto; /* 입력과 버튼 */
+    gap: 10px; /* 요소 간격 */
+} /* 양식 종료 */
+
+.story textarea /* 메시지 입력 */
+{ /* 입력 시작 */
+    width: 100%; /* 입력 너비 */
+    min-height: 52px; /* 입력 높이 */
+    padding: 12px; /* 내부 여백 */
+    border: 1px solid #34394a; /* 입력 테두리 */
+    border-radius: 14px; /* 둥근 모서리 */
+    background: #0c0f16; /* 입력 배경 */
+    color: #fff; /* 입력 글자 */
+    resize: vertical; /* 세로 조절 */
+} /* 입력 종료 */
+
+.controls /* 설정 영역 */
+{ /* 설정 시작 */
+    grid-area: controls; /* 설정 위치 */
+    padding: 18px; /* 내부 여백 */
+    border: 1px solid #292f3d; /* 설정 테두리 */
+    border-radius: 22px; /* 둥근 모서리 */
+    background: #11141c; /* 설정 배경 */
+} /* 설정 종료 */
+
+.controls select /* 레이아웃 선택 */
+{ /* 선택 시작 */
+    width: 100%; /* 선택 너비 */
+    margin-top: 8px; /* 상단 여백 */
+    padding: 10px; /* 내부 여백 */
+} /* 선택 종료 */
+
+.chat[data-layout="M1"], /* 모바일 균형 */
+.chat[data-layout="M2"], /* 모바일 장면 */
+.chat[data-layout="M3"] /* 모바일 채팅 */
+{ /* 모바일 시작 */
+    grid-template-areas: "scene" "story" "controls"; /* 모바일 영역 */
+    grid-template-columns: 1fr; /* 단일 열 */
+} /* 모바일 종료 */
+
+.chat[data-layout="M2"] .scene img /* 모바일 이미지 강조 */
+{ /* 이미지 시작 */
+    height: 72vh; /* 강조 높이 */
+} /* 이미지 종료 */
+
+.chat[data-layout="M3"] .scene /* 모바일 채팅 강조 */
+{ /* 장면 시작 */
+    display: none; /* 장면 숨김 */
+} /* 장면 종료 */
+
+.chat[data-layout="T1"] /* 태블릿 가로 */
+{ /* 태블릿 시작 */
+    grid-template-areas: "scene story" "controls story"; /* 태블릿 영역 */
+    grid-template-columns: 1fr 1fr; /* 이열 배치 */
+} /* 태블릿 종료 */
+
+.chat[data-layout="T2"], /* 태블릿 세로 */
+.chat[data-layout="T3"] /* 태블릿 정보 */
+{ /* 태블릿 시작 */
+    grid-template-areas: "scene controls" "story story"; /* 태블릿 영역 */
+    grid-template-columns: 2fr 1fr; /* 정보 배치 */
+} /* 태블릿 종료 */
+
+.chat[data-layout="D1"] /* 데스크톱 집중 */
+{ /* 집중 시작 */
+    grid-template-columns: minmax(300px, 0.8fr) minmax(480px, 1.4fr) 220px; /* 중앙 강조 */
+} /* 집중 종료 */
+
+.chat[data-layout="D2"] /* 데스크톱 삼열 */
+{ /* 삼열 시작 */
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* 균등 삼열 */
+} /* 삼열 종료 */
+
+.chat[data-layout="D3"] /* 데스크톱 시네마틱 */
+{ /* 시네마틱 시작 */
+    grid-template-areas: "scene scene" "story controls"; /* 시네마틱 영역 */
+    grid-template-columns: 1fr 280px; /* 하단 정보 */
+} /* 시네마틱 종료 */
+
+.chat[data-layout="D3"] .scene img /* 시네마틱 이미지 */
+{ /* 이미지 시작 */
+    height: 58vh; /* 시네마틱 높이 */
+} /* 이미지 종료 */
+
+@media (max-width: 760px) /* 모바일 안전망 */
+{ /* 미디어 시작 */
+    .chat /* 채팅 화면 */
+    { /* 화면 시작 */
+        grid-template-areas: "scene" "story" "controls"; /* 단일 영역 */
+        grid-template-columns: 1fr; /* 단일 열 */
+        padding: 12px; /* 모바일 여백 */
+    } /* 화면 종료 */
+} /* 미디어 종료 */

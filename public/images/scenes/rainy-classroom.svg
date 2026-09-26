@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title description"> <!-- 장면 시작 -->
+  <title id="title">비 오는 교실</title> <!-- 장면 제목 -->
+  <desc id="description">푸른 저녁빛과 빗방울이 번지는 빈 교실 장면</desc> <!-- 장면 설명 -->
+  <defs><linearGradient id="room" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#526d91"/><stop offset="1" stop-color="#151d2d"/></linearGradient><linearGradient id="window" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9ec4da"/><stop offset="1" stop-color="#415d82"/></linearGradient></defs> <!-- 장면 효과 -->
+  <rect width="1200" height="720" fill="url(#room)"/> <!-- 교실 배경 -->
+  <rect x="640" y="70" width="470" height="350" rx="10" fill="url(#window)" stroke="#b8d1df" stroke-width="12"/> <!-- 교실 창문 -->
+  <g stroke="#d8edf5" stroke-width="5" opacity="0.55"><path d="M710 95L670 190"/><path d="M800 80L750 220"/><path d="M925 90L860 260"/><path d="M1050 105L970 300"/></g> <!-- 빗줄기 -->
+  <g fill="#252d3d"><path d="M120 520H500L540 720H80Z"/><path d="M570 500H940L1010 720H530Z"/></g> <!-- 책상 실루엣 -->
+  <path d="M990 505Q1070 450 1110 530" fill="none" stroke="#202638" stroke-width="18" stroke-linecap="round"/> <!-- 우산 손잡이 -->
+  <text x="70" y="650" fill="#eef8ff" font-size="42" font-family="sans-serif" font-weight="700">비 오는 교실</text> <!-- 장면 이름 -->
+</svg> <!-- 장면 종료 -->

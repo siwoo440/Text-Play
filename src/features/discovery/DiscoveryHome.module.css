@@ -1,0 +1,254 @@
+.home /* 탐색 화면 */
+{ /* 화면 시작 */
+    max-width: 1480px; /* 최대 너비 */
+    margin: 0 auto; /* 가운데 정렬 */
+    padding: 36px clamp(20px, 4vw, 64px) 96px; /* 화면 여백 */
+} /* 화면 종료 */
+
+.hero /* 탐색 헤더 */
+{ /* 헤더 시작 */
+    display: flex; /* 가로 배치 */
+    gap: 32px; /* 요소 간격 */
+    align-items: end; /* 하단 정렬 */
+    justify-content: space-between; /* 양끝 정렬 */
+    margin-bottom: 24px; /* 하단 여백 */
+} /* 헤더 종료 */
+
+.hero h1 /* 페이지 제목 */
+{ /* 제목 시작 */
+    max-width: 760px; /* 제목 너비 */
+    margin: 8px 0 0; /* 제목 여백 */
+    font-size: clamp(2rem, 5vw, 4.6rem); /* 반응형 크기 */
+    line-height: 1.05; /* 줄 높이 */
+} /* 제목 종료 */
+
+.hero input /* 검색 입력 */
+{ /* 검색 시작 */
+    width: min(420px, 100%); /* 검색 너비 */
+    padding: 14px 18px; /* 내부 여백 */
+    border: 1px solid #34394a; /* 테두리 */
+    border-radius: 999px; /* 둥근 모양 */
+    background: #151924; /* 입력 배경 */
+    color: #fff; /* 입력 글자 */
+} /* 검색 종료 */
+
+.home [role="group"] /* 필터 그룹 */
+{ /* 그룹 시작 */
+    display: flex; /* 가로 배치 */
+    gap: 10px; /* 버튼 간격 */
+    overflow-x: auto; /* 가로 스크롤 */
+    padding-block: 12px 28px; /* 세로 여백 */
+} /* 그룹 종료 */
+
+.home [role="group"] button /* 필터 버튼 */
+{ /* 버튼 시작 */
+    padding: 9px 16px; /* 버튼 여백 */
+    border: 1px solid #34394a; /* 버튼 테두리 */
+    border-radius: 999px; /* 둥근 버튼 */
+    background: #151924; /* 버튼 배경 */
+    color: #cbd2e3; /* 버튼 글자 */
+    white-space: nowrap; /* 줄바꿈 방지 */
+} /* 버튼 종료 */
+
+.home [role="group"] button[aria-pressed="true"] /* 선택 버튼 */
+{ /* 선택 시작 */
+    border-color: #8b5cf6; /* 강조 테두리 */
+    background: #8b5cf6; /* 강조 배경 */
+    color: #fff; /* 강조 글자 */
+} /* 선택 종료 */
+
+.featured /* 추천 영역 */
+{ /* 추천 시작 */
+    position: relative; /* 이미지 기준 */
+    display: grid; /* 그리드 배치 */
+    grid-template-columns: 1fr minmax(260px, 420px); /* 추천 열 */
+    min-height: 400px; /* 추천 높이 */
+    overflow: hidden; /* 넘침 숨김 */
+    margin-bottom: 44px; /* 하단 여백 */
+    border: 1px solid #2b3040; /* 영역 테두리 */
+    border-radius: 28px; /* 둥근 모서리 */
+    background: radial-gradient(circle at 75% 40%, #5f3aa6, #171a26 60%); /* 추천 배경 */
+} /* 추천 종료 */
+
+.featured > div /* 추천 설명 */
+{ /* 설명 시작 */
+    align-self: center; /* 세로 정렬 */
+    padding: clamp(28px, 5vw, 72px); /* 설명 여백 */
+} /* 설명 종료 */
+
+.featured img /* 추천 이미지 */
+{ /* 이미지 시작 */
+    width: 100%; /* 이미지 너비 */
+    height: 100%; /* 이미지 높이 */
+    object-fit: cover; /* 이미지 채움 */
+} /* 이미지 종료 */
+
+.featured a /* 추천 링크 */
+{ /* 링크 시작 */
+    display: inline-block; /* 버튼 배치 */
+    margin-top: 12px; /* 상단 여백 */
+    padding: 12px 18px; /* 내부 여백 */
+    border-radius: 12px; /* 둥근 모서리 */
+    background: #8b5cf6; /* 강조 배경 */
+    color: #fff; /* 글자 색상 */
+    text-decoration: none; /* 밑줄 제거 */
+} /* 링크 종료 */
+
+.rail > div /* 카드 목록 */
+{ /* 목록 시작 */
+    display: grid; /* 그리드 배치 */
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); /* 반응형 열 */
+    gap: 22px; /* 카드 간격 */
+} /* 목록 종료 */
+
+.sectionHeading /* 공통 영역 제목 */
+{ /* 제목 시작 */
+    display: flex; /* 가로 배치 */
+    align-items: end; /* 하단 정렬 */
+    justify-content: space-between; /* 양끝 정렬 */
+    gap: 20px; /* 요소 간격 */
+    margin-bottom: 18px; /* 하단 여백 */
+} /* 제목 종료 */
+
+.sectionHeading h2, /* 랭킹 제목 */
+.sectionHeading span /* 랭킹 설명 */
+{ /* 제목 문구 시작 */
+    margin: 0; /* 기본 여백 제거 */
+} /* 제목 문구 종료 */
+
+.sectionHeading span /* 랭킹 설명 */
+{ /* 설명 시작 */
+    color: #9aa3b8; /* 보조 색상 */
+} /* 설명 종료 */
+
+.sectionHeading strong /* 랭킹 범위 */
+{ /* 범위 시작 */
+    color: #b99cff; /* 강조 색상 */
+} /* 범위 종료 */
+
+.ranking /* 랭킹 영역 */
+{ /* 랭킹 시작 */
+    margin-bottom: 44px; /* 하단 여백 */
+    scroll-margin-top: 84px; /* 앵커 여백 */
+} /* 랭킹 종료 */
+
+.rankingGrid /* 랭킹 목록 */
+{ /* 목록 시작 */
+    display: grid; /* 그리드 배치 */
+    grid-auto-columns: minmax(190px, 230px); /* 카드 너비 */
+    grid-auto-flow: column; /* 가로 흐름 */
+    gap: 16px; /* 카드 간격 */
+    overflow-x: auto; /* 가로 스크롤 */
+    padding: 4px 2px 16px; /* 목록 여백 */
+    scroll-snap-type: x proximity; /* 스크롤 맞춤 */
+} /* 목록 종료 */
+
+.rankingItem /* 랭킹 항목 */
+{ /* 항목 시작 */
+    position: relative; /* 배지 기준 */
+    scroll-snap-align: start; /* 항목 맞춤 */
+} /* 항목 종료 */
+
+.rankBadge /* 순위 배지 */
+{ /* 배지 시작 */
+    position: absolute; /* 카드 위 배치 */
+    z-index: 2; /* 카드 상단 표시 */
+    top: 12px; /* 상단 위치 */
+    left: 12px; /* 왼쪽 위치 */
+    padding: 6px 10px; /* 내부 여백 */
+    border-radius: 999px; /* 둥근 모양 */
+    background: rgb(9 11 16 / 88%); /* 배지 배경 */
+    color: #fff; /* 배지 글자 */
+    font-weight: 800; /* 굵은 글자 */
+    backdrop-filter: blur(10px); /* 배경 흐림 */
+} /* 배지 종료 */
+
+.loadMore /* 더 보기 버튼 */
+{ /* 버튼 시작 */
+    display: block; /* 블록 배치 */
+    min-width: 180px; /* 최소 너비 */
+    min-height: 48px; /* 터치 높이 */
+    margin: 28px auto 0; /* 가운데 정렬 */
+    padding: 12px 24px; /* 내부 여백 */
+    border: 1px solid #8b5cf6; /* 강조 테두리 */
+    border-radius: 999px; /* 둥근 모양 */
+    background: #201833; /* 버튼 배경 */
+    color: #fff; /* 버튼 글자 */
+    cursor: pointer; /* 클릭 표시 */
+} /* 버튼 종료 */
+
+.loadMore:hover /* 더 보기 올림 */
+{ /* 올림 시작 */
+    background: #8b5cf6; /* 강조 배경 */
+} /* 올림 종료 */
+
+.card /* 캐릭터 카드 */
+{ /* 카드 시작 */
+    overflow: hidden; /* 넘침 숨김 */
+    border: 1px solid #272c39; /* 카드 테두리 */
+    border-radius: 18px; /* 카드 모서리 */
+    background: #131722; /* 카드 배경 */
+    color: #fff; /* 카드 글자 */
+    text-decoration: none; /* 밑줄 제거 */
+    transition: transform 160ms ease, border-color 160ms ease; /* 상호작용 전환 */
+} /* 카드 종료 */
+
+.card:hover /* 카드 올림 */
+{ /* 올림 시작 */
+    transform: translateY(-4px); /* 카드 상승 */
+    border-color: #8b5cf6; /* 강조 테두리 */
+} /* 올림 종료 */
+
+.card img /* 카드 이미지 */
+{ /* 이미지 시작 */
+    width: 100%; /* 이미지 너비 */
+    height: 280px; /* 이미지 높이 */
+    object-fit: cover; /* 이미지 채움 */
+} /* 이미지 종료 */
+
+.card div /* 카드 설명 */
+{ /* 설명 시작 */
+    padding: 16px; /* 내부 여백 */
+} /* 설명 종료 */
+
+.card h3, /* 카드 제목 */
+.card p /* 카드 문구 */
+{ /* 문구 시작 */
+    margin: 0 0 8px; /* 문구 여백 */
+} /* 문구 종료 */
+
+.card p, /* 카드 설명 */
+.card span /* 카드 지표 */
+{ /* 보조 문구 시작 */
+    color: #9aa3b8; /* 보조 색상 */
+} /* 보조 문구 종료 */
+
+@media (max-width: 760px) /* 모바일 */
+{ /* 미디어 시작 */
+    .hero /* 탐색 헤더 */
+    { /* 헤더 시작 */
+        display: grid; /* 세로 배치 */
+    } /* 헤더 종료 */
+
+    .featured /* 추천 영역 */
+    { /* 추천 시작 */
+        grid-template-columns: 1fr; /* 단일 열 */
+    } /* 추천 종료 */
+
+    .featured img /* 추천 이미지 */
+    { /* 이미지 시작 */
+        height: 320px; /* 모바일 높이 */
+        grid-row: 1; /* 이미지 우선 */
+    } /* 이미지 종료 */
+
+    .rail > div /* 카드 목록 */
+    { /* 목록 시작 */
+        grid-template-columns: repeat(2, minmax(0, 1fr)); /* 이열 카드 */
+        gap: 12px; /* 카드 간격 */
+    } /* 목록 종료 */
+
+    .card img /* 카드 이미지 */
+    { /* 이미지 시작 */
+        height: 220px; /* 모바일 이미지 */
+    } /* 이미지 종료 */
+} /* 미디어 종료 */

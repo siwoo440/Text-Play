@@ -1,0 +1,158 @@
+.page /* 홈 화면 */
+{ /* 화면 시작 */
+    min-height: calc(100vh - 64px); /* 화면 높이 */
+    padding: 72px clamp(20px, 6vw, 96px); /* 화면 여백 */
+    background: radial-gradient(circle at 78% 12%, rgb(102 76 160 / 28%), transparent 38%), linear-gradient(145deg, #090b12, #151225 58%, #0b1119); /* 화면 배경 */
+} /* 화면 종료 */
+
+.hero /* 소개 영역 */
+{ /* 소개 시작 */
+    max-width: 780px; /* 소개 너비 */
+    margin: 0 auto 42px; /* 소개 여백 */
+    text-align: center; /* 가운데 정렬 */
+} /* 소개 종료 */
+
+.eyebrow /* 소개 표제 */
+{ /* 표제 시작 */
+    color: #a98cff; /* 표제 색상 */
+    font-size: .76rem; /* 표제 크기 */
+    font-weight: 850; /* 표제 굵기 */
+    letter-spacing: .18em; /* 표제 자간 */
+} /* 표제 종료 */
+
+.hero h1 /* 서비스 제목 */
+{ /* 제목 시작 */
+    margin: 10px 0 14px; /* 제목 여백 */
+    font-size: clamp(3rem, 9vw, 6.4rem); /* 제목 크기 */
+    line-height: .94; /* 제목 행간 */
+} /* 제목 종료 */
+
+.hero > p:last-child /* 서비스 설명 */
+{ /* 설명 시작 */
+    color: #bbc1d1; /* 설명 색상 */
+    font-size: clamp(1rem, 2vw, 1.25rem); /* 설명 크기 */
+} /* 설명 종료 */
+
+.card /* 작품 카드 */
+{ /* 카드 시작 */
+    display: grid; /* 카드 배치 */
+    grid-template-columns: minmax(180px, .7fr) minmax(0, 1.3fr); /* 카드 열 */
+    max-width: 980px; /* 카드 너비 */
+    margin: 0 auto; /* 카드 중앙 */
+    overflow: hidden; /* 모서리 정리 */
+    border: 1px solid #493f61; /* 카드 테두리 */
+    border-radius: 28px; /* 카드 모서리 */
+    background: rgb(17 19 30 / 88%); /* 카드 배경 */
+    box-shadow: 0 28px 90px rgb(0 0 0 / 36%); /* 카드 그림자 */
+} /* 카드 종료 */
+
+.art /* 작품 장식 */
+{ /* 장식 시작 */
+    display: grid; /* 중앙 배치 */
+    min-height: 330px; /* 장식 높이 */
+    background: radial-gradient(circle, rgb(229 221 255 / 90%) 0 12%, rgb(140 110 207 / 52%) 13% 28%, transparent 29%), linear-gradient(160deg, #31294c, #101928); /* 장식 배경 */
+    color: #f4efff; /* 장식 색상 */
+    font-size: 4rem; /* 장식 크기 */
+    place-items: center; /* 중앙 정렬 */
+} /* 장식 종료 */
+
+.copy /* 작품 정보 */
+{ /* 정보 시작 */
+    display: flex; /* 세로 배치 */
+    flex-direction: column; /* 세로 방향 */
+    justify-content: center; /* 세로 중앙 */
+    padding: clamp(28px, 5vw, 64px); /* 정보 여백 */
+} /* 정보 종료 */
+
+.badge /* 작품 분류 */
+{ /* 분류 시작 */
+    color: #bba7f2; /* 분류 색상 */
+    font-size: .78rem; /* 분류 크기 */
+    font-weight: 800; /* 분류 굵기 */
+} /* 분류 종료 */
+
+.copy h2 /* 작품 제목 */
+{ /* 제목 시작 */
+    margin: 6px 0 12px; /* 제목 여백 */
+    font-size: clamp(1.8rem, 4vw, 3rem); /* 제목 크기 */
+} /* 제목 종료 */
+
+.copy > p:not(.badge) /* 작품 설명 */
+{ /* 설명 시작 */
+    color: #aeb5c6; /* 설명 색상 */
+    line-height: 1.75; /* 설명 행간 */
+} /* 설명 종료 */
+
+.progress /* 저장 진행 요약 */
+{ /* 요약 시작 */
+    width: fit-content; /* 내용 너비 */
+    margin: 8px 0 0; /* 요약 여백 */
+    padding: 8px 12px; /* 요약 안쪽 여백 */
+    border: 1px solid #453a64; /* 요약 테두리 */
+    border-radius: 9px; /* 요약 모서리 */
+    background: #171322; /* 요약 배경 */
+    color: #d7c9ff; /* 요약 글자 */
+    font-size: .82rem; /* 요약 크기 */
+} /* 요약 종료 */
+
+.actions /* 작품 동작 */
+{ /* 동작 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 허용 */
+    gap: 12px; /* 동작 간격 */
+    margin-top: 24px; /* 위쪽 여백 */
+} /* 동작 종료 */
+
+.primary, /* 기본 동작 */
+.secondary, /* 보조 동작 */
+.disabled /* 비활성 동작 */
+{ /* 동작 시작 */
+    min-height: 46px; /* 동작 높이 */
+    padding: 13px 20px; /* 동작 여백 */
+    border-radius: 12px; /* 동작 모서리 */
+    font-weight: 800; /* 동작 굵기 */
+    text-decoration: none; /* 밑줄 제거 */
+} /* 동작 종료 */
+
+.primary /* 기본 동작 */
+{ /* 기본 시작 */
+    background: #8062d7; /* 기본 배경 */
+    color: #fff; /* 기본 글자 */
+} /* 기본 종료 */
+
+.secondary /* 보조 동작 */
+{ /* 보조 시작 */
+    border: 1px solid #625684; /* 보조 테두리 */
+    color: #e5dcff; /* 보조 글자 */
+} /* 보조 종료 */
+
+.disabled /* 비활성 동작 */
+{ /* 비활성 시작 */
+    color: #6f7585; /* 비활성 글자 */
+} /* 비활성 종료 */
+
+.back /* 복귀 링크 */
+{ /* 복귀 시작 */
+    display: block; /* 블록 배치 */
+    width: fit-content; /* 내용 너비 */
+    margin: 30px auto 0; /* 복귀 여백 */
+    color: #c5b5ef; /* 복귀 색상 */
+} /* 복귀 종료 */
+
+@media (max-width: 767px) /* 모바일 */
+{ /* 미디어 시작 */
+    .page /* 모바일 화면 */
+    { /* 화면 시작 */
+        padding: 48px 16px 96px; /* 화면 여백 */
+    } /* 화면 종료 */
+
+    .card /* 모바일 카드 */
+    { /* 카드 시작 */
+        grid-template-columns: 1fr; /* 단일 열 */
+    } /* 카드 종료 */
+
+    .art /* 모바일 장식 */
+    { /* 장식 시작 */
+        min-height: 190px; /* 장식 높이 */
+    } /* 장식 종료 */
+} /* 미디어 종료 */

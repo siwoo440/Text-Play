@@ -1,0 +1,30 @@
+.page { min-height: 100%; padding: clamp(24px, 5vw, 64px); color: #f4f0ff; background: radial-gradient(circle at top right, rgba(126, 87, 194, .2), transparent 32%), #100d18; } /* 설정 본문 */
+.header { max-width: 1100px; margin: 0 auto 28px; } /* 설정 머리말 */
+.header span { color: #bda8ff; font-size: .78rem; font-weight: 800; letter-spacing: .16em; } /* 영문 표제 */
+.header h1 { margin: 8px 0; font-size: clamp(2rem, 5vw, 3.4rem); } /* 화면 제목 */
+.header p { margin: 0; color: #b9b2ca; } /* 화면 설명 */
+.layout { display: grid; grid-template-columns: minmax(180px, 240px) minmax(0, 1fr); gap: 22px; max-width: 1100px; margin: 0 auto; } /* 설정 배치 */
+.tabs { display: grid; align-content: start; gap: 8px; } /* 탭 목록 */
+.tabs button { min-height: 48px; padding: 0 16px; border: 1px solid #302945; border-radius: 14px; color: #d4ccdf; background: #191523; text-align: left; cursor: pointer; } /* 탭 버튼 */
+.tabs button[aria-selected="true"] { border-color: #a88cff; color: #fff; background: linear-gradient(135deg, #513b88, #2d2550); } /* 선택 탭 */
+.panel { min-height: 420px; padding: clamp(20px, 4vw, 38px); border: 1px solid #302945; border-radius: 22px; background: rgba(28, 23, 39, .92); box-shadow: 0 24px 60px rgba(0, 0, 0, .28); } /* 설정 내용 */
+.section { display: grid; gap: 16px; max-width: 600px; } /* 설정 영역 */
+.section h2 { margin: 0 0 8px; font-size: 1.55rem; } /* 영역 제목 */
+.section p { margin: 0; color: #b9b2ca; line-height: 1.65; } /* 영역 설명 */
+.section label { display: grid; gap: 8px; color: #dcd5e8; font-size: .92rem; font-weight: 700; } /* 입력 표제 */
+.section input, .section select { min-height: 48px; padding: 0 14px; border: 1px solid #413852; border-radius: 12px; color: #fff; background: #120f1a; font: inherit; } /* 입력 요소 */
+.section .check { display: flex; align-items: center; min-height: 48px; } /* 체크 영역 */
+.check input { width: 22px; min-height: 22px; margin: 0 10px 0 0; } /* 체크 입력 */
+.primary { min-height: 48px; padding: 0 22px; border: 0; border-radius: 12px; color: #140f1d; background: #c7b5ff; font-weight: 900; cursor: pointer; justify-self: start; } /* 주요 버튼 */
+.error { margin: -8px 0 0; color: #ff9d9d; } /* 오류 안내 */
+.status { margin-top: 22px; color: #9ce7be; } /* 성공 안내 */
+.actionRow { display: flex; flex-wrap: wrap; gap: 10px; } /* 동작 모음 */
+.secondary { min-height: 44px; padding: 0 16px; border: 1px solid #5d5272; border-radius: 12px; color: #eee8fa; background: #25202f; font-weight: 800; cursor: pointer; } /* 보조 버튼 */
+.danger { min-height: 44px; padding: 0 16px; border: 1px solid #9f5058; border-radius: 12px; color: #ffd7da; background: #45252c; font-weight: 800; cursor: pointer; justify-self: start; } /* 위험 버튼 */
+.preview { display: grid; gap: 8px; padding: 16px; border: 1px solid #75639b; border-radius: 14px; background: #211a31; } /* 미리보기 영역 */
+.backupList { display: grid; gap: 10px; } /* 백업 목록 */
+.backupList h3 { margin: 8px 0 0; } /* 백업 제목 */
+.backupList article { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px; border: 1px solid #393145; border-radius: 12px; background: #15111d; } /* 백업 항목 */
+.backupList article div { display: grid; gap: 4px; } /* 백업 정보 */
+.backupList article span { color: #a9a0b8; font-size: .82rem; } /* 백업 시각 */
+@media (max-width: 720px) { .page { padding: 22px 16px 88px; } .layout { grid-template-columns: 1fr; } .tabs { grid-template-columns: repeat(5, minmax(92px, 1fr)); overflow-x: auto; padding-bottom: 6px; } .tabs button { text-align: center; } .panel { min-height: 360px; padding: 22px 18px; } } /* 모바일 배치 */

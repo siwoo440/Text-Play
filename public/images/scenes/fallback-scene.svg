@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title description"> <!-- 장면 시작 -->
+  <title id="title">기억이 머무는 장면</title> <!-- 장면 제목 -->
+  <desc id="description">새로운 장면을 준비하는 동안 표시되는 보랏빛 추상 공간</desc> <!-- 장면 설명 -->
+  <defs><linearGradient id="fallback" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#111827"/><stop offset="0.48" stop-color="#4c1d95"/><stop offset="1" stop-color="#0f766e"/></linearGradient></defs> <!-- 장면 효과 -->
+  <rect width="1200" height="720" fill="url(#fallback)"/> <!-- 추상 배경 -->
+  <g fill="none" stroke="#ddd6fe" stroke-width="3" opacity="0.55"><circle cx="600" cy="330" r="190"/><circle cx="600" cy="330" r="130"/><circle cx="600" cy="330" r="70"/></g> <!-- 기억 파동 -->
+  <g fill="#ffffff" opacity="0.75"><circle cx="340" cy="190" r="8"/><circle cx="865" cy="235" r="7"/><circle cx="720" cy="500" r="9"/><circle cx="445" cy="470" r="6"/></g> <!-- 기억 빛 -->
+  <text x="600" y="350" fill="#ffffff" font-size="36" font-family="sans-serif" font-weight="700" text-anchor="middle">장면 준비 중</text> <!-- 준비 안내 -->
+</svg> <!-- 장면 종료 -->

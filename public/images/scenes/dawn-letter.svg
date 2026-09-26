@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title description"> <!-- 장면 시작 -->
+  <title id="title">새벽의 편지</title> <!-- 장면 제목 -->
+  <desc id="description">보랏빛 새벽 도서관에 편지 조각이 떠다니는 장면</desc> <!-- 장면 설명 -->
+  <defs><linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#12152d"/><stop offset="0.55" stop-color="#503a78"/><stop offset="1" stop-color="#d7a5d7"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="16"/></filter></defs> <!-- 장면 효과 -->
+  <rect width="1200" height="720" fill="url(#sky)"/> <!-- 하늘 배경 -->
+  <circle cx="950" cy="130" r="72" fill="#fff0dc" opacity="0.82" filter="url(#glow)"/> <!-- 새벽 빛 -->
+  <path d="M0 520L160 430L330 510L510 390L710 505L930 360L1200 500V720H0Z" fill="#121421" opacity="0.88"/> <!-- 서가 실루엣 -->
+  <g fill="#f8ecff" opacity="0.72"><rect x="180" y="170" width="86" height="54" rx="5" transform="rotate(-12 180 170)"/><rect x="510" y="130" width="92" height="58" rx="5" transform="rotate(9 510 130)"/><rect x="780" y="250" width="78" height="48" rx="5" transform="rotate(-7 780 250)"/></g> <!-- 편지 조각 -->
+  <text x="70" y="650" fill="#f7efff" font-size="42" font-family="sans-serif" font-weight="700">새벽의 편지</text> <!-- 장면 이름 -->
+</svg> <!-- 장면 종료 -->

@@ -1,0 +1,11 @@
+# 현재 저장소만 독립 워크스페이스로 지정
+packages:
+  # 루트 애플리케이션 포함
+  - "."
+
+# 검증된 네이티브 빌드 스크립트 허용
+allowBuilds:
+  # Next.js 이미지 처리 모듈
+  sharp: true
+  # 모듈 경로 해석 모듈
+  unrs-resolver: true

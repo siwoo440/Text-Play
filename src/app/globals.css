@@ -1,0 +1,38 @@
+:root /* 전역 루트 */
+{ /* 루트 시작 */
+    color-scheme: dark; /* 어두운 테마 */
+    font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; /* 시스템 글꼴 */
+    background: #0d0f14; /* 기본 배경 */
+    color: #f7f7fb; /* 기본 글자 */
+} /* 루트 종료 */
+
+* /* 전체 요소 */
+{ /* 요소 시작 */
+    box-sizing: border-box; /* 크기 계산 */
+} /* 요소 종료 */
+
+html, /* 문서 요소 */
+body /* 본문 요소 */
+{ /* 본문 시작 */
+    min-height: 100%; /* 최소 높이 */
+    margin: 0; /* 기본 여백 제거 */
+    background: #0d0f14; /* 본문 배경 */
+} /* 본문 종료 */
+
+button, /* 버튼 요소 */
+input, /* 입력 요소 */
+textarea, /* 장문 요소 */
+select /* 선택 요소 */
+{ /* 입력 시작 */
+    font: inherit; /* 글꼴 상속 */
+} /* 입력 종료 */
+
+.sr-only /* 화면 숨김 */
+{ /* 숨김 시작 */
+    position: absolute; /* 배치 제외 */
+    width: 1px; /* 최소 너비 */
+    height: 1px; /* 최소 높이 */
+    overflow: hidden; /* 넘침 숨김 */
+    clip: rect(0, 0, 0, 0); /* 화면 자르기 */
+    white-space: nowrap; /* 줄바꿈 방지 */
+} /* 숨김 종료 */

@@ -1,0 +1,974 @@
+<!doctype html> <!-- 문서 형식 -->
+<html lang="ko"> <!-- 한국어 문서 -->
+<head> <!-- 머리말 시작 -->
+    <meta charset="utf-8"> <!-- 문자 인코딩 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- 반응형 화면 -->
+    <title>MATE:VERSE 탐색</title> <!-- 문서 제목 -->
+    <style> /* 화면 스타일 */
+        :root /* 전역 변수 */
+        { /* 변수 시작 */
+            color-scheme: dark; /* 어두운 테마 */
+            font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; /* 시스템 글꼴 */
+            --background: #090b10; /* 기본 배경 */
+            --surface: #11141c; /* 패널 배경 */
+            --surface-soft: #181c26; /* 보조 배경 */
+            --line: #292f3d; /* 구분선 */
+            --text: #f8f9ff; /* 기본 글자 */
+            --muted: #9aa3b8; /* 보조 글자 */
+            --accent: #8b5cf6; /* 강조 색상 */
+            --accent-bright: #a78bfa; /* 밝은 강조 */
+            --conversation-width: 0px; /* 왼쪽 폭 */
+            --user-width: 0px; /* 오른쪽 폭 */
+        } /* 변수 종료 */
+        * /* 전체 요소 */
+        { /* 요소 시작 */
+            box-sizing: border-box; /* 크기 계산 */
+        } /* 요소 종료 */
+        body /* 본문 */
+        { /* 본문 시작 */
+            min-width: 320px; /* 최소 화면 */
+            min-height: 100vh; /* 최소 높이 */
+            margin: 0; /* 기본 여백 제거 */
+            overflow-x: hidden; /* 가로 넘침 제거 */
+            background: var(--background); /* 본문 배경 */
+            color: var(--text); /* 본문 글자 */
+        } /* 본문 종료 */
+        button, input /* 입력 요소 */
+        { /* 입력 시작 */
+            font: inherit; /* 글꼴 상속 */
+        } /* 입력 종료 */
+        button /* 버튼 */
+        { /* 버튼 시작 */
+            color: inherit; /* 글자 상속 */
+            cursor: pointer; /* 포인터 표시 */
+        } /* 버튼 종료 */
+        .app-shell /* 앱 셸 */
+        { /* 셸 시작 */
+            display: grid; /* 격자 배치 */
+            grid-template-columns: var(--conversation-width) minmax(0, 1fr) var(--user-width); /* 세 영역 배치 */
+            min-height: 100vh; /* 전체 높이 */
+            transition: grid-template-columns 220ms ease; /* 패널 전환 */
+        } /* 셸 종료 */
+        .app-shell[data-conversation-open="true"] /* 왼쪽 열림 */
+        { /* 왼쪽 상태 시작 */
+            --conversation-width: 292px; /* 왼쪽 패널 폭 */
+        } /* 왼쪽 상태 종료 */
+        .app-shell[data-user-open="true"] /* 오른쪽 열림 */
+        { /* 오른쪽 상태 시작 */
+            --user-width: 312px; /* 오른쪽 패널 폭 */
+        } /* 오른쪽 상태 종료 */
+        .side-panel /* 공통 패널 */
+        { /* 패널 시작 */
+            position: sticky; /* 화면 고정 */
+            top: 0; /* 상단 위치 */
+            z-index: 30; /* 패널 층 */
+            width: 100%; /* 패널 너비 */
+            height: 100vh; /* 화면 높이 */
+            overflow: hidden; /* 닫힘 넘침 제거 */
+            background: rgba(15, 18, 25, 0.98); /* 패널 배경 */
+            opacity: 0; /* 닫힘 투명도 */
+            pointer-events: none; /* 닫힘 입력 차단 */
+            transition: opacity 160ms ease; /* 투명도 전환 */
+        } /* 패널 종료 */
+        .conversation-panel /* 왼쪽 패널 */
+        { /* 왼쪽 시작 */
+            border-right: 1px solid var(--line); /* 오른쪽 구분선 */
+        } /* 왼쪽 종료 */
+        .user-panel /* 오른쪽 패널 */
+        { /* 오른쪽 시작 */
+            border-left: 1px solid var(--line); /* 왼쪽 구분선 */
+        } /* 오른쪽 종료 */
+        .app-shell[data-conversation-open="true"] .conversation-panel, /* 왼쪽 표시 */
+        .app-shell[data-user-open="true"] .user-panel /* 오른쪽 표시 */
+        { /* 표시 시작 */
+            overflow-y: auto; /* 세로 스크롤 */
+            opacity: 1; /* 표시 투명도 */
+            pointer-events: auto; /* 입력 허용 */
+        } /* 표시 종료 */
+        .panel-inner /* 패널 내부 */
+        { /* 내부 시작 */
+            width: 292px; /* 왼쪽 기준 폭 */
+            min-height: 100%; /* 전체 높이 */
+            padding: 22px 18px; /* 내부 여백 */
+        } /* 내부 종료 */
+        .user-panel .panel-inner /* 사용자 내부 */
+        { /* 사용자 시작 */
+            width: 312px; /* 사용자 폭 */
+        } /* 사용자 종료 */
+        .brand /* 브랜드 */
+        { /* 브랜드 시작 */
+            display: flex; /* 가로 배치 */
+            align-items: center; /* 세로 정렬 */
+            gap: 10px; /* 요소 간격 */
+            margin-bottom: 22px; /* 아래 여백 */
+            font-size: 20px; /* 글자 크기 */
+            font-weight: 900; /* 굵은 글자 */
+            letter-spacing: -0.04em; /* 글자 간격 */
+        } /* 브랜드 종료 */
+        .brand-mark /* 브랜드 표시 */
+        { /* 표시 시작 */
+            display: grid; /* 중앙 배치 */
+            width: 34px; /* 표시 너비 */
+            height: 34px; /* 표시 높이 */
+            place-items: center; /* 중앙 정렬 */
+            border-radius: 11px; /* 둥근 모서리 */
+            background: linear-gradient(135deg, #a78bfa, #6d28d9); /* 강조 배경 */
+            box-shadow: 0 9px 24px rgba(139, 92, 246, 0.35); /* 강조 그림자 */
+        } /* 표시 종료 */
+        .panel-label /* 패널 제목 */
+        { /* 제목 시작 */
+            margin: 24px 0 10px; /* 제목 여백 */
+            color: var(--muted); /* 보조 글자 */
+            font-size: 12px; /* 제목 크기 */
+            font-weight: 800; /* 제목 굵기 */
+            letter-spacing: 0.08em; /* 제목 간격 */
+            text-transform: uppercase; /* 대문자 표시 */
+        } /* 제목 종료 */
+        .panel-actions /* 패널 작업 */
+        { /* 작업 시작 */
+            display: grid; /* 격자 배치 */
+            grid-template-columns: 1fr 1fr; /* 두 열 배치 */
+            gap: 8px; /* 버튼 간격 */
+        } /* 작업 종료 */
+        .panel-button /* 패널 버튼 */
+        { /* 버튼 시작 */
+            min-height: 42px; /* 터치 높이 */
+            border: 1px solid var(--line); /* 버튼 테두리 */
+            border-radius: 12px; /* 버튼 모서리 */
+            background: var(--surface-soft); /* 버튼 배경 */
+            font-size: 13px; /* 버튼 글자 */
+            font-weight: 750; /* 버튼 굵기 */
+        } /* 버튼 종료 */
+        .panel-button.primary /* 주요 버튼 */
+        { /* 주요 시작 */
+            border-color: transparent; /* 테두리 제거 */
+            background: var(--accent); /* 강조 배경 */
+        } /* 주요 종료 */
+        .conversation-list /* 대화 목록 */
+        { /* 목록 시작 */
+            display: grid; /* 세로 배치 */
+            gap: 7px; /* 항목 간격 */
+            margin: 0; /* 목록 여백 */
+            padding: 0; /* 목록 안쪽 */
+            list-style: none; /* 목록 기호 제거 */
+        } /* 목록 종료 */
+        .conversation-item /* 대화 항목 */
+        { /* 항목 시작 */
+            display: grid; /* 항목 격자 */
+            grid-template-columns: 44px minmax(0, 1fr); /* 이미지와 내용 */
+            gap: 11px; /* 항목 간격 */
+            align-items: center; /* 세로 정렬 */
+            padding: 10px; /* 항목 여백 */
+            border: 1px solid transparent; /* 선택 테두리 */
+            border-radius: 14px; /* 항목 모서리 */
+            background: transparent; /* 기본 배경 */
+        } /* 항목 종료 */
+        .conversation-item.active /* 선택 대화 */
+        { /* 선택 시작 */
+            border-color: rgba(167, 139, 250, 0.35); /* 선택 테두리 */
+            background: rgba(139, 92, 246, 0.12); /* 선택 배경 */
+        } /* 선택 종료 */
+        .mini-avatar /* 작은 이미지 */
+        { /* 이미지 시작 */
+            display: grid; /* 중앙 배치 */
+            width: 44px; /* 이미지 너비 */
+            height: 44px; /* 이미지 높이 */
+            place-items: center; /* 중앙 정렬 */
+            border-radius: 14px; /* 이미지 모서리 */
+            background: linear-gradient(145deg, #46356c, #161a27); /* 대체 이미지 */
+            font-size: 20px; /* 기호 크기 */
+        } /* 이미지 종료 */
+        .mini-avatar img /* 작은 초상 */
+        { /* 초상 시작 */
+            width: 100%; /* 초상 너비 */
+            height: 100%; /* 초상 높이 */
+            border-radius: inherit; /* 모서리 상속 */
+            object-fit: cover; /* 초상 채움 */
+            object-position: center 24%; /* 얼굴 위치 */
+        } /* 초상 종료 */
+        .conversation-copy /* 대화 내용 */
+        { /* 내용 시작 */
+            min-width: 0; /* 축소 허용 */
+        } /* 내용 종료 */
+        .conversation-title /* 대화 이름 */
+        { /* 이름 시작 */
+            margin: 0 0 4px; /* 이름 여백 */
+            overflow: hidden; /* 넘침 제거 */
+            font-size: 13px; /* 이름 크기 */
+            font-weight: 800; /* 이름 굵기 */
+            text-overflow: ellipsis; /* 말줄임 표시 */
+            white-space: nowrap; /* 한 줄 표시 */
+        } /* 이름 종료 */
+        .conversation-preview /* 대화 미리보기 */
+        { /* 미리보기 시작 */
+            margin: 0; /* 문단 여백 */
+            overflow: hidden; /* 넘침 제거 */
+            color: var(--muted); /* 보조 색상 */
+            font-size: 11px; /* 미리보기 크기 */
+            text-overflow: ellipsis; /* 말줄임 표시 */
+            white-space: nowrap; /* 한 줄 표시 */
+        } /* 미리보기 종료 */
+        .main-column /* 중앙 영역 */
+        { /* 중앙 시작 */
+            min-width: 0; /* 축소 허용 */
+        } /* 중앙 종료 */
+        .app-header /* 상단 영역 */
+        { /* 상단 시작 */
+            position: sticky; /* 상단 고정 */
+            top: 0; /* 상단 위치 */
+            z-index: 20; /* 상단 층 */
+            display: grid; /* 격자 배치 */
+            grid-template-columns: auto minmax(0, 1fr) auto; /* 세 영역 배치 */
+            gap: 18px; /* 영역 간격 */
+            align-items: center; /* 세로 정렬 */
+            min-height: 72px; /* 상단 높이 */
+            padding: 12px clamp(18px, 3vw, 44px); /* 반응형 여백 */
+            border-bottom: 1px solid rgba(41, 47, 61, 0.8); /* 아래 구분선 */
+            background: rgba(9, 11, 16, 0.88); /* 반투명 배경 */
+            backdrop-filter: blur(18px); /* 배경 흐림 */
+        } /* 상단 종료 */
+        .header-left, .header-right /* 상단 묶음 */
+        { /* 묶음 시작 */
+            display: flex; /* 가로 배치 */
+            align-items: center; /* 세로 정렬 */
+            gap: 10px; /* 항목 간격 */
+        } /* 묶음 종료 */
+        .icon-button /* 아이콘 버튼 */
+        { /* 아이콘 시작 */
+            display: grid; /* 중앙 배치 */
+            width: 44px; /* 버튼 너비 */
+            height: 44px; /* 버튼 높이 */
+            place-items: center; /* 중앙 정렬 */
+            border: 1px solid var(--line); /* 버튼 테두리 */
+            border-radius: 13px; /* 버튼 모서리 */
+            background: var(--surface); /* 버튼 배경 */
+            font-size: 18px; /* 아이콘 크기 */
+        } /* 아이콘 종료 */
+        .desktop-brand /* 중앙 브랜드 */
+        { /* 브랜드 시작 */
+            font-weight: 900; /* 브랜드 굵기 */
+            letter-spacing: -0.04em; /* 브랜드 간격 */
+        } /* 브랜드 종료 */
+        .search-box /* 검색 상자 */
+        { /* 검색 시작 */
+            width: min(100%, 520px); /* 검색 너비 */
+            min-height: 44px; /* 검색 높이 */
+            justify-self: center; /* 중앙 정렬 */
+            padding: 0 16px; /* 입력 여백 */
+            border: 1px solid var(--line); /* 검색 테두리 */
+            border-radius: 14px; /* 검색 모서리 */
+            outline: none; /* 기본 외곽선 제거 */
+            background: var(--surface); /* 검색 배경 */
+            color: var(--text); /* 검색 글자 */
+        } /* 검색 종료 */
+        .search-box:focus /* 검색 초점 */
+        { /* 초점 시작 */
+            border-color: var(--accent-bright); /* 초점 테두리 */
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18); /* 초점 표시 */
+        } /* 초점 종료 */
+        .content /* 콘텐츠 */
+        { /* 콘텐츠 시작 */
+            width: min(1380px, 100%); /* 콘텐츠 너비 */
+            margin: 0 auto; /* 중앙 배치 */
+            padding: 26px clamp(18px, 3vw, 44px) 72px; /* 콘텐츠 여백 */
+        } /* 콘텐츠 종료 */
+        .category-row /* 카테고리 */
+        { /* 카테고리 시작 */
+            display: flex; /* 가로 배치 */
+            gap: 9px; /* 항목 간격 */
+            margin-bottom: 14px; /* 아래 여백 */
+            overflow-x: auto; /* 가로 스크롤 */
+            scrollbar-width: none; /* 스크롤 숨김 */
+        } /* 카테고리 종료 */
+        .category-chip /* 카테고리 버튼 */
+        { /* 카테고리 버튼 시작 */
+            flex: 0 0 auto; /* 크기 유지 */
+            min-height: 38px; /* 터치 높이 */
+            padding: 0 16px; /* 버튼 여백 */
+            border: 1px solid var(--line); /* 버튼 테두리 */
+            border-radius: 999px; /* 알약 모양 */
+            background: transparent; /* 기본 배경 */
+            color: var(--muted); /* 기본 글자 */
+            font-size: 13px; /* 글자 크기 */
+            font-weight: 750; /* 글자 굵기 */
+        } /* 카테고리 버튼 종료 */
+        .category-chip.active /* 선택 카테고리 */
+        { /* 선택 시작 */
+            border-color: var(--accent); /* 선택 테두리 */
+            background: var(--accent); /* 선택 배경 */
+            color: white; /* 선택 글자 */
+        } /* 선택 종료 */
+        .ranking-links /* 순위 바로가기 */
+        { /* 바로가기 시작 */
+            display: grid; /* 격자 배치 */
+            grid-template-columns: repeat(3, minmax(0, 1fr)); /* 세 칸 배치 */
+            gap: 10px; /* 항목 간격 */
+            margin-bottom: 22px; /* 아래 여백 */
+        } /* 바로가기 종료 */
+        .ranking-link /* 순위 링크 */
+        { /* 링크 시작 */
+            display: flex; /* 중앙 배치 */
+            min-height: 46px; /* 링크 높이 */
+            align-items: center; /* 세로 중앙 */
+            justify-content: center; /* 가로 중앙 */
+            border: 1px solid var(--line); /* 링크 테두리 */
+            border-radius: 14px; /* 링크 모서리 */
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.16), rgba(255, 255, 255, 0.02)); /* 링크 배경 */
+            color: var(--text); /* 링크 글자 */
+            font-size: 14px; /* 링크 크기 */
+            font-weight: 800; /* 링크 굵기 */
+            text-decoration: none; /* 밑줄 제거 */
+            transition: border-color 160ms ease, transform 160ms ease; /* 반응 전환 */
+        } /* 링크 종료 */
+        .ranking-link:hover /* 링크 올림 */
+        { /* 올림 시작 */
+            border-color: var(--accent-bright); /* 올림 테두리 */
+            transform: translateY(-2px); /* 올림 이동 */
+        } /* 올림 종료 */
+        .featured /* 추천 영역 */
+        { /* 추천 시작 */
+            position: relative; /* 내부 기준 */
+            display: grid; /* 격자 배치 */
+            grid-template-columns: minmax(0, 1.2fr) minmax(240px, 0.8fr); /* 내용 배치 */
+            height: 360px; /* 추천 고정 높이 */
+            min-height: 290px; /* 추천 높이 */
+            margin-bottom: 36px; /* 아래 여백 */
+            overflow: hidden; /* 장식 넘침 제거 */
+            border: 1px solid rgba(167, 139, 250, 0.25); /* 추천 테두리 */
+            border-radius: 26px; /* 추천 모서리 */
+            background: radial-gradient(circle at 80% 30%, rgba(211, 185, 255, 0.35), transparent 28%), linear-gradient(125deg, #17223b, #3a2559 55%, #11141c); /* 추천 배경 */
+            box-shadow: 0 28px 70px rgba(0, 0, 0, 0.28); /* 추천 그림자 */
+        } /* 추천 종료 */
+        .featured-copy /* 추천 내용 */
+        { /* 내용 시작 */
+            align-self: center; /* 세로 중앙 */
+            padding: clamp(28px, 5vw, 62px); /* 내용 여백 */
+        } /* 내용 종료 */
+        .eyebrow /* 작은 제목 */
+        { /* 작은 제목 시작 */
+            display: inline-flex; /* 내용 폭 */
+            margin-bottom: 14px; /* 아래 여백 */
+            padding: 7px 10px; /* 내부 여백 */
+            border-radius: 999px; /* 알약 모양 */
+            background: rgba(139, 92, 246, 0.22); /* 작은 제목 배경 */
+            color: #ddd2ff; /* 작은 제목 글자 */
+            font-size: 12px; /* 작은 제목 크기 */
+            font-weight: 850; /* 작은 제목 굵기 */
+        } /* 작은 제목 종료 */
+        .featured h1 /* 추천 이름 */
+        { /* 이름 시작 */
+            margin: 0 0 12px; /* 이름 여백 */
+            font-size: clamp(30px, 5vw, 54px); /* 반응형 이름 */
+            line-height: 1; /* 이름 줄높이 */
+            letter-spacing: -0.05em; /* 이름 간격 */
+        } /* 이름 종료 */
+        .featured p /* 추천 설명 */
+        { /* 설명 시작 */
+            max-width: 560px; /* 설명 너비 */
+            margin: 0 0 22px; /* 설명 여백 */
+            color: #c9cede; /* 설명 색상 */
+            line-height: 1.65; /* 설명 줄높이 */
+        } /* 설명 종료 */
+        .primary-cta /* 주요 행동 */
+        { /* 행동 시작 */
+            min-height: 46px; /* 행동 높이 */
+            padding: 0 18px; /* 행동 여백 */
+            border: 0; /* 테두리 제거 */
+            border-radius: 13px; /* 행동 모서리 */
+            background: white; /* 행동 배경 */
+            color: #11131a; /* 행동 글자 */
+            font-weight: 850; /* 행동 굵기 */
+        } /* 행동 종료 */
+        .featured-portrait /* 추천 초상 */
+        { /* 초상 시작 */
+            display: grid; /* 중앙 배치 */
+            width: calc(100% - 48px); /* 초상 너비 */
+            height: calc(100% - 48px); /* 초상 높이 */
+            min-height: 250px; /* 초상 높이 */
+            margin: 24px; /* 초상 여백 */
+            place-items: center; /* 중앙 정렬 */
+            border: 1px solid rgba(255, 255, 255, 0.16); /* 초상 테두리 */
+            border-radius: 22px; /* 초상 모서리 */
+            background: radial-gradient(circle at 52% 30%, #e4d4ff 0 8%, #8166a8 9% 22%, transparent 23%), radial-gradient(circle at 50% 47%, #d9bfd5 0 18%, transparent 19%), linear-gradient(155deg, #6f5d8f, #1c1d2a 66%); /* 자체 초상 */
+            box-shadow: inset 0 -90px 100px rgba(0, 0, 0, 0.58); /* 초상 음영 */
+            color: rgba(255, 255, 255, 0.84); /* 초상 글자 */
+            font-size: 72px; /* 초상 기호 */
+            object-fit: cover; /* 초상 채움 */
+            object-position: center 25%; /* 얼굴 위치 */
+        } /* 초상 종료 */
+        .section-heading /* 구역 제목 */
+        { /* 제목 시작 */
+            display: flex; /* 가로 배치 */
+            align-items: end; /* 아래 정렬 */
+            justify-content: space-between; /* 양쪽 배치 */
+            gap: 16px; /* 요소 간격 */
+            margin: 0 0 16px; /* 제목 여백 */
+        } /* 제목 종료 */
+        .section-heading h2 /* 구역 이름 */
+        { /* 이름 시작 */
+            margin: 0; /* 이름 여백 */
+            font-size: 22px; /* 이름 크기 */
+            letter-spacing: -0.03em; /* 이름 간격 */
+        } /* 이름 종료 */
+        .section-heading span /* 구역 안내 */
+        { /* 안내 시작 */
+            color: var(--muted); /* 안내 색상 */
+            font-size: 13px; /* 안내 크기 */
+        } /* 안내 종료 */
+        .character-grid /* 캐릭터 목록 */
+        { /* 목록 시작 */
+            display: grid; /* 격자 배치 */
+            grid-template-columns: repeat(4, minmax(0, 1fr)); /* 네 열 배치 */
+            gap: 18px; /* 카드 간격 */
+        } /* 목록 종료 */
+        .character-card /* 캐릭터 카드 */
+        { /* 카드 시작 */
+            min-width: 0; /* 축소 허용 */
+        } /* 카드 종료 */
+        .character-cover /* 캐릭터 표지 */
+        { /* 표지 시작 */
+            position: relative; /* 배지 기준 */
+            display: grid; /* 중앙 배치 */
+            aspect-ratio: 4 / 5; /* 세로 비율 */
+            place-items: center; /* 중앙 정렬 */
+            overflow: hidden; /* 장식 넘침 제거 */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* 표지 테두리 */
+            border-radius: 18px; /* 표지 모서리 */
+            box-shadow: inset 0 -95px 100px rgba(0, 0, 0, 0.45); /* 표지 음영 */
+            font-size: clamp(42px, 6vw, 78px); /* 표지 기호 */
+        } /* 표지 종료 */
+        .character-cover img /* 캐릭터 이미지 */
+        { /* 이미지 시작 */
+            width: 100%; /* 이미지 너비 */
+            height: 100%; /* 이미지 높이 */
+            object-fit: cover; /* 이미지 채움 */
+            object-position: center 30%; /* 얼굴 위치 */
+            transition: transform 260ms ease; /* 확대 전환 */
+        } /* 이미지 종료 */
+        .character-card:hover .character-cover img /* 카드 가리킴 */
+        { /* 가리킴 시작 */
+            transform: scale(1.035); /* 이미지 확대 */
+        } /* 가리킴 종료 */
+        .cover-a /* 첫 표지 */
+        { /* 첫 표지 시작 */
+            background: radial-gradient(circle at 50% 32%, #ffe2d4 0 11%, #8d5c55 12% 28%, transparent 29%), linear-gradient(145deg, #4b2d34, #151925 68%); /* 첫 배경 */
+        } /* 첫 표지 종료 */
+        .cover-b /* 둘째 표지 */
+        { /* 둘째 표지 시작 */
+            background: radial-gradient(circle at 50% 30%, #d7e5ff 0 11%, #4f6487 12% 28%, transparent 29%), linear-gradient(145deg, #253f62, #121725 68%); /* 둘째 배경 */
+        } /* 둘째 표지 종료 */
+        .cover-c /* 셋째 표지 */
+        { /* 셋째 표지 시작 */
+            background: radial-gradient(circle at 50% 31%, #f5ddc2 0 11%, #94704c 12% 28%, transparent 29%), linear-gradient(145deg, #634b27, #171a20 68%); /* 셋째 배경 */
+        } /* 셋째 표지 종료 */
+        .cover-d /* 넷째 표지 */
+        { /* 넷째 표지 시작 */
+            background: radial-gradient(circle at 50% 30%, #eadcff 0 11%, #735593 12% 28%, transparent 29%), linear-gradient(145deg, #4b2869, #141522 68%); /* 넷째 배경 */
+        } /* 넷째 표지 종료 */
+        .cover-e /* 다섯째 표지 */
+        { /* 다섯째 표지 시작 */
+            background: radial-gradient(circle at 50% 30%, #d9f5f0 0 11%, #4b7b78 12% 28%, transparent 29%), linear-gradient(145deg, #1f555b, #121923 68%); /* 다섯째 배경 */
+        } /* 다섯째 표지 종료 */
+        .cover-f /* 여섯째 표지 */
+        { /* 여섯째 표지 시작 */
+            background: radial-gradient(circle at 50% 30%, #ffe4ef 0 11%, #9c5e77 12% 28%, transparent 29%), linear-gradient(145deg, #71334d, #171520 68%); /* 여섯째 배경 */
+        } /* 여섯째 표지 종료 */
+        .metric /* 카드 지표 */
+        { /* 지표 시작 */
+            position: absolute; /* 표지 위 배치 */
+            top: 11px; /* 위 위치 */
+            left: 11px; /* 왼쪽 위치 */
+            padding: 6px 8px; /* 지표 여백 */
+            border-radius: 999px; /* 지표 모양 */
+            background: rgba(9, 11, 16, 0.74); /* 지표 배경 */
+            font-size: 11px; /* 지표 글자 */
+            font-weight: 800; /* 지표 굵기 */
+            backdrop-filter: blur(8px); /* 지표 흐림 */
+        } /* 지표 종료 */
+        .character-card h3 /* 카드 이름 */
+        { /* 카드 이름 시작 */
+            margin: 12px 0 5px; /* 이름 여백 */
+            font-size: 16px; /* 이름 크기 */
+        } /* 카드 이름 종료 */
+        .character-card p /* 카드 설명 */
+        { /* 카드 설명 시작 */
+            display: -webkit-box; /* 두 줄 상자 */
+            margin: 0; /* 설명 여백 */
+            overflow: hidden; /* 넘침 제거 */
+            color: var(--muted); /* 설명 색상 */
+            font-size: 12px; /* 설명 크기 */
+            line-height: 1.5; /* 설명 줄높이 */
+            -webkit-box-orient: vertical; /* 세로 말줄임 */
+            -webkit-line-clamp: 2; /* 두 줄 제한 */
+        } /* 카드 설명 종료 */
+        .profile-card /* 프로필 카드 */
+        { /* 프로필 시작 */
+            display: grid; /* 중앙 배치 */
+            justify-items: center; /* 가로 중앙 */
+            padding: 26px 18px; /* 카드 여백 */
+            border: 1px solid var(--line); /* 카드 테두리 */
+            border-radius: 20px; /* 카드 모서리 */
+            background: linear-gradient(145deg, rgba(139, 92, 246, 0.15), rgba(24, 28, 38, 0.9)); /* 카드 배경 */
+            text-align: center; /* 글자 중앙 */
+        } /* 프로필 종료 */
+        .profile-avatar /* 프로필 이미지 */
+        { /* 이미지 시작 */
+            display: grid; /* 중앙 배치 */
+            width: 76px; /* 이미지 너비 */
+            height: 76px; /* 이미지 높이 */
+            margin-bottom: 13px; /* 아래 여백 */
+            place-items: center; /* 중앙 정렬 */
+            border-radius: 24px; /* 이미지 모서리 */
+            background: linear-gradient(145deg, #b8a2ff, #6d28d9); /* 이미지 배경 */
+            font-size: 31px; /* 이미지 기호 */
+            font-weight: 900; /* 이미지 굵기 */
+        } /* 이미지 종료 */
+        .profile-card h2 /* 프로필 이름 */
+        { /* 이름 시작 */
+            margin: 0 0 4px; /* 이름 여백 */
+            font-size: 19px; /* 이름 크기 */
+        } /* 이름 종료 */
+        .membership /* 멤버십 */
+        { /* 멤버십 시작 */
+            color: #d6c9ff; /* 멤버십 색상 */
+            font-size: 12px; /* 멤버십 크기 */
+            font-weight: 800; /* 멤버십 굵기 */
+        } /* 멤버십 종료 */
+        .stat-grid /* 통계 목록 */
+        { /* 통계 시작 */
+            display: grid; /* 격자 배치 */
+            grid-template-columns: 1fr 1fr; /* 두 열 배치 */
+            gap: 9px; /* 통계 간격 */
+            margin: 16px 0; /* 통계 여백 */
+        } /* 통계 종료 */
+        .stat-card /* 통계 카드 */
+        { /* 통계 카드 시작 */
+            padding: 14px; /* 카드 여백 */
+            border: 1px solid var(--line); /* 카드 테두리 */
+            border-radius: 15px; /* 카드 모서리 */
+            background: var(--surface-soft); /* 카드 배경 */
+        } /* 통계 카드 종료 */
+        .stat-card span /* 통계 이름 */
+        { /* 통계 이름 시작 */
+            display: block; /* 줄 분리 */
+            margin-bottom: 6px; /* 아래 여백 */
+            color: var(--muted); /* 이름 색상 */
+            font-size: 11px; /* 이름 크기 */
+        } /* 통계 이름 종료 */
+        .stat-card strong /* 통계 값 */
+        { /* 통계 값 시작 */
+            font-size: 18px; /* 값 크기 */
+        } /* 통계 값 종료 */
+        .settings-list /* 설정 목록 */
+        { /* 설정 시작 */
+            display: grid; /* 세로 배치 */
+            gap: 8px; /* 항목 간격 */
+        } /* 설정 종료 */
+        .settings-link /* 설정 항목 */
+        { /* 설정 항목 시작 */
+            display: flex; /* 가로 배치 */
+            align-items: center; /* 세로 정렬 */
+            justify-content: space-between; /* 양쪽 배치 */
+            min-height: 46px; /* 터치 높이 */
+            padding: 0 13px; /* 항목 여백 */
+            border: 1px solid var(--line); /* 항목 테두리 */
+            border-radius: 13px; /* 항목 모서리 */
+            background: var(--surface); /* 항목 배경 */
+            font-size: 13px; /* 항목 글자 */
+            font-weight: 700; /* 항목 굵기 */
+        } /* 설정 항목 종료 */
+        .logout-button /* 로그아웃 버튼 */
+        { /* 로그아웃 시작 */
+            width: 100%; /* 버튼 너비 */
+            min-height: 44px; /* 버튼 높이 */
+            margin-top: 18px; /* 위 여백 */
+            border: 1px solid rgba(255, 113, 134, 0.35); /* 경고 테두리 */
+            border-radius: 13px; /* 버튼 모서리 */
+            background: rgba(255, 93, 117, 0.08); /* 경고 배경 */
+            color: #ff9aaa; /* 경고 글자 */
+            font-weight: 800; /* 버튼 굵기 */
+        } /* 로그아웃 종료 */
+        .mobile-scrim /* 모바일 배경 */
+        { /* 배경 시작 */
+            display: none; /* 기본 숨김 */
+        } /* 배경 종료 */
+        .mobile-navigation /* 모바일 메뉴 */
+        { /* 메뉴 시작 */
+            display: none; /* 기본 숨김 */
+        } /* 메뉴 종료 */
+        @media (max-width: 1180px) /* 좁은 데스크톱 */
+        { /* 좁은 화면 시작 */
+            .app-shell[data-user-open="true"] /* 오른쪽 열림 */
+            { /* 상태 시작 */
+                --user-width: 0px; /* 중앙 폭 유지 */
+            } /* 상태 종료 */
+            .user-panel /* 오른쪽 오버레이 */
+            { /* 오버레이 시작 */
+                position: fixed; /* 화면 고정 */
+                right: 0; /* 오른쪽 배치 */
+                transform: translateX(100%); /* 닫힘 이동 */
+                transition: transform 200ms ease, opacity 160ms ease; /* 이동 전환 */
+            } /* 오버레이 종료 */
+            .app-shell[data-user-open="true"] .user-panel /* 오버레이 열림 */
+            { /* 열림 시작 */
+                transform: translateX(0); /* 화면 진입 */
+            } /* 열림 종료 */
+            .character-grid /* 카드 목록 */
+            { /* 목록 시작 */
+                grid-template-columns: repeat(3, minmax(0, 1fr)); /* 세 열 배치 */
+            } /* 목록 종료 */
+        } /* 좁은 화면 종료 */
+        @media (max-width: 760px) /* 모바일 화면 */
+        { /* 모바일 시작 */
+            :root /* 모바일 변수 */
+            { /* 변수 시작 */
+                --conversation-width: 0px; /* 왼쪽 폭 제거 */
+                --user-width: 0px; /* 오른쪽 폭 제거 */
+            } /* 변수 종료 */
+            .app-shell, /* 모든 셸 상태 */
+            .app-shell[data-conversation-open="true"], /* 왼쪽 상태 */
+            .app-shell[data-user-open="true"] /* 오른쪽 상태 */
+            { /* 셸 상태 시작 */
+                --conversation-width: 0px; /* 왼쪽 폭 고정 */
+                --user-width: 0px; /* 오른쪽 폭 고정 */
+                grid-template-columns: minmax(0, 1fr); /* 단일 열 배치 */
+            } /* 셸 상태 종료 */
+            .side-panel /* 모바일 패널 */
+            { /* 패널 시작 */
+                position: fixed; /* 화면 고정 */
+                top: 0; /* 상단 배치 */
+                bottom: 0; /* 하단 배치 */
+                z-index: 60; /* 서랍 층 */
+                width: min(86vw, 340px); /* 서랍 너비 */
+                transform: translateX(-105%); /* 왼쪽 닫힘 */
+                transition: transform 210ms ease, opacity 160ms ease; /* 서랍 전환 */
+            } /* 패널 종료 */
+            .conversation-panel /* 왼쪽 서랍 */
+            { /* 왼쪽 서랍 시작 */
+                left: 0; /* 왼쪽 배치 */
+            } /* 왼쪽 서랍 종료 */
+            .user-panel /* 오른쪽 서랍 */
+            { /* 오른쪽 서랍 시작 */
+                right: 0; /* 오른쪽 배치 */
+                transform: translateX(105%); /* 오른쪽 닫힘 */
+            } /* 오른쪽 서랍 종료 */
+            .app-shell[data-conversation-open="true"] .conversation-panel, /* 왼쪽 열림 */
+            .app-shell[data-user-open="true"] .user-panel /* 오른쪽 열림 */
+            { /* 열림 시작 */
+                transform: translateX(0); /* 화면 진입 */
+            } /* 열림 종료 */
+            .panel-inner, /* 왼쪽 내부 */
+            .user-panel .panel-inner /* 오른쪽 내부 */
+            { /* 내부 시작 */
+                width: min(86vw, 340px); /* 내부 너비 */
+            } /* 내부 종료 */
+            .app-header /* 모바일 상단 */
+            { /* 상단 시작 */
+                grid-template-columns: auto 1fr auto; /* 세 영역 배치 */
+                min-height: 60px; /* 상단 높이 */
+                padding: 8px 14px; /* 상단 여백 */
+            } /* 상단 종료 */
+            .search-box /* 모바일 검색 */
+            { /* 검색 시작 */
+                display: none; /* 검색 숨김 */
+            } /* 검색 종료 */
+            .desktop-brand /* 모바일 브랜드 */
+            { /* 브랜드 시작 */
+                justify-self: center; /* 중앙 배치 */
+            } /* 브랜드 종료 */
+            .content /* 모바일 콘텐츠 */
+            { /* 콘텐츠 시작 */
+                padding: 18px 14px 96px; /* 모바일 여백 */
+            } /* 콘텐츠 종료 */
+            .featured /* 모바일 추천 */
+            { /* 추천 시작 */
+                grid-template-columns: 1fr; /* 단일 열 */
+                height: 440px; /* 추천 고정 높이 */
+                min-height: 390px; /* 추천 높이 */
+            } /* 추천 종료 */
+            .featured-copy /* 모바일 내용 */
+            { /* 내용 시작 */
+                z-index: 2; /* 내용 층 */
+                align-self: end; /* 아래 배치 */
+                padding: 26px; /* 내용 여백 */
+            } /* 내용 종료 */
+            .featured-copy h1 /* 모바일 이름 */
+            { /* 이름 시작 */
+                font-size: 34px; /* 이름 크기 */
+            } /* 이름 종료 */
+            .featured-portrait /* 모바일 초상 */
+            { /* 초상 시작 */
+                position: absolute; /* 배경 배치 */
+                inset: 0; /* 전체 영역 */
+                width: 100%; /* 초상 전체 너비 */
+                height: 100%; /* 초상 전체 높이 */
+                min-height: 100%; /* 전체 높이 */
+                margin: 0; /* 여백 제거 */
+                border: 0; /* 테두리 제거 */
+                border-radius: 0; /* 모서리 제거 */
+                opacity: 0.58; /* 배경 투명도 */
+            } /* 초상 종료 */
+            .character-grid /* 모바일 목록 */
+            { /* 목록 시작 */
+                grid-template-columns: repeat(2, minmax(0, 1fr)); /* 두 열 배치 */
+                gap: 16px 10px; /* 카드 간격 */
+            } /* 목록 종료 */
+            .character-cover /* 모바일 표지 */
+            { /* 표지 시작 */
+                border-radius: 15px; /* 표지 모서리 */
+            } /* 표지 종료 */
+            .mobile-scrim /* 모바일 배경 */
+            { /* 배경 시작 */
+                position: fixed; /* 화면 고정 */
+                inset: 0; /* 전체 화면 */
+                z-index: 50; /* 배경 층 */
+                display: block; /* 배경 표시 */
+                border: 0; /* 테두리 제거 */
+                background: rgba(0, 0, 0, 0.7); /* 어두운 배경 */
+                opacity: 0; /* 닫힘 투명도 */
+                pointer-events: none; /* 닫힘 입력 차단 */
+                transition: opacity 180ms ease; /* 배경 전환 */
+            } /* 배경 종료 */
+            .app-shell[data-conversation-open="true"] .mobile-scrim, /* 왼쪽 배경 */
+            .app-shell[data-user-open="true"] .mobile-scrim /* 오른쪽 배경 */
+            { /* 배경 표시 시작 */
+                opacity: 1; /* 배경 표시 */
+                pointer-events: auto; /* 배경 입력 허용 */
+            } /* 배경 표시 종료 */
+            .mobile-navigation /* 모바일 메뉴 */
+            { /* 메뉴 시작 */
+                position: fixed; /* 하단 고정 */
+                right: 0; /* 오른쪽 배치 */
+                bottom: 0; /* 하단 배치 */
+                left: 0; /* 왼쪽 배치 */
+                z-index: 40; /* 메뉴 층 */
+                display: grid; /* 격자 배치 */
+                grid-template-columns: repeat(5, 1fr); /* 다섯 메뉴 */
+                padding: 8px 8px max(8px, env(safe-area-inset-bottom)); /* 안전 여백 */
+                border-top: 1px solid var(--line); /* 위 구분선 */
+                background: rgba(13, 16, 23, 0.96); /* 메뉴 배경 */
+                backdrop-filter: blur(18px); /* 배경 흐림 */
+            } /* 메뉴 종료 */
+            .mobile-nav-button /* 모바일 버튼 */
+            { /* 버튼 시작 */
+                display: grid; /* 세로 배치 */
+                min-height: 52px; /* 터치 높이 */
+                place-items: center; /* 중앙 정렬 */
+                border: 0; /* 테두리 제거 */
+                background: transparent; /* 배경 제거 */
+                color: var(--muted); /* 버튼 색상 */
+                font-size: 11px; /* 버튼 글자 */
+                font-weight: 750; /* 버튼 굵기 */
+            } /* 버튼 종료 */
+            .mobile-nav-button strong /* 모바일 기호 */
+            { /* 기호 시작 */
+                display: block; /* 줄 분리 */
+                color: var(--text); /* 기호 색상 */
+                font-size: 18px; /* 기호 크기 */
+            } /* 기호 종료 */
+        } /* 모바일 종료 */
+        @media (prefers-reduced-motion: reduce) /* 움직임 감소 */
+        { /* 감소 시작 */
+            * /* 전체 요소 */
+            { /* 요소 시작 */
+                scroll-behavior: auto !important; /* 스크롤 전환 제거 */
+                transition-duration: 0.01ms !important; /* 전환 시간 축소 */
+            } /* 요소 종료 */
+        } /* 감소 종료 */
+    </style> <!-- 화면 스타일 종료 -->
+</head> <!-- 머리말 종료 -->
+<body> <!-- 본문 시작 -->
+    <div id="app-shell" class="app-shell" data-conversation-open="true" data-user-open="false"> <!-- 앱 셸 -->
+        <aside id="conversation-panel" class="side-panel conversation-panel" aria-label="진행한 대화방"> <!-- 왼쪽 패널 -->
+            <div class="panel-inner"> <!-- 왼쪽 내부 -->
+                <div class="brand"><span class="brand-mark">M</span><span>MATE:VERSE</span></div> <!-- 브랜드 -->
+                <div class="panel-actions"> <!-- 패널 작업 -->
+                    <button class="panel-button primary" type="button">＋ 새 캐릭터</button> <!-- 새 캐릭터 -->
+                    <button class="panel-button" type="button">대화 정리</button> <!-- 대화 정리 -->
+                </div> <!-- 패널 작업 종료 -->
+                <p class="panel-label">최근 대화</p> <!-- 목록 제목 -->
+                <ul class="conversation-list"> <!-- 대화 목록 -->
+                    <li class="conversation-item active"><span class="mini-avatar"><img src="../public/images/characters/rian.webp" alt="리안"></span><div class="conversation-copy"><p class="conversation-title">새벽 도서관의 리안</p><p class="conversation-preview">오늘도 네 자리를 남겨뒀어 · 방금</p></div></li> <!-- 첫 대화 -->
+                    <li class="conversation-item"><span class="mini-avatar"><img src="../public/images/characters/sera.webp" alt="세라"></span><div class="conversation-copy"><p class="conversation-title">비 오는 교실, 세라</p><p class="conversation-preview">우산 하나로 충분할까? · 8분 전</p></div></li> <!-- 둘째 대화 -->
+                    <li class="conversation-item"><span class="mini-avatar"><img src="../public/images/characters/noah.webp" alt="노아"></span><div class="conversation-copy"><p class="conversation-title">달빛 기록관의 노아</p><p class="conversation-preview">그 문장은 아직 끝나지 않았어 · 어제</p></div></li> <!-- 셋째 대화 -->
+                    <li class="conversation-item"><span class="mini-avatar"><img src="../public/images/characters/yuna.webp" alt="유나"></span><div class="conversation-copy"><p class="conversation-title">옥상 밴드의 유나</p><p class="conversation-preview">다음 곡은 네가 골라줘 · 2일 전</p></div></li> <!-- 넷째 대화 -->
+                    <li class="conversation-item"><span class="mini-avatar"><img src="../public/images/characters/kyle.webp" alt="카일"></span><div class="conversation-copy"><p class="conversation-title">별 항해사 카일</p><p class="conversation-preview">좌표를 다시 확인했어 · 4일 전</p></div></li> <!-- 다섯째 대화 -->
+                </ul> <!-- 대화 목록 종료 -->
+                <p class="panel-label">관리</p> <!-- 관리 제목 -->
+                <button class="panel-button" type="button">보관함 보기</button> <!-- 보관함 -->
+            </div> <!-- 왼쪽 내부 종료 -->
+        </aside> <!-- 왼쪽 패널 종료 -->
+        <div class="main-column"> <!-- 중앙 영역 -->
+            <header class="app-header"> <!-- 상단 영역 -->
+                <div class="header-left"><button id="conversation-toggle" class="icon-button" type="button" aria-label="대화방 패널 열기 또는 닫기" aria-controls="conversation-panel" aria-expanded="true" data-panel-target="conversation">☰</button><span class="desktop-brand">MATE:VERSE</span></div> <!-- 왼쪽 상단 -->
+                <input id="character-search" class="search-box" type="search" aria-label="캐릭터 검색" placeholder="# 성인 1등 : 새벽 도서관의 리안" autocomplete="off"> <!-- 검색 입력 -->
+                <div class="header-right"><button class="icon-button" type="button" aria-label="알림">♢</button><button id="user-toggle" class="icon-button" type="button" aria-label="사용자 패널 열기 또는 닫기" aria-controls="user-panel" aria-expanded="false" data-panel-target="user">☺</button></div> <!-- 오른쪽 상단 -->
+            </header> <!-- 상단 영역 종료 -->
+            <main class="content"> <!-- 탐색 콘텐츠 -->
+                <nav class="category-row" aria-label="캐릭터 카테고리"> <!-- 카테고리 목록 -->
+                    <button class="category-chip active" type="button">추천</button> <!-- 추천 필터 -->
+                    <button class="category-chip" type="button">감정 교류</button> <!-- 감정 필터 -->
+                    <button class="category-chip" type="button">가벼운 스토리</button> <!-- 스토리 필터 -->
+                    <button class="category-chip" type="button">로맨스</button> <!-- 로맨스 필터 -->
+                    <button class="category-chip" type="button">판타지</button> <!-- 판타지 필터 -->
+                    <button class="category-chip" type="button">현대</button> <!-- 현대 필터 -->
+                    <button class="category-chip" type="button">미스터리</button> <!-- 미스터리 필터 -->
+                </nav> <!-- 카테고리 종료 -->
+                <nav id="ranking-period-links" class="ranking-links" aria-label="기간별 추천 순위"> <!-- 순위 바로가기 -->
+                    <a class="ranking-link" href="./Ranking.html?period=monthly">월간 추천 1–100위</a> <!-- 월간 링크 -->
+                    <a class="ranking-link" href="./Ranking.html?period=weekly">주간 추천 1–100위</a> <!-- 주간 링크 -->
+                    <a class="ranking-link" href="./Ranking.html?period=daily">일간 추천 1–100위</a> <!-- 일간 링크 -->
+                </nav> <!-- 순위 바로가기 종료 -->
+                <section id="featured-character" class="featured" aria-labelledby="featured-name"> <!-- 추천 캐릭터 -->
+                    <div class="featured-copy"> <!-- 추천 내용 -->
+                        <span class="eyebrow">오늘의 관계 추천</span> <!-- 추천 표식 -->
+                        <h1 id="featured-name">새벽 도서관의 리안</h1> <!-- 추천 이름 -->
+                        <p>사라지는 기억을 기록하는 도서관 사서. 매일 새벽, 당신에게만 남겨 둔 한 페이지를 함께 완성합니다.</p> <!-- 추천 설명 -->
+                        <button class="primary-cta" type="button">대화 시작</button> <!-- 대화 시작 -->
+                    </div> <!-- 추천 내용 종료 -->
+                    <img class="featured-portrait" src="../public/images/characters/rian.webp" alt="보랏빛 새벽 도서관의 사서 리안"> <!-- 추천 캐릭터 이미지 -->
+                </section> <!-- 추천 캐릭터 종료 -->
+                <div class="section-heading"><h2>지금 마음이 닿는 캐릭터</h2><span>전체 보기 →</span></div> <!-- 목록 제목 -->
+                <section id="character-grid" class="character-grid" aria-label="캐릭터 목록"> <!-- 캐릭터 목록 -->
+                    <article class="character-card"><div class="character-cover cover-a"><img src="../public/images/characters/harin.webp" alt="따뜻한 조명의 카페에 있는 하린" loading="lazy"><span class="metric">● 18.4만</span></div><h3>퇴근길 카페의 하린</h3><p>매일 같은 시간, 당신의 표정을 먼저 알아보는 바리스타.</p></article> <!-- 첫 카드 -->
+                    <article class="character-card"><div class="character-cover cover-b"><img src="../public/images/characters/sera.webp" alt="비 오는 교실 창가의 세라" loading="lazy"><span class="metric">● 12.7만</span></div><h3>비 오는 교실, 세라</h3><p>멈춘 방과 후에서 둘만의 약속을 기다리는 친구.</p></article> <!-- 둘째 카드 -->
+                    <article class="character-card"><div class="character-cover cover-c"><img src="../public/images/characters/kyle.webp" alt="별빛 아래의 항해사 카일" loading="lazy"><span class="metric">● 9.8만</span></div><h3>별 항해사 카일</h3><p>잃어버린 별의 좌표를 당신과 함께 찾는 항해사.</p></article> <!-- 셋째 카드 -->
+                    <article class="character-card"><div class="character-cover cover-d"><img src="../public/images/characters/noah.webp" alt="달빛 기록관의 노아" loading="lazy"><span class="metric">● 8.1만</span></div><h3>달빛 기록관의 노아</h3><p>말하지 못한 마음을 문장으로 보관하는 기록자.</p></article> <!-- 넷째 카드 -->
+                    <article class="character-card"><div class="character-cover cover-e"><img src="../public/images/characters/miel.webp" alt="숲의 치료사 미엘" loading="lazy"><span class="metric">● 6.5만</span></div><h3>숲의 치료사 미엘</h3><p>지친 하루의 온도를 천천히 되돌려 주는 안내자.</p></article> <!-- 다섯째 카드 -->
+                    <article class="character-card"><div class="character-cover cover-f"><img src="../public/images/characters/yuna.webp" alt="옥상 밴드의 유나" loading="lazy"><span class="metric">● 5.9만</span></div><h3>옥상 밴드의 유나</h3><p>당신에게만 미완성 노래를 들려주는 밴드 리더.</p></article> <!-- 여섯째 카드 -->
+                </section> <!-- 캐릭터 목록 종료 -->
+            </main> <!-- 탐색 콘텐츠 종료 -->
+        </div> <!-- 중앙 영역 종료 -->
+        <aside id="user-panel" class="side-panel user-panel" aria-label="사용자 정보와 설정"> <!-- 오른쪽 패널 -->
+            <div class="panel-inner"> <!-- 오른쪽 내부 -->
+                <div class="profile-card"><div class="profile-avatar">태</div><h2>태평양12</h2><span class="membership">Free Explorer</span></div> <!-- 사용자 프로필 -->
+                <div class="stat-grid"><div class="stat-card"><span>가상 토큰</span><strong>1,240</strong></div><div class="stat-card"><span>오늘 이미지</span><strong>0 / 5</strong></div></div> <!-- 사용자 통계 -->
+                <p class="panel-label">내 공간</p> <!-- 내 공간 제목 -->
+                <div class="settings-list"> <!-- 내 공간 목록 -->
+                    <button class="settings-link" type="button"><span>프로필 관리</span><span>›</span></button> <!-- 프로필 관리 -->
+                    <button class="settings-link" type="button"><span>내 캐릭터와 작품</span><span>›</span></button> <!-- 작품 관리 -->
+                    <button class="settings-link" type="button"><span>토큰 이용 내역</span><span>›</span></button> <!-- 토큰 내역 -->
+                </div> <!-- 내 공간 종료 -->
+                <p class="panel-label">환경 설정</p> <!-- 설정 제목 -->
+                <div class="settings-list"> <!-- 설정 목록 -->
+                    <button class="settings-link" type="button"><span>화면 레이아웃</span><span>자동</span></button> <!-- 레이아웃 설정 -->
+                    <button class="settings-link" type="button"><span>알림 허용 시간</span><span>09:00–22:00</span></button> <!-- 알림 시간 -->
+                    <button class="settings-link" type="button"><span>선제 메시지</span><span>켜짐</span></button> <!-- 선제 메시지 -->
+                    <button class="settings-link" type="button"><span>개인정보 및 보안</span><span>›</span></button> <!-- 보안 설정 -->
+                    <button class="settings-link" type="button"><span>고객 지원</span><span>›</span></button> <!-- 고객 지원 -->
+                </div> <!-- 설정 목록 종료 -->
+                <button class="logout-button" type="button">로그아웃</button> <!-- 로그아웃 -->
+            </div> <!-- 오른쪽 내부 종료 -->
+        </aside> <!-- 오른쪽 패널 종료 -->
+        <button id="mobile-scrim" class="mobile-scrim" type="button" aria-label="열린 패널 닫기"></button> <!-- 모바일 배경 -->
+        <nav id="mobile-navigation" class="mobile-navigation" aria-label="모바일 기본 메뉴"> <!-- 모바일 메뉴 -->
+            <button class="mobile-nav-button" type="button"><span><strong>⌂</strong>홈</span></button> <!-- 홈 메뉴 -->
+            <button class="mobile-nav-button" type="button"><span><strong>⌕</strong>발견</span></button> <!-- 발견 메뉴 -->
+            <button class="mobile-nav-button" type="button"><span><strong>＋</strong>만들기</span></button> <!-- 만들기 메뉴 -->
+            <button class="mobile-nav-button" type="button" data-panel-target="conversation"><span><strong>☰</strong>대화</span></button> <!-- 대화 메뉴 -->
+            <button class="mobile-nav-button" type="button" data-panel-target="user"><span><strong>☺</strong>내 정보</span></button> <!-- 정보 메뉴 -->
+        </nav> <!-- 모바일 메뉴 종료 -->
+    </div> <!-- 앱 셸 종료 -->
+    <script src="./ranking-data.js"></script> <!-- 순위 데이터 불러오기 -->
+    <script> // 화면 동작
+        const { formatRankingSuggestion, getNextRankingIndex, topSearchRankings } = globalThis.RankingData; // 순위 도구 연결
+        const app = document.getElementById("app-shell"); // 앱 셸 탐색
+        const mobileQuery = window.matchMedia("(max-width: 760px)"); // 모바일 판정
+        const scrim = document.getElementById("mobile-scrim"); // 모바일 배경 탐색
+        const searchInput = document.getElementById("character-search"); // 검색 입력 탐색
+        let rankingIndex = 0; // 현재 순위 번호
+        let rankingTimer = 0; // 순위 타이머
+
+        function showNextRankingSuggestion() // 다음 검색 문구 함수
+        { // 함수 시작
+            if (document.activeElement === searchInput || searchInput.value.length > 0) // 입력 중 판정
+            { // 입력 중 시작
+                return; // 회전 중지
+            } // 입력 중 종료
+            searchInput.placeholder = formatRankingSuggestion(topSearchRankings[rankingIndex]); // 검색 문구 적용
+            rankingIndex = getNextRankingIndex(rankingIndex, topSearchRankings.length); // 다음 번호 저장
+        } // 함수 종료
+
+        function scheduleRankingSuggestion() // 검색 회전 예약 함수
+        { // 함수 시작
+            window.clearTimeout(rankingTimer); // 기존 예약 해제
+            rankingTimer = window.setTimeout(() => // 다음 회전 예약
+            { // 예약 시작
+                showNextRankingSuggestion(); // 다음 문구 적용
+                scheduleRankingSuggestion(); // 다음 회전 재예약
+            }, 3000); // 삼 초 간격
+        } // 함수 종료
+
+        function setPanel(side, open) // 패널 상태 함수
+        { // 함수 시작
+            const button = document.getElementById(`${side}-toggle`); // 토글 버튼 탐색
+            const panel = document.getElementById(`${side}-panel`); // 대상 패널 탐색
+            app.dataset[`${side}Open`] = String(open); // 열림 상태 저장
+            button.setAttribute("aria-expanded", String(open)); // 접근성 상태 갱신
+            panel.setAttribute("aria-hidden", String(!open)); // 패널 노출 갱신
+            if (mobileQuery.matches && open) // 모바일 열림 판정
+            { // 모바일 판정 시작
+                const otherSide = side === "conversation" ? "user" : "conversation"; // 반대 패널 선택
+                const otherButton = document.getElementById(`${otherSide}-toggle`); // 반대 버튼 탐색
+                const otherPanel = document.getElementById(`${otherSide}-panel`); // 반대 패널 탐색
+                app.dataset[`${otherSide}Open`] = "false"; // 반대 패널 닫기
+                otherButton.setAttribute("aria-expanded", "false"); // 반대 접근성 갱신
+                otherPanel.setAttribute("aria-hidden", "true"); // 반대 노출 갱신
+            } // 모바일 판정 종료
+        } // 함수 종료
+
+        function togglePanel(side) // 패널 토글 함수
+        { // 함수 시작
+            const isOpen = app.dataset[`${side}Open`] === "true"; // 현재 상태 확인
+            setPanel(side, !isOpen); // 반대 상태 적용
+        } // 함수 종료
+
+        function closeAllPanels() // 전체 닫기 함수
+        { // 함수 시작
+            setPanel("conversation", false); // 왼쪽 닫기
+            setPanel("user", false); // 오른쪽 닫기
+        } // 함수 종료
+
+        function applyViewportDefaults() // 화면 기본값 함수
+        { // 함수 시작
+            if (mobileQuery.matches) // 모바일 판정
+            { // 모바일 시작
+                closeAllPanels(); // 모바일 전체 닫기
+                return; // 모바일 처리 종료
+            } // 모바일 종료
+            setPanel("conversation", true); // 데스크톱 왼쪽 열기
+            setPanel("user", false); // 데스크톱 오른쪽 닫기
+        } // 함수 종료
+
+        document.querySelectorAll("[data-panel-target]").forEach((button) => // 패널 버튼 순회
+        { // 순회 시작
+            button.addEventListener("click", () => // 클릭 처리
+            { // 클릭 시작
+                togglePanel(button.dataset.panelTarget); // 대상 패널 토글
+            }); // 클릭 종료
+        }); // 순회 종료
+        scrim.addEventListener("click", closeAllPanels); // 배경 닫기 연결
+        document.addEventListener("keydown", (event) => // 키보드 처리
+        { // 키보드 시작
+            if (event.key === "Escape") // 탈출 키 판정
+            { // 탈출 키 시작
+                closeAllPanels(); // 전체 패널 닫기
+            } // 탈출 키 종료
+        }); // 키보드 종료
+        mobileQuery.addEventListener("change", applyViewportDefaults); // 화면 변화 연결
+        searchInput.addEventListener("focus", () => // 검색 초점 연결
+        { // 초점 시작
+            window.clearTimeout(rankingTimer); // 회전 일시 정지
+            searchInput.placeholder = "캐릭터와 세계관을 검색하세요"; // 기본 검색 안내
+        }); // 초점 종료
+        searchInput.addEventListener("blur", () => // 검색 이탈 연결
+        { // 이탈 시작
+            showNextRankingSuggestion(); // 순위 문구 복구
+            scheduleRankingSuggestion(); // 삼 초 회전 재개
+        }); // 이탈 종료
+        applyViewportDefaults(); // 초기 상태 적용
+        showNextRankingSuggestion(); // 첫 순위 문구 적용
+        scheduleRankingSuggestion(); // 삼 초 회전 시작
+    </script> <!-- 화면 동작 종료 -->
+</body> <!-- 본문 종료 -->
+</html> <!-- 문서 종료 -->

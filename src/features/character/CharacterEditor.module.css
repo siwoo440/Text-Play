@@ -1,0 +1,294 @@
+.page /* 편집기 본문 */
+{ /* 본문 시작 */
+    max-width: 1280px; /* 최대 너비 */
+    margin: 0 auto; /* 중앙 배치 */
+    padding: 42px 28px 100px; /* 내부 여백 */
+} /* 본문 종료 */
+
+.header /* 상단 영역 */
+{ /* 상단 시작 */
+    display: flex; /* 가로 배치 */
+    align-items: end; /* 하단 정렬 */
+    justify-content: space-between; /* 양쪽 배치 */
+    gap: 24px; /* 요소 간격 */
+    margin-bottom: 32px; /* 아래 여백 */
+} /* 상단 종료 */
+
+.header span, /* 상단 표시 */
+.previewLabel /* 미리보기 표시 */
+{ /* 표시 시작 */
+    color: #b9a0ff; /* 강조 색상 */
+    font-size: 12px; /* 작은 글자 */
+    font-weight: 800; /* 굵은 글자 */
+    letter-spacing: 0.16em; /* 글자 간격 */
+} /* 표시 종료 */
+
+.header h1 /* 상단 제목 */
+{ /* 제목 시작 */
+    margin: 7px 0 8px; /* 제목 여백 */
+    font-size: clamp(30px, 4vw, 52px); /* 반응형 크기 */
+} /* 제목 종료 */
+
+.header p /* 상단 설명 */
+{ /* 설명 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    color: #aeb1c2; /* 보조 색상 */
+} /* 설명 종료 */
+
+.header a /* 보관함 링크 */
+{ /* 링크 시작 */
+    min-height: 44px; /* 터치 높이 */
+    padding: 12px 18px; /* 내부 여백 */
+    border: 1px solid #37394b; /* 테두리 */
+    border-radius: 999px; /* 둥근 모양 */
+    color: #f7f7fb; /* 글자 색상 */
+    text-decoration: none; /* 밑줄 제거 */
+} /* 링크 종료 */
+
+.workspace /* 작업 영역 */
+{ /* 작업 시작 */
+    display: grid; /* 격자 배치 */
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr); /* 두 열 배치 */
+    gap: 32px; /* 열 간격 */
+    align-items: start; /* 상단 정렬 */
+} /* 작업 종료 */
+
+.form /* 입력 폼 */
+{ /* 폼 시작 */
+    display: grid; /* 격자 배치 */
+    gap: 10px; /* 입력 간격 */
+    padding: 28px; /* 내부 여백 */
+    border: 1px solid #252837; /* 테두리 */
+    border-radius: 24px; /* 둥근 모서리 */
+    background: #141720; /* 폼 배경 */
+} /* 폼 종료 */
+
+.form > label /* 입력 묶음 */
+{ /* 입력 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 8px; /* 라벨 간격 */
+    margin-top: 8px; /* 위 여백 */
+    color: #dfe0e8; /* 라벨 색상 */
+    font-weight: 700; /* 라벨 굵기 */
+} /* 입력 종료 */
+
+.form input, /* 짧은 입력 */
+.form textarea, /* 긴 입력 */
+.form select /* 선택 입력 */
+{ /* 입력 요소 시작 */
+    width: 100%; /* 전체 너비 */
+    min-height: 46px; /* 최소 높이 */
+    padding: 12px 14px; /* 내부 여백 */
+    border: 1px solid #343748; /* 입력 테두리 */
+    border-radius: 12px; /* 둥근 모서리 */
+    outline: none; /* 기본 외곽선 제거 */
+    background: #0f1118; /* 입력 배경 */
+    color: #f7f7fb; /* 입력 글자 */
+} /* 입력 요소 종료 */
+
+.form input:focus, /* 입력 포커스 */
+.form textarea:focus, /* 장문 포커스 */
+.form select:focus /* 선택 포커스 */
+{ /* 포커스 시작 */
+    border-color: #9b7cff; /* 강조 테두리 */
+    box-shadow: 0 0 0 3px rgb(155 124 255 / 18%); /* 포커스 그림자 */
+} /* 포커스 종료 */
+
+.error /* 오류 문구 */
+{ /* 오류 시작 */
+    color: #ff9f9f; /* 오류 색상 */
+    font-size: 13px; /* 작은 글자 */
+} /* 오류 종료 */
+
+.images /* 이미지 목록 */
+{ /* 이미지 시작 */
+    display: grid; /* 격자 배치 */
+    grid-template-columns: repeat(4, minmax(0, 1fr)); /* 네 열 배치 */
+    gap: 10px; /* 이미지 간격 */
+    margin-top: 12px; /* 위 여백 */
+    border: 0; /* 기본 테두리 제거 */
+    padding: 0; /* 기본 여백 제거 */
+} /* 이미지 종료 */
+
+.images legend /* 이미지 제목 */
+{ /* 제목 시작 */
+    margin-bottom: 10px; /* 아래 여백 */
+    font-weight: 700; /* 굵은 글자 */
+} /* 제목 종료 */
+
+.images label /* 이미지 항목 */
+{ /* 항목 시작 */
+    overflow: hidden; /* 넘침 숨김 */
+    border: 2px solid transparent; /* 선택 테두리 */
+    border-radius: 12px; /* 둥근 모서리 */
+    background: #0f1118; /* 항목 배경 */
+    cursor: pointer; /* 선택 커서 */
+} /* 항목 종료 */
+
+.images label[data-selected="true"] /* 선택 이미지 */
+{ /* 선택 시작 */
+    border-color: #9b7cff; /* 선택 테두리 */
+} /* 선택 종료 */
+
+.images input /* 이미지 라디오 */
+{ /* 라디오 시작 */
+    position: absolute; /* 화면 배치 제외 */
+    width: 1px; /* 최소 너비 */
+    height: 1px; /* 최소 높이 */
+    opacity: 0; /* 화면 숨김 */
+} /* 라디오 종료 */
+
+.images img /* 선택 썸네일 */
+{ /* 썸네일 시작 */
+    display: block; /* 블록 표시 */
+    width: 100%; /* 전체 너비 */
+    aspect-ratio: 3 / 4; /* 세로 비율 */
+    object-fit: cover; /* 이미지 채움 */
+} /* 썸네일 종료 */
+
+.images small /* 이미지 이름 */
+{ /* 이름 시작 */
+    display: block; /* 블록 표시 */
+    padding: 7px; /* 내부 여백 */
+    text-align: center; /* 중앙 정렬 */
+} /* 이름 종료 */
+
+.actions /* 저장 동작 */
+{ /* 동작 시작 */
+    display: grid; /* 격자 배치 */
+    grid-template-columns: 1fr 1fr; /* 두 열 배치 */
+    gap: 12px; /* 버튼 간격 */
+    margin-top: 18px; /* 위 여백 */
+} /* 동작 종료 */
+
+.actions button /* 저장 버튼 */
+{ /* 버튼 시작 */
+    min-height: 48px; /* 터치 높이 */
+    border-radius: 14px; /* 둥근 모서리 */
+    cursor: pointer; /* 클릭 커서 */
+} /* 버튼 종료 */
+
+.primary /* 공개 버튼 */
+{ /* 공개 시작 */
+    border: 0; /* 테두리 제거 */
+    background: linear-gradient(135deg, #8a68ff, #d062ff); /* 강조 배경 */
+    color: white; /* 밝은 글자 */
+    font-weight: 800; /* 굵은 글자 */
+} /* 공개 종료 */
+
+.secondary /* 임시 버튼 */
+{ /* 임시 시작 */
+    border: 1px solid #44475b; /* 버튼 테두리 */
+    background: transparent; /* 투명 배경 */
+    color: #f7f7fb; /* 밝은 글자 */
+} /* 임시 종료 */
+
+.notice /* 저장 안내 */
+{ /* 안내 시작 */
+    min-height: 22px; /* 안내 공간 */
+    margin: 0; /* 기본 여백 제거 */
+    color: #bdaeff; /* 안내 색상 */
+} /* 안내 종료 */
+
+.preview /* 미리보기 */
+{ /* 미리보기 시작 */
+    position: sticky; /* 화면 고정 */
+    top: 96px; /* 고정 위치 */
+    overflow: hidden; /* 넘침 숨김 */
+    border: 1px solid #303345; /* 카드 테두리 */
+    border-radius: 28px; /* 둥근 모서리 */
+    background: #171a24; /* 카드 배경 */
+    box-shadow: 0 24px 70px rgb(0 0 0 / 34%); /* 카드 그림자 */
+    animation: preview-in 200ms ease-out; /* 등장 효과 */
+} /* 미리보기 종료 */
+
+.previewLabel /* 미리보기 표시 */
+{ /* 표시 시작 */
+    position: absolute; /* 이미지 위 배치 */
+    z-index: 1; /* 이미지 위 표시 */
+    margin: 18px; /* 바깥 여백 */
+    padding: 8px 10px; /* 내부 여백 */
+    border-radius: 999px; /* 둥근 모양 */
+    background: rgb(12 13 19 / 72%); /* 반투명 배경 */
+} /* 표시 종료 */
+
+.preview > img /* 미리보기 이미지 */
+{ /* 이미지 시작 */
+    display: block; /* 블록 표시 */
+    width: 100%; /* 전체 너비 */
+    height: auto; /* 자동 높이 */
+    aspect-ratio: 3 / 4; /* 세로 비율 */
+    object-fit: cover; /* 이미지 채움 */
+} /* 이미지 종료 */
+
+.previewBody /* 미리보기 본문 */
+{ /* 본문 시작 */
+    padding: 24px; /* 내부 여백 */
+} /* 본문 종료 */
+
+.previewBody h2 /* 미리보기 제목 */
+{ /* 제목 시작 */
+    margin: 0 0 8px; /* 제목 여백 */
+    font-size: 28px; /* 제목 크기 */
+} /* 제목 종료 */
+
+.previewBody p, /* 미리보기 소개 */
+.previewBody blockquote /* 미리보기 인사 */
+{ /* 문구 시작 */
+    color: #bdc0ce; /* 보조 색상 */
+    line-height: 1.7; /* 줄 높이 */
+} /* 문구 종료 */
+
+.previewBody blockquote /* 인사 영역 */
+{ /* 인사 시작 */
+    margin: 18px 0 0; /* 위 여백 */
+    padding: 16px; /* 내부 여백 */
+    border-left: 3px solid #9678ff; /* 강조선 */
+    border-radius: 0 12px 12px 0; /* 오른쪽 모서리 */
+    background: #10121a; /* 인사 배경 */
+} /* 인사 종료 */
+
+.tags /* 태그 목록 */
+{ /* 태그 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 허용 */
+    gap: 8px; /* 태그 간격 */
+} /* 태그 종료 */
+
+.tags span /* 태그 항목 */
+{ /* 항목 시작 */
+    padding: 6px 9px; /* 내부 여백 */
+    border-radius: 999px; /* 둥근 모양 */
+    background: #27233a; /* 태그 배경 */
+    color: #c9baff; /* 태그 글자 */
+    font-size: 12px; /* 작은 글자 */
+} /* 항목 종료 */
+
+.missing /* 부재 화면 */
+{ /* 부재 시작 */
+    max-width: 720px; /* 최대 너비 */
+    margin: 80px auto; /* 중앙 여백 */
+    padding: 32px; /* 내부 여백 */
+    text-align: center; /* 중앙 정렬 */
+} /* 부재 종료 */
+
+@keyframes preview-in /* 등장 애니메이션 */
+{ /* 애니메이션 시작 */
+    from { opacity: 0; transform: translateY(10px); } /* 시작 상태 */
+    to { opacity: 1; transform: translateY(0); } /* 종료 상태 */
+} /* 애니메이션 종료 */
+
+@media (max-width: 760px) /* 모바일 화면 */
+{ /* 모바일 시작 */
+    .page { padding: 28px 16px 96px; } /* 본문 여백 */
+    .header { align-items: start; flex-direction: column; } /* 상단 세로 배치 */
+    .workspace { grid-template-columns: 1fr; } /* 단일 열 배치 */
+    .form { padding: 20px; } /* 폼 여백 */
+    .images { grid-template-columns: repeat(3, minmax(0, 1fr)); } /* 이미지 세 열 */
+    .preview { position: static; } /* 고정 해제 */
+} /* 모바일 종료 */
+
+@media (prefers-reduced-motion: reduce) /* 애니메이션 감소 */
+{ /* 감소 시작 */
+    .preview { animation: none; } /* 등장 효과 제거 */
+} /* 감소 종료 */

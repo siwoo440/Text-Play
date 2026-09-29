@@ -84,4 +84,34 @@ describe("Text-Play 플레이 화면", () => // 플레이 검증 묶음
         await user.click(screen.getByRole("button", { name: "게임 설정 열기" })); // 설정 열기
         expect(screen.getByRole("dialog", { name: "게임 화면 설정" })).toBeInTheDocument(); // 설정 대화상자 확인
     }); // 테스트 종료
+
+    it("현재 턴과 전체 턴을 분리하고 이전 턴의 장면으로 이동한다", async () => // 턴 이동 검증
+    { // 테스트 시작
+        const user = userEvent.setup(); // 사용자 동작 준비
+        render(<TextPlayPlatformProvider value={createPlatform()}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new MemoryTextPlaySaveRepository()}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 화면 렌더
+        expect(screen.getByLabelText("현재 턴 1")).toHaveTextContent("1"); // 초기 현재 턴 확인
+        expect(screen.getByLabelText("전체 턴 1")).toHaveTextContent("1"); // 초기 전체 턴 확인
+        await user.click(screen.getByRole("button", { name: "달빛 등불을 든다" })); // 다음 장면 생성
+        expect(screen.getByLabelText("현재 턴 2")).toHaveTextContent("2"); // 최신 현재 턴 확인
+        expect(screen.getByLabelText("전체 턴 2")).toHaveTextContent("2"); // 생성된 전체 턴 확인
+        expect(screen.getByTestId("scene-image")).toHaveTextContent("/images/scenes/dawn-letter.svg"); // 최신 이미지 확인
+        await user.click(screen.getByRole("button", { name: "이전 턴 보기" })); // 이전 턴 이동
+        expect(screen.getByLabelText("현재 턴 1")).toHaveTextContent("1"); // 이동한 현재 턴 확인
+        expect(screen.getByLabelText("전체 턴 2")).toHaveTextContent("2"); // 전체 턴 유지 확인
+        expect(screen.getByTestId("scene-image")).toHaveTextContent("/images/scenes/moon-library.svg"); // 이전 이미지 확인
+        expect(screen.getByText("은빛 안개 너머에서 낡은 등불이 희미하게 빛난다.")).toBeInTheDocument(); // 이전 이야기 확인
+        expect(screen.getByRole("button", { name: "1턴 보기" })).toHaveAttribute("aria-current", "step"); // 현재 위치 점 확인
+        await user.click(screen.getByRole("button", { name: "봉인된 서재로 간다" })); // 과거 열람 중 새 장면 생성
+        expect(screen.getByLabelText("현재 턴 3")).toHaveTextContent("3"); // 새 최신 턴 이동 확인
+        expect(screen.getByRole("heading", { name: "봉인된 서재" })).toBeInTheDocument(); // 새 최신 장면 확인
+    }); // 테스트 종료
+
+    it("추천 답안을 직접 작성 영역 바로 위에 배치한다", () => // 도크 순서 검증
+    { // 테스트 시작
+        render(<TextPlayPlatformProvider value={createPlatform()}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new MemoryTextPlaySaveRepository()}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 화면 렌더
+        const recommendations = screen.getByRole("region", { name: "추천 답안" }); // 추천 영역 조회
+        const input = screen.getByRole("textbox", { name: "행동 직접 입력" }); // 입력 영역 조회
+        expect(recommendations.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy(); // 추천 영역 선행 확인
+        expect(recommendations.parentElement?.nextElementSibling?.contains(input)).toBe(true); // 직접 입력 바로 위 확인
+    }); // 테스트 종료
 }); // 묶음 종료

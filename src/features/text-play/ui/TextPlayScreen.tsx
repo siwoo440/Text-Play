@@ -12,6 +12,7 @@ import { StatusPanel } from "@/features/text-play/ui/StatusPanel"; // 상태 패
 import { StoryLog } from "@/features/text-play/ui/StoryLog"; // 이야기 기록
 import { TextPlayFrameDecoration, TextPlayIcon } from "@/features/text-play/ui/TextPlayIcons"; // 벡터 UI
 import { TextPlaySettingsDialog } from "@/features/text-play/ui/TextPlaySettingsDialog"; // 설정 대화상자
+import { buildTextPlayStoryPages } from "@/features/text-play/ui/text-play-story-pages"; // 이야기 페이지 생성기
 import styles from "@/features/text-play/ui/TextPlayScreen.module.css"; // 화면 스타일
 
 export function TextPlayScreen() // Text-Play 플레이 화면
@@ -22,7 +23,13 @@ export function TextPlayScreen() // Text-Play 플레이 화면
     const [input, setInput] = useState(""); // 자유 입력 상태
     const [activeDialog, setActiveDialog] = useState<SaveManagerMode | "settings" | null>(null); // 활성 대화상자 상태
     const abortRef = useRef<AbortController | null>(null); // 중지 제어기
-    const scene = useMemo(() => DEMO_TEXT_PLAY_PACKAGE.scenes.find((candidate) => candidate.id === state.game.sceneId) ?? DEMO_TEXT_PLAY_PACKAGE.scenes[0], [state.game.sceneId]); // 현재 장면 조회
+    const storyPages = useMemo(() => buildTextPlayStoryPages(state.game.log, DEMO_TEXT_PLAY_PACKAGE, state.game.sceneId), [state.game.log, state.game.sceneId]); // 이야기 페이지 생성
+    const [turnNavigation, setTurnNavigation] = useState({ gameUpdatedAt: state.game.updatedAt, turnsBack: 0 }); // 턴 탐색 상태
+    const turnsBack = turnNavigation.gameUpdatedAt === state.game.updatedAt ? turnNavigation.turnsBack : 0; // 현재 게임 이동량
+    const safeTurnsBack = Math.min(turnsBack, storyPages.length - 1); // 유효 이동량 계산
+    const viewedTurnIndex = storyPages.length - 1 - safeTurnsBack; // 열람 턴 계산
+    const viewedPage = storyPages[viewedTurnIndex]; // 현재 페이지 조회
+    const scene = useMemo(() => DEMO_TEXT_PLAY_PACKAGE.scenes.find((candidate) => candidate.id === viewedPage.sceneId) ?? DEMO_TEXT_PLAY_PACKAGE.scenes[0], [viewedPage.sceneId]); // 열람 장면 조회
     const choices = useMemo(() => getAvailableChoices(DEMO_TEXT_PLAY_PACKAGE, state.game), [state.game]); // 현재 선택지 조회
     const startRequest = (value: string) => // 자유 입력 요청 시작
     { // 함수 시작
@@ -78,7 +85,16 @@ export function TextPlayScreen() // Text-Play 플레이 화면
                     </div> {/* 장면 표제 종료 */}
                     <section className={styles.storyBox} aria-label="스토리 대화"> {/* 스토리 상자 */}
                         <div className={styles.frameDecoration}><TextPlayFrameDecoration /></div> {/* 벡터 프레임 */}
-                        <StoryLog entries={state.game.log} streamedText={state.streamedText} /> {/* 이야기 기록 */}
+                        <div className={styles.turnBadges}> {/* 턴 배지 모음 */}
+                            <span aria-label={`현재 턴 ${viewedTurnIndex + 1}`}><small>현재 턴</small><strong>{viewedTurnIndex + 1}</strong></span> {/* 현재 턴 배지 */}
+                            <span aria-label={`전체 턴 ${storyPages.length}`}><small>전체 턴</small><strong>{storyPages.length}</strong></span> {/* 전체 턴 배지 */}
+                        </div> {/* 턴 배지 종료 */}
+                        <button type="button" className={`${styles.turnArrow} ${styles.turnArrowPrevious}`} aria-label="이전 턴 보기" disabled={viewedTurnIndex === 0} onClick={() => setTurnNavigation({ gameUpdatedAt: state.game.updatedAt, turnsBack: Math.min(storyPages.length - 1, safeTurnsBack + 1) })}>‹</button> {/* 이전 턴 버튼 */}
+                        <StoryLog entries={viewedPage.entries} streamedText={viewedTurnIndex === storyPages.length - 1 ? state.streamedText : ""} /> {/* 현재 이야기 */}
+                        <button type="button" className={`${styles.turnArrow} ${styles.turnArrowNext}`} aria-label="다음 턴 보기" disabled={viewedTurnIndex === storyPages.length - 1} onClick={() => setTurnNavigation({ gameUpdatedAt: state.game.updatedAt, turnsBack: Math.max(0, safeTurnsBack - 1) })}>›</button> {/* 다음 턴 버튼 */}
+                        <nav className={styles.turnDots} aria-label="이야기 턴 목록"> {/* 턴 위치 목록 */}
+                            {storyPages.map((_page, index) => <button key={index} type="button" aria-label={`${index + 1}턴 보기`} aria-current={index === viewedTurnIndex ? "step" : undefined} onClick={() => setTurnNavigation({ gameUpdatedAt: state.game.updatedAt, turnsBack: storyPages.length - 1 - index })}><span aria-hidden="true">{index === viewedTurnIndex ? "●" : "○"}</span></button>)} {/* 턴 위치 버튼 */}
+                        </nav> {/* 턴 위치 목록 종료 */}
                     </section> {/* 스토리 상자 종료 */}
                 </section> {/* 장면 무대 종료 */}
                 <aside className={styles.commandDock} aria-label="진행 명령"> {/* 명령 도크 */}

@@ -301,9 +301,10 @@
     bottom: clamp(18px, 3vw, 34px); /* 하단 위치 */
     left: clamp(18px, 3vw, 42px); /* 왼쪽 위치 */
     z-index: 3; /* 이미지 위 배치 */
-    max-height: min(42%, 300px); /* 상자 높이 */
-    overflow: hidden auto; /* 내부 스크롤 */
-    padding: clamp(22px, 3vw, 32px); /* 상자 여백 */
+    min-height: 190px; /* 상자 최소 높이 */
+    max-height: min(46%, 320px); /* 상자 높이 */
+    overflow: hidden; /* 내부 정리 */
+    padding: 62px 66px 42px; /* 이동 조작 여백 */
     border: 1px solid var(--panel-line); /* 상자 테두리 */
     border-radius: 20px; /* 상자 모서리 */
     background: var(--dialog-bg); /* 반투명 배경 */
@@ -333,7 +334,118 @@
 { /* 기록 시작 */
     display: grid; /* 세로 배치 */
     gap: 12px; /* 기록 간격 */
+    max-height: 170px; /* 기록 최대 높이 */
+    overflow: hidden auto; /* 긴 기록 스크롤 */
 } /* 기록 종료 */
+
+.turnBadges /* 턴 배지 모음 */
+{ /* 배지 시작 */
+    position: absolute; /* 우상단 배치 */
+    top: 16px; /* 위쪽 위치 */
+    right: 20px; /* 오른쪽 위치 */
+    z-index: 2; /* 장식 위 배치 */
+    display: flex; /* 가로 배치 */
+    gap: 8px; /* 배지 간격 */
+} /* 배지 종료 */
+
+.turnBadges > span /* 턴 배지 */
+{ /* 배지 시작 */
+    display: inline-flex; /* 가로 배치 */
+    gap: 7px; /* 내용 간격 */
+    align-items: center; /* 세로 중앙 */
+    min-height: 32px; /* 배지 높이 */
+    padding: 0 11px; /* 배지 여백 */
+    border: 1px solid var(--panel-line); /* 배지 테두리 */
+    border-radius: 999px; /* 둥근 배지 */
+    background: rgb(6 8 14 / 72%); /* 배지 배경 */
+    box-shadow: 0 6px 18px rgb(0 0 0 / 24%); /* 배지 그림자 */
+    backdrop-filter: blur(10px); /* 배경 흐림 */
+} /* 배지 종료 */
+
+.turnBadges small /* 턴 이름 */
+{ /* 이름 시작 */
+    color: var(--muted-text); /* 이름 색상 */
+    font-size: .62rem; /* 이름 크기 */
+    font-weight: 800; /* 이름 굵기 */
+} /* 이름 종료 */
+
+.turnBadges strong /* 턴 숫자 */
+{ /* 숫자 시작 */
+    color: var(--accent); /* 숫자 색상 */
+    font-size: .84rem; /* 숫자 크기 */
+} /* 숫자 종료 */
+
+.turnArrow /* 턴 이동 버튼 */
+{ /* 버튼 시작 */
+    position: absolute; /* 측면 배치 */
+    top: 50%; /* 세로 중앙 */
+    z-index: 4; /* 기록 위 배치 */
+    display: grid; /* 중앙 배치 */
+    place-items: center; /* 내용 중앙 */
+    width: 38px; /* 버튼 너비 */
+    height: 58px; /* 버튼 높이 */
+    border: 1px solid var(--panel-line); /* 버튼 테두리 */
+    border-radius: 14px; /* 둥근 버튼 */
+    background: rgb(7 9 15 / 70%); /* 버튼 배경 */
+    color: var(--accent); /* 화살표 색상 */
+    cursor: pointer; /* 선택 커서 */
+    font-size: 2rem; /* 화살표 크기 */
+    transform: translateY(-40%); /* 중앙 보정 */
+} /* 버튼 종료 */
+
+.turnArrowPrevious /* 이전 턴 버튼 */
+{ /* 버튼 시작 */
+    left: 14px; /* 왼쪽 위치 */
+} /* 버튼 종료 */
+
+.turnArrowNext /* 다음 턴 버튼 */
+{ /* 버튼 시작 */
+    right: 14px; /* 오른쪽 위치 */
+} /* 버튼 종료 */
+
+.turnArrow:disabled /* 비활성 이동 버튼 */
+{ /* 버튼 시작 */
+    cursor: default; /* 기본 커서 */
+    opacity: .28; /* 비활성 투명도 */
+} /* 버튼 종료 */
+
+.turnArrow:not(:disabled):hover, /* 이동 버튼 올림 */
+.turnArrow:not(:disabled):focus-visible /* 이동 버튼 초점 */
+{ /* 강조 시작 */
+    border-color: var(--accent); /* 강조 테두리 */
+    background: var(--accent-soft); /* 강조 배경 */
+    outline: none; /* 기본 외곽선 제거 */
+} /* 강조 종료 */
+
+.turnDots /* 턴 위치 목록 */
+{ /* 목록 시작 */
+    position: absolute; /* 하단 배치 */
+    right: 62px; /* 오른쪽 여백 */
+    bottom: 10px; /* 아래쪽 위치 */
+    left: 62px; /* 왼쪽 여백 */
+    z-index: 4; /* 기록 위 배치 */
+    display: flex; /* 가로 배치 */
+    justify-content: safe center; /* 안전한 중앙 정렬 */
+    gap: 2px; /* 점 간격 */
+    overflow-x: auto; /* 많은 점 가로 이동 */
+    overflow-y: hidden; /* 세로 넘침 차단 */
+} /* 목록 종료 */
+
+.turnDots button /* 턴 위치 버튼 */
+{ /* 버튼 시작 */
+    padding: 2px 4px; /* 버튼 여백 */
+    border: 0; /* 기본 테두리 제거 */
+    background: transparent; /* 투명 배경 */
+    color: var(--muted-text); /* 기본 점 색상 */
+    cursor: pointer; /* 선택 커서 */
+    font-size: .72rem; /* 점 크기 */
+} /* 버튼 종료 */
+
+.turnDots button[aria-current="step"] /* 현재 턴 위치 */
+{ /* 위치 시작 */
+    color: var(--accent); /* 현재 점 색상 */
+    text-shadow: 0 0 9px var(--accent); /* 현재 점 발광 */
+} /* 위치 종료 */
 
 .storyBox article /* 기록 항목 */
 { /* 항목 시작 */
@@ -400,6 +512,8 @@
 
 .recommendations /* 추천 영역 */
 { /* 영역 시작 */
+    display: flex; /* 하단 정렬 준비 */
+    align-items: flex-end; /* 입력창 위 배치 */
     min-height: 0; /* 축소 허용 */
     overflow: hidden auto; /* 선택지 스크롤 */
     padding: 16px 18px; /* 영역 여백 */
@@ -409,6 +523,7 @@
 { /* 선택지 시작 */
     display: grid; /* 세로 배치 */
     gap: 12px; /* 내용 간격 */
+    width: 100%; /* 전체 너비 */
 } /* 선택지 종료 */
 
 .recommendations h2 /* 선택지 제목 */
@@ -773,7 +888,7 @@
         bottom: 12px; /* 하단 위치 */
         left: 12px; /* 왼쪽 위치 */
         max-height: 52%; /* 상자 높이 */
-        padding: 22px 18px 18px; /* 상자 여백 */
+        padding: 58px 54px 40px; /* 조작 포함 여백 */
     } /* 상자 종료 */
 } /* 미디어 종료 */
 

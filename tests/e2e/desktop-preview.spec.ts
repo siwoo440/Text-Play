@@ -28,7 +28,7 @@ test("Mock 플레이를 저장하고 새 세션에서 이어간다", async ({ pa
     await resumedPage.goto("/"); // 새 앱 홈 진입
     await resumedPage.getByRole("button", { name: "이어하기" }).click(); // 자동 저장 복원
     await expect(resumedPage.getByRole("heading", { name: "폐허 회랑" })).toBeVisible(); // 복원 장면 확인
-    await expect(resumedPage.getByLabel("AI 연결")).toHaveText("Mock AI"); // Mock 표시 확인
+    await expect(resumedPage.getByLabel("AI 연결")).toHaveText("임시 인공지능"); // 임시 인공지능 표시 확인
 }); // 테스트 종료
 
 test("자유 입력을 외부 네트워크 없이 처리한다", async ({ page }) => // 오프라인 AI 검증

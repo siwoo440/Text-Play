@@ -94,6 +94,7 @@ describe("Text-Play 세션 제어기", () => // 제어기 검증 묶음
         ["insufficient-credit", "AI 서비스 크레딧이 부족합니다."], // 크레딧 오류
         ["rate-limited", "요청이 많습니다. 잠시 후 다시 시도하세요."], // 요청 제한 오류
         ["unavailable", "AI 서비스에 연결할 수 없습니다."], // 연결 오류
+        ["model-unavailable", "선택한 로컬 모델이 설치되어 있지 않습니다."], // 모델 누락 오류
         ["invalid-response", "AI 서비스 응답 형식이 올바르지 않습니다."], // 응답 오류
     ] as const)("%s 오류를 사용자 안내로 변환한다", async (code, message) => // 오류 안내 검증
     { // 테스트 시작

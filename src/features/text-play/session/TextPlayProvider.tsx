@@ -50,8 +50,14 @@ export function TextPlayProvider({ children, initialState, repository, llm, llmL
     const [activeRepository] = useState<TextPlaySaveRepository>(() => repository ?? createBrowserTextPlaySaveRepository()); // 활성 저장소
     const repositoryRef = useRef<TextPlaySaveRepository>(activeRepository); // 저장소 참조
     const [storageWarning, setStorageWarning] = useState<string | null>(() => activeRepository.getStorageWarning?.() ?? null); // 저장 경고 상태
-    const [llmSelection] = useState(() => llm === undefined ? { adapter: new MockLLMAdapter(), mode: "mock" as const, label: "Mock AI" } : { adapter: llm, mode: "mock" as const, label: llmLabel ?? "사용자 지정 AI" }); // LLM 선택
-    const llmRef = useRef<LLMAdapter>(llmSelection.adapter); // LLM 참조
+    const [defaultLLM] = useState<LLMAdapter>(() => new MockLLMAdapter()); // 기본 임시 인공지능
+    const activeLLM = llm ?? defaultLLM; // 현재 인공지능 선택
+    const activeLLMLabel = llm === undefined ? "임시 인공지능" : llmLabel ?? "사용자 지정 인공지능"; // 현재 연결 문구
+    const llmRef = useRef<LLMAdapter>(activeLLM); // LLM 참조
+    useEffect(() => // LLM 참조 동기화 효과
+    { // 효과 시작
+        llmRef.current = activeLLM; // 현재 LLM 반영
+    }, [activeLLM]); // LLM 의존
     const [slots, setSlots] = useState<TextPlaySaveSlot[]>([]); // 저장 슬롯 상태
     const [corruptSlotIds, setCorruptSlotIds] = useState<TextPlaySlotId[]>([]); // 손상 슬롯 상태
     const syncStorageWarning = useCallback(() => // 저장 경고 동기화
@@ -147,7 +153,7 @@ export function TextPlayProvider({ children, initialState, repository, llm, llmL
         dispatch({ type: "save-notice", message: "저장 데이터를 삭제했습니다." }); // 삭제 안내
         await refreshSlots(); // 저장 슬롯 목록 갱신
     }, [refreshSlots, syncStorageWarning]); // 슬롯 갱신 의존
-    const value = useMemo<TextPlayStore>(() => ({ state, slots, corruptSlotIds, llmLabel: llmSelection.label, storageWarning, selectChoice, sendFreeInput, save, load, remove, toggleStatePanel: () => dispatch({ type: "toggle-state-panel" }) }), [corruptSlotIds, llmSelection.label, load, remove, save, selectChoice, sendFreeInput, slots, state, storageWarning]); // 문맥 값 생성
+    const value = useMemo<TextPlayStore>(() => ({ state, slots, corruptSlotIds, llmLabel: activeLLMLabel, storageWarning, selectChoice, sendFreeInput, save, load, remove, toggleStatePanel: () => dispatch({ type: "toggle-state-panel" }) }), [activeLLMLabel, corruptSlotIds, load, remove, save, selectChoice, sendFreeInput, slots, state, storageWarning]); // 문맥 값 생성
     return <TextPlayContext.Provider value={value}>{children}</TextPlayContext.Provider>; // 공급자 반환
 } // 함수 종료
 

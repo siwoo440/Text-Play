@@ -5,14 +5,16 @@ import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window"; // Tauri
 import type { DesktopRouteAction } from "@/desktop/desktop-navigation"; // 화면 전이 동작
 import { TextPlayPlatformProvider, type TextPlayPlatform } from "@/features/text-play/platform/text-play-platform"; // 플랫폼 계약
 import { resolveWindowSize } from "@/features/text-play/platform/text-play-window"; // 창 크기 계산기
+import type { OllamaClient } from "@/lib/adapters/ollama-client"; // 로컬 인공지능 계약
 
 interface DesktopPlatformProviderProps // 데스크톱 공급자 속성
 { // 구조 시작
     children: ReactNode; // 하위 화면
     onNavigate(action: DesktopRouteAction): void; // 화면 전이 처리
+    localAIClient: OllamaClient; // 로컬 인공지능 통신기
 } // 구조 종료
 
-export function DesktopPlatformProvider({ children, onNavigate }: DesktopPlatformProviderProps): ReactElement // 데스크톱 플랫폼 공급자
+export function DesktopPlatformProvider({ children, onNavigate, localAIClient }: DesktopPlatformProviderProps): ReactElement // 데스크톱 플랫폼 공급자
 { // 함수 시작
     const platform = useMemo<TextPlayPlatform>(() => // 플랫폼 생성
     { // 함수 시작
@@ -46,8 +48,9 @@ export function DesktopPlatformProvider({ children, onNavigate }: DesktopPlatfor
                 onNavigate({ type: "show-home" }); // 홈 전이
             }, // 이동 함수 종료
             renderSceneImage: (source) => createElement("img", { src: source.startsWith("/") ? `.${source}` : source, alt: "", className: "desktop-scene-image" }), // 상대 이미지 출력
+            localAI: localAIClient, // 로컬 인공지능 연결
         } // 객체 종료
         ); // 플랫폼 반환 종료
-    }, [onNavigate]); // 이동 처리 의존
+    }, [localAIClient, onNavigate]); // 플랫폼 의존
     return <TextPlayPlatformProvider value={platform}>{children}</TextPlayPlatformProvider>; // 공용 플랫폼 공급
 } // 함수 종료

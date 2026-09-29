@@ -14,7 +14,7 @@ describe("Text-Play 창 해상도 동기화", () => // 동기화 묶음
 
     it("플레이 화면 진입 전에도 저장된 해상도를 적용한다", async () => // 홈 해상도 검증
     { // 테스트 시작
-        saveTextPlayPreferences(window.localStorage, { schemaVersion: 1, themeId: "dark-fantasy", resolutionId: "1600x900", aiProviderId: "mock" }); // 저장 해상도 준비
+        saveTextPlayPreferences(window.localStorage, { schemaVersion: 2, themeId: "dark-fantasy", resolutionId: "1600x900", aiProviderId: "mock", localModelId: null }); // 저장 해상도 준비
         const applyWindowResolution = vi.fn(async () => undefined); // 적용 기록기
         const platform: TextPlayPlatform = { applyWindowResolution, navigate: vi.fn(), renderSceneImage: () => null }; // 테스트 플랫폼
         render(<TextPlayPlatformProvider value={platform}><TextPlayPreferencesProvider><TextPlayWindowResolutionSync /><span>홈 화면</span></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 홈 구조 렌더

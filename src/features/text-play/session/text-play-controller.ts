@@ -46,6 +46,10 @@ function getLLMErrorMessage(error: unknown): string // LLM 오류 안내 생성
     { // 조건 시작
         return "AI 서비스에 연결할 수 없습니다."; // 연결 안내 반환
     } // 조건 종료
+    if (error.code === "model-unavailable") // 모델 누락 확인
+    { // 조건 시작
+        return "선택한 로컬 모델이 설치되어 있지 않습니다."; // 모델 누락 안내 반환
+    } // 조건 종료
     return "AI 서비스 응답 형식이 올바르지 않습니다."; // 응답 안내 반환
 } // 함수 종료
 

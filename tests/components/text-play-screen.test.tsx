@@ -54,7 +54,7 @@ describe("Text-Play 플레이 화면", () => // 플레이 검증 묶음
         expect(screen.getByRole("button", { name: "전송" })).toBeInTheDocument(); // 전송 버튼 확인
         expect(screen.getByRole("button", { name: "상태 패널 열기" })).toHaveAttribute("aria-controls", "text-play-state-panel"); // 패널 제어 확인
         expect(screen.getByRole("region", { name: "시스템 안내" })).toHaveAttribute("aria-live", "polite"); // 안내 영역 확인
-        expect(screen.getByLabelText("AI 연결")).toHaveTextContent("Mock AI"); // 공급자 상태 확인
+        expect(screen.getByLabelText("AI 연결")).toHaveTextContent("임시 인공지능"); // 공급자 상태 확인
         expect(screen.getByTestId("scene-image")).toHaveTextContent("/images/scenes/moon-library.svg"); // 플랫폼 이미지 확인
     }); // 테스트 종료
 
@@ -78,7 +78,7 @@ describe("Text-Play 플레이 화면", () => // 플레이 검증 묶음
         expect(screen.getByRole("region", { name: "스토리 대화" })).toBeInTheDocument(); // 스토리 대화 확인
         expect(screen.getByRole("region", { name: "추천 답안" })).toBeInTheDocument(); // 추천 답안 확인
         expect(screen.getByRole("combobox", { name: "AI 챗봇 선택" })).toHaveValue("mock"); // AI 선택 확인
-        expect(screen.getByRole("option", { name: "로컬 GPU · 준비 중" })).toBeDisabled(); // 로컬 AI 확인
+        expect(screen.getByRole("option", { name: "올라마 모델 미선택" })).toBeDisabled(); // 로컬 AI 확인
         await user.click(screen.getByRole("button", { name: "메인으로 돌아가기: 달빛 숲의 기록" })); // 작품 제목 선택
         expect(navigate).toHaveBeenCalledWith("home"); // 홈 이동 확인
         await user.click(screen.getByRole("button", { name: "게임 설정 열기" })); // 설정 열기

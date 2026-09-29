@@ -58,7 +58,7 @@ export function TextPlayPreferencesProvider({ children }: TextPlayPreferencesPro
     { // 함수 시작
         setPreferences((current) => // 현재 설정 갱신
         { // 갱신 시작
-            const next = { ...current, ...values, schemaVersion: 1 as const }; // 다음 설정 생성
+            const next = { ...current, ...values, schemaVersion: 2 as const }; // 다음 설정 생성
             try // 저장 시도
             { // 예외 처리 시작
                 if (typeof window !== "undefined") // 브라우저 환경 확인

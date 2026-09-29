@@ -143,6 +143,40 @@
     font: inherit; /* 글꼴 상속 */
 } /* 입력 종료 */
 
+.scanButton /* 모델 검색 버튼 */
+{ /* 버튼 시작 */
+    min-height: 42px; /* 버튼 높이 */
+    border: 1px solid #7661a4; /* 버튼 테두리 */
+    border-radius: 10px; /* 버튼 모서리 */
+    background: rgb(111 82 176 / 22%); /* 버튼 배경 */
+    color: #e9ddff; /* 버튼 글자 */
+    font: inherit; /* 글꼴 상속 */
+    font-weight: 800; /* 버튼 굵기 */
+    cursor: pointer; /* 클릭 커서 */
+} /* 버튼 종료 */
+
+.scanButton:disabled /* 비활성 검색 버튼 */
+{ /* 버튼 시작 */
+    opacity: .55; /* 비활성 투명도 */
+    cursor: wait; /* 대기 커서 */
+} /* 버튼 종료 */
+
+.status, /* 모델 상태 */
+.memoryStatus /* 메모리 상태 */
+{ /* 상태 시작 */
+    padding: 10px 12px; /* 상태 여백 */
+    border-radius: 10px; /* 상태 모서리 */
+    background: rgb(22 25 39 / 82%); /* 상태 배경 */
+    color: #c9c0d8; /* 상태 글자 */
+    line-height: 1.5; /* 상태 행간 */
+} /* 상태 종료 */
+
+.memoryStatus /* 메모리 상태 강조 */
+{ /* 강조 시작 */
+    border: 1px solid rgb(100 207 178 / 34%); /* 상태 테두리 */
+    color: #9fe3cf; /* 상태 강조색 */
+} /* 강조 종료 */
+
 @media (max-width: 760px) /* 작은 화면 */
 { /* 미디어 시작 */
     .themeGrid, /* 테마 격자 */

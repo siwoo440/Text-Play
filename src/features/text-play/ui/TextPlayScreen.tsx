@@ -18,7 +18,7 @@ import styles from "@/features/text-play/ui/TextPlayScreen.module.css"; // 화�
 export function TextPlayScreen() // Text-Play 플레이 화면
 { // 함수 시작
     const platform = useTextPlayPlatform(); // 실행 플랫폼 조회
-    const { preferences } = useTextPlayPreferences(); // 게임 설정 조회
+    const { preferences, updatePreferences } = useTextPlayPreferences(); // 게임 설정 조회
     const { state, llmLabel, storageWarning, selectChoice, sendFreeInput, toggleStatePanel } = useTextPlaySession(); // 세션 조회
     const [input, setInput] = useState(""); // 자유 입력 상태
     const [activeDialog, setActiveDialog] = useState<SaveManagerMode | "settings" | null>(null); // 활성 대화상자 상태
@@ -66,9 +66,9 @@ export function TextPlayScreen() // Text-Play 플레이 화면
                     <label className={styles.aiSelect}> {/* AI 선택 */}
                         <TextPlayIcon name="ai" /> {/* AI 아이콘 */}
                         <span aria-label="AI 연결">{llmLabel}</span> {/* AI 상태 */}
-                        <select aria-label="AI 챗봇 선택" value="mock" onChange={() => undefined}> {/* AI 목록 */}
-                            <option value="mock">{llmLabel}</option> {/* Mock AI */}
-                            <option value="local-gpu" disabled>로컬 GPU · 준비 중</option> {/* 로컬 AI */}
+                        <select aria-label="AI 챗봇 선택" value={preferences.aiProviderId} onChange={(event) => event.target.value === "ollama" && preferences.localModelId === null ? setActiveDialog("settings") : updatePreferences({ aiProviderId: event.target.value as "mock" | "ollama" })}> {/* AI 목록 */}
+                            <option value="mock">임시 인공지능</option> {/* 임시 인공지능 */}
+                            <option value="ollama" disabled={platform.localAI === undefined || preferences.localModelId === null}>{preferences.localModelId === null ? "올라마 모델 미선택" : `올라마 · ${preferences.localModelId}`}</option> {/* 로컬 인공지능 */}
                         </select> {/* AI 목록 종료 */}
                     </label> {/* AI 선택 종료 */}
                     <button type="button" aria-label="게임 설정 열기" onClick={() => setActiveDialog("settings")}><TextPlayIcon name="settings" /><span>설정</span></button> {/* 설정 버튼 */}

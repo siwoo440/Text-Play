@@ -32,8 +32,8 @@ freezePrototype = true # 객체 원형 보호
 active = true # 설치 파일 생성
 targets = ["nsis"] # NSIS 설치 형식
 publisher = "MATE Verse" # 게시자 이름
-shortDescription = "Mock 전용 Text-Play 시험판" # 짧은 설명
-longDescription = "외부 AI 연결 없이 로컬에서 실행되는 MATE Text-Play 시험판" # 긴 설명
+shortDescription = "임시 응답과 올라마를 지원하는 Text-Play 시험판" # 짧은 설명
+longDescription = "외부 서비스 없이 임시 응답 또는 로컬 올라마 모델로 실행되는 MATE Text-Play 시험판" # 긴 설명
 icon = ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico"] # 앱 아이콘 목록
 
 [bundle.windows] # Windows 설치 설정

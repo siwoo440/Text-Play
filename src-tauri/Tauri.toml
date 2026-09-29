@@ -1,0 +1,44 @@
+productName = "MATE Text-Play Preview" # 제품 이름
+version = "0.1.0-preview.1" # 제품 버전
+identifier = "com.mateverse.textplay.preview" # 앱 식별자
+
+[build] # 프런트엔드 빌드 설정
+beforeDevCommand = "pnpm desktop:dev" # 개발 서버 명령
+devUrl = "http://127.0.0.1:1420" # 개발 서버 주소
+beforeBuildCommand = "pnpm desktop:build && pnpm desktop:verify-assets" # 배포 빌드 명령
+frontendDist = "../desktop-dist" # 배포 자산 폴더
+
+[app] # 앱 설정
+withGlobalTauri = false # 전역 Tauri API 차단
+
+[[app.windows]] # 기본 창 설정
+label = "main" # 창 식별자
+title = "MATE Text-Play Preview" # 창 제목
+width = 1280 # 기본 창 너비
+height = 820 # 기본 창 높이
+minWidth = 960 # 최소 창 너비
+minHeight = 640 # 최소 창 높이
+resizable = true # 창 크기 조절
+fullscreen = false # 전체 화면 해제
+devtools = false # 배포 개발 도구 차단
+
+[app.security] # 앱 보안 설정
+capabilities = ["main-capability"] # 허용 권한 묶음
+csp = "default-src 'self'; img-src 'self' data: asset: http://asset.localhost; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'none'" # 배포 외부 연결 차단
+devCsp = "default-src 'self' http://127.0.0.1:1420; img-src 'self' data: http://127.0.0.1:1420; style-src 'self' 'unsafe-inline' http://127.0.0.1:1420; script-src 'self' 'unsafe-eval' http://127.0.0.1:1420; connect-src http://127.0.0.1:1420 ws://127.0.0.1:1420" # 개발 서버 연결 허용
+freezePrototype = true # 객체 원형 보호
+
+[bundle] # 설치 묶음 설정
+active = true # 설치 파일 생성
+targets = ["nsis"] # NSIS 설치 형식
+publisher = "MATE Verse" # 게시자 이름
+shortDescription = "Mock 전용 Text-Play 시험판" # 짧은 설명
+longDescription = "외부 AI 연결 없이 로컬에서 실행되는 MATE Text-Play 시험판" # 긴 설명
+icon = ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico"] # 앱 아이콘 목록
+
+[bundle.windows] # Windows 설치 설정
+allowDowngrades = false # 이전 버전 설치 차단
+
+[bundle.windows.webviewInstallMode] # WebView2 설치 설정
+type = "downloadBootstrapper" # 부트스트래퍼 다운로드
+silent = true # 조용한 설치

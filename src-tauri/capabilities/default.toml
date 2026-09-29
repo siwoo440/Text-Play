@@ -1,0 +1,5 @@
+identifier = "main-capability" # 권한 묶음 식별자
+description = "Text-Play 기본 창 최소 권한" # 권한 묶음 설명
+windows = ["main"] # 적용 창
+local = true # 로컬 자산 전용
+permissions = ["core:default"] # Tauri 기본 권한

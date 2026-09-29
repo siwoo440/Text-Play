@@ -1,0 +1,17 @@
+[package] # 패키지 정보 시작
+name = "mate-text-play-preview" # Rust 패키지 이름
+version = "0.1.0-preview.1" # 시험판 버전
+description = "MATE Text-Play Mock preview" # 패키지 설명
+authors = ["MATE Verse"] # 제작자 정보
+edition = "2021" # Rust 문법 판
+rust-version = "1.77.2" # 최소 Rust 버전
+
+[build-dependencies] # 빌드 의존성 시작
+tauri-build = { version = "2", features = ["config-toml"] } # TOML 빌드 설정
+
+[dependencies] # 실행 의존성 시작
+tauri = { version = "2", features = ["config-toml"] } # Tauri 실행기
+
+[features] # Cargo 기능 시작
+default = ["custom-protocol"] # 기본 배포 프로토콜
+custom-protocol = ["tauri/custom-protocol"] # Tauri 앱 프로토콜

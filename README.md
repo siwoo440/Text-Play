@@ -14,7 +14,7 @@ MATE Text-Play는 선택지와 제한형 자유 입력을 결합한 텍스트 �
 - Text-Play 설계서와 구현 계획 포함
 - 공통 LLM HTTP 어댑터·서버 프록시·오류·재시도 기반 구현
 - 실제 LLM 서버 API 주소·모델·인증 계약 미확정
-- Windows 실행 파일 빌드 도구 미설치
+- Tauri 기반 Windows Mock 시험판과 NSIS 설치 EXE 생성 완료
 
 기본 실행은 기존 챗봇과 Text-Play가 함께 `MockLLMAdapter`를 사용합니다. 실제 서비스 연결 모드에서는 두 화면이 같은 `/api/llm` 서버 경계를 사용하며 브라우저나 실행 파일에 비밀키를 저장하지 않습니다. 기존 챗봇 소스에도 실제 API 주소·모델·인증 계약이 없어 실서비스 호출은 아직 활성화하지 않았습니다.
 
@@ -66,11 +66,25 @@ pnpm build
 ```
 
 ---
-## Windows 실행 프로그램 계획
+## Windows Mock 시험판
 
-웹 MVP 테스트와 UI 검토, 저장 스키마, 실제 LLM 서버 계약과 `.mateplay` 최소 규격이 확정되면 Tauri 셸을 추가합니다. Windows 빌드에는 Rust, MSVC Build Tools와 WebView2가 필요합니다.
+Windows 10·11 x64에서 실행하는 Mock 전용 미서명 시험판입니다. 실제 AI 서버, 로그인, 크레딧과 클라우드 저장은 포함하지 않습니다.
 
-현재 개발은 설치 파일을 반복 생성하지 않고 웹 개발 서버와 Fast Refresh로 화면을 확인합니다. 웹 MVP 승인 뒤 같은 UI를 Tauri 네이티브 셸에 넣습니다.
+저장소 루트에서 다음 명령을 실행하면 전체 검증 후 NSIS 설치 EXE와 SHA-256 파일을 `artifacts/`에 만듭니다.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows-preview.ps1
+```
+
+생성 파일은 `MATE-Text-Play-Preview_0.1.0-preview.1_x64-setup.exe`입니다. 설치 안내와 제한은 [시험판 Release 문서](docs/releases/v0.1.0-preview.1.md)를 확인합니다.
+
+개발 실행은 다음 명령을 사용합니다.
+
+```powershell
+pnpm tauri:dev
+```
+
+Windows 빌드에는 Rust, MSVC Build Tools와 WebView2가 필요합니다. 코드 서명이 없어 SmartScreen 경고가 표시될 수 있습니다.
 
 ---
 ## 문서 갱신 규칙

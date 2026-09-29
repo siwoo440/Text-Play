@@ -61,6 +61,16 @@
     cursor: pointer; /* 선택 커서 */
 } /* 버튼 종료 */
 
+.storageWarning /* 저장 경고 */
+{ /* 경고 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    padding: 10px 24px; /* 경고 여백 */
+    border-bottom: 1px solid #8a6840; /* 경고 구분선 */
+    background: #2a2117; /* 경고 배경 */
+    color: #f2d8ae; /* 경고 글자 */
+    font-size: .82rem; /* 경고 크기 */
+} /* 경고 종료 */
+
 .layout /* 본문 배치 */
 { /* 배치 시작 */
     display: grid; /* 세 영역 배치 */

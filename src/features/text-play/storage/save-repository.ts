@@ -20,6 +20,7 @@ export interface TextPlaySaveRepository // 저장소 계약
     load(packageId: string, slotId: TextPlaySlotId): Promise<TextPlaySaveSlot | null>; // 슬롯 읽기
     save(slotId: TextPlaySlotId, state: TextPlayState, summary: string): Promise<void>; // 슬롯 저장
     remove(packageId: string, slotId: TextPlaySlotId): Promise<void>; // 슬롯 삭제
+    getStorageWarning?(): string | null; // 저장 방식 경고
 } // 구조 종료
 
 function isRecord(value: unknown): value is Record<string, unknown> // 객체 확인

@@ -379,3 +379,63 @@ Character Chat과 Text-Play가 같은 서버 경계를 사용하고 실제 비�
 - 실제 서버 계약이 없어 기본 Mock 모드를 유지
 - 자동 재시도는 중복 과금 가능성 때문에 사용하지 않고 사용자 수동 재시도만 제공
 - 이번 연결 기반은 새 래스터·벡터 이미지가 필요하지 않아 기존 UI 자산을 그대로 사용
+
+---
+## 2026-09-29 — Windows Mock 시험판 패키징
+
+---
+### 목표
+
+웹 Text-Play를 외부 AI 연결 없이 실행하는 Windows x64 설치 EXE로 패키징합니다.
+
+---
+### 변경 파일
+
+- `desktop`
+- `src/desktop`
+- `src-tauri`
+- `scripts/build-windows-preview.ps1`
+- `scripts/finalize-windows-preview.mjs`
+- `scripts/smoke-installed-preview.mjs`
+- `tests/e2e/desktop-preview.spec.ts`
+- `tests/unit/windows-build-script.test.ts`
+- `vite.desktop.config.ts`
+- `playwright.desktop.config.ts`
+
+---
+### 사용자 기능
+
+- Tauri 기반 Windows 데스크톱 실행
+- Mock AI 고정 실행과 외부 API 요청 차단
+- 자동 저장·수동 저장·이어하기
+- NSIS 설치 EXE와 SHA-256 파일 생성
+
+---
+### 검증 결과
+
+- 단위·통합 테스트 44개 파일, 178개 테스트 통과
+- 데스크톱 Playwright E2E 3개 통과
+- 타입 검사, 린트, Next.js 웹 빌드 통과
+- 데스크톱 상대 자산과 외부 연결 금지 문자열 검사 통과
+- Rust `cargo check`와 Tauri NSIS 빌드 통과
+- 설치 EXE 크기 16,400,384바이트 확인
+- SHA-256 `b507cbadf807e3f51657af34f61e0eba2c4066362113395ce203bdecb1245322` 확인
+- 최종 설치 EXE의 현재 Windows 사용자 설치와 직접 실행 성공
+- 앱 제거 후 WebView 저장 데이터 폴더 유지 확인
+- 최종 설치 EXE 재설치 후 자동 저장 이어하기와 수동 저장 유지 확인
+- 최종 설치본의 Mock AI 표시와 자동화 연결 이후 외부 요청 0건 확인
+- 최종 설치본 일반 실행과 창 응답 상태 확인
+
+---
+### 남은 검증
+
+- GitHub 시험판 Release 게시와 게시 자산 재다운로드 해시 확인
+
+---
+### 알려진 제한
+
+- Mock AI 전용 시험판
+- Windows 코드 서명과 자동 업데이트 미적용
+- MSI 미제공
+- WebView2 미설치 환경의 완전한 오프라인 설치 미지원
+- 설치 앱 시작 이전 네트워크 요청은 CDP 감시 범위 밖이며 사용자 승인에 따라 CSP·번들 검사로 대체 검증

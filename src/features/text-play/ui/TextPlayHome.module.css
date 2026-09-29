@@ -33,6 +33,18 @@
     font-size: clamp(1rem, 2vw, 1.25rem); /* 설명 크기 */
 } /* 설명 종료 */
 
+.storageWarning /* 저장 경고 */
+{ /* 경고 시작 */
+    max-width: 980px; /* 경고 너비 */
+    margin: 0 auto 18px; /* 경고 여백 */
+    padding: 12px 16px; /* 경고 안쪽 여백 */
+    border: 1px solid #8a6840; /* 경고 테두리 */
+    border-radius: 10px; /* 경고 모서리 */
+    background: #2a2117; /* 경고 배경 */
+    color: #f2d8ae; /* 경고 글자 */
+    font-size: .86rem; /* 경고 크기 */
+} /* 경고 종료 */
+
 .card /* 작품 카드 */
 { /* 카드 시작 */
     display: grid; /* 카드 배치 */
@@ -109,8 +121,11 @@
 { /* 동작 시작 */
     min-height: 46px; /* 동작 높이 */
     padding: 13px 20px; /* 동작 여백 */
+    border: 0; /* 기본 테두리 제거 */
     border-radius: 12px; /* 동작 모서리 */
+    font: inherit; /* 글꼴 상속 */
     font-weight: 800; /* 동작 굵기 */
+    cursor: pointer; /* 클릭 표시 */
     text-decoration: none; /* 밑줄 제거 */
 } /* 동작 종료 */
 
@@ -136,7 +151,12 @@
     display: block; /* 블록 배치 */
     width: fit-content; /* 내용 너비 */
     margin: 30px auto 0; /* 복귀 여백 */
+    padding: 0; /* 기본 여백 제거 */
+    border: 0; /* 기본 테두리 제거 */
+    background: transparent; /* 투명 배경 */
     color: #c5b5ef; /* 복귀 색상 */
+    font: inherit; /* 글꼴 상속 */
+    cursor: pointer; /* 클릭 표시 */
 } /* 복귀 종료 */
 
 @media (max-width: 767px) /* 모바일 */

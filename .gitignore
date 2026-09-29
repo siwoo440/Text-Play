@@ -3,9 +3,13 @@
 .pnpm-store/
 node_modules/
 .next/
+desktop-dist/
+src-tauri/target/
+src-tauri/gen/
 coverage/
 playwright-report/
 test-results/
+artifacts/
 *.tsbuildinfo
 .env
 .env.local

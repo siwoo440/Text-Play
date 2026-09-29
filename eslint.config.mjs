@@ -9,6 +9,9 @@ export default defineConfig( // 설정 내보내기
     globalIgnores( // 제외 설정
     [ // 제외 목록 시작
         ".next/**", // 빌드 결과 제외
+        "desktop-dist/**", // 데스크톱 빌드 결과 제외
+        "src-tauri/target/**", // Rust 빌드 결과 제외
+        "src-tauri/gen/**", // Tauri 생성 설정 제외
         "coverage/**", // 검사 결과 제외
         "playwright-report/**", // 종단 보고서 제외
         "test-results/**", // 종단 결과 제외

@@ -18,7 +18,7 @@ export default defineConfig( // 설정 내보내기
     ], // 목록 종료
     webServer: // 개발 서버 설정
     { // 서버 설정 시작
-        command: "npm run dev", // 서버 실행 명령
+        command: "pnpm dev", // 서버 실행 명령
         url: "http://127.0.0.1:3000", // 서버 확인 주소
         reuseExistingServer: true, // 기존 서버 재사용
     }, // 서버 설정 종료

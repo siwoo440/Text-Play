@@ -5,6 +5,7 @@ import type { TextPlaySessionState } from "@/features/text-play/session/text-pla
 
 export const TEST_TEXT_PLAY_PLATFORM: TextPlayPlatform = // 테스트 플랫폼
 { // 객체 시작
+    applyWindowResolution: async () => undefined, // 테스트 창 변경 생략
     navigate: () => undefined, // 이동 생략
     renderSceneImage: (source) => source, // 이미지 경로 출력
 }; // 객체 종료

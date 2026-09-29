@@ -1,8 +1,10 @@
 "use client"; // 클라이언트 컴포넌트
 
 import { createElement, useMemo, type ReactElement, type ReactNode } from "react"; // 리액트 도구
+import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window"; // Tauri 창 도구
 import type { DesktopRouteAction } from "@/desktop/desktop-navigation"; // 화면 전이 동작
 import { TextPlayPlatformProvider, type TextPlayPlatform } from "@/features/text-play/platform/text-play-platform"; // 플랫폼 계약
+import { resolveWindowSize } from "@/features/text-play/platform/text-play-window"; // 창 크기 계산기
 
 interface DesktopPlatformProviderProps // 데스크톱 공급자 속성
 { // 구조 시작
@@ -16,6 +18,19 @@ export function DesktopPlatformProvider({ children, onNavigate }: DesktopPlatfor
     { // 함수 시작
         return ( // 플랫폼 반환
         { // 객체 시작
+            applyWindowResolution: async (resolutionId) => // 창 해상도 적용
+            { // 함수 시작
+                const currentWindow = getCurrentWindow(); // 현재 창 조회
+                const resolved = resolveWindowSize(resolutionId, window.screen.availWidth, window.screen.availHeight); // 적용 크기 계산
+                if (resolved === "maximize") // 화면 맞춤 확인
+                { // 조건 시작
+                    await currentWindow.maximize(); // 창 최대화
+                    return; // 적용 종료
+                } // 조건 종료
+                await currentWindow.unmaximize(); // 최대화 해제
+                await currentWindow.setSize(new LogicalSize(resolved.width, resolved.height)); // 창 크기 변경
+                await currentWindow.center(); // 창 중앙 이동
+            }, // 해상도 함수 종료
             navigate: (route) => // 화면 이동
             { // 함수 시작
                 if (route === "new") // 새 게임 확인

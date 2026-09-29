@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"; // 테스트 도구
 import { createTextPlayState } from "@/features/text-play/core/engine"; // 상태 생성 함수
 import { DEMO_TEXT_PLAY_PACKAGE } from "@/features/text-play/data/demo-package"; // 샘플 패키지
 import { ResilientTextPlaySaveRepository, TEXT_PLAY_MEMORY_STORAGE_WARNING } from "@/features/text-play/storage/browser-save-repository"; // 복구 저장소
-import { IndexedDBTextPlaySaveRepository } from "@/features/text-play/storage/indexeddb-save-repository"; // IndexedDB 저장소
+import { IndexedDBTextPlaySaveRepository, readTextPlaySaveSlots } from "@/features/text-play/storage/indexeddb-save-repository"; // IndexedDB 저장소
 import { MemoryTextPlaySaveRepository } from "@/features/text-play/storage/memory-save-repository"; // 메모리 저장소
 import { TextPlayStorageError, validateTextPlaySaveSlot } from "@/features/text-play/storage/save-repository"; // 저장 계약
 
@@ -45,6 +45,23 @@ describe("Text-Play 저장소", () => // 저장소 검증 묶음
     it("손상된 저장 데이터를 거부한다", () => // 저장 스키마 검증
     { // 테스트 시작
         expect(() => validateTextPlaySaveSlot({ key: "bad" })).toThrowError(new TextPlayStorageError("invalid-save")); // 손상 데이터 오류 확인
+    }); // 테스트 종료
+
+    it("손상 슬롯만 분리하고 같은 작품의 정상 슬롯은 유지한다", () => // 손상 슬롯 격리 검증
+    { // 테스트 시작
+        const state = createTextPlayState(DEMO_TEXT_PLAY_PACKAGE, "2026-09-29T00:00:00.000Z"); // 정상 상태 생성
+        const valid = { key: `${DEMO_TEXT_PLAY_PACKAGE.id}:manual-1`, slotId: "manual-1", packageId: DEMO_TEXT_PLAY_PACKAGE.id, summary: "정상 슬롯", state, savedAt: state.updatedAt }; // 정상 슬롯 생성
+        const corrupt = { ...valid, key: `${DEMO_TEXT_PLAY_PACKAGE.id}:manual-2`, slotId: "manual-2", state: { broken: true } }; // 손상 슬롯 생성
+        const result = readTextPlaySaveSlots([valid, corrupt], DEMO_TEXT_PLAY_PACKAGE.id); // 슬롯 목록 해석
+        expect(result.slots.map((slot) => slot.slotId)).toEqual(["manual-1"]); // 정상 슬롯 유지 확인
+        expect(result.corruptSlotIds).toEqual(["manual-2"]); // 손상 슬롯 분리 확인
+    }); // 테스트 종료
+
+    it("여섯 번째 수동 저장 슬롯을 정상 데이터로 허용한다", () => // 확장 슬롯 검증
+    { // 테스트 시작
+        const state = createTextPlayState(DEMO_TEXT_PLAY_PACKAGE, "2026-09-29T00:00:00.000Z"); // 저장 상태 생성
+        const slot = { key: `${DEMO_TEXT_PLAY_PACKAGE.id}:manual-6`, slotId: "manual-6", packageId: DEMO_TEXT_PLAY_PACKAGE.id, summary: "여섯 번째 슬롯", state, savedAt: "2026-09-29T00:01:00.000Z" }; // 여섯 번째 슬롯 생성
+        expect(validateTextPlaySaveSlot(slot).slotId).toBe("manual-6"); // 슬롯 허용 확인
     }); // 테스트 종료
 
     it("IndexedDB 비동기 실패 후 메모리 저장소로 전환한다", async () => // 비동기 대체 검증

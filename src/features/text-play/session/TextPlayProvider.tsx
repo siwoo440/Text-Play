@@ -15,6 +15,7 @@ interface TextPlayStore // Text-Play 저장소 구조
 { // 구조 시작
     state: TextPlaySessionState; // 세션 상태
     slots: TextPlaySaveSlot[]; // 저장 슬롯 목록
+    corruptSlotIds: TextPlaySlotId[]; // 손상 슬롯 목록
     llmLabel: string; // LLM 연결 표시
     storageWarning: string | null; // 저장 방식 경고
     selectChoice(choiceId: string): Promise<void>; // 선택지 처리
@@ -52,6 +53,7 @@ export function TextPlayProvider({ children, initialState, repository, llm, llmL
     const [llmSelection] = useState(() => llm === undefined ? { adapter: new MockLLMAdapter(), mode: "mock" as const, label: "Mock AI" } : { adapter: llm, mode: "mock" as const, label: llmLabel ?? "사용자 지정 AI" }); // LLM 선택
     const llmRef = useRef<LLMAdapter>(llmSelection.adapter); // LLM 참조
     const [slots, setSlots] = useState<TextPlaySaveSlot[]>([]); // 저장 슬롯 상태
+    const [corruptSlotIds, setCorruptSlotIds] = useState<TextPlaySlotId[]>([]); // 손상 슬롯 상태
     const syncStorageWarning = useCallback(() => // 저장 경고 동기화
     { // 함수 시작
         setStorageWarning(repositoryRef.current.getStorageWarning?.() ?? null); // 저장 경고 반영
@@ -60,11 +62,14 @@ export function TextPlayProvider({ children, initialState, repository, llm, llmL
     { // 함수 시작
         try // 목록 조회 시도
         { // 시도 시작
-            setSlots(await repositoryRef.current.list(DEMO_TEXT_PLAY_PACKAGE.id)); // 저장 슬롯 반영
+            const nextSlots = await repositoryRef.current.list(DEMO_TEXT_PLAY_PACKAGE.id); // 저장 슬롯 조회
+            setSlots(nextSlots); // 저장 슬롯 반영
+            setCorruptSlotIds(repositoryRef.current.getCorruptSlotIds?.(DEMO_TEXT_PLAY_PACKAGE.id) ?? []); // 손상 슬롯 반영
         } // 시도 종료
         catch // 목록 조회 실패 처리
         { // 오류 시작
             setSlots([]); // 빈 슬롯 반영
+            setCorruptSlotIds([]); // 손상 슬롯 초기화
         } // 오류 종료
         finally // 저장 방식 반영
         { // 정리 시작
@@ -142,7 +147,7 @@ export function TextPlayProvider({ children, initialState, repository, llm, llmL
         dispatch({ type: "save-notice", message: "저장 데이터를 삭제했습니다." }); // 삭제 안내
         await refreshSlots(); // 저장 슬롯 목록 갱신
     }, [refreshSlots, syncStorageWarning]); // 슬롯 갱신 의존
-    const value = useMemo<TextPlayStore>(() => ({ state, slots, llmLabel: llmSelection.label, storageWarning, selectChoice, sendFreeInput, save, load, remove, toggleStatePanel: () => dispatch({ type: "toggle-state-panel" }) }), [llmSelection.label, load, remove, save, selectChoice, sendFreeInput, slots, state, storageWarning]); // 문맥 값 생성
+    const value = useMemo<TextPlayStore>(() => ({ state, slots, corruptSlotIds, llmLabel: llmSelection.label, storageWarning, selectChoice, sendFreeInput, save, load, remove, toggleStatePanel: () => dispatch({ type: "toggle-state-panel" }) }), [corruptSlotIds, llmSelection.label, load, remove, save, selectChoice, sendFreeInput, slots, state, storageWarning]); // 문맥 값 생성
     return <TextPlayContext.Provider value={value}>{children}</TextPlayContext.Provider>; // 공급자 반환
 } // 함수 종료
 

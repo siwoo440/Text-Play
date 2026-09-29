@@ -64,6 +64,11 @@ export class ResilientTextPlaySaveRepository implements TextPlaySaveRepository /
         return this.execute((repository) => repository.remove(packageId, slotId)); // 삭제 작업 실행
     } // 함수 종료
 
+    public getCorruptSlotIds(packageId: string): TextPlaySlotId[] // 손상 슬롯 조회
+    { // 함수 시작
+        return this.activeRepository.getCorruptSlotIds?.(packageId) ?? []; // 활성 저장소 결과 반환
+    } // 함수 종료
+
     public getStorageWarning(): string | null // 저장 방식 경고
     { // 함수 시작
         return this.usingMemory ? TEXT_PLAY_MEMORY_STORAGE_WARNING : null; // 경고 반환

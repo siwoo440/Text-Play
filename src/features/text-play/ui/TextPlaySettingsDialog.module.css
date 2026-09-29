@@ -1,0 +1,158 @@
+.header /* 설정 머리말 */
+{ /* 머리말 시작 */
+    padding-right: 54px; /* 닫기 공간 */
+} /* 머리말 종료 */
+
+.header > span /* 영문 표제 */
+{ /* 표제 시작 */
+    color: #bca8ff; /* 표제 색상 */
+    font-size: .72rem; /* 표제 크기 */
+    font-weight: 900; /* 표제 굵기 */
+    letter-spacing: .16em; /* 표제 자간 */
+} /* 표제 종료 */
+
+.header h2 /* 설정 제목 */
+{ /* 제목 시작 */
+    margin: 8px 0 6px; /* 제목 여백 */
+    font-size: clamp(1.5rem, 4vw, 2.2rem); /* 제목 크기 */
+} /* 제목 종료 */
+
+.header p, /* 머리말 설명 */
+.section p /* 영역 설명 */
+{ /* 설명 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    color: #aaa4b6; /* 설명 색상 */
+    font-size: .82rem; /* 설명 크기 */
+} /* 설명 종료 */
+
+.section /* 설정 영역 */
+{ /* 영역 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 16px; /* 항목 간격 */
+    margin-top: 26px; /* 위쪽 간격 */
+    padding: 18px; /* 영역 여백 */
+    border: 1px solid rgb(139 122 190 / 34%); /* 영역 테두리 */
+    border-radius: 16px; /* 영역 모서리 */
+    background: rgb(16 17 27 / 60%); /* 영역 배경 */
+} /* 영역 종료 */
+
+.sectionTitle /* 영역 제목 */
+{ /* 제목 시작 */
+    display: flex; /* 가로 배치 */
+    gap: 12px; /* 항목 간격 */
+    align-items: center; /* 세로 중앙 */
+    color: #c6b5fb; /* 아이콘 색상 */
+} /* 제목 종료 */
+
+.sectionTitle h3 /* 제목 문구 */
+{ /* 문구 시작 */
+    margin: 0 0 4px; /* 문구 여백 */
+    color: #f6f2ff; /* 문구 색상 */
+    font-size: 1rem; /* 문구 크기 */
+} /* 문구 종료 */
+
+.themeGrid /* 테마 격자 */
+{ /* 격자 시작 */
+    display: grid; /* 격자 배치 */
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* 세 열 배치 */
+    gap: 12px; /* 카드 간격 */
+} /* 격자 종료 */
+
+.themeCard /* 테마 카드 */
+{ /* 카드 시작 */
+    position: relative; /* 장식 기준 */
+    display: grid; /* 세로 배치 */
+    gap: 8px; /* 내용 간격 */
+    min-height: 142px; /* 카드 높이 */
+    padding: 28px 18px 16px; /* 카드 여백 */
+    overflow: hidden; /* 장식 정리 */
+    border: 1px solid #3e394e; /* 카드 테두리 */
+    border-radius: 14px; /* 카드 모서리 */
+    background: linear-gradient(145deg, #252033, #151721); /* 카드 배경 */
+    color: #bca9f5; /* 아이콘 색상 */
+    cursor: pointer; /* 선택 커서 */
+} /* 카드 종료 */
+
+.themeCard[data-selected="true"] /* 선택 카드 */
+{ /* 카드 시작 */
+    border-color: #b399ff; /* 선택 테두리 */
+    box-shadow: 0 0 0 2px rgb(167 137 255 / 18%); /* 선택 강조 */
+} /* 카드 종료 */
+
+.themeCard input /* 테마 입력 */
+{ /* 입력 시작 */
+    position: absolute; /* 숨김 배치 */
+    width: 1px; /* 최소 너비 */
+    height: 1px; /* 최소 높이 */
+    opacity: 0; /* 시각 숨김 */
+} /* 입력 종료 */
+
+.themeCard > svg /* 테마 벡터 */
+{ /* 벡터 시작 */
+    pointer-events: none; /* 입력 클릭 통과 */
+} /* 벡터 종료 */
+
+.themeCard > svg:first-of-type /* 프레임 장식 */
+{ /* 장식 시작 */
+    position: absolute; /* 전체 배치 */
+    top: 0; /* 위쪽 배치 */
+    right: 0; /* 오른쪽 배치 */
+    left: 0; /* 왼쪽 배치 */
+    width: 100%; /* 전체 너비 */
+    height: 48px; /* 장식 높이 */
+    opacity: .5; /* 장식 투명도 */
+} /* 장식 종료 */
+
+.themeCard strong /* 테마 이름 */
+{ /* 이름 시작 */
+    color: #f4efff; /* 이름 색상 */
+    font-size: .9rem; /* 이름 크기 */
+} /* 이름 종료 */
+
+.themeCard > span /* 테마 설명 */
+{ /* 설명 시작 */
+    color: #9992a8; /* 설명 색상 */
+    font-size: .72rem; /* 설명 크기 */
+    line-height: 1.5; /* 설명 행간 */
+} /* 설명 종료 */
+
+.settingGrid /* 설정 격자 */
+{ /* 격자 시작 */
+    display: grid; /* 격자 배치 */
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* 두 열 배치 */
+    gap: 14px; /* 영역 간격 */
+} /* 격자 종료 */
+
+.field /* 설정 필드 */
+{ /* 필드 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 8px; /* 입력 간격 */
+    color: #d8d1e4; /* 표제 색상 */
+    font-size: .8rem; /* 표제 크기 */
+    font-weight: 800; /* 표제 굵기 */
+} /* 필드 종료 */
+
+.field select /* 선택 입력 */
+{ /* 입력 시작 */
+    min-height: 46px; /* 입력 높이 */
+    padding: 0 12px; /* 입력 여백 */
+    border: 1px solid #4a425c; /* 입력 테두리 */
+    border-radius: 10px; /* 입력 모서리 */
+    background: #10131c; /* 입력 배경 */
+    color: #f5f1fc; /* 입력 글자 */
+    font: inherit; /* 글꼴 상속 */
+} /* 입력 종료 */
+
+@media (max-width: 760px) /* 작은 화면 */
+{ /* 미디어 시작 */
+    .themeGrid, /* 테마 격자 */
+    .settingGrid /* 설정 격자 */
+    { /* 격자 시작 */
+        grid-template-columns: 1fr; /* 한 열 배치 */
+    } /* 격자 종료 */
+
+    .themeCard /* 작은 카드 */
+    { /* 카드 시작 */
+        min-height: 120px; /* 카드 높이 */
+    } /* 카드 종료 */
+} /* 미디어 종료 */

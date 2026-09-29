@@ -1,0 +1,56 @@
+.backdrop /* 대화상자 배경 */
+{ /* 배경 시작 */
+    position: fixed; /* 화면 고정 */
+    inset: 0; /* 전체 채움 */
+    z-index: 100; /* 최상단 배치 */
+    display: grid; /* 중앙 배치 */
+    place-items: center; /* 정중앙 배치 */
+    padding: 24px; /* 바깥 여백 */
+    background: rgb(4 5 10 / 78%); /* 어두운 배경 */
+    backdrop-filter: blur(10px); /* 배경 흐림 */
+} /* 배경 종료 */
+
+.panel /* 대화상자 패널 */
+{ /* 패널 시작 */
+    position: relative; /* 닫기 기준 */
+    width: min(1040px, 100%); /* 최대 너비 */
+    max-height: min(760px, calc(100dvh - 48px)); /* 최대 높이 */
+    overflow: auto; /* 내용 스크롤 */
+    padding: clamp(22px, 4vw, 38px); /* 안쪽 여백 */
+    border: 1px solid rgb(173 151 255 / 48%); /* 패널 테두리 */
+    border-radius: 24px; /* 둥근 모서리 */
+    background: linear-gradient(145deg, rgb(30 25 43 / 98%), rgb(12 15 24 / 98%)); /* 패널 배경 */
+    box-shadow: 0 28px 90px rgb(0 0 0 / 56%); /* 패널 그림자 */
+    color: #f6f1ff; /* 기본 글자 */
+} /* 패널 종료 */
+
+.close /* 닫기 버튼 */
+{ /* 버튼 시작 */
+    position: absolute; /* 우상단 배치 */
+    top: 18px; /* 위쪽 위치 */
+    right: 18px; /* 오른쪽 위치 */
+    width: 38px; /* 버튼 너비 */
+    height: 38px; /* 버튼 높이 */
+    border: 1px solid rgb(189 171 255 / 34%); /* 버튼 테두리 */
+    border-radius: 50%; /* 원형 버튼 */
+    background: rgb(14 15 24 / 72%); /* 버튼 배경 */
+    color: #eee7ff; /* 버튼 글자 */
+    cursor: pointer; /* 선택 커서 */
+    font-size: 1.4rem; /* 기호 크기 */
+} /* 버튼 종료 */
+
+@media (max-width: 720px) /* 작은 화면 */
+{ /* 미디어 시작 */
+    .backdrop /* 작은 배경 */
+    { /* 배경 시작 */
+        align-items: end; /* 하단 배치 */
+        padding: 12px; /* 바깥 여백 */
+    } /* 배경 종료 */
+
+    .panel /* 작은 패널 */
+    { /* 패널 시작 */
+        max-height: calc(100dvh - 24px); /* 화면 높이 제한 */
+        padding: 24px 18px; /* 안쪽 여백 */
+        border-radius: 22px 22px 12px 12px; /* 시트 모서리 */
+    } /* 패널 종료 */
+} /* 미디어 종료 */

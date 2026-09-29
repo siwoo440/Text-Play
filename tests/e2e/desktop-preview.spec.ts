@@ -47,21 +47,57 @@ test("수동 저장을 불러오고 삭제한다", async ({ page }) => // 수동
     await page.goto("/"); // 데스크톱 홈 진입
     await page.getByRole("button", { name: "새 게임" }).click(); // 새 게임 시작
     await page.getByRole("button", { name: "달빛 등불을 든다" }).click(); // 회랑 이동
+    await page.getByRole("button", { name: "저장 슬롯 열기" }).click(); // 저장 모달 열기
     const firstSlot = page.getByRole("group", { name: "수동 저장 슬롯 1" }); // 첫 저장 슬롯 조회
     await firstSlot.getByRole("button", { name: "저장" }).click(); // 수동 저장 실행
     await expect(firstSlot.getByText("moonlit-hall")).toBeVisible(); // 저장 장면 확인
+    await page.getByRole("button", { name: "닫기" }).click(); // 저장 모달 닫기
     await page.getByRole("button", { name: "봉인된 서재로 간다" }).click(); // 서재 이동
     await expect(page.getByRole("heading", { name: "봉인된 서재" })).toBeVisible(); // 이동 장면 확인
+    await page.getByRole("button", { name: "불러오기 슬롯 열기" }).click(); // 불러오기 모달 열기
     page.once("dialog", async (dialog) => // 불러오기 확인 처리
     { // 함수 시작
         await dialog.accept(); // 불러오기 승인
     }); // 처리 종료
     await firstSlot.getByRole("button", { name: "불러오기" }).click(); // 수동 저장 복원
     await expect(page.getByRole("heading", { name: "폐허 회랑" })).toBeVisible(); // 복원 장면 확인
+    await page.getByRole("button", { name: "저장 슬롯 열기" }).click(); // 저장 모달 다시 열기
     page.once("dialog", async (dialog) => // 삭제 확인 처리
     { // 함수 시작
         await dialog.accept(); // 삭제 승인
     }); // 처리 종료
     await firstSlot.getByRole("button", { name: "삭제" }).click(); // 수동 저장 삭제
-    await expect(firstSlot.getByText("빈 슬롯")).toBeVisible(); // 빈 슬롯 확인
+    await expect(firstSlot.getByText("저장된 대화가 없습니다.")).toBeVisible(); // 빈 슬롯 확인
+}); // 테스트 종료
+
+test("1280×720에서 설정과 여섯 번째 슬롯 전체 흐름을 제공한다", async ({ page }) => // 고정 화면 회귀 검증
+{ // 테스트 시작
+    await page.setViewportSize({ width: 1280, height: 720 }); // 검증 화면 크기
+    await page.goto("/"); // 데스크톱 홈 진입
+    await page.getByRole("button", { name: "새 게임" }).click(); // 새 게임 시작
+    await expect(page.getByRole("region", { name: "장면 무대" })).toBeVisible(); // 장면 무대 확인
+    await page.getByRole("button", { name: "게임 설정 열기" }).click(); // 설정 모달 열기
+    await page.getByRole("radio", { name: "미니멀 SF HUD 테마" }).check(); // SF 테마 선택
+    await page.getByLabel("창 해상도").selectOption("1280x720"); // 창 해상도 선택
+    await expect(page.locator("[data-text-play-root]")).toHaveAttribute("data-theme", "sci-fi"); // 테마 적용 확인
+    await expect(page.locator("[data-text-play-root]")).toHaveAttribute("data-resolution", "1280x720"); // 해상도 적용 확인
+    await page.getByRole("button", { name: "닫기" }).click(); // 설정 모달 닫기
+    await page.getByRole("button", { name: "저장 슬롯 열기" }).click(); // 저장 모달 열기
+    const sixthSlot = page.getByRole("group", { name: "수동 저장 슬롯 6" }); // 여섯 번째 슬롯 조회
+    await sixthSlot.getByRole("button", { name: "저장" }).click(); // 여섯 번째 슬롯 저장
+    await expect(sixthSlot.getByText("forest-gate")).toBeVisible(); // 저장 장면 확인
+    await page.getByRole("button", { name: "닫기" }).click(); // 저장 모달 닫기
+    await page.getByRole("button", { name: "달빛 등불을 든다" }).click(); // 장면 진행
+    await expect(page.getByRole("heading", { name: "폐허 회랑" })).toBeVisible(); // 진행 장면 확인
+    await page.getByRole("button", { name: "불러오기 슬롯 열기" }).click(); // 불러오기 모달 열기
+    page.once("dialog", async (dialog) => // 불러오기 확인 처리
+    { // 함수 시작
+        await dialog.accept(); // 불러오기 승인
+    }); // 처리 종료
+    await sixthSlot.getByRole("button", { name: "불러오기" }).click(); // 여섯 번째 슬롯 복원
+    await expect(page.getByRole("heading", { name: "달빛 숲 입구" })).toBeVisible(); // 초기 장면 복원 확인
+    const hasDocumentScroll = await page.evaluate(() => document.documentElement.scrollHeight > window.innerHeight); // 문서 스크롤 확인
+    expect(hasDocumentScroll).toBe(false); // 전체 세로 스크롤 부재 확인
+    await page.getByRole("button", { name: "메인으로 돌아가기: 달빛 숲의 기록" }).click(); // 홈 복귀
+    await expect(page.getByRole("button", { name: "새 게임" })).toBeVisible(); // 홈 화면 확인
 }); // 테스트 종료

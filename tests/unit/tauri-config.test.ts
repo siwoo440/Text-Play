@@ -12,10 +12,13 @@ describe("Tauri Windows 설정", () => // Tauri 설정 묶음
         expect(config).toContain('devtools = false'); // 배포 개발 도구 차단 확인
     }); // 테스트 종료
 
-    it("기본 기능 외 플러그인 권한을 허용하지 않는다", () => // 최소 권한 검증
+    it("창 해상도 변경에 필요한 최소 권한만 추가한다", () => // 최소 권한 검증
     { // 테스트 시작
         const capability = readFileSync("src-tauri/capabilities/default.toml", "utf8"); // 권한 설정 읽기
-        expect(capability).toContain('permissions = ["core:default"]'); // 기본 권한 확인
+        expect(capability).toContain('"core:window:allow-set-size"'); // 크기 권한 확인
+        expect(capability).toContain('"core:window:allow-center"'); // 중앙 권한 확인
+        expect(capability).toContain('"core:window:allow-maximize"'); // 최대화 권한 확인
+        expect(capability).toContain('"core:window:allow-unmaximize"'); // 최대화 해제 권한 확인
         expect(capability).not.toMatch(/(?:shell|fs|http|opener):/u); // 추가 권한 부재 확인
     }); // 테스트 종료
 

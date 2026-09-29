@@ -9,7 +9,7 @@ import { createPreparedTextPlaySessionState } from "@/test/text-play-fixtures"; 
 
 function createPlatform(navigate = vi.fn()): TextPlayPlatform // 테스트 플랫폼 생성기
 { // 함수 시작
-    return { navigate, renderSceneImage: () => null }; // 테스트 플랫폼 반환
+    return { applyWindowResolution: async () => undefined, navigate, renderSceneImage: () => null }; // 테스트 플랫폼 반환
 } // 함수 종료
 
 describe("Text-Play 홈", () => // 홈 검증 묶음

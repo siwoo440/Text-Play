@@ -1,12 +1,14 @@
 "use client"; // 클라이언트 컴포넌트
 
 import { createContext, useContext, type ReactElement, type ReactNode } from "react"; // 리액트 문맥 도구
+import type { TextPlayResolutionId } from "@/features/text-play/preferences/text-play-preferences"; // 해상도 타입
 
 export type TextPlayRoute = "home" | "new" | "resume" | "back"; // 화면 이동 종류
 
 export interface TextPlayPlatform // 플랫폼 계약
 { // 구조 시작
     navigate(route: TextPlayRoute): void; // 화면 이동
+    applyWindowResolution(resolutionId: TextPlayResolutionId): Promise<void>; // 창 해상도 적용
     renderSceneImage(source: string): ReactNode; // 장면 이미지 출력
 } // 구조 종료
 

@@ -37,4 +37,10 @@ export class MemoryTextPlaySaveRepository implements TextPlaySaveRepository // �
     { // 함수 시작
         this.slots.delete(`${packageId}:${slotId}`); // 저장 슬롯 제거
     } // 함수 종료
+
+    public getCorruptSlotIds(_packageId: string): TextPlaySlotId[] // 손상 슬롯 조회
+    { // 함수 시작
+        void _packageId; // 미사용 작품 표시
+        return []; // 빈 목록 반환
+    } // 함수 종료
 } // 클래스 종료

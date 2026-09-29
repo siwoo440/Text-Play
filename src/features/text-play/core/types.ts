@@ -1,5 +1,5 @@
 export type TextPlayStatKey = "hp" | "sanity" | "gold"; // 능력치 식별자
-export type TextPlaySlotId = "auto" | "manual-1" | "manual-2" | "manual-3"; // 저장 슬롯 식별자
+export type TextPlaySlotId = "auto" | "manual-1" | "manual-2" | "manual-3" | "manual-4" | "manual-5" | "manual-6"; // 저장 슬롯 식별자
 
 export type TextPlayAction = // 게임 액션 묶음
     | { type: "change-stat"; stat: TextPlayStatKey; amount: number } // 능력치 변경

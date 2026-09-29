@@ -20,6 +20,7 @@ export interface TextPlaySaveRepository // 저장소 계약
     load(packageId: string, slotId: TextPlaySlotId): Promise<TextPlaySaveSlot | null>; // 슬롯 읽기
     save(slotId: TextPlaySlotId, state: TextPlayState, summary: string): Promise<void>; // 슬롯 저장
     remove(packageId: string, slotId: TextPlaySlotId): Promise<void>; // 슬롯 삭제
+    getCorruptSlotIds?(packageId: string): TextPlaySlotId[]; // 손상 슬롯 목록
     getStorageWarning?(): string | null; // 저장 방식 경고
 } // 구조 종료
 
@@ -59,7 +60,7 @@ export function validateTextPlaySaveSlot(value: unknown): TextPlaySaveSlot // �
 { // 함수 시작
     if (!isRecord(value) // 슬롯 객체 확인
         || typeof value.key !== "string" // 저장 키 확인
-        || !["auto", "manual-1", "manual-2", "manual-3"].includes(String(value.slotId)) // 슬롯 식별자 확인
+        || !["auto", "manual-1", "manual-2", "manual-3", "manual-4", "manual-5", "manual-6"].includes(String(value.slotId)) // 슬롯 식별자 확인
         || typeof value.packageId !== "string" // 작품 식별자 확인
         || typeof value.summary !== "string" // 진행 요약 확인
         || typeof value.savedAt !== "string" // 저장 시각 확인

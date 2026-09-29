@@ -57,7 +57,7 @@ describe("데스크톱 앱", () => // 데스크톱 앱 묶음
         await user.click(screen.getByRole("button", { name: "전송" })); // 자유 행동 전송
         expect(await screen.findByText("그 선택을 기억할게.")).toBeInTheDocument(); // Mock 응답 완료 확인
         expect(fetchSpy).not.toHaveBeenCalled(); // 네트워크 미사용 확인
-        await user.click(screen.getByRole("button", { name: "홈" })); // 홈 복귀
+        await user.click(screen.getByRole("button", { name: "메인으로 돌아가기: 달빛 숲의 기록" })); // 홈 복귀
         expect(await screen.findByRole("button", { name: "새 게임" })).toBeInTheDocument(); // 홈 화면 확인
         expect(createRepository).toHaveBeenCalledOnce(); // 저장소 단일 생성 확인
         fetchSpy.mockRestore(); // 네트워크 감시 복원

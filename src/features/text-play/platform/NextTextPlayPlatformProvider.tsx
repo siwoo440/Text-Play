@@ -25,6 +25,7 @@ export function NextTextPlayPlatformProvider({ children }: NextTextPlayPlatformP
     { // 함수 시작
         return ( // 플랫폼 반환
         { // 객체 시작
+            applyWindowResolution: async () => undefined, // 웹 창 변경 생략
             navigate: (route) => router.push(ROUTE_PATHS[route]), // 웹 경로 이동
             renderSceneImage: (source) => <Image src={source} alt="" fill sizes="(max-width: 767px) 100vw, 34vw" priority />, // 장면 이미지 출력
         } // 객체 종료

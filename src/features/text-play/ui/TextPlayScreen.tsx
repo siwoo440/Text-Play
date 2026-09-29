@@ -4,18 +4,23 @@ import { useMemo, useRef, useState, type FormEvent } from "react"; // 리액트 
 import { getAvailableChoices } from "@/features/text-play/core/engine"; // 선택지 조회기
 import { DEMO_TEXT_PLAY_PACKAGE } from "@/features/text-play/data/demo-package"; // 샘플 작품
 import { useTextPlayPlatform } from "@/features/text-play/platform/text-play-platform"; // 플랫폼 훅
+import { useTextPlayPreferences } from "@/features/text-play/preferences/TextPlayPreferencesProvider"; // 설정 훅
 import { useTextPlaySession } from "@/features/text-play/session/TextPlayProvider"; // 세션 훅
 import { ChoiceList } from "@/features/text-play/ui/ChoiceList"; // 선택지 목록
-import { SaveManager } from "@/features/text-play/ui/SaveManager"; // 저장 관리자
+import { SaveManager, type SaveManagerMode } from "@/features/text-play/ui/SaveManager"; // 저장 관리자
 import { StatusPanel } from "@/features/text-play/ui/StatusPanel"; // 상태 패널
 import { StoryLog } from "@/features/text-play/ui/StoryLog"; // 이야기 기록
+import { TextPlayFrameDecoration, TextPlayIcon } from "@/features/text-play/ui/TextPlayIcons"; // 벡터 UI
+import { TextPlaySettingsDialog } from "@/features/text-play/ui/TextPlaySettingsDialog"; // 설정 대화상자
 import styles from "@/features/text-play/ui/TextPlayScreen.module.css"; // 화면 스타일
 
 export function TextPlayScreen() // Text-Play 플레이 화면
 { // 함수 시작
     const platform = useTextPlayPlatform(); // 실행 플랫폼 조회
+    const { preferences } = useTextPlayPreferences(); // 게임 설정 조회
     const { state, llmLabel, storageWarning, selectChoice, sendFreeInput, toggleStatePanel } = useTextPlaySession(); // 세션 조회
     const [input, setInput] = useState(""); // 자유 입력 상태
+    const [activeDialog, setActiveDialog] = useState<SaveManagerMode | "settings" | null>(null); // 활성 대화상자 상태
     const abortRef = useRef<AbortController | null>(null); // 중지 제어기
     const scene = useMemo(() => DEMO_TEXT_PLAY_PACKAGE.scenes.find((candidate) => candidate.id === state.game.sceneId) ?? DEMO_TEXT_PLAY_PACKAGE.scenes[0], [state.game.sceneId]); // 현재 장면 조회
     const choices = useMemo(() => getAvailableChoices(DEMO_TEXT_PLAY_PACKAGE, state.game), [state.game]); // 현재 선택지 조회
@@ -37,32 +42,69 @@ export function TextPlayScreen() // Text-Play 플레이 화면
         startRequest(value); // 자유 입력 요청
     }; // 함수 종료
     return ( // 화면 반환
-        <main className={styles.page}> {/* 플레이 화면 */}
+        <main className={styles.page} data-text-play-root data-theme={preferences.themeId} data-resolution={preferences.resolutionId}> {/* 플레이 화면 */}
             <header className={styles.topbar}> {/* 상태 표시줄 */}
-                <div><span>TEXT-PLAY</span><strong>{DEMO_TEXT_PLAY_PACKAGE.title}</strong><span className={styles.aiMode} aria-label="AI 연결">{llmLabel}</span></div> {/* 작품 정보 */}
-                <div><span>체력 {state.game.stats.hp}</span><span>정신력 {state.game.stats.sanity}</span><span>골드 {state.game.stats.gold}</span></div> {/* 능력치 정보 */}
-                <div><button type="button" onClick={() => platform.navigate("home")}>홈</button><button type="button" aria-label={state.isStatePanelOpen ? "상태 패널 닫기" : "상태 패널 열기"} aria-expanded={state.isStatePanelOpen} aria-controls="text-play-state-panel" onClick={toggleStatePanel}>상태</button></div> {/* 화면 동작 */}
+                <button type="button" className={styles.storyTitle} aria-label={`메인으로 돌아가기: ${DEMO_TEXT_PLAY_PACKAGE.title}`} onClick={() => platform.navigate("home")}> {/* 작품 제목 버튼 */}
+                    <span>TEXT-PLAY</span> {/* 작품 표제 */}
+                    <strong>{DEMO_TEXT_PLAY_PACKAGE.title}</strong> {/* 작품 제목 */}
+                </button> {/* 제목 버튼 종료 */}
+                <button type="button" className={styles.stats} aria-label={state.isStatePanelOpen ? "상태 패널 닫기" : "상태 패널 열기"} aria-expanded={state.isStatePanelOpen} aria-controls="text-play-state-panel" onClick={toggleStatePanel}> {/* 능력치 버튼 */}
+                    <span><TextPlayIcon name="heart" size={17} /><small>체력</small><strong>{state.game.stats.hp}</strong></span> {/* 체력 정보 */}
+                    <span><TextPlayIcon name="sanity" size={17} /><small>정신력</small><strong>{state.game.stats.sanity}</strong></span> {/* 정신력 정보 */}
+                    <span><TextPlayIcon name="gold" size={17} /><small>골드</small><strong>{state.game.stats.gold}</strong></span> {/* 골드 정보 */}
+                </button> {/* 능력치 버튼 종료 */}
+                <div className={styles.actions}> {/* 상단 동작 */}
+                    <button type="button" aria-label="저장 슬롯 열기" onClick={() => setActiveDialog("save")}><TextPlayIcon name="save" /><span>저장</span></button> {/* 저장 버튼 */}
+                    <button type="button" aria-label="불러오기 슬롯 열기" onClick={() => setActiveDialog("load")}><TextPlayIcon name="load" /><span>불러오기</span></button> {/* 불러오기 버튼 */}
+                    <label className={styles.aiSelect}> {/* AI 선택 */}
+                        <TextPlayIcon name="ai" /> {/* AI 아이콘 */}
+                        <span aria-label="AI 연결">{llmLabel}</span> {/* AI 상태 */}
+                        <select aria-label="AI 챗봇 선택" value="mock" onChange={() => undefined}> {/* AI 목록 */}
+                            <option value="mock">{llmLabel}</option> {/* Mock AI */}
+                            <option value="local-gpu" disabled>로컬 GPU · 준비 중</option> {/* 로컬 AI */}
+                        </select> {/* AI 목록 종료 */}
+                    </label> {/* AI 선택 종료 */}
+                    <button type="button" aria-label="게임 설정 열기" onClick={() => setActiveDialog("settings")}><TextPlayIcon name="settings" /><span>설정</span></button> {/* 설정 버튼 */}
+                </div> {/* 상단 동작 종료 */}
             </header> {/* 상태 표시줄 종료 */}
             {storageWarning === null ? null : <p className={styles.storageWarning} role="alert">{storageWarning}</p>} {/* 저장 경고 */}
-            <div className={styles.layout}> {/* 본문 배치 */}
-                <section className={styles.scene} aria-labelledby="scene-title"> {/* 장면 영역 */}
+            <div className={styles.workspace}> {/* 게임 작업 영역 */}
+                <section className={styles.stage} aria-label="장면 무대"> {/* 장면 무대 */}
                     <div className={styles.sceneImage}>{scene.imagePath === null ? null : platform.renderSceneImage(scene.imagePath)}</div> {/* 장면 이미지 */}
-                    <div><p>{scene.locationId}</p><h1 id="scene-title">{scene.title}</h1></div> {/* 장면 제목 */}
-                </section> {/* 장면 영역 종료 */}
-                <section className={styles.story}> {/* 이야기 영역 */}
-                    <StoryLog entries={state.game.log} streamedText={state.streamedText} /> {/* 이야기 기록 */}
-                    <ChoiceList choices={choices} disabled={state.isStreaming} onSelect={(choiceId) => void selectChoice(choiceId)} /> {/* 선택지 */}
-                    <form onSubmit={submit}> {/* 자유 입력 폼 */}
-                        <label htmlFor="text-play-input">행동 직접 입력</label> {/* 입력 표제 */}
-                        <div><input id="text-play-input" value={input} disabled={state.isStreaming} onChange={(event) => setInput(event.target.value)} placeholder="예: 벽의 문양을 자세히 살핀다" /><button type="submit" disabled={state.isStreaming}>전송</button>{state.isStreaming ? <button type="button" onClick={() => abortRef.current?.abort()}>응답 중지</button> : null}</div> {/* 입력 제어 */}
-                    </form> {/* 자유 입력 폼 종료 */}
-                    <section className={styles.notice} role="region" aria-label="시스템 안내" aria-live="polite"><span>{state.error ?? state.saveNotice ?? "선택하거나 행동을 입력해 이야기를 진행하세요."}</span>{state.error !== null && state.pendingInput.length > 0 && !state.isStreaming ? <button type="button" onClick={() => startRequest(state.pendingInput)}>같은 입력 다시 시도</button> : null}</section> {/* 시스템 안내 */}
-                </section> {/* 이야기 영역 종료 */}
-                <div className={styles.side}> {/* 상태 보조 영역 */}
-                    <StatusPanel state={state.game} open={state.isStatePanelOpen} /> {/* 상태 패널 */}
-                    <SaveManager /> {/* 저장 관리자 */}
-                </div> {/* 상태 보조 영역 종료 */}
-            </div> {/* 본문 배치 종료 */}
+                    <div className={styles.sceneShade} aria-hidden="true" /> {/* 이미지 음영 */}
+                    <div className={styles.sceneCaption}> {/* 장면 표제 */}
+                        <p>{scene.locationId}</p> {/* 장소 식별자 */}
+                        <h1 id="scene-title">{scene.title}</h1> {/* 장면 제목 */}
+                    </div> {/* 장면 표제 종료 */}
+                    <section className={styles.storyBox} aria-label="스토리 대화"> {/* 스토리 상자 */}
+                        <div className={styles.frameDecoration}><TextPlayFrameDecoration /></div> {/* 벡터 프레임 */}
+                        <StoryLog entries={state.game.log} streamedText={state.streamedText} /> {/* 이야기 기록 */}
+                    </section> {/* 스토리 상자 종료 */}
+                </section> {/* 장면 무대 종료 */}
+                <aside className={styles.commandDock} aria-label="진행 명령"> {/* 명령 도크 */}
+                    <div className={styles.dockHeading}> {/* 도크 제목 */}
+                        <span><TextPlayIcon name="ai" size={18} />AI ASSIST</span> {/* AI 표제 */}
+                        <strong>다음 행동을 선택하세요</strong> {/* 도크 안내 */}
+                    </div> {/* 도크 제목 종료 */}
+                    <div className={styles.recommendations}> {/* 추천 영역 */}
+                        <ChoiceList choices={choices} disabled={state.isStreaming} onSelect={(choiceId) => void selectChoice(choiceId)} /> {/* 선택지 */}
+                    </div> {/* 추천 영역 종료 */}
+                    <div className={styles.inputPanel}> {/* 직접 입력 영역 */}
+                        <form onSubmit={submit}> {/* 자유 입력 폼 */}
+                            <label htmlFor="text-play-input">행동 직접 입력</label> {/* 입력 표제 */}
+                            <textarea id="text-play-input" value={input} disabled={state.isStreaming} onChange={(event) => setInput(event.target.value)} placeholder="예: 벽의 문양을 자세히 살핀다" rows={3} /> {/* 자유 입력 */}
+                            <div className={styles.inputActions}> {/* 입력 동작 */}
+                                <button type="submit" disabled={state.isStreaming}><TextPlayIcon name="send" size={17} />전송</button> {/* 전송 버튼 */}
+                                {state.isStreaming ? <button type="button" onClick={() => abortRef.current?.abort()}><TextPlayIcon name="stop" size={16} />응답 중지</button> : null} {/* 중지 버튼 */}
+                            </div> {/* 입력 동작 종료 */}
+                        </form> {/* 자유 입력 폼 종료 */}
+                        <section className={styles.notice} role="region" aria-label="시스템 안내" aria-live="polite"><span>{state.error ?? state.saveNotice ?? "선택하거나 행동을 입력해 이야기를 진행하세요."}</span>{state.error !== null && state.pendingInput.length > 0 && !state.isStreaming ? <button type="button" onClick={() => startRequest(state.pendingInput)}>같은 입력 다시 시도</button> : null}</section> {/* 시스템 안내 */}
+                    </div> {/* 직접 입력 영역 종료 */}
+                </aside> {/* 명령 도크 종료 */}
+            </div> {/* 작업 영역 종료 */}
+            {state.isStatePanelOpen ? <div className={styles.stateLayer}><button type="button" className={styles.stateScrim} aria-label="상태 패널 닫기" onClick={toggleStatePanel} /><div className={styles.statePopover}><StatusPanel state={state.game} open /></div></div> : null} {/* 상태 팝업 */}
+            <SaveManager mode={activeDialog === "load" ? "load" : "save"} open={activeDialog === "save" || activeDialog === "load"} onClose={() => setActiveDialog(null)} /> {/* 저장 관리자 */}
+            <TextPlaySettingsDialog open={activeDialog === "settings"} onClose={() => setActiveDialog(null)} /> {/* 화면 설정 */}
         </main> // 화면 종료
     ); // 반환 종료
 } // 함수 종료

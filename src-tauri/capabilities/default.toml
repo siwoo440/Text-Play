@@ -2,4 +2,10 @@ identifier = "main-capability" # 권한 묶음 식별자
 description = "Text-Play 기본 창 최소 권한" # 권한 묶음 설명
 windows = ["main"] # 적용 창
 local = true # 로컬 자산 전용
-permissions = ["core:default"] # Tauri 기본 권한
+permissions = [ # 허용 권한 목록
+    "core:default", # Tauri 기본 권한
+    "core:window:allow-set-size", # 창 크기 권한
+    "core:window:allow-center", # 창 중앙 권한
+    "core:window:allow-maximize", # 창 최대화 권한
+    "core:window:allow-unmaximize", # 최대화 해제 권한
+] # 권한 목록 종료

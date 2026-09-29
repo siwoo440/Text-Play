@@ -11,6 +11,16 @@ body /* 문서 본문 */
     overflow-x: hidden; /* 가로 넘침 차단 */
 } /* 본문 종료 */
 
+body:has([data-text-play-root]) /* 게임 실행 본문 */
+{ /* 본문 시작 */
+    overflow: hidden; /* 전체 스크롤 차단 */
+} /* 본문 종료 */
+
+[data-text-play-root] /* 게임 실행 화면 */
+{ /* 화면 시작 */
+    height: 100dvh; /* 창 높이 맞춤 */
+} /* 화면 종료 */
+
 .desktop-scene-image /* 데스크톱 장면 이미지 */
 { /* 이미지 시작 */
     width: 100%; /* 전체 너비 */

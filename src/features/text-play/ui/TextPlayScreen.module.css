@@ -1,91 +1,248 @@
 .page /* 플레이 화면 */
 { /* 화면 시작 */
-    min-height: calc(100vh - 64px); /* 화면 높이 */
-    background: #090c13; /* 화면 배경 */
-    color: #f2f1f7; /* 기본 글자 */
+    --accent: #af91ff; /* 강조 색상 */
+    --accent-strong: #7a57d1; /* 강한 강조 */
+    --accent-soft: rgb(174 143 255 / 18%); /* 약한 강조 */
+    --page-bg: #080a11; /* 화면 배경 */
+    --bar-bg: rgb(12 14 22 / 96%); /* 상단바 배경 */
+    --panel-bg: rgb(15 17 27 / 94%); /* 패널 배경 */
+    --panel-line: rgb(158 136 219 / 30%); /* 패널 구분선 */
+    --dialog-bg: linear-gradient(135deg, rgb(24 20 34 / 84%), rgb(11 13 21 / 76%)); /* 대화 배경 */
+    --main-text: #f6f2ff; /* 주요 글자 */
+    --muted-text: #a7a1b4; /* 보조 글자 */
+    display: grid; /* 화면 배치 */
+    grid-template-rows: 74px minmax(0, 1fr); /* 세로 구획 */
+    width: 100%; /* 전체 너비 */
+    height: calc(100dvh - 64px); /* 앱 셸 제외 높이 */
+    min-height: 560px; /* 최소 높이 */
+    overflow: hidden; /* 전체 스크롤 차단 */
+    background: radial-gradient(circle at 50% -20%, var(--accent-soft), transparent 42%), var(--page-bg); /* 화면 배경 */
+    color: var(--main-text); /* 기본 글자 */
 } /* 화면 종료 */
+
+.page:has(.storageWarning) /* 저장 경고 화면 */
+{ /* 화면 시작 */
+    grid-template-rows: 74px auto minmax(0, 1fr); /* 경고 포함 구획 */
+} /* 화면 종료 */
+
+.page[data-theme="sci-fi"] /* SF 테마 */
+{ /* 테마 시작 */
+    --accent: #63e6e2; /* 강조 색상 */
+    --accent-strong: #138e9d; /* 강한 강조 */
+    --accent-soft: rgb(62 224 222 / 16%); /* 약한 강조 */
+    --page-bg: #041014; /* 화면 배경 */
+    --bar-bg: rgb(4 20 25 / 96%); /* 상단바 배경 */
+    --panel-bg: rgb(6 24 29 / 94%); /* 패널 배경 */
+    --panel-line: rgb(93 226 224 / 32%); /* 패널 구분선 */
+    --dialog-bg: linear-gradient(135deg, rgb(3 24 29 / 82%), rgb(4 14 20 / 76%)); /* 대화 배경 */
+    --main-text: #eaffff; /* 주요 글자 */
+    --muted-text: #91b9bd; /* 보조 글자 */
+} /* 테마 종료 */
+
+.page[data-theme="classic-novel"] /* 비주얼 노벨 테마 */
+{ /* 테마 시작 */
+    --accent: #f1b5bc; /* 강조 색상 */
+    --accent-strong: #a95f74; /* 강한 강조 */
+    --accent-soft: rgb(238 174 184 / 17%); /* 약한 강조 */
+    --page-bg: #171013; /* 화면 배경 */
+    --bar-bg: rgb(31 21 25 / 96%); /* 상단바 배경 */
+    --panel-bg: rgb(35 24 29 / 94%); /* 패널 배경 */
+    --panel-line: rgb(235 175 184 / 30%); /* 패널 구분선 */
+    --dialog-bg: linear-gradient(135deg, rgb(46 29 34 / 84%), rgb(25 17 22 / 76%)); /* 대화 배경 */
+    --main-text: #fff4ee; /* 주요 글자 */
+    --muted-text: #c5aaa9; /* 보조 글자 */
+} /* 테마 종료 */
 
 .topbar /* 상단 표시줄 */
 { /* 표시줄 시작 */
-    display: grid; /* 표시줄 배치 */
-    grid-template-columns: minmax(180px, 1fr) auto auto; /* 표시줄 열 */
-    gap: 20px; /* 항목 간격 */
+    position: relative; /* 겹침 기준 */
+    z-index: 20; /* 장면 위 배치 */
+    display: grid; /* 세 영역 배치 */
+    grid-template-columns: minmax(190px, 1fr) auto minmax(330px, 1fr); /* 표시줄 열 */
+    gap: 18px; /* 영역 간격 */
     align-items: center; /* 세로 중앙 */
-    min-height: 70px; /* 표시줄 높이 */
-    padding: 12px 24px; /* 표시줄 여백 */
-    border-bottom: 1px solid #292b3a; /* 하단 구분선 */
-    background: #11141d; /* 표시줄 배경 */
+    min-width: 0; /* 축소 허용 */
+    padding: 9px 18px; /* 표시줄 여백 */
+    border-bottom: 1px solid var(--panel-line); /* 하단 구분선 */
+    background: var(--bar-bg); /* 표시줄 배경 */
+    backdrop-filter: blur(18px); /* 배경 흐림 */
 } /* 표시줄 종료 */
 
-.topbar > div /* 표시줄 그룹 */
-{ /* 그룹 시작 */
-    display: flex; /* 가로 배치 */
-    flex-wrap: wrap; /* 줄바꿈 허용 */
-    gap: 8px 18px; /* 항목 간격 */
-    align-items: center; /* 세로 중앙 */
-} /* 그룹 종료 */
+.storyTitle /* 작품 제목 버튼 */
+{ /* 버튼 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 3px; /* 제목 간격 */
+    min-width: 0; /* 축소 허용 */
+    padding: 7px 10px; /* 버튼 여백 */
+    border: 0; /* 기본 테두리 제거 */
+    border-radius: 10px; /* 버튼 모서리 */
+    background: transparent; /* 투명 배경 */
+    color: var(--main-text); /* 제목 색상 */
+    cursor: pointer; /* 선택 커서 */
+    text-align: left; /* 왼쪽 정렬 */
+} /* 버튼 종료 */
 
-.topbar > div:first-child span /* 작품 표제 */
+.storyTitle:hover, /* 제목 올림 */
+.storyTitle:focus-visible /* 제목 초점 */
+{ /* 제목 강조 시작 */
+    background: var(--accent-soft); /* 강조 배경 */
+    outline: none; /* 기본 외곽선 제거 */
+} /* 제목 강조 종료 */
+
+.storyTitle span /* 작품 표제 */
 { /* 표제 시작 */
-    color: #a68ae9; /* 표제 색상 */
-    font-size: .68rem; /* 표제 크기 */
+    color: var(--accent); /* 표제 색상 */
+    font-size: .62rem; /* 표제 크기 */
     font-weight: 900; /* 표제 굵기 */
-    letter-spacing: .14em; /* 표제 자간 */
+    letter-spacing: .18em; /* 표제 자간 */
 } /* 표제 종료 */
 
-.topbar .aiMode /* AI 연결 배지 */
-{ /* 배지 시작 */
-    padding: 4px 8px; /* 배지 여백 */
-    border: 1px solid #4b4267; /* 배지 테두리 */
-    border-radius: 999px; /* 배지 모서리 */
-    background: #211c31; /* 배지 배경 */
-    color: #c8b7f4; /* 배지 글자 */
-    font-size: .68rem; /* 배지 크기 */
-    letter-spacing: 0; /* 배지 자간 */
-} /* 배지 종료 */
+.storyTitle strong /* 작품 제목 */
+{ /* 제목 시작 */
+    overflow: hidden; /* 넘침 숨김 */
+    font-size: .94rem; /* 제목 크기 */
+    text-overflow: ellipsis; /* 말줄임 표시 */
+    white-space: nowrap; /* 한 줄 표시 */
+} /* 제목 종료 */
 
-.topbar > div:nth-child(2) span /* 능력치 */
-{ /* 능력치 시작 */
-    color: #b9c0d1; /* 능력치 색상 */
-    font-size: .82rem; /* 능력치 크기 */
-} /* 능력치 종료 */
-
-.topbar button /* 상태 버튼 */
-{ /* 버튼 시작 */
-    min-height: 40px; /* 버튼 높이 */
-    padding: 0 16px; /* 버튼 여백 */
-    border: 1px solid #615583; /* 버튼 테두리 */
-    border-radius: 10px; /* 버튼 모서리 */
-    background: #29213d; /* 버튼 배경 */
-    color: #ede8ff; /* 버튼 글자 */
+.stats /* 능력치 모음 */
+{ /* 모음 시작 */
+    display: flex; /* 가로 배치 */
+    gap: 7px; /* 항목 간격 */
+    padding: 0; /* 기본 여백 제거 */
+    border: 0; /* 기본 테두리 제거 */
+    background: transparent; /* 투명 배경 */
+    color: inherit; /* 글자 상속 */
     cursor: pointer; /* 선택 커서 */
+} /* 모음 종료 */
+
+.stats > span /* 능력치 칩 */
+{ /* 칩 시작 */
+    display: grid; /* 칩 배치 */
+    grid-template-columns: auto auto; /* 아이콘 값 배치 */
+    grid-template-rows: auto auto; /* 이름 값 배치 */
+    column-gap: 7px; /* 가로 간격 */
+    min-width: 76px; /* 칩 너비 */
+    padding: 7px 10px; /* 칩 여백 */
+    border: 1px solid var(--panel-line); /* 칩 테두리 */
+    border-radius: 11px; /* 칩 모서리 */
+    background: var(--accent-soft); /* 칩 배경 */
+    color: var(--accent); /* 아이콘 색상 */
+    text-align: left; /* 왼쪽 정렬 */
+} /* 칩 종료 */
+
+.stats svg /* 능력치 아이콘 */
+{ /* 아이콘 시작 */
+    grid-row: 1 / 3; /* 두 행 차지 */
+    align-self: center; /* 세로 중앙 */
+} /* 아이콘 종료 */
+
+.stats small /* 능력치 이름 */
+{ /* 이름 시작 */
+    color: var(--muted-text); /* 이름 색상 */
+    font-size: .58rem; /* 이름 크기 */
+} /* 이름 종료 */
+
+.stats strong /* 능력치 값 */
+{ /* 값 시작 */
+    color: var(--main-text); /* 값 색상 */
+    font-size: .82rem; /* 값 크기 */
+} /* 값 종료 */
+
+.actions /* 상단 동작 */
+{ /* 동작 시작 */
+    display: flex; /* 가로 배치 */
+    justify-content: flex-end; /* 오른쪽 정렬 */
+    gap: 7px; /* 버튼 간격 */
+    min-width: 0; /* 축소 허용 */
+} /* 동작 종료 */
+
+.actions > button /* 상단 버튼 */
+{ /* 버튼 시작 */
+    display: inline-flex; /* 가로 배치 */
+    gap: 6px; /* 내용 간격 */
+    align-items: center; /* 세로 중앙 */
+    min-height: 40px; /* 버튼 높이 */
+    padding: 0 11px; /* 버튼 여백 */
+    border: 1px solid var(--panel-line); /* 버튼 테두리 */
+    border-radius: 10px; /* 버튼 모서리 */
+    background: var(--panel-bg); /* 버튼 배경 */
+    color: var(--main-text); /* 버튼 글자 */
+    cursor: pointer; /* 선택 커서 */
+    font-size: .72rem; /* 버튼 크기 */
+    font-weight: 800; /* 버튼 굵기 */
 } /* 버튼 종료 */
+
+.actions > button:hover, /* 버튼 올림 */
+.actions > button:focus-visible /* 버튼 초점 */
+{ /* 버튼 강조 시작 */
+    border-color: var(--accent); /* 강조 테두리 */
+    color: var(--accent); /* 강조 글자 */
+    outline: none; /* 기본 외곽선 제거 */
+} /* 버튼 강조 종료 */
+
+.aiSelect /* AI 선택 */
+{ /* 선택 시작 */
+    display: grid; /* 선택 배치 */
+    grid-template-columns: auto minmax(0, 1fr); /* 아이콘 내용 배치 */
+    align-items: center; /* 세로 중앙 */
+    min-width: 126px; /* 선택 너비 */
+    padding: 4px 8px; /* 선택 여백 */
+    border: 1px solid var(--panel-line); /* 선택 테두리 */
+    border-radius: 10px; /* 선택 모서리 */
+    background: var(--panel-bg); /* 선택 배경 */
+    color: var(--accent); /* 아이콘 색상 */
+} /* 선택 종료 */
+
+.aiSelect > span /* AI 상태 */
+{ /* 상태 시작 */
+    overflow: hidden; /* 넘침 숨김 */
+    color: var(--main-text); /* 상태 색상 */
+    font-size: .68rem; /* 상태 크기 */
+    font-weight: 800; /* 상태 굵기 */
+    text-overflow: ellipsis; /* 말줄임 표시 */
+    white-space: nowrap; /* 한 줄 표시 */
+} /* 상태 종료 */
+
+.aiSelect select /* AI 목록 */
+{ /* 목록 시작 */
+    grid-column: 1 / -1; /* 전체 너비 */
+    width: 100%; /* 전체 너비 */
+    margin-top: 2px; /* 위쪽 간격 */
+    border: 0; /* 테두리 제거 */
+    background: transparent; /* 투명 배경 */
+    color: var(--muted-text); /* 목록 색상 */
+    font-size: .62rem; /* 목록 크기 */
+    outline: 0; /* 외곽선 제거 */
+} /* 목록 종료 */
 
 .storageWarning /* 저장 경고 */
 { /* 경고 시작 */
+    z-index: 10; /* 내용 위 배치 */
     margin: 0; /* 기본 여백 제거 */
-    padding: 10px 24px; /* 경고 여백 */
+    padding: 8px 20px; /* 경고 여백 */
     border-bottom: 1px solid #8a6840; /* 경고 구분선 */
     background: #2a2117; /* 경고 배경 */
     color: #f2d8ae; /* 경고 글자 */
-    font-size: .82rem; /* 경고 크기 */
+    font-size: .76rem; /* 경고 크기 */
 } /* 경고 종료 */
 
-.layout /* 본문 배치 */
-{ /* 배치 시작 */
-    display: grid; /* 세 영역 배치 */
-    grid-template-columns: minmax(260px, .8fr) minmax(420px, 1.3fr) minmax(260px, .7fr); /* 세 영역 열 */
-    min-height: calc(100vh - 134px); /* 본문 높이 */
-} /* 배치 종료 */
+.workspace /* 게임 작업 영역 */
+{ /* 작업 영역 시작 */
+    display: grid; /* 두 영역 배치 */
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 390px); /* 무대와 도크 */
+    min-height: 0; /* 내부 축소 허용 */
+    overflow: hidden; /* 전체 넘침 차단 */
+} /* 작업 영역 종료 */
 
-.scene /* 장면 영역 */
-{ /* 장면 시작 */
-    position: relative; /* 문구 기준 */
-    min-height: 520px; /* 장면 높이 */
+.stage /* 장면 무대 */
+{ /* 무대 시작 */
+    position: relative; /* 겹침 기준 */
+    min-width: 0; /* 축소 허용 */
+    min-height: 0; /* 축소 허용 */
     overflow: hidden; /* 이미지 정리 */
-    border-right: 1px solid #292b3a; /* 오른쪽 구분선 */
-    background: #141722; /* 장면 배경 */
-} /* 장면 종료 */
+    background: #10131b; /* 이미지 대체 배경 */
+} /* 무대 종료 */
 
 .sceneImage /* 장면 이미지 */
 { /* 이미지 시작 */
@@ -93,375 +250,537 @@
     inset: 0; /* 전체 채움 */
 } /* 이미지 종료 */
 
-.sceneImage::after /* 이미지 음영 */
-{ /* 음영 시작 */
-    position: absolute; /* 전체 배치 */
-    inset: 0; /* 전체 채움 */
-    background: linear-gradient(transparent 35%, rgb(5 7 12 / 92%)); /* 음영 배경 */
-    content: ""; /* 가상 요소 */
-} /* 음영 종료 */
-
-.sceneImage img /* 장면 이미지 요소 */
+.sceneImage img /* 이미지 요소 */
 { /* 이미지 시작 */
+    width: 100%; /* 전체 너비 */
+    height: 100%; /* 전체 높이 */
     object-fit: cover; /* 이미지 채움 */
 } /* 이미지 종료 */
 
-.scene > div:last-child /* 장면 문구 */
-{ /* 문구 시작 */
-    position: absolute; /* 하단 배치 */
-    right: 28px; /* 오른쪽 여백 */
-    bottom: 30px; /* 하단 여백 */
-    left: 28px; /* 왼쪽 여백 */
-    z-index: 1; /* 이미지 위 배치 */
-} /* 문구 종료 */
+.sceneShade /* 이미지 음영 */
+{ /* 음영 시작 */
+    position: absolute; /* 전체 배치 */
+    inset: 0; /* 전체 채움 */
+    background: linear-gradient(180deg, rgb(3 5 10 / 8%) 20%, rgb(3 5 10 / 22%) 55%, rgb(3 5 10 / 82%) 100%); /* 하단 음영 */
+    pointer-events: none; /* 조작 통과 */
+} /* 음영 종료 */
 
-.scene p /* 장소 식별자 */
+.sceneCaption /* 장면 표제 */
+{ /* 표제 시작 */
+    position: absolute; /* 좌상단 배치 */
+    top: 24px; /* 위쪽 위치 */
+    left: 26px; /* 왼쪽 위치 */
+    z-index: 2; /* 이미지 위 배치 */
+    padding: 10px 14px; /* 표제 여백 */
+    border-left: 2px solid var(--accent); /* 강조선 */
+    background: rgb(5 7 12 / 52%); /* 표제 배경 */
+    backdrop-filter: blur(8px); /* 배경 흐림 */
+} /* 표제 종료 */
+
+.sceneCaption p /* 장소 식별자 */
 { /* 식별자 시작 */
-    color: #baa6ee; /* 식별자 색상 */
-    font-size: .76rem; /* 식별자 크기 */
-    font-weight: 800; /* 식별자 굵기 */
+    margin: 0; /* 기본 여백 제거 */
+    color: var(--accent); /* 식별자 색상 */
+    font-size: .62rem; /* 식별자 크기 */
+    font-weight: 900; /* 식별자 굵기 */
+    letter-spacing: .12em; /* 식별자 자간 */
     text-transform: uppercase; /* 대문자 표시 */
 } /* 식별자 종료 */
 
-.scene h1 /* 장면 제목 */
+.sceneCaption h1 /* 장면 제목 */
 { /* 제목 시작 */
-    margin: 8px 0 0; /* 제목 여백 */
-    font-size: clamp(1.8rem, 3vw, 3.1rem); /* 제목 크기 */
+    margin: 4px 0 0; /* 제목 여백 */
+    font-size: clamp(1.15rem, 2.2vw, 2rem); /* 제목 크기 */
+    text-shadow: 0 2px 14px rgb(0 0 0 / 70%); /* 제목 그림자 */
 } /* 제목 종료 */
 
-.story /* 이야기 영역 */
-{ /* 이야기 시작 */
-    display: flex; /* 세로 배치 */
-    flex-direction: column; /* 세로 방향 */
-    gap: 22px; /* 영역 간격 */
-    max-height: calc(100vh - 134px); /* 최대 높이 */
-    padding: 28px; /* 이야기 여백 */
-    overflow-y: auto; /* 세로 스크롤 */
-    background: linear-gradient(180deg, #11141e, #0c1018); /* 이야기 배경 */
-} /* 이야기 종료 */
+.storyBox /* 스토리 상자 */
+{ /* 상자 시작 */
+    position: absolute; /* 하단 겹침 */
+    right: clamp(18px, 3vw, 42px); /* 오른쪽 위치 */
+    bottom: clamp(18px, 3vw, 34px); /* 하단 위치 */
+    left: clamp(18px, 3vw, 42px); /* 왼쪽 위치 */
+    z-index: 3; /* 이미지 위 배치 */
+    max-height: min(42%, 300px); /* 상자 높이 */
+    overflow: hidden auto; /* 내부 스크롤 */
+    padding: clamp(22px, 3vw, 32px); /* 상자 여백 */
+    border: 1px solid var(--panel-line); /* 상자 테두리 */
+    border-radius: 20px; /* 상자 모서리 */
+    background: var(--dialog-bg); /* 반투명 배경 */
+    box-shadow: 0 22px 70px rgb(0 0 0 / 46%); /* 상자 그림자 */
+    backdrop-filter: blur(17px) saturate(125%); /* 배경 흐림 */
+} /* 상자 종료 */
 
-.story > section:first-child /* 이야기 기록 */
+.frameDecoration /* 프레임 장식 */
+{ /* 장식 시작 */
+    position: absolute; /* 상단 장식 */
+    top: 0; /* 위쪽 배치 */
+    right: 0; /* 오른쪽 배치 */
+    left: 0; /* 왼쪽 배치 */
+    height: 48px; /* 장식 높이 */
+    color: var(--accent); /* 장식 색상 */
+    opacity: .58; /* 장식 투명도 */
+    pointer-events: none; /* 조작 통과 */
+} /* 장식 종료 */
+
+.frameDecoration svg /* 장식 벡터 */
+{ /* 벡터 시작 */
+    width: 100%; /* 전체 너비 */
+    height: 100%; /* 전체 높이 */
+} /* 벡터 종료 */
+
+.storyBox > section /* 이야기 기록 */
 { /* 기록 시작 */
     display: grid; /* 세로 배치 */
-    gap: 16px; /* 기록 간격 */
+    gap: 12px; /* 기록 간격 */
 } /* 기록 종료 */
 
-.story article /* 기록 카드 */
-{ /* 카드 시작 */
-    padding: 18px 20px; /* 카드 여백 */
-    border-left: 3px solid #7562a8; /* 기록 구분선 */
-    border-radius: 0 12px 12px 0; /* 카드 모서리 */
-    background: #181c27; /* 카드 배경 */
-} /* 카드 종료 */
+.storyBox article /* 기록 항목 */
+{ /* 항목 시작 */
+    padding-left: 14px; /* 왼쪽 여백 */
+    border-left: 2px solid var(--accent); /* 기록 구분선 */
+} /* 항목 종료 */
 
-.story article[data-kind="system"] /* 시스템 기록 */
-{ /* 시스템 시작 */
-    border-left-color: #67778b; /* 시스템 구분선 */
-    background: #121720; /* 시스템 배경 */
-    color: #aeb6c7; /* 시스템 글자 */
-} /* 시스템 종료 */
+.storyBox article[data-kind="system"] /* 시스템 기록 */
+{ /* 기록 시작 */
+    border-left-color: var(--muted-text); /* 시스템 구분선 */
+    color: var(--muted-text); /* 시스템 글자 */
+} /* 기록 종료 */
 
-.story article[data-kind="dialogue"] /* 대사 기록 */
-{ /* 대사 시작 */
-    border-left-color: #c28c73; /* 대사 구분선 */
-} /* 대사 종료 */
-
-.story article p /* 기록 문구 */
+.storyBox article p /* 기록 문구 */
 { /* 문구 시작 */
     margin: 0; /* 기본 여백 제거 */
-    line-height: 1.72; /* 기록 행간 */
+    color: var(--main-text); /* 문구 색상 */
+    font-size: clamp(.88rem, 1.2vw, 1.02rem); /* 문구 크기 */
+    line-height: 1.7; /* 문구 행간 */
+    text-shadow: 0 1px 8px rgb(0 0 0 / 70%); /* 문구 그림자 */
 } /* 문구 종료 */
 
-.story article strong /* 발화자 */
+.storyBox article strong /* 발화자 */
 { /* 발화자 시작 */
     display: block; /* 줄 분리 */
-    margin-bottom: 8px; /* 문구 간격 */
-    color: #e0b99d; /* 발화자 색상 */
+    margin-bottom: 5px; /* 문구 간격 */
+    color: var(--accent); /* 발화자 색상 */
 } /* 발화자 종료 */
 
-.story > section:nth-child(2) /* 선택지 영역 */
+.commandDock /* 명령 도크 */
+{ /* 도크 시작 */
+    display: grid; /* 세로 배치 */
+    grid-template-rows: auto minmax(0, 1fr) auto; /* 도크 구획 */
+    min-width: 0; /* 축소 허용 */
+    min-height: 0; /* 축소 허용 */
+    overflow: hidden; /* 도크 넘침 차단 */
+    border-left: 1px solid var(--panel-line); /* 도크 구분선 */
+    background: linear-gradient(180deg, var(--panel-bg), var(--page-bg)); /* 도크 배경 */
+} /* 도크 종료 */
+
+.dockHeading /* 도크 제목 */
+{ /* 제목 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 4px; /* 제목 간격 */
+    padding: 20px 20px 14px; /* 제목 여백 */
+    border-bottom: 1px solid var(--panel-line); /* 하단 구분선 */
+} /* 제목 종료 */
+
+.dockHeading span /* AI 표제 */
+{ /* 표제 시작 */
+    display: flex; /* 가로 배치 */
+    gap: 7px; /* 내용 간격 */
+    align-items: center; /* 세로 중앙 */
+    color: var(--accent); /* 표제 색상 */
+    font-size: .62rem; /* 표제 크기 */
+    font-weight: 900; /* 표제 굵기 */
+    letter-spacing: .14em; /* 표제 자간 */
+} /* 표제 종료 */
+
+.dockHeading strong /* 도크 안내 */
+{ /* 안내 시작 */
+    font-size: .96rem; /* 안내 크기 */
+} /* 안내 종료 */
+
+.recommendations /* 추천 영역 */
+{ /* 영역 시작 */
+    min-height: 0; /* 축소 허용 */
+    overflow: hidden auto; /* 선택지 스크롤 */
+    padding: 16px 18px; /* 영역 여백 */
+} /* 영역 종료 */
+
+.recommendations section /* 선택지 영역 */
 { /* 선택지 시작 */
-    padding-top: 6px; /* 위쪽 여백 */
+    display: grid; /* 세로 배치 */
+    gap: 12px; /* 내용 간격 */
 } /* 선택지 종료 */
 
-.story h2 /* 영역 제목 */
+.recommendations h2 /* 선택지 제목 */
 { /* 제목 시작 */
-    margin: 0 0 12px; /* 제목 여백 */
-    font-size: .86rem; /* 제목 크기 */
+    margin: 0; /* 기본 여백 제거 */
+    color: var(--muted-text); /* 제목 색상 */
+    font-size: .72rem; /* 제목 크기 */
     letter-spacing: .08em; /* 제목 자간 */
 } /* 제목 종료 */
 
-.story > section:nth-child(2) > div /* 선택지 목록 */
+.recommendations section > div /* 선택지 목록 */
 { /* 목록 시작 */
     display: grid; /* 세로 배치 */
     gap: 10px; /* 선택지 간격 */
 } /* 목록 종료 */
 
-.story > section:nth-child(2) button /* 선택지 버튼 */
+.recommendations button /* 추천 버튼 */
 { /* 버튼 시작 */
-    min-height: 48px; /* 버튼 높이 */
-    padding: 10px 16px; /* 버튼 여백 */
-    border: 1px solid #4d4666; /* 버튼 테두리 */
+    position: relative; /* 번호 기준 */
+    min-height: 54px; /* 버튼 높이 */
+    padding: 12px 14px 12px 38px; /* 버튼 여백 */
+    border: 1px solid var(--panel-line); /* 버튼 테두리 */
     border-radius: 12px; /* 버튼 모서리 */
-    background: linear-gradient(135deg, #282238, #1a1e2a); /* 버튼 배경 */
-    color: #eeeaf8; /* 버튼 글자 */
+    background: linear-gradient(135deg, var(--accent-soft), rgb(14 16 25 / 76%)); /* 버튼 배경 */
+    color: var(--main-text); /* 버튼 글자 */
     cursor: pointer; /* 선택 커서 */
+    font-size: .84rem; /* 버튼 크기 */
+    line-height: 1.45; /* 버튼 행간 */
     text-align: left; /* 왼쪽 정렬 */
 } /* 버튼 종료 */
 
-.story form /* 입력 폼 */
+.recommendations button::before /* 추천 표시 */
+{ /* 표시 시작 */
+    position: absolute; /* 왼쪽 배치 */
+    top: 50%; /* 세로 중앙 */
+    left: 14px; /* 왼쪽 위치 */
+    width: 8px; /* 표시 너비 */
+    height: 8px; /* 표시 높이 */
+    border: 1px solid var(--accent); /* 표시 테두리 */
+    border-radius: 50%; /* 원형 표시 */
+    box-shadow: 0 0 10px var(--accent); /* 표시 발광 */
+    content: ""; /* 가상 요소 */
+    transform: translateY(-50%); /* 중앙 보정 */
+} /* 표시 종료 */
+
+.recommendations button:hover, /* 추천 올림 */
+.recommendations button:focus-visible /* 추천 초점 */
+{ /* 추천 강조 시작 */
+    border-color: var(--accent); /* 강조 테두리 */
+    outline: none; /* 기본 외곽선 제거 */
+    transform: translateX(-2px); /* 왼쪽 이동 */
+} /* 추천 강조 종료 */
+
+.inputPanel /* 직접 입력 영역 */
+{ /* 영역 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 10px; /* 내용 간격 */
+    padding: 16px 18px 18px; /* 영역 여백 */
+    border-top: 1px solid var(--panel-line); /* 상단 구분선 */
+    background: rgb(7 9 15 / 56%); /* 영역 배경 */
+} /* 영역 종료 */
+
+.inputPanel form /* 입력 폼 */
 { /* 폼 시작 */
     display: grid; /* 세로 배치 */
     gap: 8px; /* 폼 간격 */
 } /* 폼 종료 */
 
-.story form label /* 입력 표제 */
+.inputPanel label /* 입력 표제 */
 { /* 표제 시작 */
-    color: #aeb5c5; /* 표제 색상 */
-    font-size: .82rem; /* 표제 크기 */
-    font-weight: 750; /* 표제 굵기 */
+    color: var(--muted-text); /* 표제 색상 */
+    font-size: .72rem; /* 표제 크기 */
+    font-weight: 800; /* 표제 굵기 */
 } /* 표제 종료 */
 
-.story form > div /* 입력 제어 */
-{ /* 제어 시작 */
-    display: flex; /* 가로 배치 */
-    gap: 8px; /* 제어 간격 */
-} /* 제어 종료 */
-
-.story input /* 자유 입력 */
+.inputPanel textarea /* 자유 입력 */
 { /* 입력 시작 */
-    min-width: 0; /* 축소 허용 */
-    flex: 1; /* 남은 영역 채움 */
-    min-height: 46px; /* 입력 높이 */
-    padding: 0 14px; /* 입력 여백 */
-    border: 1px solid #393e4d; /* 입력 테두리 */
-    border-radius: 10px; /* 입력 모서리 */
-    background: #0d1119; /* 입력 배경 */
-    color: #fff; /* 입력 글자 */
+    width: 100%; /* 전체 너비 */
+    min-height: 76px; /* 입력 높이 */
+    resize: none; /* 크기 고정 */
+    padding: 12px; /* 입력 여백 */
+    border: 1px solid var(--panel-line); /* 입력 테두리 */
+    border-radius: 11px; /* 입력 모서리 */
+    background: rgb(6 8 13 / 74%); /* 입력 배경 */
+    color: var(--main-text); /* 입력 글자 */
+    line-height: 1.5; /* 입력 행간 */
+    outline: none; /* 기본 외곽선 제거 */
 } /* 입력 종료 */
 
-.story form button /* 입력 버튼 */
+.inputPanel textarea:focus /* 입력 초점 */
+{ /* 초점 시작 */
+    border-color: var(--accent); /* 초점 테두리 */
+    box-shadow: 0 0 0 2px var(--accent-soft); /* 초점 강조 */
+} /* 초점 종료 */
+
+.inputActions /* 입력 동작 */
+{ /* 동작 시작 */
+    display: flex; /* 가로 배치 */
+    gap: 8px; /* 버튼 간격 */
+} /* 동작 종료 */
+
+.inputActions button, /* 입력 버튼 */
+.notice button /* 안내 버튼 */
 { /* 버튼 시작 */
-    min-height: 46px; /* 버튼 높이 */
+    display: inline-flex; /* 가로 배치 */
+    gap: 6px; /* 내용 간격 */
+    align-items: center; /* 세로 중앙 */
+    justify-content: center; /* 가로 중앙 */
+    min-height: 40px; /* 버튼 높이 */
     padding: 0 14px; /* 버튼 여백 */
-    border: 0; /* 테두리 제거 */
+    border: 1px solid var(--accent); /* 버튼 테두리 */
     border-radius: 10px; /* 버튼 모서리 */
-    background: #7656c4; /* 버튼 배경 */
+    background: var(--accent-strong); /* 버튼 배경 */
     color: #fff; /* 버튼 글자 */
     cursor: pointer; /* 선택 커서 */
+    font-size: .78rem; /* 버튼 크기 */
+    font-weight: 850; /* 버튼 굵기 */
+} /* 버튼 종료 */
+
+.inputActions button:first-child /* 전송 버튼 */
+{ /* 버튼 시작 */
+    flex: 1; /* 남은 공간 */
 } /* 버튼 종료 */
 
 .notice /* 시스템 안내 */
 { /* 안내 시작 */
-    display: flex; /* 안내 배치 */
+    display: flex; /* 가로 배치 */
     flex-wrap: wrap; /* 줄바꿈 허용 */
-    gap: 10px; /* 안내 간격 */
+    gap: 7px; /* 내용 간격 */
     align-items: center; /* 세로 중앙 */
-    min-height: 42px; /* 안내 높이 */
-    padding: 12px 14px; /* 안내 여백 */
-    border: 1px solid #34394a; /* 안내 테두리 */
-    border-radius: 10px; /* 안내 모서리 */
-    background: #121722; /* 안내 배경 */
-    color: #adb5c8; /* 안내 글자 */
-    font-size: .82rem; /* 안내 크기 */
+    min-height: 34px; /* 안내 높이 */
+    color: var(--muted-text); /* 안내 색상 */
+    font-size: .7rem; /* 안내 크기 */
+    line-height: 1.4; /* 안내 행간 */
 } /* 안내 종료 */
 
 .notice button /* 재시도 버튼 */
 { /* 버튼 시작 */
-    min-height: 34px; /* 버튼 높이 */
-    padding: 0 12px; /* 버튼 여백 */
-    border: 1px solid #64548f; /* 버튼 테두리 */
-    border-radius: 8px; /* 버튼 모서리 */
-    background: #2b2340; /* 버튼 배경 */
-    color: #eee8ff; /* 버튼 글자 */
-    cursor: pointer; /* 선택 커서 */
+    min-height: 30px; /* 버튼 높이 */
+    padding: 0 9px; /* 버튼 여백 */
+    background: var(--accent-soft); /* 버튼 배경 */
+    color: var(--accent); /* 버튼 글자 */
+    font-size: .68rem; /* 버튼 크기 */
 } /* 버튼 종료 */
 
-.side /* 보조 영역 */
-{ /* 보조 시작 */
+.stateLayer /* 상태 레이어 */
+{ /* 레이어 시작 */
+    position: fixed; /* 화면 고정 */
+    inset: 0; /* 전체 채움 */
+    z-index: 70; /* 화면 위 배치 */
+} /* 레이어 종료 */
+
+.stateScrim /* 상태 배경 */
+{ /* 배경 시작 */
+    position: absolute; /* 전체 배치 */
+    inset: 0; /* 전체 채움 */
+    width: 100%; /* 전체 너비 */
+    border: 0; /* 테두리 제거 */
+    background: rgb(2 4 8 / 48%); /* 어두운 배경 */
+    backdrop-filter: blur(5px); /* 배경 흐림 */
+    cursor: pointer; /* 닫기 커서 */
+} /* 배경 종료 */
+
+.statePopover /* 상태 팝업 */
+{ /* 팝업 시작 */
+    position: absolute; /* 우상단 배치 */
+    top: 86px; /* 위쪽 위치 */
+    right: 20px; /* 오른쪽 위치 */
+    width: min(340px, calc(100vw - 40px)); /* 팝업 너비 */
+    max-height: calc(100dvh - 106px); /* 팝업 높이 */
+    overflow: auto; /* 팝업 스크롤 */
+    padding: 20px; /* 팝업 여백 */
+    border: 1px solid var(--panel-line); /* 팝업 테두리 */
+    border-radius: 17px; /* 팝업 모서리 */
+    background: var(--panel-bg); /* 팝업 배경 */
+    box-shadow: 0 24px 70px rgb(0 0 0 / 55%); /* 팝업 그림자 */
+} /* 팝업 종료 */
+
+.statePopover aside /* 상태 내용 */
+{ /* 내용 시작 */
     display: grid; /* 세로 배치 */
-    align-content: start; /* 위쪽 정렬 */
-    gap: 18px; /* 영역 간격 */
-    padding: 24px; /* 보조 여백 */
-    border-left: 1px solid #292b3a; /* 왼쪽 구분선 */
-    background: #10131b; /* 보조 배경 */
-} /* 보조 종료 */
+    gap: 14px; /* 내용 간격 */
+} /* 내용 종료 */
 
-.side aside, /* 상태 패널 */
-.side > section /* 저장 관리자 */
-{ /* 패널 시작 */
-    padding: 18px; /* 패널 여백 */
-    border: 1px solid #303443; /* 패널 테두리 */
-    border-radius: 14px; /* 패널 모서리 */
-    background: #171b25; /* 패널 배경 */
-} /* 패널 종료 */
-
-.side h2, /* 상태 제목 */
-.side h3 /* 보조 제목 */
+.statePopover h2, /* 상태 제목 */
+.statePopover h3 /* 영역 제목 */
 { /* 제목 시작 */
-    margin: 0 0 12px; /* 제목 여백 */
-    font-size: .92rem; /* 제목 크기 */
+    margin: 0; /* 기본 여백 제거 */
 } /* 제목 종료 */
 
-.side dl /* 능력치 목록 */
+.statePopover dl /* 능력치 목록 */
 { /* 목록 시작 */
-    display: grid; /* 두 열 배치 */
-    grid-template-columns: repeat(2, 1fr); /* 두 열 */
+    display: grid; /* 격자 배치 */
+    grid-template-columns: repeat(2, 1fr); /* 두 열 배치 */
     gap: 8px; /* 항목 간격 */
-    margin: 0 0 18px; /* 목록 여백 */
+    margin: 0; /* 기본 여백 제거 */
 } /* 목록 종료 */
 
-.side dl div /* 능력치 항목 */
+.statePopover dl div /* 능력치 항목 */
 { /* 항목 시작 */
     padding: 10px; /* 항목 여백 */
-    border-radius: 8px; /* 항목 모서리 */
-    background: #0f131c; /* 항목 배경 */
+    border: 1px solid var(--panel-line); /* 항목 테두리 */
+    border-radius: 9px; /* 항목 모서리 */
+    background: var(--accent-soft); /* 항목 배경 */
 } /* 항목 종료 */
 
-.side dt /* 능력치 이름 */
+.statePopover dt /* 능력치 이름 */
 { /* 이름 시작 */
-    color: #929bad; /* 이름 색상 */
-    font-size: .72rem; /* 이름 크기 */
+    color: var(--muted-text); /* 이름 색상 */
+    font-size: .68rem; /* 이름 크기 */
 } /* 이름 종료 */
 
-.side dd /* 능력치 값 */
+.statePopover dd /* 능력치 값 */
 { /* 값 시작 */
-    margin: 4px 0 0; /* 값 여백 */
-    color: #ded5f7; /* 값 색상 */
-    font-weight: 800; /* 값 굵기 */
+    margin: 3px 0 0; /* 값 여백 */
+    font-weight: 850; /* 값 굵기 */
 } /* 값 종료 */
 
-.side ul /* 아이템 목록 */
-{ /* 목록 시작 */
-    padding-left: 20px; /* 목록 들여쓰기 */
-} /* 목록 종료 */
-
-.side p, /* 보조 문구 */
-.side li /* 보조 항목 */
+.statePopover p, /* 상태 문구 */
+.statePopover li /* 상태 항목 */
 { /* 문구 시작 */
-    color: #aab2c2; /* 문구 색상 */
-    font-size: .8rem; /* 문구 크기 */
-    line-height: 1.55; /* 문구 행간 */
+    color: var(--muted-text); /* 문구 색상 */
+    font-size: .78rem; /* 문구 크기 */
+    line-height: 1.5; /* 문구 행간 */
 } /* 문구 종료 */
 
-.side > section > div /* 슬롯 행 */
-{ /* 슬롯 시작 */
-    display: grid; /* 세로 배치 */
-    gap: 5px; /* 슬롯 간격 */
-    margin-top: 10px; /* 슬롯 위쪽 여백 */
-    padding: 10px; /* 슬롯 안쪽 여백 */
-    border: 1px solid #2d3140; /* 슬롯 테두리 */
-    border-radius: 9px; /* 슬롯 모서리 */
-    background: #11151e; /* 슬롯 배경 */
-} /* 슬롯 종료 */
-
-.side > section > div > span /* 슬롯 정보 */
-{ /* 정보 시작 */
-    color: #939cad; /* 정보 글자 */
-    font-size: .72rem; /* 정보 크기 */
-} /* 정보 종료 */
-
-.side > section > div > div /* 슬롯 동작 */
-{ /* 동작 시작 */
-    display: flex; /* 가로 배치 */
-    flex-wrap: wrap; /* 줄바꿈 허용 */
-    gap: 5px; /* 버튼 간격 */
-} /* 동작 종료 */
-
-.side > section button /* 슬롯 버튼 */
-{ /* 버튼 시작 */
-    padding: 6px; /* 버튼 여백 */
-    border: 1px solid #48415e; /* 버튼 테두리 */
-    border-radius: 6px; /* 버튼 모서리 */
-    background: #242031; /* 버튼 배경 */
-    color: #dcd5ed; /* 버튼 글자 */
-    cursor: pointer; /* 선택 커서 */
-    font-size: .7rem; /* 버튼 크기 */
-} /* 버튼 종료 */
-
-@media (min-width: 768px) /* 태블릿 이상 */
+@media (max-width: 1180px) /* 작은 데스크톱 */
 { /* 미디어 시작 */
-    .side aside[aria-hidden="true"] /* 닫힌 상태 패널 */
-    { /* 패널 시작 */
-        display: block; /* 데스크톱 상시 표시 */
-    } /* 패널 종료 */
-} /* 미디어 종료 */
-
-@media (max-width: 1279px) /* 태블릿 */
-{ /* 미디어 시작 */
-    .layout /* 태블릿 배치 */
-    { /* 배치 시작 */
-        grid-template-columns: minmax(260px, .8fr) minmax(420px, 1.2fr); /* 두 영역 열 */
-    } /* 배치 종료 */
-
-    .side /* 태블릿 보조 */
-    { /* 보조 시작 */
-        grid-column: 1 / -1; /* 전체 너비 */
-        grid-template-columns: 1fr 1fr; /* 두 열 */
-        border-top: 1px solid #292b3a; /* 상단 구분선 */
-        border-left: 0; /* 왼쪽 선 제거 */
-    } /* 보조 종료 */
-
-    .story /* 태블릿 이야기 */
-    { /* 이야기 시작 */
-        max-height: none; /* 높이 제한 해제 */
-    } /* 이야기 종료 */
-} /* 미디어 종료 */
-
-@media (max-width: 767px) /* 모바일 */
-{ /* 미디어 시작 */
-    .topbar /* 모바일 표시줄 */
+    .topbar /* 작은 표시줄 */
     { /* 표시줄 시작 */
-        grid-template-columns: 1fr auto; /* 두 열 */
-        padding: 10px 14px; /* 표시줄 여백 */
+        grid-template-columns: minmax(170px, 1fr) auto; /* 두 열 배치 */
     } /* 표시줄 종료 */
 
-    .topbar > div:nth-child(2) /* 모바일 능력치 */
+    .stats /* 작은 능력치 */
     { /* 능력치 시작 */
-        grid-column: 1 / -1; /* 전체 너비 */
-        grid-row: 2; /* 둘째 줄 */
+        justify-self: end; /* 오른쪽 배치 */
     } /* 능력치 종료 */
 
-    .layout /* 모바일 배치 */
-    { /* 배치 시작 */
-        display: block; /* 단일 열 */
-    } /* 배치 종료 */
+    .actions /* 작은 동작 */
+    { /* 동작 시작 */
+        grid-column: 1 / -1; /* 전체 너비 */
+        justify-content: flex-end; /* 오른쪽 정렬 */
+    } /* 동작 종료 */
 
-    .scene /* 모바일 장면 */
-    { /* 장면 시작 */
-        min-height: 330px; /* 장면 높이 */
-        border-right: 0; /* 오른쪽 선 제거 */
-    } /* 장면 종료 */
+    .page /* 작은 화면 */
+    { /* 화면 시작 */
+        grid-template-rows: auto minmax(0, 1fr); /* 자동 상단바 */
+    } /* 화면 종료 */
 
-    .story /* 모바일 이야기 */
-    { /* 이야기 시작 */
-        max-height: none; /* 높이 제한 해제 */
-        padding: 20px 16px; /* 이야기 여백 */
-    } /* 이야기 종료 */
+    .page:has(.storageWarning) /* 작은 경고 화면 */
+    { /* 화면 시작 */
+        grid-template-rows: auto auto minmax(0, 1fr); /* 경고 포함 구획 */
+    } /* 화면 종료 */
+} /* 미디어 종료 */
 
-    .story form > div /* 모바일 입력 */
-    { /* 입력 시작 */
-        flex-wrap: wrap; /* 줄바꿈 허용 */
-    } /* 입력 종료 */
+@media (max-width: 959px) /* 태블릿 */
+{ /* 미디어 시작 */
+    .page /* 태블릿 화면 */
+    { /* 화면 시작 */
+        display: block; /* 문서 흐름 */
+        height: auto; /* 높이 자동 */
+        min-height: calc(100dvh - 64px); /* 앱 셸 높이 */
+        overflow: visible; /* 문서 스크롤 허용 */
+    } /* 화면 종료 */
 
-    .story input /* 모바일 입력창 */
-    { /* 입력창 시작 */
-        flex-basis: 100%; /* 전체 너비 */
-    } /* 입력창 종료 */
+    .topbar /* 태블릿 표시줄 */
+    { /* 표시줄 시작 */
+        position: sticky; /* 상단 고정 */
+        top: 64px; /* 앱 헤더 아래 */
+        grid-template-columns: minmax(0, 1fr) auto; /* 두 열 배치 */
+    } /* 표시줄 종료 */
 
-    .side /* 모바일 보조 */
-    { /* 보조 시작 */
-        display: block; /* 단일 열 */
-        padding: 16px; /* 보조 여백 */
-    } /* 보조 종료 */
+    .workspace /* 태블릿 작업 영역 */
+    { /* 영역 시작 */
+        display: grid; /* 세로 배치 */
+        grid-template-columns: 1fr; /* 한 열 배치 */
+        overflow: visible; /* 문서 흐름 */
+    } /* 영역 종료 */
 
-    .side aside[aria-hidden="true"] /* 닫힌 모바일 상태 */
-    { /* 패널 시작 */
-        display: none; /* 패널 숨김 */
-    } /* 패널 종료 */
+    .stage /* 태블릿 무대 */
+    { /* 무대 시작 */
+        min-height: min(68vw, 650px); /* 반응형 높이 */
+    } /* 무대 종료 */
 
-    .side > section /* 모바일 저장 */
-    { /* 저장 시작 */
-        margin-top: 14px; /* 저장 위쪽 여백 */
-    } /* 저장 종료 */
+    .commandDock /* 태블릿 도크 */
+    { /* 도크 시작 */
+        grid-template-rows: auto auto auto; /* 내용 높이 */
+        overflow: visible; /* 내용 표시 */
+        border-top: 1px solid var(--panel-line); /* 상단 구분선 */
+        border-left: 0; /* 왼쪽 선 제거 */
+    } /* 도크 종료 */
+
+    .recommendations /* 태블릿 추천 */
+    { /* 추천 시작 */
+        overflow: visible; /* 목록 표시 */
+    } /* 추천 종료 */
+} /* 미디어 종료 */
+
+@media (max-width: 700px) /* 모바일 */
+{ /* 미디어 시작 */
+    .page /* 모바일 화면 */
+    { /* 화면 시작 */
+        min-height: calc(100dvh - 132px); /* 하단 메뉴 제외 */
+        padding-bottom: 68px; /* 하단 메뉴 공간 */
+    } /* 화면 종료 */
+
+    .topbar /* 모바일 표시줄 */
+    { /* 표시줄 시작 */
+        top: 64px; /* 앱 헤더 아래 */
+        gap: 8px; /* 영역 간격 */
+        padding: 8px 10px; /* 표시줄 여백 */
+    } /* 표시줄 종료 */
+
+    .stats > span /* 모바일 능력치 */
+    { /* 칩 시작 */
+        min-width: 0; /* 너비 축소 */
+        padding: 6px 8px; /* 칩 여백 */
+    } /* 칩 종료 */
+
+    .stats small, /* 모바일 이름 */
+    .actions > button span, /* 모바일 버튼 문구 */
+    .aiSelect > span /* 모바일 AI 상태 */
+    { /* 숨김 시작 */
+        position: absolute; /* 화면 제외 */
+        width: 1px; /* 최소 너비 */
+        height: 1px; /* 최소 높이 */
+        overflow: hidden; /* 넘침 숨김 */
+        clip: rect(0 0 0 0); /* 화면 자르기 */
+    } /* 숨김 종료 */
+
+    .actions /* 모바일 동작 */
+    { /* 동작 시작 */
+        justify-content: stretch; /* 전체 배치 */
+    } /* 동작 종료 */
+
+    .actions > button /* 모바일 버튼 */
+    { /* 버튼 시작 */
+        justify-content: center; /* 중앙 정렬 */
+        min-width: 42px; /* 터치 너비 */
+        padding: 0 10px; /* 버튼 여백 */
+    } /* 버튼 종료 */
+
+    .aiSelect /* 모바일 AI */
+    { /* 선택 시작 */
+        min-width: 100px; /* 선택 너비 */
+    } /* 선택 종료 */
+
+    .stage /* 모바일 무대 */
+    { /* 무대 시작 */
+        min-height: 540px; /* 무대 높이 */
+    } /* 무대 종료 */
+
+    .sceneCaption /* 모바일 장면 제목 */
+    { /* 표제 시작 */
+        top: 16px; /* 위쪽 위치 */
+        left: 16px; /* 왼쪽 위치 */
+    } /* 표제 종료 */
+
+    .storyBox /* 모바일 스토리 */
+    { /* 상자 시작 */
+        right: 12px; /* 오른쪽 위치 */
+        bottom: 12px; /* 하단 위치 */
+        left: 12px; /* 왼쪽 위치 */
+        max-height: 52%; /* 상자 높이 */
+        padding: 22px 18px 18px; /* 상자 여백 */
+    } /* 상자 종료 */
+} /* 미디어 종료 */
+
+@media (prefers-reduced-motion: reduce) /* 동작 감소 */
+{ /* 미디어 시작 */
+    .recommendations button /* 추천 버튼 */
+    { /* 버튼 시작 */
+        transition: none; /* 전환 제거 */
+    } /* 버튼 종료 */
 } /* 미디어 종료 */

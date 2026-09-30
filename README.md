@@ -35,6 +35,8 @@ MATE Text-Play는 선택지와 제한형 자유 입력을 결합한 텍스트 �
 
 자세한 설명은 [프로젝트 구조 문서](docs/PROJECT-STRUCTURE.md)와 [개발 기록](docs/DEVELOPMENT-LOG.md)을 확인합니다.
 
+다른 컴퓨터나 새 챗봇 세션에서 작업을 이어갈 때는 [작업 인수인계](docs/HANDOFF.md)를 먼저 확인합니다.
+
 ---
 ## 로컬 실행
 

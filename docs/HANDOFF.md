@@ -8,7 +8,8 @@
 
 - 저장소: [siwoo440/Text-Play](https://github.com/siwoo440/Text-Play)
 - 작업 브랜치: `main` 하나만 사용
-- 기준 소스 커밋: `f54fa3feb958c34e312cc9853166e814b2a67c81` (`기능: exe 메인 화면을 ChatBot 밝은 다채색 탐색 화면 구성으로 변경`)
+- 기준 소스 커밋: `2115f42e214409f4b37f2758bab8561f0807244c` (`기능: exe에 최신 ChatBot 전체 기능과 왼쪽 사이드바 데스크톱 화면 추가`)
+- 포함한 ChatBot 커밋: `0bb7d5c` (`src/chatbot/SOURCE.md`, 확인은 `pnpm chatbot:status`)
 - 현재 커밋 확인: `git rev-parse HEAD`
 - 원격 동기화 확인: `git status --short --branch`
 - 확인 기준 화면: **Windows 실행 파일(exe)**. 웹 화면은 보조로 확인합니다.
@@ -34,6 +35,9 @@
 | `32f0557` | Tauri API 버전 불일치로 실패하던 exe 빌드 수정, `pnpm exe:rebuild` 추가 |
 | `70c7c23` | exe 스크롤바 제거와 창 크기 맞춤 |
 | `f54fa3f` | exe 메인 화면을 ChatBot 밝은 다채색 탐색 화면 구성으로 변경 |
+| `8fae1be` | exe 플레이 화면 명령 도크를 장면 무대 아래로 변경 |
+| `d23df47` | ChatBot 비교 기반 Text-Play 추가 작업 기획 문서 |
+| `2115f42` | exe에 최신 ChatBot 전체 기능, 왼쪽 사이드바·Text-Play 대화방, ChatBot 동기화 명령 |
 
 ---
 ## 작업 규칙

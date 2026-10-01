@@ -148,3 +148,31 @@ test("최소 창 960×640에서 메인은 스크롤바 없이 안쪽 스크롤�
     expect(overflow).toBe(0); // 추천 영역 스크롤 부재 확인
     await expect(page.getByRole("button", { name: "주변을 자세히 살핀다" })).toBeVisible(); // 세 번째 답안 표시 확인
 }); // 테스트 종료
+
+for (const size of [{ width: 960, height: 640 }, { width: 1280, height: 720 }, { width: 1920, height: 1080 }]) // 검증 창 크기 순회
+{ // 순회 시작
+    test(`${size.width}×${size.height}에서 진행 명령 도크를 장면 무대 아래에 배치한다`, async ({ page }) => // 하단 도크 검증
+    { // 테스트 시작
+        await page.setViewportSize(size); // 검증 창 크기
+        await page.goto("/"); // 데스크톱 홈 진입
+        await page.getByRole("button", { name: "새 게임" }).click(); // 새 게임 시작
+        await page.getByRole("button", { name: "AI 추천 답안" }).click(); // 추천 펼치기
+        await page.mouse.move(0, 0); // 답안 올림 효과 제거
+        await page.waitForFunction(() => document.getAnimations().length === 0); // 펼침 효과 종료 대기
+        const stage = await page.getByRole("region", { name: "장면 무대" }).boundingBox(); // 무대 위치
+        const dock = await page.getByRole("complementary", { name: "진행 명령" }).boundingBox(); // 도크 위치
+        const story = await page.getByRole("region", { name: "스토리 대화" }).boundingBox(); // 스토리 상자 위치
+        const answers = await page.locator("[data-recommendation-toggle] ~ ul button").evaluateAll((buttons) => buttons.map((button) => Math.round(button.getBoundingClientRect().top))); // 답안 위쪽 위치
+        expect(stage).not.toBeNull(); // 무대 존재 확인
+        expect(dock).not.toBeNull(); // 도크 존재 확인
+        expect(story).not.toBeNull(); // 스토리 존재 확인
+        expect(dock!.y).toBeGreaterThanOrEqual(stage!.y + stage!.height - 1); // 무대 아래 배치 확인
+        expect(Math.abs(dock!.x - stage!.x)).toBeLessThanOrEqual(1); // 왼쪽 정렬 확인
+        expect(Math.abs(dock!.width - stage!.width)).toBeLessThanOrEqual(1); // 무대와 같은 너비 확인
+        expect(story!.y).toBeGreaterThanOrEqual(stage!.y); // 스토리 상자 위쪽 표시 확인
+        expect(story!.y + story!.height).toBeLessThanOrEqual(stage!.y + stage!.height + 1); // 스토리 상자 무대 안 확인
+        expect(answers).toHaveLength(3); // 답안 세 개 확인
+        expect(new Set(answers).size).toBe(1); // 답안 한 줄 배치 확인
+        expect((await measureFit(page)).contentOverflows).toBe(false); // 창 밖 넘침 부재 확인
+    }); // 테스트 종료
+} // 순회 종료

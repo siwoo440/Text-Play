@@ -218,6 +218,7 @@ test("상단 바 오른쪽 화살표로 메인부터 고객 지원까지 사이�
         { button: "다음 메뉴: 내 작품", heading: /내 작품과 보관함/u }, // 내 작품
         { button: "다음 메뉴: Text-Play", heading: /어떤 이야기/u }, // Text-Play
         { button: "다음 메뉴: 설정", heading: /프로필 관리/u }, // 설정
+        { button: "다음 메뉴: AI 모델", heading: /AI 모델/u }, // AI 모델
         { button: "다음 메뉴: 고객 지원", heading: /고객 지원/u }, // 고객 지원
     ]; // 목록 종료
     for (const step of steps) // 순서 순회
@@ -226,8 +227,8 @@ test("상단 바 오른쪽 화살표로 메인부터 고객 지원까지 사이�
         await expect(page.getByRole("heading", { level: 1, name: step.heading })).toBeVisible(); // 이동 화면 확인
     } // 순회 종료
     await expect(page.getByRole("button", { name: "다음 메뉴" })).toBeDisabled(); // 마지막 다음 비활성 확인
-    await page.getByRole("button", { name: "이전 메뉴: 설정" }).click(); // 왼쪽 화살표 선택
-    await expect(page.getByRole("heading", { level: 1, name: "프로필 관리" })).toBeVisible(); // 이전 메뉴 이동 확인
+    await page.getByRole("button", { name: "이전 메뉴: AI 모델" }).click(); // 왼쪽 화살표 선택
+    await expect(page.getByRole("heading", { level: 1, name: "AI 모델" })).toBeVisible(); // 이전 메뉴 이동 확인
 }); // 테스트 종료
 
 test("Text-Play를 플레이하고 돌아오면 사이드바 Text-Play 대화방에 기록이 생기고 눌러서 이어한다", async ({ page }) => // Text-Play 대화방 검증

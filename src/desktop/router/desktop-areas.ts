@@ -1,6 +1,6 @@
 import type { DesktopRouteMatch } from "@/desktop/router/desktop-routes"; // 화면 경로 결과
 
-export type DesktopAreaId = "home" | "explore" | "library" | "text-play" | "settings" | "support"; // 메뉴 영역 식별자
+export type DesktopAreaId = "home" | "explore" | "library" | "text-play" | "settings" | "ai-models" | "support"; // 메뉴 영역 식별자
 
 export interface DesktopArea // 사이드바 메뉴 영역
 { // 구조 시작
@@ -18,6 +18,7 @@ export const desktopAreas: DesktopArea[] = // 사이드바 위에서 아래 순�
     { id: "library", href: "/library", label: "내 작품", accent: "library", group: "primary" }, // 보관함
     { id: "text-play", href: "/text-play", label: "Text-Play", accent: "textplay", group: "primary" }, // Text-Play
     { id: "settings", href: "/settings/profile", label: "설정", accent: "settings", group: "program" }, // 설정
+    { id: "ai-models", href: "/ai-models", label: "AI 모델", accent: "settings", group: "program" }, // 내장 AI 모델
     { id: "support", href: "/support", label: "고객 지원", accent: "settings", group: "program" }, // 고객 지원
 ]; // 목록 종료
 
@@ -40,6 +41,8 @@ export function getDesktopAreaId(match: DesktopRouteMatch): DesktopAreaId | null
             return "text-play"; // Text-Play 소속
         case "settings": // 설정 세부 화면
             return "settings"; // 설정 소속
+        case "ai-models": // 내장 AI 모델
+            return "ai-models"; // AI 모델 소속
         case "support": // 고객 지원
             return "support"; // 지원 소속
         case "redirect": // 주소 이동 중

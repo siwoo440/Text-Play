@@ -45,6 +45,7 @@ describe("데스크톱 화면 경로", () => // 화면 경로 묶음
         expect(matchDesktopRoute(at("/library"))).toEqual({ kind: "library" }); // 보관함 확인
         expect(matchDesktopRoute(at("/settings/tokens"))).toEqual({ kind: "settings", section: "tokens" }); // 설정 확인
         expect(matchDesktopRoute(at("/support"))).toEqual({ kind: "support" }); // 지원 확인
+        expect(matchDesktopRoute(at("/ai-models"))).toEqual({ kind: "ai-models" }); // AI 모델 확인
     }); // 테스트 종료
 
     it("ChatBot 주소 이동 규칙을 그대로 따른다", () => // 이동 규칙 검증
@@ -76,5 +77,6 @@ describe("데스크톱 화면 경로", () => // 화면 경로 묶음
         expect(getDesktopRouteTitle({ kind: "explore", tag: null })).toBe("탐색"); // 탐색 제목 확인
         expect(getDesktopRouteTitle({ kind: "settings", section: "privacy" })).toBe("설정 · 개인정보 및 보안"); // 설정 제목 확인
         expect(getDesktopRouteTitle({ kind: "text-play-home" })).toBe("Text-Play"); // Text-Play 제목 확인
+        expect(getDesktopRouteTitle({ kind: "ai-models" })).toBe("AI 모델"); // AI 모델 제목 확인
     }); // 테스트 종료
 }); // 묶음 종료

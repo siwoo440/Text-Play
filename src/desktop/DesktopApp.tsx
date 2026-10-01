@@ -2,6 +2,8 @@
 
 import { useState, type ReactElement } from "react"; // 리액트 상태 도구
 import { AppProvider } from "@chatbot/features/core/AppProvider"; // ChatBot 앱 상태 공급자
+import type { ModelStoreClient } from "@/desktop/ai-models/model-store-client"; // 보관함 통신 계약
+import { createTauriModelStoreClient } from "@/desktop/ai-models/tauri-model-store-client"; // 보관함 통신기 생성기
 import { DesktopPlatformProvider } from "@/desktop/DesktopPlatformProvider"; // 데스크톱 플랫폼 공급자
 import { DesktopRoutes } from "@/desktop/DesktopRoutes"; // 데스크톱 경로 화면
 import { DesktopRouterProvider } from "@/desktop/router/DesktopRouter"; // 데스크톱 경로 공급자
@@ -16,19 +18,21 @@ interface DesktopAppProps // 데스크톱 앱 속성
 { // 구조 시작
     createRepository?: () => TextPlaySaveRepository; // 저장소 생성기
     createLocalAIClient?: () => OllamaClient; // 로컬 통신기 생성기
+    createModelStoreClient?: () => ModelStoreClient; // 보관함 통신기 생성기
 } // 구조 종료
 
-export function DesktopApp({ createRepository = createBrowserTextPlaySaveRepository, createLocalAIClient = createTauriOllamaClient }: DesktopAppProps): ReactElement // 데스크톱 앱
+export function DesktopApp({ createRepository = createBrowserTextPlaySaveRepository, createLocalAIClient = createTauriOllamaClient, createModelStoreClient = createTauriModelStoreClient }: DesktopAppProps): ReactElement // 데스크톱 앱
 { // 함수 시작
     const [repository] = useState<TextPlaySaveRepository>(() => createRepository()); // 단일 저장소 생성
     const [localAIClient] = useState<OllamaClient>(() => createLocalAIClient()); // 단일 로컬 통신기 생성
+    const [modelStoreClient] = useState<ModelStoreClient>(() => createModelStoreClient()); // 단일 보관함 통신기 생성
     return ( // 앱 반환
         <DesktopRouterProvider> {/* 데스크톱 경로 */}
             <AppProvider> {/* ChatBot 앱 상태 */}
                 <DesktopPlatformProvider localAIClient={localAIClient}> {/* Text-Play 플랫폼 */}
                     <TextPlayPreferencesProvider> {/* 게임 설정 공급 */}
                         <TextPlayWindowResolutionSync /> {/* 저장 해상도 적용 */}
-                        <DesktopRoutes repository={repository} localAIClient={localAIClient} /> {/* 현재 화면 출력 */}
+                        <DesktopRoutes repository={repository} localAIClient={localAIClient} modelStoreClient={modelStoreClient} /> {/* 현재 화면 출력 */}
                     </TextPlayPreferencesProvider> {/* 게임 설정 종료 */}
                 </DesktopPlatformProvider> {/* 플랫폼 종료 */}
             </AppProvider> {/* 앱 상태 종료 */}

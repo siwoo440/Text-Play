@@ -53,7 +53,9 @@ Windows 실행 파일 화면입니다.
 | `DesktopApp.tsx` | 경로·ChatBot 상태·Text-Play 플랫폼·설정 공급자 조립 |
 | `DesktopRoutes.tsx` | 경로별 화면 출력, 화면 오류 경계, 문서 제목 |
 | `router/desktop-routes.ts` | 해시 주소(`#/explore?tag=…`) 해석, 경로표, ChatBot 주소 이동 규칙, 화면 제목, Text-Play 슬롯 이어하기 주소 |
-| `router/desktop-areas.ts` | 사이드바 메뉴 순서(메인·탐색·내 작품·Text-Play·설정·고객 지원)와 화면 소속 메뉴, 이전·다음 메뉴 계산 |
+| `router/desktop-areas.ts` | 사이드바 메뉴 순서(메인·탐색·내 작품·Text-Play·설정·AI 모델·고객 지원)와 화면 소속 메뉴, 이전·다음 메뉴 계산 |
+| `ai-models/*` | `AI 모델` 화면(PC 사양, 실행 엔진 상태, 모델 카드·다운로드·사용·삭제), 보관함 Tauri 통신기, 표시 문구 도구 |
+| `tauri-bundled-client.ts`, `tauri-stream.ts` | 내장 AI 대화 Tauri 호출, 올라마와 공용 스트림 처리 |
 | `router/DesktopRouter.tsx` | 해시 기반 경로 공급자와 이동 동작 |
 | `next-compat/*` | ChatBot 사본이 쓰는 Next 링크·이미지·경로 도구의 데스크톱 구현 |
 | `shell/DesktopShell.tsx` | 왼쪽 사이드바(주요 메뉴, ChatBot 대화방, Text-Play 대화방, 프로그램 메뉴)와 상단 바(이전·다음 메뉴 화살표, 19+, 토큰, 사용자 패널) |

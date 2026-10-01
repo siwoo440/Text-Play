@@ -883,3 +883,42 @@ Windows 실행 파일(exe)이 최신 ChatBot(Mate Verse) 기능을 똑같이 제
 
 - 기반 4 `AI 모델` 화면: 모델 카드·적합도·받기 진행률·취소·사용·삭제, 엔진 상태, 사이드바 메뉴(설정 · AI 모델 · 고객 지원)
 - 실제 모델 받기 정보(주소·SHA-256·정확한 크기)는 결정 1과 작업 0 실측 뒤 목록에 채우기
+
+---
+## 2026-10-01 — 내장 AI 기반 4: AI 모델 화면(기반 완성)
+
+---
+### 목표
+
+기반 1~3(연결 통로·엔진 관리자·모델 보관함)을 사용자가 보고 누를 수 있는 `AI 모델` 화면으로 묶어, 모델 파일만 넣으면 동작하는 내장 AI 기반을 완성합니다.
+
+---
+### 변경 파일
+
+- 새 파일: `src/desktop/ai-models/AiModelsScreen.tsx`·`.module.css`, `model-store-client.ts`, `tauri-model-store-client.ts`, `ai-model-view.ts`
+- 수정: `src/desktop/router/desktop-routes.ts`(`#/ai-models`), `desktop-areas.ts`(프로그램 메뉴 `AI 모델`), `src/desktop/shell/DesktopShell.tsx`(칩 아이콘), `src/desktop/DesktopRoutes.tsx`, `src/desktop/DesktopApp.tsx`(보관함 통신기 주입)
+- 테스트: `tests/unit/ai-model-view.test.ts`, `tauri-model-store-client.test.ts`, `ai-models-screen-styles.test.ts`, `tests/components/ai-models-screen.test.tsx`(새 파일), `tests/unit/desktop-areas.test.ts`, `desktop-routes.test.ts`, `tests/integration/desktop-app.test.tsx`, `tests/e2e/desktop-preview.spec.ts`(화살표 순서)
+- 문서: 계획(`진행 상태: 기반 4`), 인수인계, 구조
+
+---
+### 사용자 기능
+
+- 사이드바 프로그램 메뉴 `설정 · AI 모델 · 고객 지원`, 상단 바 화살표도 이 순서
+- `AI 모델` 화면: 이 PC 사양(그래픽·RAM·남은 공간), 실행 엔진 상태와 `엔진 끄기`, 가벼움·표준·고성능 카드(크기·라이선스·이 PC 적합도·사용 중)
+- 카드 버튼: `준비 중`·`공간 부족`(막힘), `다운로드`·`그래도 다운로드`(부족 경고)·`이어받기`, 받는 중 진행 막대·속도·남은 시간·`취소`, 파일 검사 중, `사용하기`, `삭제`(화면 안에서 한 번 더 확인)
+- 실제 모델 3종은 받기 정보가 아직 없어 `준비 중`
+
+---
+### 검증 결과
+
+- 새·수정 테스트는 구현 전 실패(모듈 없음, 메뉴·경로 없음, 화살표 순서 불일치)를 확인한 뒤 구현해 통과. 실패 중 `그래픽(Vulkan)로` 조사 오류를 발견해 `으로`로 고침
+- 테스트 파일 109개, 테스트 626개 통과, 타입 검사·코드 검사 통과, 데스크톱 통합 테스트 13개 통과
+- `pnpm exe:rebuild` 후 실제 exe에서 확인: 이 PC 정보와 카드 3개(`준비 중`) 표시, 시험 목록으로 화면 버튼만 눌러 다운로드 → 사용하기 → 삭제 확인
+- 처음 화면에서 창의 어두운 바탕 때문에 제목·설명이 보이지 않는 문제를 exe 캡처로 발견해 밝은 바탕을 직접 칠하도록 고치고 스타일 테스트 추가
+
+---
+### 남은 작업
+
+- 덧붙이기 1: 모델 실측(작업 0, 다운로드 승인 필요)과 보관 위치 결정(결정 1) → `model-catalog.json` 받기 정보 채우기
+- 덧붙이기 2: 설치 프로그램(실행 엔진 리소스 포함, 설치 때 가벼운 모델 받기, 제거 때 모델 삭제 질문)
+- 덧붙이기 3: 응답 품질(장면 설명·인물 이름 문맥, 모델별 설정)

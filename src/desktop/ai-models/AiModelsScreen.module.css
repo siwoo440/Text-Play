@@ -1,0 +1,182 @@
+.page /* AI 모델 화면 */
+{
+    --accent: var(--page-settings, #1d4ed8); /* 대표색 */
+    --accent-soft: #e8efff; /* 연한 대표색 */
+    display: grid; /* 세로 배치 */
+    align-content: start; /* 위에서부터 배치 */
+    gap: 20px; /* 묶음 간격 */
+    min-height: calc(100vh - 64px); /* 상단 바 아래 전체 높이 */
+    padding: 28px max(clamp(16px, 3vw, 40px), calc((100% - 1080px) / 2)) 48px; /* 안쪽 여백(넓은 창에서는 1080px 가운데) */
+    background: var(--mv-canvas, #fbf9ff); /* 밝은 바탕(다른 화면과 같은 색) */
+    color: var(--mv-ink, #1f1a2e); /* 기본 글자 */
+}
+
+.header span /* 작은 제목 */
+{
+    color: var(--accent); /* 대표색 */
+    font-size: 0.8rem; /* 작은 글자 */
+    font-weight: 800; /* 굵게 */
+    letter-spacing: 0.08em; /* 자간 */
+}
+
+.header h1 /* 제목 */
+{
+    margin: 4px 0 8px; /* 여백 */
+    font-size: clamp(1.6rem, 2.4vw, 2.1rem); /* 제목 크기 */
+}
+
+.header p, .tip, .loading /* 설명 글 */
+{
+    margin: 0; /* 여백 제거 */
+    color: var(--mv-muted, #5f5873); /* 보조 글자 */
+    line-height: 1.6; /* 줄 간격 */
+}
+
+.summary /* PC·엔진 요약 */
+{
+    display: grid; /* 격자 */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 좁으면 한 줄 */
+    gap: 14px; /* 간격 */
+}
+
+.summary section, .card /* 카드 공통 */
+{
+    border: 1px solid var(--mv-line, #e9e3f3); /* 경계선 */
+    border-radius: 18px; /* 둥근 모서리 */
+    background: var(--mv-surface, #ffffff); /* 카드 배경 */
+    padding: 18px 20px; /* 안쪽 여백 */
+    box-shadow: 0 10px 28px rgb(31 26 46 / 6%); /* 옅은 그림자 */
+}
+
+.summary h2 /* 요약 제목 */
+{
+    margin: 0 0 6px; /* 여백 */
+    font-size: 0.95rem; /* 크기 */
+}
+
+.summary p /* 요약 내용 */
+{
+    margin: 0 0 10px; /* 여백 */
+    line-height: 1.5; /* 줄 간격 */
+}
+
+.cards /* 모델 카드 목록 */
+{
+    display: grid; /* 격자 */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 좁으면 한 줄 */
+    gap: 14px; /* 간격 */
+}
+
+.card /* 모델 카드 */
+{
+    display: flex; /* 세로 배치 */
+    flex-direction: column; /* 위에서 아래 */
+    gap: 6px; /* 간격 */
+    border-top: 5px solid var(--card-tone, var(--accent)); /* 역할 색 띠 */
+}
+
+.card[data-role="light"] { --card-tone: #15803d; } /* 가벼움 초록 */
+.card[data-role="standard"] { --card-tone: #1d4ed8; } /* 표준 파랑 */
+.card[data-role="high"] { --card-tone: #7c3aed; } /* 고성능 보라 */
+.card[data-active="true"] { outline: 2px solid var(--card-tone); } /* 사용 중 강조 */
+
+.card h2 /* 모델 이름 */
+{
+    margin: 0; /* 여백 제거 */
+    font-size: 1.1rem; /* 크기 */
+}
+
+.role /* 역할 표시 */
+{
+    align-self: flex-start; /* 왼쪽 정렬 */
+    border-radius: 999px; /* 알약 모양 */
+    background: color-mix(in srgb, var(--card-tone) 12%, white); /* 연한 역할 색 */
+    color: var(--card-tone); /* 역할 색 글자 */
+    padding: 2px 10px; /* 여백 */
+    font-size: 0.78rem; /* 작은 글자 */
+    font-weight: 800; /* 굵게 */
+}
+
+.meta, .fitness, .warning, .confirm /* 카드 보조 글 */
+{
+    margin: 0; /* 여백 제거 */
+    font-size: 0.9rem; /* 크기 */
+    color: var(--mv-muted, #5f5873); /* 보조 글자 */
+}
+
+.fitness { font-weight: 700; } /* 적합도 굵게 */
+.fitness[data-fitness="recommended"] { color: #15803d; } /* 권장 초록 */
+.fitness[data-fitness="possible"] { color: #1d4ed8; } /* 가능 파랑 */
+.fitness[data-fitness="slow"] { color: #b45309; } /* 느릴 수 있음 주황 */
+.fitness[data-fitness="insufficient"], .warning { color: #b91c1c; } /* 부족 빨강 */
+
+.active /* 사용 중 표시 */
+{
+    align-self: flex-start; /* 왼쪽 정렬 */
+    border-radius: 8px; /* 둥근 모서리 */
+    background: var(--card-tone); /* 역할 색 */
+    color: #ffffff; /* 흰 글자 */
+    padding: 3px 10px; /* 여백 */
+    font-size: 0.82rem; /* 크기 */
+    font-weight: 800; /* 굵게 */
+}
+
+.actions, .progress /* 버튼·진행률 묶음 */
+{
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 */
+    align-items: center; /* 세로 가운데 */
+    gap: 8px; /* 간격 */
+    margin-top: auto; /* 카드 아래로 */
+    padding-top: 8px; /* 위 여백 */
+}
+
+.progress p /* 진행 문구 */
+{
+    flex: 1 1 100%; /* 한 줄 전체 */
+    margin: 0; /* 여백 제거 */
+    font-size: 0.85rem; /* 크기 */
+    color: var(--mv-muted, #5f5873); /* 보조 글자 */
+}
+
+.progressTrack /* 진행 막대 바탕 */
+{
+    flex: 1 1 100%; /* 한 줄 전체 */
+    height: 10px; /* 높이 */
+    border-radius: 999px; /* 둥근 막대 */
+    background: var(--mv-line, #e9e3f3); /* 바탕색 */
+    overflow: hidden; /* 넘침 숨김 */
+}
+
+.progressTrack span /* 진행 막대 */
+{
+    display: block; /* 블록 */
+    height: 100%; /* 높이 채움 */
+    background: var(--card-tone, var(--accent)); /* 역할 색 */
+    transition: width 0.3s ease; /* 부드러운 변화 */
+}
+
+.primary, .secondary, .danger /* 버튼 공통 */
+{
+    border-radius: 10px; /* 둥근 모서리 */
+    padding: 8px 14px; /* 여백 */
+    font: inherit; /* 글꼴 상속 */
+    font-weight: 700; /* 굵게 */
+    cursor: pointer; /* 손 모양 */
+}
+
+.primary { border: 0; background: var(--card-tone, var(--accent)); color: #ffffff; } /* 주요 버튼 */
+.secondary { border: 1px solid var(--mv-line, #e9e3f3); background: #ffffff; color: var(--mv-ink, #1f1a2e); } /* 보조 버튼 */
+.danger { border: 0; background: #b91c1c; color: #ffffff; } /* 삭제 버튼 */
+.primary:disabled { cursor: not-allowed; background: #c9c3d6; } /* 막힌 버튼 */
+.primary:focus-visible, .secondary:focus-visible, .danger:focus-visible { outline: 3px solid var(--mv-focus, #1d4ed8); outline-offset: 2px; } /* 키보드 초점 */
+
+.notice, .alert /* 안내 */
+{
+    margin: 0; /* 여백 제거 */
+    border-radius: 12px; /* 둥근 모서리 */
+    padding: 12px 16px; /* 여백 */
+    background: var(--accent-soft); /* 연한 대표색 */
+}
+
+.alert { background: #fee2e2; color: #7f1d1d; } /* 실패 안내 */

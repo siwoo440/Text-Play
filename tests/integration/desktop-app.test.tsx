@@ -114,7 +114,21 @@ describe("데스크톱 앱 틀", () => // 데스크톱 틀 묶음
         window.history.replaceState(null, "", "/#/support"); // 고객 지원 주소
         render(<DesktopApp createRepository={() => new MemoryTextPlaySaveRepository()} />); // 데스크톱 앱 렌더
         expect(await screen.findByRole("button", { name: "다음 메뉴" })).toBeDisabled(); // 다음 비활성 확인
-        expect(screen.getByRole("button", { name: "이전 메뉴: 설정" })).toBeEnabled(); // 이전 활성 확인
+        expect(screen.getByRole("button", { name: "이전 메뉴: AI 모델" })).toBeEnabled(); // 이전 활성 확인
+    }); // 테스트 종료
+
+    it("프로그램 메뉴의 AI 모델로 모델 화면을 연다", async () => // AI 모델 메뉴 검증
+    { // 테스트 시작
+        const user = userEvent.setup(); // 사용자 동작 준비
+        const getStore = vi.fn(async () => ({ hardware: { gpuName: null, vramBytes: 0, ramBytes: 8_589_934_592 }, freeDiskBytes: null, models: [], activeModelId: null })); // 보관함 조회 대역
+        const client = { getStore, getRuntimeStatus: async () => ({ state: "stopped" as const, backend: null, message: null }), download: async () => undefined, cancel: async () => undefined, remove: async () => undefined, select: async () => undefined, stopRuntime: async () => undefined }; // 보관함 통신기 대역
+        render(<DesktopApp createRepository={() => new MemoryTextPlaySaveRepository()} createModelStoreClient={() => client} />); // 데스크톱 앱 렌더
+        const programMenu = await screen.findByRole("navigation", { name: "프로그램 메뉴" }); // 프로그램 메뉴 조회
+        expect(within(programMenu).getAllByRole("link").map((link) => link.textContent)).toEqual(["설정", "AI 모델", "고객 지원"]); // 메뉴 순서 확인
+        await user.click(within(programMenu).getByRole("link", { name: "AI 모델" })); // AI 모델 이동
+        expect(await screen.findByRole("heading", { level: 1, name: "AI 모델" })).toBeInTheDocument(); // 화면 확인
+        expect(await screen.findByText("그래픽 장치 없음(CPU로 실행) · RAM 8.0GB · 남은 공간 확인 불가")).toBeInTheDocument(); // 보관함 연결 확인
+        expect(getStore).toHaveBeenCalled(); // 조회 확인
     }); // 테스트 종료
 
     it("ChatBot 대화방 아래에 Text-Play 대화방을 따로 두고 저장 기록을 최신 순으로 보여 준다", async () => // Text-Play 대화방 검증

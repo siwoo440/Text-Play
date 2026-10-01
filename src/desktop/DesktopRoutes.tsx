@@ -16,6 +16,8 @@ import { CharacterEditor } from "@chatbot/features/character/CharacterEditor"; /
 import { ChatScreen } from "@chatbot/features/chat/ChatScreen"; // ChatBot 대화 화면
 import { ExploreScreen } from "@chatbot/features/explore/ExploreScreen"; // ChatBot 탐색 화면
 import { SettingsShell } from "@chatbot/features/settings/SettingsShell"; // ChatBot 설정 틀
+import { AiModelsScreen } from "@/desktop/ai-models/AiModelsScreen"; // AI 모델 화면
+import type { ModelStoreClient } from "@/desktop/ai-models/model-store-client"; // 보관함 통신 계약
 import { createDesktopLLMSelection } from "@/desktop/desktop-llm"; // 데스크톱 AI 생성기
 import { getDesktopAreaId } from "@/desktop/router/desktop-areas"; // 화면 소속 메뉴 영역
 import { useDesktopLocation, useDesktopRouterActions } from "@/desktop/router/DesktopRouter"; // 데스크톱 경로 도구
@@ -32,6 +34,7 @@ interface DesktopRoutesProps // 경로 화면 속성
 { // 구조 시작
     repository: TextPlaySaveRepository; // Text-Play 저장소
     localAIClient: OllamaClient; // 로컬 인공지능 통신기
+    modelStoreClient: ModelStoreClient; // 내장 AI 모델 보관함 통신기
 } // 구조 종료
 
 interface ErrorBoundaryProps // 오류 경계 속성
@@ -74,7 +77,7 @@ const settingsPages: Record<DesktopSettingsSection, () => ReactElement> = // 설
     privacy: PrivacySettingsPage, // 개인정보
 }; // 객체 종료
 
-function renderPage(match: DesktopRouteMatch, repository: TextPlaySaveRepository): ReactNode // 경로 화면 출력
+function renderPage(match: DesktopRouteMatch, repository: TextPlaySaveRepository, modelStoreClient: ModelStoreClient): ReactNode // 경로 화면 출력
 { // 함수 시작
     switch (match.kind) // 경로 분기
     { // 분기 시작
@@ -91,6 +94,7 @@ function renderPage(match: DesktopRouteMatch, repository: TextPlaySaveRepository
             return <SettingsShell><SettingsPage /></SettingsShell>; // ChatBot 설정 레이아웃과 같은 틀
         } // 분기 내용 종료
         case "support": return <SupportPage />; // 고객 지원
+        case "ai-models": return <AiModelsScreen client={modelStoreClient} />; // 내장 AI 모델
         case "text-play-home": return <TextPlayHome repository={repository} />; // Text-Play 홈
         case "text-play-play": return null; // 틀 밖에서 출력
         case "redirect": return null; // 이동 대기
@@ -98,7 +102,7 @@ function renderPage(match: DesktopRouteMatch, repository: TextPlaySaveRepository
     } // 분기 종료
 } // 함수 종료
 
-export function DesktopRoutes({ repository, localAIClient }: DesktopRoutesProps): ReactElement | null // 경로 화면
+export function DesktopRoutes({ repository, localAIClient, modelStoreClient }: DesktopRoutesProps): ReactElement | null // 경로 화면
 { // 함수 시작
     const location = useDesktopLocation(); // 현재 위치
     const router = useDesktopRouterActions(); // 이동 동작
@@ -122,5 +126,5 @@ export function DesktopRoutes({ repository, localAIClient }: DesktopRoutesProps)
     { // 조건 시작
         return <DesktopErrorBoundary key={location.search}><TextPlayProvider repository={repository} llm={llmSelection.adapter} llmLabel={llmSelection.label} resumeSlot={match.resumeSlot}><TextPlayScreen /></TextPlayProvider></DesktopErrorBoundary>; // 전체 창 플레이 화면
     } // 조건 종료
-    return <DesktopShell pathname={location.pathname} area={getDesktopAreaId(match)} title={title} repository={repository}><DesktopErrorBoundary key={location.pathname}>{renderPage(match, repository)}</DesktopErrorBoundary></DesktopShell>; // 사이드바 틀 화면
+    return <DesktopShell pathname={location.pathname} area={getDesktopAreaId(match)} title={title} repository={repository}><DesktopErrorBoundary key={location.pathname}>{renderPage(match, repository, modelStoreClient)}</DesktopErrorBoundary></DesktopShell>; // 사이드바 틀 화면
 } // 함수 종료

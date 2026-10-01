@@ -222,7 +222,7 @@
 ---
 ## 이어서 진행할 작업
 
-0. 내장 로컬 인공지능: 설치 때 가벼운 모델(Mi:dm 2.0 Mini) 자동 준비, 표준·고성능(Qwen3.5-4B·9B)은 `AI 모델` 화면 다운로드 버튼. 계획 `docs/plans/2026-10-01-bundled-local-ai.md` 참고. 사용자 지시로 **기반을 먼저 만들고 기능을 덧붙이는 순서**로 진행: 기반 1 `AI 연결 통로` 완료 → 기반 2 `엔진 관리자` 완료(`local_runtime.rs`) → 기반 3 `모델 보관함` 완료(`hardware.rs`·`model_store.rs`·`resources/model-catalog.json`, 받기 정보는 아직 비어 `준비 중`) → 기반 4 `AI 모델` 화면 → 이후 모델 실측(작업 0, 사용자가 다운로드를 미룸: `pnpm local-ai:runtime` → `local-ai:models` → `local-ai:eval`)·설치 프로그램·응답 품질. 끝의 결정 필요 항목 4개도 확인
+0. 내장 로컬 인공지능: 설치 때 가벼운 모델(Mi:dm 2.0 Mini) 자동 준비, 표준·고성능(Qwen3.5-4B·9B)은 `AI 모델` 화면 다운로드 버튼. 계획 `docs/plans/2026-10-01-bundled-local-ai.md` 참고. 사용자 지시로 **기반을 먼저 만들고 기능을 덧붙이는 순서**로 진행: 기반 1 `AI 연결 통로` 완료 → 기반 2 `엔진 관리자` 완료(`local_runtime.rs`) → 기반 3 `모델 보관함` 완료(`hardware.rs`·`model_store.rs`·`resources/model-catalog.json`, 받기 정보는 아직 비어 `준비 중`) → 기반 4 `AI 모델` 화면 완료(`src/desktop/ai-models`, 사이드바 `설정 · AI 모델 · 고객 지원`) — **기반 완성** → 이후 덧붙이기: 모델 실측(작업 0, 사용자가 다운로드를 미룸: `pnpm local-ai:runtime` → `local-ai:models` → `local-ai:eval`)·설치 프로그램·응답 품질. 끝의 결정 필요 항목 4개도 확인
 1. exe에서 ChatBot 기능 직접 확인: JSON 내보내기·백업 파일 저장, 링크 복사, `window.confirm` 확인 창이 WebView2에서 동작하는지
 2. exe 메인 화면 아래쪽(인기 랭킹, 전체 작품, 작품 상세 창) 직접 확인과 세부 디자인 조정
 3. 게임 플레이 화면을 메인과 같은 밝은 다채색 디자인으로 변경

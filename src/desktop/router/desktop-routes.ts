@@ -19,6 +19,7 @@ export type DesktopRouteMatch = // 화면 경로 결과
     | { kind: "library" } // 보관함
     | { kind: "settings"; section: DesktopSettingsSection } // 설정
     | { kind: "support" } // 고객 지원
+    | { kind: "ai-models" } // 내장 AI 모델
     | { kind: "text-play-home" } // Text-Play 홈
     | { kind: "text-play-play"; resumeSlot: TextPlaySlotId | null } // Text-Play 플레이
     | { kind: "redirect"; to: string } // 주소 이동
@@ -134,6 +135,10 @@ export function matchDesktopRoute(location: DesktopLocation): DesktopRouteMatch 
     { // 조건 시작
         return { kind: "support" }; // 지원 반환
     } // 조건 종료
+    if (first === "ai-models" && segments.length === 1) // AI 모델 확인
+    { // 조건 시작
+        return { kind: "ai-models" }; // AI 모델 반환
+    } // 조건 종료
     if (first === "text-play" && segments.length === 1) // Text-Play 홈 확인
     { // 조건 시작
         return { kind: "text-play-home" }; // 홈 반환
@@ -163,6 +168,7 @@ export function getDesktopRouteTitle(match: DesktopRouteMatch): string // 화면
         case "library": return "내 작품"; // 보관함 제목
         case "settings": return `설정 · ${settingsSections[match.section]}`; // 설정 제목
         case "support": return "고객 지원"; // 지원 제목
+        case "ai-models": return "AI 모델"; // AI 모델 제목
         case "text-play-home": return "Text-Play"; // Text-Play 제목
         case "text-play-play": return "Text-Play 플레이"; // 플레이 제목
         case "redirect": return "이동 중"; // 이동 제목

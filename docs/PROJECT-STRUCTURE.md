@@ -92,7 +92,7 @@ Text-Play 전용 기능이 들어 있는 경로입니다.
 
 ### `src/lib/adapters`
 
-LLM과 이미지 생성 기능을 앱에서 사용할 수 있는 공통 인터페이스로 감쌉니다. `create-llm-adapter.ts`가 Mock 모드와 서버 모드를 선택하고, `http-llm-adapter.ts`가 Character Chat과 Text-Play의 요청을 같은 `/api/llm` 경로로 보냅니다. `structured-messages.ts`는 Text-Play 구조화 응답 메시지를, `chat-messages.ts`는 캐릭터 대화·요약 메시지를 만들어 올라마 연결과 내장 AI가 함께 씁니다. `bundled-llm-adapter.ts`는 이 PC의 내장 AI 어댑터이며 구조화 응답에 작품 JSON 스키마를 함께 보냅니다(데스크톱 통신은 `src/desktop/tauri-bundled-client.ts`, Rust 쪽은 `src-tauri/src/bundled_ai.rs`). 실제 비밀키는 포함하지 않습니다.
+LLM과 이미지 생성 기능을 앱에서 사용할 수 있는 공통 인터페이스로 감쌉니다. `create-llm-adapter.ts`가 Mock 모드와 서버 모드를 선택하고, `http-llm-adapter.ts`가 Character Chat과 Text-Play의 요청을 같은 `/api/llm` 경로로 보냅니다. `structured-messages.ts`는 Text-Play 구조화 응답 메시지를, `chat-messages.ts`는 캐릭터 대화·요약 메시지를 만들어 올라마 연결과 내장 AI가 함께 씁니다. `bundled-llm-adapter.ts`는 이 PC의 내장 AI 어댑터이며 구조화 응답에 작품 JSON 스키마를 함께 보냅니다(데스크톱 통신은 `src/desktop/tauri-bundled-client.ts`, Rust 쪽은 `src-tauri/src/bundled_ai.rs`, 실행 엔진을 켜고 끄는 관리자는 `src-tauri/src/local_runtime.rs`). 실제 비밀키는 포함하지 않습니다.
 
 ### `src/lib/server`
 

@@ -179,6 +179,17 @@ pnpm local-ai:eval --models midm-2.0-mini:Q4_K_M,qwen3.5-2b:Q4_K_M --backends cp
 - 확인용 연결: 환경 변수 `MATE_TEXT_PLAY_BUNDLED_AI_URL`(127.0.0.1·localhost http 주소만 허용)과 가짜 서버 `node scripts/local-ai/fake-openai-server.mjs --port 8765`로 모델 없이 exe 전체 흐름을 확인할 수 있다.
 - exe 확인: 엔진 없음 → 미준비 안내 표시, 가짜 서버 연결 → 응답 서술·리라 대사 표시와 자동 저장.
 
+#### 진행 상태 (2026-10-01): 기반 2 "엔진 관리자" 완료
+
+- `src-tauri/src/local_runtime.rs`의 `LocalRuntimeManager`: 내장 AI로 첫 요청이 오면 엔진을 켠다. `vulkan\llama-server.exe`가 있고 `--list-devices`에 그래픽 장치가 있으면 메모리가 가장 큰 장치 하나로(`--device`) 먼저 켜고, 시작 중 종료·준비 시간 초과(180초)면 끄고 `cpu\llama-server.exe`로 다시 켠다. 127.0.0.1 빈 포트, 실행마다 새 32바이트 키, 문맥 4096, 슬롯 1개, 웹 화면 끔.
+- 준비 확인은 `/health` 200을 기다린다. 켜진 엔진은 다음 요청에 그대로 쓰고, 저절로 꺼졌으면 다음 요청에 다시 켠다. 동시에 두 번 켜지 않는다.
+- 끄기: 앱 종료(`RunEvent::Exit`), 10분 동안 쓰지 않음(1분마다 확인), `stop_local_runtime` 명령. Windows Job Object(KILL_ON_JOB_CLOSE)로 앱이 강제 종료돼도 엔진이 함께 끝난다. 콘솔 창은 숨기고 출력은 앱 기록 폴더 `llama-server.log`에 남긴다.
+- 상태 조회 `get_local_runtime_status`(꺼짐·시작 중·준비·실패와 실행 방식·실패 이유)는 기반 4 화면이 쓴다.
+- 실행 엔진 폴더: 설치본은 리소스 `llama-runtime\{vulkan,cpu}`(작업 4에서 넣음), 개발·확인은 `MATE_TEXT_PLAY_LLAMA_RUNTIME_DIR`. 모델은 기반 3 보관함 전까지 `MATE_TEXT_PLAY_BUNDLED_MODEL`(있는 `.gguf`만)로 지정한다. 확인용 연결 주소(`MATE_TEXT_PLAY_BUNDLED_AI_URL`)가 있으면 그것을 먼저 쓴다.
+- 확인용 가짜 엔진: `cargo build --release --example fake_llama_server --manifest-path src-tauri/Cargo.toml` 결과를 `.local-ai\fake-runtime\{vulkan,cpu}\llama-server.exe`로 복사(그래픽 폴더에서는 일부러 실패)
+- exe 확인: 엔진 꺼진 상태에서 첫 응답까지 3.9초(그래픽 실패 → CPU 전환 포함), 응답 표시, 앱을 강제 종료하면 2초 안에 엔진도 종료
+
+
 ### 작업 2: 모델 관리 (2~3일)
 
 - 실패 테스트(Rust 로컬 HTTP 테스트 서버)

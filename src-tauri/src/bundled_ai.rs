@@ -1,6 +1,7 @@
 // 내장 인공지능 연결 통로: 이 PC의 실행 엔진(OpenAI 호환 llama-server)에 대화를 보내고 응답 조각을 화면으로 전달한다
 // 실행 엔진을 켜고 끄는 일은 엔진 관리자(다음 단계)가 맡고, 여기서는 연결 정보가 있을 때만 통신한다
 use crate::local_ai::{clear_cancelled, is_cancelled, validate_request_fields, LocalAIState, LocalAIStreamEvent, LocalChatMessage}; // 로컬 AI 공통 도구
+use crate::local_runtime::{now_secs, LocalRuntimeManager}; // 엔진 관리자
 use futures_util::StreamExt; // 비동기 스트림 도구
 use reqwest::Client; // HTTP 통신기
 use serde::Deserialize; // JSON 변환 도구
@@ -89,9 +90,13 @@ pub(crate) fn endpoint_from_env_values(url: Option<String>, key: Option<String>)
     Some(BundledEndpoint { base_url: url.trim_end_matches('/').to_string(), api_key: key.filter(|value| !value.is_empty()), generation: Map::new(), chat_template_kwargs: None }) // 연결 정보 반환
 } // 함수 종료
 
-pub(crate) fn require_endpoint(state: &BundledAIState) -> Result<BundledEndpoint, String> // 연결 정보 요구
+pub(crate) async fn resolve_endpoint(state: &BundledAIState, runtime: &LocalRuntimeManager) -> Result<BundledEndpoint, String> // 연결 정보 결정
 { // 함수 시작
-    state.current().ok_or_else(|| NOT_READY_MESSAGE.to_string()) // 연결 정보 또는 미준비 오류 반환
+    match state.current() // 확인용 연결 주소 확인
+    { // 분기 시작
+        Some(endpoint) => Ok(endpoint), // 지정 주소 사용
+        None => runtime.ensure_ready().await, // 엔진 관리자가 켜거나 미준비 오류
+    } // 분기 종료
 } // 함수 종료
 
 pub(crate) fn validate_bundled_request(request: &BundledChatRequest) -> Result<(), String> // 요청 검증
@@ -222,10 +227,11 @@ where // 함수 제약
 } // 함수 종료
 
 #[tauri::command] // Tauri 명령 표시
-pub async fn stream_bundled_chat(request: BundledChatRequest, on_event: Channel<LocalAIStreamEvent>, bundled: State<'_, BundledAIState>, local: State<'_, LocalAIState>) -> Result<(), String> // 내장 AI 대화 스트림 명령
+pub async fn stream_bundled_chat(request: BundledChatRequest, on_event: Channel<LocalAIStreamEvent>, bundled: State<'_, BundledAIState>, local: State<'_, LocalAIState>, runtime: State<'_, LocalRuntimeManager>) -> Result<(), String> // 내장 AI 대화 스트림 명령
 { // 함수 시작
     validate_bundled_request(&request)?; // 요청 검증
-    let endpoint = require_endpoint(&bundled)?; // 연결 정보 확인
+    let endpoint = resolve_endpoint(&bundled, &runtime).await?; // 연결 정보 확인(필요하면 엔진 켜기)
+    runtime.touch(now_secs()); // 사용 시각 기록
     if is_cancelled(&local, &request.request_id) // 사전 중단 확인
     { // 조건 시작
         clear_cancelled(&local, &request.request_id); // 중단 상태 정리
@@ -235,6 +241,7 @@ pub async fn stream_bundled_chat(request: BundledChatRequest, on_event: Channel<
     let body = build_bundled_chat_body(&request, &endpoint); // 요청 본문
     let result = stream_openai_chat(&client, &endpoint, &body, |content| on_event.send(LocalAIStreamEvent::Chunk { content }).map_err(|_| "화면에 응답을 전달하지 못했습니다.".to_string()), || is_cancelled(&local, &request.request_id)).await; // 스트림 전달
     clear_cancelled(&local, &request.request_id); // 중단 상태 정리
+    runtime.touch(now_secs()); // 사용 시각 다시 기록(긴 생성 뒤 바로 내리지 않도록)
     result?; // 스트림 오류 전달
     on_event.send(LocalAIStreamEvent::Done).map_err(|_| "화면에 완료 상태를 전달하지 못했습니다.".to_string()) // 완료 사건 전송
 } // 함수 종료
@@ -284,9 +291,17 @@ mod tests // 단위 테스트 모듈
     #[test] // 테스트 표시
     fn missing_engine_is_reported_as_not_ready() // 실행 엔진 미준비 검증
     { // 함수 시작
-        let error = require_endpoint(&BundledAIState::default()).expect_err("미준비 오류"); // 연결 정보 없는 상태
+        struct NoLauncher; // 실행하지 않는 실행기
+        impl crate::local_runtime::ProcessLauncher for NoLauncher // 실행기 동작
+        { // 구현 시작
+            fn list_devices(&self, _program: &std::path::Path) -> String { String::new() } // 장치 없음
+            fn launch(&self, _program: &std::path::Path, _args: &[String], _log_path: Option<&std::path::Path>) -> Result<Box<dyn crate::local_runtime::RuntimeProcess>, String> { Err("실행 안 함".to_string()) } // 실행 실패
+        } // 구현 종료
+        let runtime = LocalRuntimeManager::new(crate::local_runtime::RuntimeConfig::default(), Box::new(NoLauncher), Duration::from_secs(1)); // 모델 없는 관리자
+        let error = tauri::async_runtime::block_on(resolve_endpoint(&BundledAIState::default(), &runtime)).expect_err("미준비 오류"); // 연결 정보 없는 상태
         assert!(error.starts_with("BUNDLED_NOT_READY")); // 오류 표시 확인
-        assert!(require_endpoint(&BundledAIState::with_endpoint(Some(endpoint("http://127.0.0.1:1")))).is_ok()); // 연결 정보 있는 상태
+        let given = endpoint("http://127.0.0.1:1"); // 지정 연결 정보
+        assert_eq!(tauri::async_runtime::block_on(resolve_endpoint(&BundledAIState::with_endpoint(Some(given.clone())), &runtime)), Ok(given)); // 지정 주소 우선
     } // 함수 종료
 
     #[test] // 테스트 표시

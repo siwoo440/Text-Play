@@ -15,6 +15,11 @@ serde = { version = "1", features = ["derive"] } # JSON 구조 변환
 serde_json = "1" # JSON 값 처리
 reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] } # 로컬 HTTP 통신
 futures-util = "0.3" # HTTP 스트림 순회
+tokio = { version = "1", features = ["sync", "time"] } # 비동기 잠금과 대기(Tauri와 같은 실행기)
+getrandom = "0.2" # 일회용 키용 운영체제 난수
+
+[target.'cfg(windows)'.dependencies] # Windows 전용 의존성
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Security", "Win32_System_JobObjects", "Win32_System_Threading"] } # 앱이 끝나면 실행 엔진도 끝내는 Job Object
 
 [features] # Cargo 기능 시작
 default = ["custom-protocol"] # 기본 배포 프로토콜

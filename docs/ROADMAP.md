@@ -43,6 +43,7 @@
 - [x] Tauri 셸과 로컬 저장 경로
 - [x] 개발 실행 파일 확인
 - [x] NSIS 설치 EXE 시험판
+- [ ] 내장 로컬 인공지능: llama.cpp 실행 엔진 내장, 설치 때 가벼운 모델(Mi:dm 2.0 Mini) 자동 준비, 표준·고성능(Qwen3.5-4B·9B) 다운로드 버튼 (`docs/plans/2026-10-01-bundled-local-ai.md`)
 - [ ] MSI 빌드
 - [ ] 자동 업데이트
 - [ ] 코드 서명

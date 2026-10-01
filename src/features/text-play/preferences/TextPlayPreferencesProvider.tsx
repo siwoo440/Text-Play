@@ -54,6 +54,13 @@ export function TextPlayPreferencesProvider({ children }: TextPlayPreferencesPro
             active = false; // 후속 반영 차단
         }; // 정리 종료
     }, []); // 최초 실행
+    useEffect(() => // 문서 언어 반영
+    { // 효과 시작
+        if (ready && typeof document !== "undefined") // 준비 확인
+        { // 조건 시작
+            document.documentElement.lang = preferences.language; // 화면 읽기 프로그램·글꼴용 언어
+        } // 조건 종료
+    }, [preferences.language, ready]); // 언어 의존
     const updatePreferences = useCallback((values: Partial<Omit<TextPlayPreferences, "schemaVersion">>) => // 설정 변경
     { // 함수 시작
         setPreferences((current) => // 현재 설정 갱신

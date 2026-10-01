@@ -3,7 +3,7 @@
 import { useState, type ChangeEvent, type ReactElement } from "react"; // 리액트 상태와 입력 타입
 import { useTextPlayPlatform } from "@/features/text-play/platform/text-play-platform"; // 플랫폼 훅
 import { useTextPlayPreferences } from "@/features/text-play/preferences/TextPlayPreferencesProvider"; // 설정 훅
-import type { TextPlayAIProviderId, TextPlayResolutionId, TextPlayThemeId } from "@/features/text-play/preferences/text-play-preferences"; // 설정 타입
+import type { AppLanguage, TextPlayAIProviderId, TextPlayResolutionId, TextPlayThemeId } from "@/features/text-play/preferences/text-play-preferences"; // 설정 타입
 import { TextPlayDialog } from "@/features/text-play/ui/TextPlayDialog"; // 공통 대화상자
 import { TextPlayFrameDecoration, TextPlayIcon, type TextPlayIconName } from "@/features/text-play/ui/TextPlayIcons"; // 벡터 UI
 import styles from "@/features/text-play/ui/TextPlaySettingsDialog.module.css"; // 설정 스타일
@@ -120,6 +120,7 @@ export function TextPlaySettingsDialog({ open, onClose }: TextPlaySettingsDialog
                 <section className={styles.section}> {/* 해상도 설정 */}
                     <div className={styles.sectionTitle}><TextPlayIcon name="status" /><div><h3>창 크기</h3><p>EXE에서 실제 창 크기를 변경합니다.</p></div></div> {/* 영역 제목 */}
                     <label className={styles.field}>창 해상도<select value={preferences.resolutionId} onChange={changeResolution}><option value="fit">화면 맞춤</option><option value="1280x720">1280×720</option><option value="1600x900">1600×900</option><option value="1920x1080">1920×1080</option></select></label> {/* 해상도 선택 */}
+                    <label className={styles.field}>언어 / Language<select value={preferences.language} onChange={(event) => updatePreferences({ language: event.target.value as AppLanguage })}><option value="ko">한국어</option><option value="en">English</option></select></label> {/* 앱 언어 선택(어느 언어로 보든 찾을 수 있게 두 언어 이름) */}
                 </section> {/* 해상도 설정 종료 */}
                 <section className={styles.section}> {/* AI 설정 */}
                     <div className={styles.sectionTitle}><TextPlayIcon name="ai" /><div><h3>인공지능 공급자</h3><p>임시 응답, 이 PC의 내장 AI, PC에 설치된 올라마 모델 중에서 선택합니다.</p></div></div> {/* 영역 제목 */}

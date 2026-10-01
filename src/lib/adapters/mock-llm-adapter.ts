@@ -17,6 +17,11 @@ const structuredNarrations = [ // 구조화 서술 목록
     "낡은 기록 사이에서 리라의 목소리가 또렷하게 들린다.", // 둘째 서술
 ]; // 목록 종료
 
+const englishNarrations = [ // 영어 구조화 서술 목록
+    "Moonlight spreads along the pattern, revealing hidden letters.", // 첫 서술
+    "Among the old records, Lyra's voice rings out clearly.", // 둘째 서술
+]; // 목록 종료
+
 function hash(value: string): number // 문자열 해시
 { // 함수 시작
     return [...value].reduce((total, character) => (total * 31 + character.charCodeAt(0)) >>> 0, 0); // 해시 반환
@@ -52,7 +57,9 @@ export class MockLLMAdapter implements LLMAdapter // Mock 대화 어댑터
     public async *streamStructuredReply(input: StructuredLLMInput): AsyncIterable<string> // 구조화 응답 스트림
     { // 함수 시작
         const key = `${input.system}|${input.context}|${input.userInput}|${input.responseSchema}|${this.seed}`; // 결정 키
-        const response = JSON.stringify({ narration: structuredNarrations[hash(key) % structuredNarrations.length], dialogue: { speaker: "lyra", content: "그 선택을 기억할게." }, proposedActions: [{ type: "change-relation", characterId: "lyra", amount: 1 }] }); // 구조화 응답 생성
+        const english = input.language === "en"; // 영어 답변 여부
+        const narrations = english ? englishNarrations : structuredNarrations; // 언어별 서술 목록
+        const response = JSON.stringify({ narration: narrations[hash(key) % narrations.length], dialogue: { speaker: "lyra", content: english ? "I will remember that choice." : "그 선택을 기억할게." }, proposedActions: [{ type: "change-relation", characterId: "lyra", amount: 1 }] }); // 구조화 응답 생성
         const words = response.split(" "); // 단어 분리
         for (const [index, word] of words.entries()) // 단어 순회
         { // 순회 시작

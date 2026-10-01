@@ -74,6 +74,15 @@ export interface TextPlayGlossary // 식별자의 표시 이름과 소개(AI 문
     events: Record<string, string>; // 이벤트 이름
 } // 구조 종료
 
+export interface TextPlayPackageTranslation // 작품 다른 언어판(식별자·규칙은 원문과 같고 글만 바꿈)
+{ // 구조 시작
+    title: string; // 작품 제목
+    description: string; // 작품 설명
+    scenes: Record<string, { title: string; narration: string; choices: Record<string, string> }>; // 장면 제목·서술·선택지 문구
+    endings: Record<string, { title: string; summary: string }>; // 엔딩 제목·요약
+    glossary: TextPlayGlossary; // 용어 이름과 소개
+} // 구조 종료
+
 export interface TextPlayPackage // 작품 패키지 구조
 { // 구조 시작
     id: string; // 작품 식별자
@@ -91,6 +100,7 @@ export interface TextPlayPackage // 작품 패키지 구조
     eventIds: string[]; // 이벤트 식별자 목록
     characterIds: string[]; // 캐릭터 식별자 목록
     glossary?: TextPlayGlossary; // 표시 이름과 소개(없으면 식별자 그대로)
+    translations?: { en?: TextPlayPackageTranslation }; // 다른 언어판(없으면 원문)
     scenes: TextPlayScene[]; // 장면 목록
     endings: TextPlayEnding[]; // 엔딩 목록
 } // 구조 종료

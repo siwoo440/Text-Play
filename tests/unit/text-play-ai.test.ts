@@ -5,6 +5,7 @@ import { createTextPlayResponseJsonSchema } from "@/features/text-play/ai/respon
 import { parseTextPlayResponse } from "@/features/text-play/ai/response-schema"; // 응답 파서
 import { createTextPlayState } from "@/features/text-play/core/engine"; // 상태 생성기
 import { DEMO_TEXT_PLAY_PACKAGE } from "@/features/text-play/data/demo-package"; // 샘플 패키지
+import { localizeTextPlayPackage } from "@/features/text-play/data/localize-package"; // 작품 언어판
 
 describe("Text-Play AI 응답", () => // 응답 검증 묶음
 { // 묶음 시작
@@ -94,5 +95,35 @@ describe("Text-Play AI 응답", () => // 응답 검증 묶음
         const state = createTextPlayState(DEMO_TEXT_PLAY_PACKAGE, "2026-09-25T00:00:00.000Z"); // 초기 상태 생성
         const context = buildTextPlayContext(DEMO_TEXT_PLAY_PACKAGE, state, "주변을 본다"); // 구조화 문맥 생성
         expect(context.jsonSchema).toEqual(createTextPlayResponseJsonSchema(DEMO_TEXT_PLAY_PACKAGE)); // 스키마 확인
+    }); // 테스트 종료
+}); // 묶음 종료
+
+describe("Text-Play AI 영어 답변", () => // 영어 답변 묶음
+{ // 묶음 시작
+    it("샘플 작품의 모든 장면·선택지·엔딩·용어에 영어판이 있다", () => // 영어판 범위 검증
+    { // 테스트 시작
+        const english = localizeTextPlayPackage(DEMO_TEXT_PLAY_PACKAGE, "en"); // 영어판
+        expect(english.title).toBe("Moonlit Forest Records"); // 제목 확인
+        const hangul = /[가-힣]/u; // 한글 판정
+        const texts = [english.title, english.description, ...english.scenes.flatMap((scene) => [scene.title, scene.narration, ...scene.choices.map((choice) => choice.label)]), ...english.endings.flatMap((ending) => [ending.title, ending.summary]), ...Object.values(english.glossary?.characters ?? {}).flatMap((character) => [character.name, character.description]), ...Object.values(english.glossary?.items ?? {}), ...Object.values(english.glossary?.locations ?? {}), ...Object.values(english.glossary?.quests ?? {}), ...Object.values(english.glossary?.events ?? {})]; // 모든 글
+        expect(texts.filter((text) => hangul.test(text))).toEqual([]); // 한글 남은 글 없음 확인
+        expect(english.scenes.map((scene) => scene.id)).toEqual(DEMO_TEXT_PLAY_PACKAGE.scenes.map((scene) => scene.id)); // 구조 유지 확인
+        expect(localizeTextPlayPackage(DEMO_TEXT_PLAY_PACKAGE, "ko")).toBe(DEMO_TEXT_PLAY_PACKAGE); // 한국어는 원문 그대로
+    }); // 테스트 종료
+
+    it("English를 고르면 영어 이야기꾼 규칙·영어 문맥·영어 발화자 이름으로 요청한다", () => // 영어 문맥 검증
+    { // 테스트 시작
+        const state = createTextPlayState(DEMO_TEXT_PLAY_PACKAGE, "2026-09-25T00:00:00.000Z"); // 초기 상태(첫 서술은 한국어 기록)
+        const input = buildTextPlayContext(DEMO_TEXT_PLAY_PACKAGE, state, "Look around", "en"); // 영어 문맥
+        expect(input.language).toBe("en"); // 언어 전달 확인
+        expect(input.system).toContain("storyteller of the text adventure \"Moonlit Forest Records\""); // 영어 역할 확인
+        expect(input.system).toContain("only in English"); // 영어 규칙 확인
+        expect(input.context).toContain("Current scene: Moonlit Forest Gate"); // 영어 장면 확인
+        expect(input.context).toContain("HP 100/100, Sanity 80/100, Gold 10"); // 영어 능력치 확인
+        expect(input.context).toContain("Choices in this scene: Take the moon lantern / Retreat out of the forest"); // 영어 선택지 확인
+        expect(input.context).not.toMatch(/[가-힣]/u); // 한국어 기록까지 영어로 바뀜 확인
+        const dialogue = ((input.jsonSchema?.properties as Record<string, Record<string, unknown>>).dialogue.anyOf as Record<string, unknown>[])[1]; // 대사 스키마
+        expect((dialogue.properties as Record<string, unknown>).speaker).toEqual({ type: "string", enum: ["Lyra"] }); // 영어 발화자 확인
+        expect(buildTextPlayContext(DEMO_TEXT_PLAY_PACKAGE, state, "본다").language).toBe("ko"); // 기본 한국어 확인
     }); // 테스트 종료
 }); // 묶음 종료

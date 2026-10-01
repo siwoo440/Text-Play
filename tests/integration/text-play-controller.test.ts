@@ -9,6 +9,7 @@ import { LLMServiceError, type LLMServiceErrorCode } from "@/lib/adapters/llm-se
 class FixedAdapter implements LLMAdapter // 고정 응답 어댑터
 { // 클래스 시작
     public receivedSignal: AbortSignal | undefined; // 수신 중단 신호
+    public receivedInput: StructuredLLMInput | undefined; // 수신 구조화 입력
 
     public constructor(private readonly raw: string) // 생성자
     { // 생성자 시작
@@ -16,7 +17,7 @@ class FixedAdapter implements LLMAdapter // 고정 응답 어댑터
 
     public async *streamStructuredReply(_input: StructuredLLMInput, signal?: AbortSignal): AsyncIterable<string> // 구조화 응답
     { // 함수 시작
-        void _input; // 미사용 입력 표시
+        this.receivedInput = _input; // 입력 저장
         this.receivedSignal = signal; // 중단 신호 저장
         yield this.raw.slice(0, 12); // 첫 조각 반환
         yield this.raw.slice(12); // 둘째 조각 반환
@@ -75,6 +76,17 @@ describe("Text-Play 세션 제어기", () => // 제어기 검증 묶음
         expect(state.game.log.at(-1)?.content).toBe("기록을 찾아요."); // 대사 기록 확인
         expect(await repository.load(state.game.packageId, "auto")).not.toBeNull(); // 자동 저장 확인
         expect(adapter.receivedSignal).toBe(signal); // 중단 신호 전달 확인
+    }); // 테스트 종료
+
+    it("고른 언어를 AI 요청에 담는다", async () => // 언어 전달 검증
+    { // 테스트 시작
+        let state = createPreparedTextPlaySessionState(); // 세션 상태 생성
+        const adapter = new FixedAdapter(JSON.stringify({ narration: "The mist clears.", dialogue: null, proposedActions: [] })); // 고정 어댑터
+        const controller = createTextPlayController({ llm: adapter, repository: new MemoryTextPlaySaveRepository(), getState: () => state, dispatch: (action) => { state = textPlayReducer(state, action); }, now: () => "2026-09-26T00:00:00.000Z", language: "en" }); // 영어 제어기
+        await controller.sendFreeInput("Look around", new AbortController().signal); // 자유 입력 전송
+        expect(adapter.receivedInput?.language).toBe("en"); // 언어 전달 확인
+        expect(adapter.receivedInput?.system).toContain("only in English"); // 영어 규칙 확인
+        expect(state.game.log.at(-1)?.content).toBe("The mist clears."); // 영어 서술 기록 확인
     }); // 테스트 종료
 
     it("지금 상황에 맞지 않는 행동만 빼고 서술과 나머지 행동은 반영한다", async () => // 부분 적용 검증

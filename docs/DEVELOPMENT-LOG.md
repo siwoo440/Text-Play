@@ -1013,3 +1013,37 @@ Windows 실행 파일(exe)이 최신 ChatBot(Mate Verse) 기능을 똑같이 제
 
 - 테스트 파일 116개, 테스트 699개 통과(가져온 ChatBot 스토리 테스트 포함), 타입 검사·코드 검사 통과, 데스크톱 통합 테스트 13개 통과, `pnpm exe:rebuild` 성공
 - 미리보기에서 스토리 모드 화면이 사이드바 틀 안에 열리는 것 확인
+
+---
+## 2026-10-01 — 한국어·영어 나누기 1~2단계(언어 설정, AI 답변 언어)
+
+---
+### 변경 파일
+
+- `src/features/text-play/preferences/text-play-preferences.ts`(`AppLanguage`, `language` 기본 `ko`, 예전 저장값은 `ko`로 채움), `TextPlayPreferencesProvider.tsx`(문서 `lang` 반영), `ui/TextPlaySettingsDialog.tsx`(`언어 / Language` 선택)
+- `src/features/text-play/core/types.ts`(`TextPlayPackageTranslation`, `translations.en`), `data/demo-package.ts`(샘플 작품 영어판), 새 `data/localize-package.ts`(고른 언어의 작품, 저장된 한국어 기록 바꾸기)
+- `src/features/text-play/ai/context-builder.ts`(언어별 이야기꾼 규칙·예시·문맥 문구), `response-json-schema.ts`(영어 글자 수 상한 2배)
+- `src/lib/adapters/llm-adapter.ts`(`StructuredLLMInput.language`), `mock-llm-adapter.ts`(영어 응답)
+- 언어 전달: `session/text-play-controller.ts` → `session/TextPlayProvider.tsx` → `src/desktop/DesktopRoutes.tsx`
+- 테스트: 설정·설정 창·창 해상도·데스크톱 AI 선택, `text-play-ai`, `mock-adapters`, 세션 제어기
+- 문서: 계획 `docs/plans/2026-10-01-language-ko-en.md`
+
+---
+### 사용자 기능
+
+- Text-Play 설정 창에서 `한국어`·`English`를 고르면 AI의 **다음 답변부터** 그 언어로 나옴(이미 나온 기록은 그대로). 한국어로 입력해도 English를 골랐으면 영어로 답함
+- 영어 답변의 대사 인물 이름은 `Lyra`, AI 문맥의 작품 제목·장면·선택지도 영어판 사용
+
+---
+### 검증 결과
+
+- 새 테스트는 구현 전 실패를 확인한 뒤 구현해 통과
+- 테스트 파일 116개, 테스트 707개 통과, 타입 검사·코드 검사 통과, `pnpm exe:rebuild` 성공
+- exe(내장 AI Mi:dm, 그래픽)에서 English로 9턴: 모두 영어 답변, 한 턴 0.5~1초, 골드·엔딩 요구 4번 모두 능력치 변화 없음
+
+---
+### 남은 작업
+
+- 3단계: 화면 글자 영어판(Text-Play 플레이·홈·설정·저장 창, 사이드바·상단 바·AI 모델 화면)
+- 4단계: ChatBot 저장소에 언어 기능 요청 후 동기화
+- 영어 답변 품질: 가끔 `The player`로 부름, 리라 대사가 서술처럼 나옴, 1번은 서술이 끊기고 저장 안내 없이 끝남(다시 3번 해 보니 재현 안 됨)

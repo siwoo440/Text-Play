@@ -32,6 +32,35 @@ export const DEMO_TEXT_PLAY_PACKAGE: TextPlayPackage = // 공식 샘플 패키�
         quests: { "voices-below": "숲 아래의 목소리" }, // 퀘스트
         events: { "truth-revealed": "기록의 진실" }, // 이벤트
     }, // 용어 종료
+    translations: // 다른 언어판
+    { // 언어판 시작
+        en: // 영어판
+        { // 영어판 시작
+            title: "Moonlit Forest Records", // 작품 제목
+            description: "A fantasy mystery about lost records and the truth of the voices beneath the forest", // 작품 설명
+            scenes: // 장면
+            { // 장면 시작
+                "forest-gate": { title: "Moonlit Forest Gate", narration: "Beyond the silver mist, an old lantern glimmers faintly.", choices: { "take-lantern": "Take the moon lantern", retreat: "Retreat out of the forest" } }, // 숲 입구
+                "moonlit-hall": { title: "Ruined Hall", narration: "The lantern reveals patterns on the wall and a door leading to the sealed study.", choices: { "inspect-seal": "Examine the pattern on the wall", "enter-study": "Go to the sealed study" } }, // 폐허 회랑
+                "sealed-study": { title: "Sealed Study", narration: "The records Lyra left behind show that the voices beneath the forest were a call for help.", choices: { "decode-records": "Decode the records" } }, // 봉인 서재
+                "truth-ending": { title: "The Truth of the Records", narration: "You return the records to the world and end the forest's old misunderstanding.", choices: {} }, // 진실 엔딩
+                "retreat-ending": { title: "The Way Back", narration: "You left the forest, but the faint voices return to you every night.", choices: {} }, // 후퇴 엔딩
+            }, // 장면 종료
+            endings: // 엔딩
+            { // 엔딩 시작
+                "truth-ending": { title: "The Truth of the Records", summary: "You uncovered the identity of the voices beneath the forest and restored Lyra's records." }, // 정상 엔딩
+                "retreat-ending": { title: "The Way Back", summary: "You gave up the expedition at the entrance of the moonlit forest and turned back." }, // 후퇴 엔딩
+            }, // 엔딩 종료
+            glossary: // 용어
+            { // 용어 시작
+                characters: { lyra: { name: "Lyra", description: "An archivist who once guarded the records of the moonlit forest. She vanished while investigating the voices beneath the forest and now stays by the player's side only as a faint voice. She speaks calmly and carefully." } }, // 인물
+                items: { "moon-lantern": "Moon Lantern" }, // 아이템
+                locations: { "forest-gate": "Moonlit Forest Gate", "moonlit-hall": "Ruined Hall", "sealed-study": "Sealed Study" }, // 장소
+                quests: { "voices-below": "Voices Beneath the Forest" }, // 퀘스트
+                events: { "truth-revealed": "The Truth of the Records" }, // 이벤트
+            }, // 용어 종료
+        }, // 영어판 종료
+    }, // 언어판 종료
     scenes: // 장면 목록
     [ // 장면 시작
         { // 숲 입구 시작

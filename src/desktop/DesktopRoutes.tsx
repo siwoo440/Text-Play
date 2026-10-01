@@ -132,7 +132,7 @@ export function DesktopRoutes({ repository, localAIClient, modelStoreClient }: D
     }, [title]); // 제목 의존
     if (match.kind === "text-play-play") // 플레이 화면 확인
     { // 조건 시작
-        return <DesktopErrorBoundary key={location.search}><TextPlayProvider repository={repository} llm={llmSelection.adapter} llmLabel={llmSelection.label} resumeSlot={match.resumeSlot}><TextPlayScreen /></TextPlayProvider></DesktopErrorBoundary>; // 전체 창 플레이 화면
+        return <DesktopErrorBoundary key={location.search}><TextPlayProvider repository={repository} llm={llmSelection.adapter} llmLabel={llmSelection.label} resumeSlot={match.resumeSlot} language={preferences.language}><TextPlayScreen /></TextPlayProvider></DesktopErrorBoundary>; // 전체 창 플레이 화면
     } // 조건 종료
     return <DesktopShell pathname={location.pathname} area={getDesktopAreaId(match)} title={title} repository={repository}><DesktopErrorBoundary key={location.pathname}>{renderPage(match, repository, modelStoreClient)}</DesktopErrorBoundary></DesktopShell>; // 사이드바 틀 화면
 } // 함수 종료

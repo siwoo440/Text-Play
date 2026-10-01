@@ -51,3 +51,18 @@ describe("Mock 어댑터", () => // 어댑터 묶음
         await expect(adapter.generateScene({ sceneId: "unknown" })).resolves.toMatchObject({ path: "/images/scenes/fallback-scene.svg", fallback: true }); // 대체 장면
     }); // 검증 종료
 }); // 묶음 종료
+
+describe("임시 인공지능 영어 답변", () => // 영어 Mock 묶음
+{ // 묶음 시작
+    it("구조화 입력이 영어면 영어 서술과 대사로 답한다", async () => // 영어 응답 검증
+    { // 테스트 시작
+        let raw = ""; // 응답 누적
+        for await (const chunk of new MockLLMAdapter({ delayMs: 0 }).streamStructuredReply({ system: "rules", context: "scene", userInput: "Look", responseSchema: "{}", language: "en" })) // 조각 순회
+        { // 반복 시작
+            raw += chunk; // 조각 누적
+        } // 반복 종료
+        const parsed = JSON.parse(raw) as { narration: string; dialogue: { content: string } }; // 응답 해석
+        expect(parsed.narration).not.toMatch(/[가-힣]/u); // 영어 서술 확인
+        expect(parsed.dialogue.content).toBe("I will remember that choice."); // 영어 대사 확인
+    }); // 테스트 종료
+}); // 묶음 종료

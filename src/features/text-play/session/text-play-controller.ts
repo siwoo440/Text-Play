@@ -4,6 +4,7 @@ import { parseTextPlayResponse } from "@/features/text-play/ai/response-schema";
 import { applyTextPlayActions } from "@/features/text-play/core/engine"; // 게임 액션 처리기
 import type { TextPlayLogEntry, TextPlayPackage, TextPlayState } from "@/features/text-play/core/types"; // 게임 계약
 import { DEMO_TEXT_PLAY_PACKAGE } from "@/features/text-play/data/demo-package"; // 샘플 작품
+import type { AppLanguage } from "@/features/text-play/preferences/text-play-preferences"; // 앱 언어
 import type { TextPlaySessionAction, TextPlaySessionState } from "@/features/text-play/session/text-play-reducer"; // 세션 계약
 import type { TextPlaySaveRepository } from "@/features/text-play/storage/save-repository"; // 저장소 계약
 import type { LLMAdapter } from "@/lib/adapters/llm-adapter"; // LLM 계약
@@ -17,6 +18,7 @@ interface TextPlayControllerDependencies // 제어기 의존성
     dispatch(action: TextPlaySessionAction): void; // 동작 전달기
     now(): string; // 현재 시각 생성기
     packageData?: TextPlayPackage; // 작품 패키지
+    language?: AppLanguage; // 답변 언어(없으면 한국어)
 } // 구조 종료
 
 export interface TextPlayController // 제어기 계약
@@ -82,7 +84,7 @@ export function createTextPlayController(dependencies: TextPlayControllerDepende
             let raw = ""; // 원본 응답 준비
             try // 응답 처리 시도
             { // 시도 시작
-                for await (const chunk of dependencies.llm.streamStructuredReply(buildTextPlayContext(packageData, confirmed, input), signal)) // 응답 조각 순회
+                for await (const chunk of dependencies.llm.streamStructuredReply(buildTextPlayContext(packageData, confirmed, input, dependencies.language), signal)) // 응답 조각 순회
                 { // 순회 시작
                     if (signal.aborted) // 중지 여부 확인
                     { // 조건 시작

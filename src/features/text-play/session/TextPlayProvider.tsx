@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer,
 import { createTextPlayState, selectTextPlayChoice } from "@/features/text-play/core/engine"; // 게임 엔진
 import type { TextPlaySaveSlot, TextPlaySlotId } from "@/features/text-play/core/types"; // 슬롯 계약
 import { DEMO_TEXT_PLAY_PACKAGE } from "@/features/text-play/data/demo-package"; // 샘플 작품
+import type { AppLanguage } from "@/features/text-play/preferences/text-play-preferences"; // 앱 언어
 import { createTextPlayController } from "@/features/text-play/session/text-play-controller"; // 세션 제어기
 import { textPlayReducer, type TextPlaySessionState } from "@/features/text-play/session/text-play-reducer"; // 세션 리듀서
 import { createBrowserTextPlaySaveRepository } from "@/features/text-play/storage/browser-save-repository"; // 브라우저 저장소 생성기
@@ -34,11 +35,12 @@ interface TextPlayProviderProps // 공급자 속성
     llm?: LLMAdapter; // LLM 주입
     llmLabel?: string; // LLM 표시 문구
     resumeSlot?: TextPlaySlotId | null; // 시작 복원 슬롯
+    language?: AppLanguage; // AI 답변 언어(없으면 한국어)
 } // 구조 종료
 
 const TextPlayContext = createContext<TextPlayStore | null>(null); // Text-Play 문맥
 
-export function TextPlayProvider({ children, initialState, repository, llm, llmLabel, resumeSlot = null }: TextPlayProviderProps) // Text-Play 공급자
+export function TextPlayProvider({ children, initialState, repository, llm, llmLabel, resumeSlot = null, language = "ko" }: TextPlayProviderProps) // Text-Play 공급자
 { // 함수 시작
     const initial = initialState ?? { game: createTextPlayState(DEMO_TEXT_PLAY_PACKAGE, new Date().toISOString()), streamedText: "", pendingInput: "", isStreaming: false, error: null, saveNotice: null, isStatePanelOpen: false }; // 초기 세션 생성
     const [state, dispatch] = useReducer(textPlayReducer, initial); // 세션 리듀서 연결
@@ -88,10 +90,10 @@ export function TextPlayProvider({ children, initialState, repository, llm, llmL
     }, [refreshSlots]); // 조회 함수 의존
     const sendFreeInput = useCallback(async (input: string, signal: AbortSignal) => // 자유 입력 처리
     { // 함수 시작
-        const controller = createTextPlayController({ llm: llmRef.current, repository: repositoryRef.current, getState: () => stateRef.current, dispatch, now: () => new Date().toISOString() }); // 제어기 생성
+        const controller = createTextPlayController({ llm: llmRef.current, repository: repositoryRef.current, getState: () => stateRef.current, dispatch, now: () => new Date().toISOString(), language }); // 제어기 생성(고른 언어로 답변)
         await controller.sendFreeInput(input, signal); // 자유 입력 실행
         await refreshSlots(); // 자동 저장 목록 갱신
-    }, [refreshSlots]); // 슬롯 갱신 의존
+    }, [language, refreshSlots]); // 언어·슬롯 갱신 의존
     const selectChoice = useCallback(async (choiceId: string) => // 선택지 처리
     { // 함수 시작
         const result = selectTextPlayChoice(DEMO_TEXT_PLAY_PACKAGE, stateRef.current.game, choiceId, new Date().toISOString()); // 선택지 적용

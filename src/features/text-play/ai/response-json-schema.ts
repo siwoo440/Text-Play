@@ -1,10 +1,11 @@
 import type { TextPlayPackage, TextPlayStatKey } from "@/features/text-play/core/types"; // 도메인 계약
+import type { AppLanguage } from "@/features/text-play/preferences/text-play-preferences"; // 앱 언어
 
 export type TextPlayJsonSchema = Record<string, unknown>; // JSON 스키마 객체
 
 const STAT_KEYS: TextPlayStatKey[] = ["hp", "sanity", "gold"]; // 능력치 식별자 목록
-const NARRATION_MAX_LENGTH = 300; // 서술 최대 글자 수
-const DIALOGUE_MAX_LENGTH = 150; // 대사 최대 글자 수
+const NARRATION_MAX_LENGTH: Record<AppLanguage, number> = { ko: 300, en: 600 }; // 서술 최대 글자 수(영어는 같은 뜻에 글자가 더 많음)
+const DIALOGUE_MAX_LENGTH: Record<AppLanguage, number> = { ko: 150, en: 300 }; // 대사 최대 글자 수
 const MAX_PROPOSED_ACTIONS = 4; // 제안 액션 최대 개수
 export const STAT_CHANGE_LIMIT = 20; // 능력치 한 번 변화 상한
 export const RELATION_CHANGE_LIMIT = 10; // 관계도 한 번 변화 상한
@@ -51,13 +52,13 @@ export function speakerNames(packageData: TextPlayPackage): string[] // 대사�
     return packageData.characterIds.map((id) => packageData.glossary?.characters[id]?.name ?? id); // 표시 이름(없으면 식별자)
 } // 함수 종료
 
-export function createTextPlayResponseJsonSchema(packageData: TextPlayPackage): TextPlayJsonSchema // 응답 JSON 스키마 생성
+export function createTextPlayResponseJsonSchema(packageData: TextPlayPackage, language: AppLanguage = "ko"): TextPlayJsonSchema // 응답 JSON 스키마 생성
 { // 함수 시작
     return { // 스키마 반환
         type: "object", // 객체 형식
         properties: // 응답 필드(생성 순서)
         { // 필드 시작
-            narration: { type: "string", minLength: 1, maxLength: NARRATION_MAX_LENGTH }, // 장면 서술
+            narration: { type: "string", minLength: 1, maxLength: NARRATION_MAX_LENGTH[language] }, // 장면 서술
             dialogue: packageData.characterIds.length === 0 ? { type: "null" } : // 등장인물이 없으면 대사 없음
             { // 대사 시작
                 anyOf: // 대사 후보
@@ -65,7 +66,7 @@ export function createTextPlayResponseJsonSchema(packageData: TextPlayPackage): 
                     { type: "null" }, // 대사 없음
                     { // 대사 객체 시작
                         type: "object", // 객체 형식
-                        properties: { speaker: idEnum(speakerNames(packageData)), content: { type: "string", minLength: 1, maxLength: DIALOGUE_MAX_LENGTH } }, // 등장인물만 발화자로
+                        properties: { speaker: idEnum(speakerNames(packageData)), content: { type: "string", minLength: 1, maxLength: DIALOGUE_MAX_LENGTH[language] } }, // 등장인물만 발화자로
                         required: ["speaker", "content"], // 필수 필드
                         additionalProperties: false, // 추가 필드 차단
                     }, // 대사 객체 종료

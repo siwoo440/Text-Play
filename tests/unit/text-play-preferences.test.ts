@@ -32,14 +32,14 @@ describe("Text-Play 환경 설정", () => // 환경 설정 묶음
 
     it("선택한 테마와 해상도와 올라마 모델을 저장하고 다시 불러온다", () => // 영속성 검증
     { // 테스트 시작
-        const preferences = { schemaVersion: 2 as const, themeId: "sci-fi" as const, resolutionId: "1600x900" as const, aiProviderId: "ollama" as const, localModelId: "qwen3:8b" }; // 선택 설정
+        const preferences = { schemaVersion: 2 as const, themeId: "sci-fi" as const, resolutionId: "1600x900" as const, aiProviderId: "ollama" as const, localModelId: "qwen3:8b", language: "en" as const }; // 선택 설정
         saveTextPlayPreferences(window.localStorage, preferences); // 설정 저장
         expect(loadTextPlayPreferences(window.localStorage)).toEqual(preferences); // 저장값 확인
     }); // 테스트 종료
 
     it("모델 선택 없이 내장 AI를 저장하고 다시 불러온다", () => // 내장 AI 영속성 검증
     { // 테스트 시작
-        const preferences = { schemaVersion: 2 as const, themeId: "dark-fantasy" as const, resolutionId: "fit" as const, aiProviderId: "bundled" as const, localModelId: null }; // 내장 AI 설정
+        const preferences = { schemaVersion: 2 as const, themeId: "dark-fantasy" as const, resolutionId: "fit" as const, aiProviderId: "bundled" as const, localModelId: null, language: "ko" as const }; // 내장 AI 설정
         saveTextPlayPreferences(window.localStorage, preferences); // 설정 저장
         expect(loadTextPlayPreferences(window.localStorage)).toEqual(preferences); // 저장값 확인
     }); // 테스트 종료
@@ -47,13 +47,33 @@ describe("Text-Play 환경 설정", () => // 환경 설정 묶음
     it("버전 1 설정의 화면 선택을 보존하며 버전 2로 이전한다", () => // 이전 검증
     { // 테스트 시작
         window.localStorage.setItem(LEGACY_TEXT_PLAY_PREFERENCES_KEY, JSON.stringify({ schemaVersion: 1, themeId: "classic-novel", resolutionId: "1280x720", aiProviderId: "mock" })); // 예전 설정 저장
-        expect(loadTextPlayPreferences(window.localStorage)).toEqual({ schemaVersion: 2, themeId: "classic-novel", resolutionId: "1280x720", aiProviderId: "mock", localModelId: null }); // 이전 결과 확인
+        expect(loadTextPlayPreferences(window.localStorage)).toEqual({ schemaVersion: 2, themeId: "classic-novel", resolutionId: "1280x720", aiProviderId: "mock", localModelId: null, language: "ko" }); // 이전 결과 확인
     }); // 테스트 종료
 
     it("알 수 없는 설정값은 안전한 기본값으로 복구한다", () => // 값 검증
     { // 테스트 시작
         window.localStorage.setItem(TEXT_PLAY_PREFERENCES_KEY, JSON.stringify({ schemaVersion: 2, themeId: "unknown", resolutionId: "fit", aiProviderId: "mock", localModelId: null })); // 잘못된 값 저장
         expect(loadTextPlayPreferences(window.localStorage)).toEqual(DEFAULT_TEXT_PLAY_PREFERENCES); // 복구값 확인
+    }); // 테스트 종료
+
+    it("언어를 고르지 않았던 예전 설정은 한국어로 읽는다", () => // 언어 기본값 검증
+    { // 테스트 시작
+        window.localStorage.setItem(TEXT_PLAY_PREFERENCES_KEY, JSON.stringify({ schemaVersion: 2, themeId: "sci-fi", resolutionId: "fit", aiProviderId: "mock", localModelId: null })); // 언어 없는 저장값
+        expect(loadTextPlayPreferences(window.localStorage)).toEqual({ schemaVersion: 2, themeId: "sci-fi", resolutionId: "fit", aiProviderId: "mock", localModelId: null, language: "ko" }); // 한국어 보충 확인
+        expect(DEFAULT_TEXT_PLAY_PREFERENCES.language).toBe("ko"); // 기본 언어 확인
+    }); // 테스트 종료
+
+    it("알 수 없는 언어 값은 안전한 기본값으로 복구한다", () => // 언어 값 검증
+    { // 테스트 시작
+        window.localStorage.setItem(TEXT_PLAY_PREFERENCES_KEY, JSON.stringify({ schemaVersion: 2, themeId: "sci-fi", resolutionId: "fit", aiProviderId: "mock", localModelId: null, language: "fr" })); // 지원하지 않는 언어
+        expect(loadTextPlayPreferences(window.localStorage)).toEqual(DEFAULT_TEXT_PLAY_PREFERENCES); // 기본값 복구 확인
+    }); // 테스트 종료
+
+    it("고른 언어를 문서 언어(lang)에 반영한다", async () => // 문서 언어 검증
+    { // 테스트 시작
+        window.localStorage.setItem(TEXT_PLAY_PREFERENCES_KEY, JSON.stringify({ ...DEFAULT_TEXT_PLAY_PREFERENCES, language: "en" })); // 영어 저장값
+        render(createElement(TextPlayPreferencesProvider, null, createElement("span", null, "화면"))); // 설정 공급자 렌더
+        await vi.waitFor(() => expect(document.documentElement.lang).toBe("en")); // 영어 반영 확인
     }); // 테스트 종료
 
     it("모델 없는 올라마 선택을 안전한 기본값으로 복구한다", () => // AI 값 검증

@@ -62,6 +62,16 @@ describe("Text-Play 설정 대화상자", () => // 설정 대화상자 묶음
         expect(screen.getByRole("option", { name: "내장 AI(이 PC)" })).toBeDisabled(); // 웹에서 내장 AI 막힘 확인
     }); // 테스트 종료
 
+    it("언어 / Language에서 English를 고르면 앱 언어로 저장한다", async () => // 언어 선택 검증
+    { // 테스트 시작
+        const user = userEvent.setup(); // 사용자 동작 생성
+        const platform: TextPlayPlatform = { applyWindowResolution: async () => undefined, navigate: vi.fn(), renderSceneImage: () => null }; // 테스트 플랫폼
+        render(<TextPlayPlatformProvider value={platform}><TextPlayPreferencesProvider><TextPlaySettingsDialog open onClose={vi.fn()} /></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 설정 화면 렌더
+        expect(screen.getByLabelText("언어 / Language")).toHaveValue("ko"); // 기본 한국어 확인
+        await user.selectOptions(screen.getByLabelText("언어 / Language"), "en"); // English 선택
+        expect(loadTextPlayPreferences(window.localStorage).language).toBe("en"); // 저장 확인
+    }); // 테스트 종료
+
     it("Windows 실행 프로그램에서는 모델 선택 없이 내장 AI를 고를 수 있다", async () => // 내장 AI 선택 검증
     { // 테스트 시작
         const user = userEvent.setup(); // 사용자 동작 생성

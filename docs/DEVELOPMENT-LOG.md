@@ -597,3 +597,45 @@ Character Chat과 Text-Play가 같은 서버 경계를 사용하고 실제 비�
 - 최소 창 맞춤 데스크톱 통합 테스트 추가: 수정 전 코드에서 실패, 수정 후 통과
 - 데스크톱 통합 테스트 5개, 웹 통합 테스트 1개, 테스트 225개, 타입 검사와 코드 검사 통과
 - `pnpm exe:rebuild` 후 실행 파일 화면에서 스크롤바 없음 확인
+
+---
+## 2026-10-01 — 실행 파일 메인 화면 개편 (진행 중)
+
+---
+### 목표
+
+실행 파일을 열면 ChatBot 최신 커밋(`4fbbd3e`, 밝은 다채색 디자인)과 같은 메인 탐색 화면이 나오도록 합니다.
+
+---
+### 변경 파일
+
+- `src/features/text-play/catalog/text-play-catalog.ts`
+- `src/features/text-play/ui/TextPlayHome.tsx`, `src/features/text-play/ui/TextPlayHome.module.css`
+- `src/features/text-play/ui/TextPlayDialog.tsx`, `src/features/text-play/ui/TextPlayDialog.module.css`
+- `src/features/text-play/platform/*`, `src/desktop/DesktopApp.tsx`, `src/desktop/desktop.css`
+- `public/images/text-play/moonlit-forest-cover.svg`
+- `vitest.config.mts`, 관련 단위·컴포넌트·통합 테스트
+
+---
+### 사용자 기능
+
+- 어두운 단일 카드 홈을 ChatBot 밝은 다채색 메인 화면 구성으로 변경: 흰 헤더와 여러 색 띠, 여러 색 원형 그라데이션 바탕, 큰 제목과 검색창, 장르색 칩, 오늘의 작품, 인기 랭킹 TOP 10, 전체 작품과 더 보기
+- Text-Play 대표색(주황)으로 주요 버튼·검색 테두리·제품 표시 지정
+- 실제 플레이 가능한 `달빛 숲의 기록` 1개와 캐릭터 일러스트 기반 Mock 작품 50개 추가, Mock 작품은 `준비 중` 표시
+- 작품 카드를 누르면 밝은 상세 창 표시, 준비 중 작품은 플레이 버튼 비활성
+- 이어하기 요약을 장면 식별자 대신 장면 제목으로 표시
+- 실행 파일에서 `Mate Verse 탐색으로 돌아가기` 버튼 제거, 메인은 스크롤바 없이 안쪽 스크롤
+- `달빛 숲의 기록` 표지 SVG 추가
+
+---
+### 검증 결과
+
+- 테스트 파일 55개, 테스트 233개 통과, 타입 검사와 코드 검사 통과
+- 데스크톱 통합 테스트 5개, 웹 통합 테스트 1개 통과
+- 전체 병렬 실행 부하로 시간 초과가 생겨 테스트 시간 제한을 15초로 변경
+
+---
+### 남은 작업
+
+- 실행 파일 화면 직접 확인과 세부 디자인 조정
+- 게임 플레이 화면을 같은 밝은 디자인으로 맞추기

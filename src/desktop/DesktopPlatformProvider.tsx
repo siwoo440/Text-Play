@@ -47,7 +47,7 @@ export function DesktopPlatformProvider({ children, onNavigate, localAIClient }:
                 } // 조건 종료
                 onNavigate({ type: "show-home" }); // 홈 전이
             }, // 이동 함수 종료
-            renderSceneImage: (source) => createElement("img", { src: source.startsWith("/") ? `.${source}` : source, alt: "", className: "desktop-scene-image" }), // 상대 이미지 출력
+            renderSceneImage: (source, options) => createElement("img", { src: source.startsWith("/") ? `.${source}` : source, alt: "", className: "desktop-scene-image", loading: options?.priority === false ? "lazy" : "eager" }), // 상대 이미지 출력
             localAI: localAIClient, // 로컬 인공지능 연결
         } // 객체 종료
         ); // 플랫폼 반환 종료

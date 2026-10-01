@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" role="img" aria-label="달빛 숲의 기록 표지">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2e1065"/>
+      <stop offset=".55" stop-color="#5b21b6"/>
+      <stop offset="1" stop-color="#c2410c"/>
+    </linearGradient>
+    <radialGradient id="moonGlow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#fef3c7" stop-opacity=".95"/>
+      <stop offset=".45" stop-color="#fde68a" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#fde68a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="lanternGlow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#fdba74" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#fb923c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fffbeb"/>
+      <stop offset="1" stop-color="#fde68a"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="500" fill="url(#sky)"/>
+  <g fill="#fef9c3" opacity=".85">
+    <circle cx="48" cy="62" r="1.8"/><circle cx="92" cy="118" r="1.2"/><circle cx="150" cy="40" r="1.5"/>
+    <circle cx="330" cy="58" r="1.4"/><circle cx="362" cy="140" r="1.8"/><circle cx="214" cy="92" r="1"/>
+    <circle cx="28" cy="184" r="1.1"/><circle cx="300" cy="196" r="1.2"/><circle cx="122" cy="200" r="1"/>
+  </g>
+  <circle cx="262" cy="132" r="128" fill="url(#moonGlow)"/>
+  <circle cx="262" cy="132" r="58" fill="#fef3c7"/>
+  <circle cx="290" cy="114" r="52" fill="#6d28d9" opacity=".92"/>
+  <path d="M0 330 L40 250 L70 300 L104 214 L140 296 L176 236 L214 310 L250 246 L290 312 L330 232 L366 300 L400 262 L400 500 L0 500 Z" fill="#3b0764" opacity=".85"/>
+  <path d="M0 382 L34 318 L62 362 L96 296 L132 370 L170 314 L206 380 L246 322 L286 384 L322 318 L360 372 L400 334 L400 500 L0 500 Z" fill="#1e1b4b"/>
+  <circle cx="200" cy="356" r="70" fill="url(#lanternGlow)"/>
+  <g transform="translate(200 352)">
+    <path d="M-12 -42 Q0 -56 12 -42" fill="none" stroke="#fde68a" stroke-width="3" stroke-linecap="round"/>
+    <rect x="-17" y="-40" width="34" height="8" rx="3" fill="#92400e"/>
+    <rect x="-14" y="-32" width="28" height="38" rx="7" fill="#fdba74" stroke="#92400e" stroke-width="3"/>
+    <path d="M0 -24 Q7 -14 0 -6 Q-7 -14 0 -24 Z" fill="#fff7ed"/>
+    <rect x="-17" y="6" width="34" height="7" rx="3" fill="#92400e"/>
+  </g>
+  <g transform="translate(200 438)">
+    <path d="M-118 0 Q-60 -26 0 -6 Q60 -26 118 0 L118 34 Q60 10 0 30 Q-60 10 -118 34 Z" fill="url(#page)"/>
+    <path d="M0 -6 L0 30" stroke="#b45309" stroke-width="3"/>
+    <g stroke="#d97706" stroke-width="2.4" stroke-linecap="round" opacity=".7">
+      <path d="M-96 6 Q-60 -8 -20 4"/><path d="M-96 16 Q-60 2 -20 14"/>
+      <path d="M20 4 Q60 -8 96 6"/><path d="M20 14 Q60 2 96 16"/>
+    </g>
+  </g>
+  <g fill="#fde68a" opacity=".9">
+    <circle cx="150" cy="300" r="2.4"/><circle cx="252" cy="288" r="2"/><circle cx="176" cy="268" r="1.6"/><circle cx="232" cy="318" r="1.8"/>
+  </g>
+</svg>

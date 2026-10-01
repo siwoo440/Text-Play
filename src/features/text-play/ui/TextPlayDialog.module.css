@@ -39,6 +39,26 @@
     font-size: 1.4rem; /* 기호 크기 */
 } /* 버튼 종료 */
 
+.backdrop[data-tone="light"] /* 밝은 배경 */
+{ /* 배경 시작 */
+    background: rgb(31 26 46 / 34%); /* 연한 반투명 배경 */
+} /* 배경 종료 */
+
+.backdrop[data-tone="light"] .panel /* 밝은 패널 */
+{ /* 패널 시작 */
+    border-color: #e9e3f3; /* 밝은 테두리 */
+    background: #ffffff; /* 흰 배경 */
+    box-shadow: 0 28px 80px rgb(31 26 46 / 24%); /* 밝은 그림자 */
+    color: #1f1a2e; /* 진한 글자 */
+} /* 패널 종료 */
+
+.backdrop[data-tone="light"] .close /* 밝은 닫기 버튼 */
+{ /* 버튼 시작 */
+    border-color: #e9e3f3; /* 밝은 테두리 */
+    background: #ffffff; /* 흰 배경 */
+    color: #5f5873; /* 보조 글자 */
+} /* 버튼 종료 */
+
 @media (max-width: 720px) /* 작은 화면 */
 { /* 미디어 시작 */
     .backdrop /* 작은 배경 */

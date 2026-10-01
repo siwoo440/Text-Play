@@ -33,7 +33,7 @@ function DesktopContent({ repository, localAIClient, route }: DesktopContentProp
     const llmSelection = useMemo(() => createDesktopLLMSelection(preferences, localAIClient), [localAIClient, preferences]); // 설정 기반 AI 생성
     if (route.screen === "home") // 홈 화면 확인
     { // 조건 시작
-        return <TextPlayHome repository={repository} />; // 홈 화면 반환
+        return <TextPlayHome repository={repository} showHeader />; // 메인 화면 반환
     } // 조건 종료
     return <TextPlayProvider repository={repository} llm={llmSelection.adapter} llmLabel={llmSelection.label} resumeSlot={route.resumeSlot}><TextPlayScreen /></TextPlayProvider>; // 플레이 화면 반환
 } // 함수 종료

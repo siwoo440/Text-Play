@@ -21,7 +21,7 @@ test("웹 Text-Play 홈과 플레이 화면을 화면 불일치 오류 없이 �
 { // 테스트 시작
     const errors = collectConsoleErrors(page); // 콘솔 오류 수집
     await page.goto("/text-play"); // 웹 홈 진입
-    await expect(page.getByRole("heading", { name: "Text-Play", level: 1 })).toBeVisible(); // 홈 제목 확인
+    await expect(page.getByRole("heading", { name: "오늘, 어떤 이야기를 플레이할까요?", level: 1 })).toBeVisible(); // 메인 제목 확인
     await expect(page).toHaveTitle("Text-Play · Mate Verse"); // 홈 탭 제목 확인
     await page.getByRole("button", { name: "새 게임" }).click(); // 새 게임 시작
     await expect(page.getByRole("heading", { name: "달빛 숲 입구" })).toBeVisible(); // 첫 장면 확인

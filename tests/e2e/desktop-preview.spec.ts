@@ -36,7 +36,7 @@ test("Mock 플레이를 저장하고 새 세션에서 이어간다", async ({ pa
     const resumedPage = await context.newPage(); // 새 앱 화면 생성
     await page.close(); // 기존 앱 화면 종료
     await resumedPage.goto("/"); // 새 앱 홈 진입
-    await resumedPage.getByRole("button", { name: "이어하기" }).click(); // 자동 저장 복원
+    await resumedPage.getByRole("button", { name: "이어하기", exact: true }).click(); // 자동 저장 복원
     await expect(resumedPage.getByRole("heading", { name: "폐허 회랑" })).toBeVisible(); // 복원 장면 확인
     await expect(resumedPage.getByLabel("AI 연결")).toHaveText("임시 인공지능"); // 임시 인공지능 표시 확인
 }); // 테스트 종료
@@ -130,12 +130,13 @@ async function measureFit(page: Page): Promise<{ documentScrolls: boolean; conte
     }); // 측정 종료
 } // 함수 종료
 
-test("최소 창 960×640에서 홈과 플레이 화면이 스크롤 없이 창 크기에 맞는다", async ({ page }) => // 창 맞춤 검증
+test("최소 창 960×640에서 메인은 스크롤바 없이 안쪽 스크롤하고 플레이 화면은 창 크기에 맞는다", async ({ page }) => // 창 맞춤 검증
 { // 테스트 시작
     await page.setViewportSize({ width: 960, height: 640 }); // 최소 창 크기
     await page.goto("/"); // 데스크톱 홈 진입
     await expect(page.getByRole("button", { name: "새 게임" })).toBeVisible(); // 홈 표시 확인
-    expect(await measureFit(page)).toEqual({ documentScrolls: false, contentOverflows: false }); // 홈 맞춤 확인
+    expect((await measureFit(page)).documentScrolls).toBe(false); // 창 스크롤 부재 확인
+    expect(await page.locator("[data-text-play-home]").evaluate((main) => (main as HTMLElement).offsetWidth - main.clientWidth)).toBe(0); // 메인 스크롤바 숨김 확인
     await page.getByRole("button", { name: "새 게임" }).click(); // 새 게임 시작
     await page.getByRole("button", { name: "AI 추천 답안" }).click(); // 추천 펼치기
     expect(await measureFit(page)).toEqual({ documentScrolls: false, contentOverflows: false }); // 플레이 맞춤 확인

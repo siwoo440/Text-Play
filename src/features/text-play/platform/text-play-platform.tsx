@@ -6,11 +6,17 @@ import type { OllamaClient } from "@/lib/adapters/ollama-client"; // 로컬 인�
 
 export type TextPlayRoute = "home" | "new" | "resume" | "back"; // 화면 이동 종류
 
+export interface TextPlayImageOptions // 이미지 출력 설정
+{ // 구조 시작
+    priority?: boolean; // 우선 불러오기 여부
+    sizes?: string; // 반응형 크기 힌트
+} // 구조 종료
+
 export interface TextPlayPlatform // 플랫폼 계약
 { // 구조 시작
     navigate(route: TextPlayRoute): void; // 화면 이동
     applyWindowResolution(resolutionId: TextPlayResolutionId): Promise<void>; // 창 해상도 적용
-    renderSceneImage(source: string): ReactNode; // 장면 이미지 출력
+    renderSceneImage(source: string, options?: TextPlayImageOptions): ReactNode; // 장면·표지 이미지 출력
     localAI?: OllamaClient; // 선택 로컬 인공지능
 } // 구조 종료
 

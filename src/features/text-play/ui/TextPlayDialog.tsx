@@ -9,13 +9,14 @@ interface TextPlayDialogProps // 대화상자 속성
     labelledBy: string; // 제목 식별자
     describedBy?: string; // 설명 식별자
     open: boolean; // 열림 상태
+    tone?: "dark" | "light"; // 색 분위기
     onClose(): void; // 닫기 처리
     children: ReactNode; // 대화상자 내용
 } // 구조 종료
 
 const FOCUSABLE_SELECTOR = "button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [href], [tabindex]:not([tabindex='-1'])"; // 초점 요소 선택자
 
-export function TextPlayDialog({ labelledBy, describedBy, open, onClose, children }: TextPlayDialogProps): ReactElement | null // 공통 대화상자
+export function TextPlayDialog({ labelledBy, describedBy, open, tone = "dark", onClose, children }: TextPlayDialogProps): ReactElement | null // 공통 대화상자
 { // 함수 시작
     const panelRef = useRef<HTMLDivElement | null>(null); // 패널 참조
     const backdropRef = useRef<HTMLDivElement | null>(null); // 배경 참조
@@ -93,7 +94,7 @@ export function TextPlayDialog({ labelledBy, describedBy, open, onClose, childre
         } // 조건 종료
     }; // 함수 종료
     return createPortal( // 대화상자 포털 반환
-        <div ref={backdropRef} className={styles.backdrop} role="presentation" onMouseDown={closeBackdrop}> {/* 대화상자 배경 */}
+        <div ref={backdropRef} className={styles.backdrop} data-tone={tone} role="presentation" onMouseDown={closeBackdrop}> {/* 대화상자 배경 */}
             <div ref={panelRef} className={styles.panel} role="dialog" aria-modal="true" aria-labelledby={labelledBy} aria-describedby={describedBy} tabIndex={-1}> {/* 대화상자 패널 */}
                 <button type="button" className={styles.close} aria-label="닫기" onClick={onClose}>×</button> {/* 닫기 버튼 */}
                 {children} {/* 대화상자 내용 */}

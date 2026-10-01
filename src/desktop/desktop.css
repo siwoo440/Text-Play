@@ -13,13 +13,24 @@ body /* 문서 본문 */
 } /* 본문 종료 */
 
 [data-text-play-root], /* 게임 실행 화면 */
-[data-text-play-home] /* 게임 홈 화면 */
+[data-text-play-home] /* 게임 메인 화면 */
 { /* 화면 시작 */
     box-sizing: border-box; /* 여백 포함 크기 */
     height: 100dvh; /* 창 높이 맞춤 */
     min-height: 0; /* 웹 최소 높이 해제 */
     overflow: hidden; /* 창 밖 넘침 차단 */
 } /* 화면 종료 */
+
+[data-text-play-home] /* 게임 메인 화면 */
+{ /* 화면 시작 */
+    overflow-y: auto; /* 메인 안쪽 스크롤 */
+    scrollbar-width: none; /* 스크롤바 숨김 */
+} /* 화면 종료 */
+
+[data-text-play-home]::-webkit-scrollbar /* 메인 스크롤바 */
+{ /* 스크롤바 시작 */
+    display: none; /* 스크롤바 숨김 */
+} /* 스크롤바 종료 */
 
 .desktop-scene-image /* 데스크톱 장면 이미지 */
 { /* 이미지 시작 */

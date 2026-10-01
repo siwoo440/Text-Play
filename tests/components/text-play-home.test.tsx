@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react"; // 렌더 도구
 import userEvent from "@testing-library/user-event"; // 사용자 동작
+import { renderToString } from "react-dom/server"; // 서버 렌더 도구
 import { describe, expect, it, vi } from "vitest"; // 테스트 도구
 import { TextPlayPlatformProvider, type TextPlayPlatform } from "@/features/text-play/platform/text-play-platform"; // 플랫폼 계약
 import { ResilientTextPlaySaveRepository, TEXT_PLAY_MEMORY_STORAGE_WARNING } from "@/features/text-play/storage/browser-save-repository"; // 복구 저장소
@@ -57,5 +58,21 @@ describe("Text-Play 홈", () => // 홈 검증 묶음
         const repository = new ResilientTextPlaySaveRepository(failingRepository); // 복구 저장소 생성
         render(<TextPlayPlatformProvider value={createPlatform()}><TextPlayHome repository={repository} /></TextPlayPlatformProvider>); // 홈 렌더
         expect(await screen.findByRole("alert")).toHaveTextContent(TEXT_PLAY_MEMORY_STORAGE_WARNING); // 대체 경고 확인
+    }); // 테스트 종료
+
+    it("서버 첫 렌더에는 저장 경고를 넣지 않고 화면 표시 후에 경고를 보여 준다", async () => // 화면 불일치 방지 검증
+    { // 테스트 시작
+        const repository = // 경고 저장소 생성
+        { // 저장소 시작
+            list: async () => [], // 빈 목록
+            load: async () => null, // 빈 슬롯
+            save: async () => undefined, // 저장 성공
+            remove: async () => undefined, // 삭제 성공
+            getStorageWarning: () => TEXT_PLAY_MEMORY_STORAGE_WARNING, // 메모리 저장 경고
+        }; // 저장소 종료
+        const html = renderToString(<TextPlayPlatformProvider value={createPlatform()}><TextPlayHome repository={repository} /></TextPlayPlatformProvider>); // 서버 렌더
+        expect(html).not.toContain(TEXT_PLAY_MEMORY_STORAGE_WARNING); // 서버 경고 부재 확인
+        render(<TextPlayPlatformProvider value={createPlatform()}><TextPlayHome repository={repository} /></TextPlayPlatformProvider>); // 브라우저 렌더
+        expect(await screen.findByRole("alert")).toHaveTextContent(TEXT_PLAY_MEMORY_STORAGE_WARNING); // 표시 후 경고 확인
     }); // 테스트 종료
 }); // 묶음 종료

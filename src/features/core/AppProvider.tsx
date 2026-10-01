@@ -17,6 +17,7 @@ interface AppStore // 앱 저장소
     state: AppState; // 현재 상태
     dispatch: Dispatch<AppAction>; // 동작 전달
     storageError: string | null; // 저장 오류
+    restored: boolean; // 저장 상태 복원 완료 여부
 } // 구조 종료
 
 interface AppProviderProps // 공급자 속성
@@ -33,6 +34,7 @@ export function AppProvider({ children, initialState = createInitialState(), rep
     const [state, dispatch] = useReducer(appReducer, initialState); // 상태 리듀서
     const [storageError, setStorageError] = useState<string | null>(null); // 저장 오류 상태
     const hydrated = useRef(false); // 복원 완료 표시
+    const [restored, setRestored] = useState(false); // 복원 완료 상태
     useEffect(() => // 최초 복원 효과
     { // 효과 시작
         let cancelled = false; // 취소 표시
@@ -51,6 +53,7 @@ export function AppProvider({ children, initialState = createInitialState(), rep
             } // 조건 종료
             dispatch({ type: "replace-state", state: restoredState }); // 저장 상태 복원
             hydrated.current = true; // 복원 완료
+            setRestored(true); // 복원 완료 알림
         }); // 작업 종료
         return () => // 효과 정리
         { // 정리 시작
@@ -80,7 +83,7 @@ export function AppProvider({ children, initialState = createInitialState(), rep
             queueMicrotask(() => setStorageError("저장하지 못했습니다. 브라우저 저장공간을 확인해 주세요.")); // 오류 안내 예약
         } // 오류 종료
     }, [repository, state]); // 상태 변경 의존
-    const value = useMemo(() => ({ state, dispatch, storageError }), [state, storageError]); // 문맥 값
+    const value = useMemo(() => ({ state, dispatch, storageError, restored }), [restored, state, storageError]); // 문맥 값
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>; // 공급자 반환
 } // 함수 종료
 

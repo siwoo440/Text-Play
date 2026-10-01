@@ -25,7 +25,7 @@ export function TextPlayHome({ repository }: TextPlayHomeProps) // Text-Play 홈
     const platform = useTextPlayPlatform(); // 실행 플랫폼 조회
     const [activeRepository] = useState<TextPlaySaveRepository>(() => repository ?? createBrowserTextPlaySaveRepository()); // 활성 저장소 생성
     const [resumeSlot, setResumeSlot] = useState<TextPlaySaveSlot | null>(null); // 이어하기 슬롯 상태
-    const [storageWarning, setStorageWarning] = useState<string | null>(() => activeRepository.getStorageWarning?.() ?? null); // 저장 경고 상태
+    const [storageWarning, setStorageWarning] = useState<string | null>(null); // 화면 표시 후 반영할 저장 경고
     useEffect(() => // 자동 저장 조회 효과
     { // 효과 시작
         let cancelled = false; // 취소 상태

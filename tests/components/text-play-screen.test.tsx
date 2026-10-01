@@ -1,6 +1,8 @@
 import { render, screen, within } from "@testing-library/react"; // 렌더 도구
 import userEvent from "@testing-library/user-event"; // 사용자 동작
+import { renderToString } from "react-dom/server"; // 서버 렌더 도구
 import { chooseTextPlayRecommendation } from "@/test/text-play-recommendations"; // 추천 답안 선택 도우미
+import { TEXT_PLAY_MEMORY_STORAGE_WARNING } from "@/features/text-play/storage/browser-save-repository"; // 메모리 저장 경고
 import { describe, expect, it, vi } from "vitest"; // 테스트 도구
 import { TextPlayPlatformProvider, type TextPlayPlatform } from "@/features/text-play/platform/text-play-platform"; // 플랫폼 계약
 import { TextPlayPreferencesProvider } from "@/features/text-play/preferences/TextPlayPreferencesProvider"; // 설정 공급자
@@ -152,6 +154,50 @@ describe("Text-Play 플레이 화면", () => // 플레이 검증 묶음
         await user.click(screen.getByRole("button", { name: "주변을 자세히 살핀다" })); // 자유 행동 추천 선택
         expect(await screen.findByText("주변을 살폈다")).toBeInTheDocument(); // 응답 기록 확인
         expect(inputs).toEqual(["주변을 자세히 살핀다"]); // 자유 입력 전달 확인
+    }); // 테스트 종료
+
+    it("서버 첫 렌더의 플레이 화면에는 저장 경고를 넣지 않는다", () => // 화면 불일치 방지 검증
+    { // 테스트 시작
+        const repository = new MemoryTextPlaySaveRepository(); // 메모리 저장소 생성
+        const warningRepository = Object.assign(repository, { getStorageWarning: () => TEXT_PLAY_MEMORY_STORAGE_WARNING }); // 경고 저장소 생성
+        const html = renderToString(<TextPlayPlatformProvider value={createPlatform()}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={warningRepository}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 서버 렌더
+        expect(html).not.toContain(TEXT_PLAY_MEMORY_STORAGE_WARNING); // 서버 경고 부재 확인
+    }); // 테스트 종료
+
+    it("응답을 받는 동안 원문 대신 생성 중 안내와 서술만 보여 준다", async () => // 스트리밍 표시 검증
+    { // 테스트 시작
+        const user = userEvent.setup(); // 사용자 동작 준비
+        let releaseFirst = () => undefined as void; // 첫 조각 해제기
+        let releaseRest = () => undefined as void; // 나머지 해제기
+        const firstGate = new Promise<void>((resolve) => { releaseFirst = resolve; }); // 첫 조각 대기
+        const restGate = new Promise<void>((resolve) => { releaseRest = resolve; }); // 나머지 대기
+        const adapter: LLMAdapter = // 단계 응답 어댑터
+        { // 객체 시작
+            async *streamStructuredReply() // 구조화 응답
+            { // 함수 시작
+                await firstGate; // 첫 조각 대기
+                yield "{\"narration\":\"안개가 \\\"천천히\\\""; // 서술 앞부분
+                await restGate; // 나머지 대기
+                yield " 걷힌다.\",\"dialogue\":null,\"proposedActions\":[]}"; // 서술 뒷부분
+            }, // 함수 종료
+            async *streamReply() // 일반 응답
+            { // 함수 시작
+                yield "응답"; // 응답 반환
+            }, // 함수 종료
+            async summarizeConversation() // 대화 요약
+            { // 함수 시작
+                return "요약"; // 요약 반환
+            }, // 함수 종료
+        }; // 객체 종료
+        render(<TextPlayPlatformProvider value={createPlatform()}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new MemoryTextPlaySaveRepository()} llm={adapter}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 화면 렌더
+        await user.type(screen.getByRole("textbox", { name: "행동 직접 입력" }), "안개를 살핀다"); // 자유 입력 작성
+        await user.click(screen.getByRole("button", { name: "전송" })); // 전송 실행
+        expect(await screen.findByLabelText("생성 중인 이야기")).toHaveTextContent("응답 생성 중…"); // 대기 안내 확인
+        releaseFirst(); // 첫 조각 해제
+        expect(await screen.findByText("안개가 \"천천히\"")).toBeInTheDocument(); // 서술만 표시 확인
+        expect(screen.getByLabelText("생성 중인 이야기")).not.toHaveTextContent("narration"); // 원문 숨김 확인
+        releaseRest(); // 나머지 해제
+        expect(await screen.findByText("안개가 \"천천히\" 걷힌다.")).toBeInTheDocument(); // 완성 서술 확인
     }); // 테스트 종료
 
     it("추천 답안을 직접 작성 영역 바로 위에 배치한다", () => // 도크 순서 검증

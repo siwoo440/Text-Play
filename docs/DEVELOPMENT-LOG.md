@@ -485,3 +485,52 @@ Character Chat과 Text-Play가 같은 서버 경계를 사용하고 실제 비�
 
 - 자유 행동 추천 문구는 장면과 무관한 고정 문구 3개
 - 자유 행동 응답이 스트리밍되는 동안 이야기 상자에 응답 원문(JSON)이 그대로 보임
+
+---
+## 2026-10-01 — 안정화
+
+---
+### 목표
+
+웹 화면 오류, 응답 표시, 탭 제목, 테스트 명령과 자동 생성 파일 처리처럼 바로 고칠 수 있는 문제를 정리합니다.
+
+---
+### 변경 파일
+
+- `src/features/text-play/ui/TextPlayHome.tsx`, `src/features/text-play/session/TextPlayProvider.tsx`
+- `src/features/text-play/ui/StoryLog.tsx`, `src/features/text-play/ui/text-play-streaming-preview.ts`
+- `src/features/text-play/platform/CloseAppPanelsOnEnter.tsx`, `src/features/core/AppProvider.tsx`
+- `src/app/layout.tsx`, `src/app/text-play/page.tsx`, `src/app/text-play/demo/page.tsx`
+- `playwright.config.ts`, `tests/e2e/web-text-play.spec.ts`
+- `package.json`, `.gitignore`, `next-env.d.ts` 추적 해제
+- `tests/components`, `tests/unit`의 관련 테스트
+
+---
+### 사용자 기능
+
+- 저장 경고를 화면 표시 후에 반영하도록 수정해 웹 화면 불일치 오류(빨간 `1 Issue`) 제거
+- 응답 생성 중에는 원문(JSON) 대신 `응답 생성 중…` 안내와 서술만 표시
+- 브라우저 탭 제목 추가: `Text-Play · Mate Verse`, `달빛 숲의 기록 · Text-Play · Mate Verse`
+- 웹 Text-Play 진입 시 기본으로 열려 화면을 가리던 대화방 패널과 흐린 배경을 닫도록 수정
+- 앱 저장 상태 복원 완료 여부(`restored`)를 앱 저장소에 추가
+
+---
+### 개발 환경 변경
+
+- `pnpm test:e2e`가 데스크톱 전용 테스트를 제외하고, 운영 빌드 후 전용 주소 `127.0.0.1:3100`에서 웹 통합 테스트를 실행하도록 변경
+- `next-env.d.ts`를 Git 추적에서 제외하고 `pnpm typecheck`가 `next typegen`으로 먼저 생성하도록 변경
+
+---
+### 검증 결과
+
+- 테스트 파일 54개, 테스트 224개 통과
+- 타입 검사와 코드 검사 통과
+- 웹 통합 테스트 1개 통과(콘솔 오류 0건)
+- 데스크톱 통합 테스트 4개 통과
+- 인앱 브라우저에서 탭 제목, 패널 닫힘, 빨간 오류 표시 제거, 생성 중 서술 표시 확인
+
+---
+### 알려진 제한
+
+- 이어하기 요약이 장면 제목 대신 장면 식별자(예: `truth-ending`)를 표시
+- 개발 기록에 게임 화면 개편·턴 이동·올라마 연결 기록이 빠져 있음

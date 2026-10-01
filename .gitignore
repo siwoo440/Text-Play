@@ -11,6 +11,7 @@ playwright-report/
 test-results/
 artifacts/
 *.tsbuildinfo
+next-env.d.ts
 .env
 .env.local
 .env.development.local

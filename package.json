@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test:run": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:desktop": "node scripts/run-desktop-e2e.mjs",

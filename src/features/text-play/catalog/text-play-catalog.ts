@@ -1,4 +1,5 @@
 import type { AppLanguage } from "@/features/text-play/preferences/text-play-preferences"; // 앱 언어
+import { ENGLISH_CATALOG_WORKS, ENGLISH_TAGS } from "@/features/text-play/catalog/text-play-catalog-en"; // 작품 영어판
 import { DEMO_TEXT_PLAY_PACKAGE } from "@/features/text-play/data/demo-package"; // 샘플 작품
 import { mockCharacters } from "@/mocks/fixtures"; // 기본 캐릭터 기준값
 import { rankingCharacterConcepts } from "@/mocks/ranking-character-concepts"; // 랭킹 캐릭터 콘셉트
@@ -120,14 +121,15 @@ export function filterTextPlayWorks(works: readonly TextPlayWork[], query: strin
     return works.filter((work) => // 작품 순회
     { // 필터 시작
         const categoryMatch = category === "전체" || work.tags.includes(category); // 장르 일치
-        const searchTarget = `${work.title} ${work.leadName} ${work.summary} ${work.tags.join(" ")}`.toLowerCase(); // 검색 대상
+        const english = localizeTextPlayWork(work, "en"); // 영어판(어느 언어로 검색해도 찾도록)
+        const searchTarget = [work, english].map((text) => `${text.title} ${text.leadName} ${text.summary} ${text.tags.join(" ")}`).join(" ").toLowerCase(); // 검색 대상
         return categoryMatch && (normalized.length === 0 || searchTarget.includes(normalized)); // 복합 결과
     }); // 필터 종료
 } // 함수 종료
 
 type TextPlayWorkText = Pick<TextPlayWork, "title" | "leadName" | "summary" | "description" | "tags" | "genreLabel">; // 작품 글 묶음
 
-const ENGLISH_WORK_TEXT: Readonly<Record<string, TextPlayWorkText>> = // 영어판이 있는 작품(나머지 작품은 아직 한국어)
+const ENGLISH_DEMO_TEXT: Readonly<Record<string, TextPlayWorkText>> = // 샘플 작품 영어판
 { // 목록 시작
     [DEMO_TEXT_PLAY_PACKAGE.id]: // 샘플 작품
     { // 영어판 시작
@@ -142,6 +144,16 @@ const ENGLISH_WORK_TEXT: Readonly<Record<string, TextPlayWorkText>> = // 영어�
 
 export function localizeTextPlayWork(work: TextPlayWork, language: AppLanguage): TextPlayWork // 고른 언어의 작품 카드 글(영어판이 없으면 원문)
 { // 함수 시작
-    const text = language === "en" ? ENGLISH_WORK_TEXT[work.id] : undefined; // 영어판 조회
-    return text === undefined ? work : { ...work, ...text }; // 작품 반환
+    if (language === "ko") // 한국어 확인
+    { // 조건 시작
+        return work; // 원문 반환
+    } // 조건 종료
+    const demo = ENGLISH_DEMO_TEXT[work.id]; // 샘플 작품 영어판
+    if (demo !== undefined) // 샘플 작품 확인
+    { // 조건 시작
+        return { ...work, ...demo }; // 샘플 영어판 반환
+    } // 조건 종료
+    const text = ENGLISH_CATALOG_WORKS[work.id]; // 작품 영어판
+    const tags = work.tags.map((tag) => ENGLISH_TAGS[tag] ?? tag); // 태그 영어판
+    return text === undefined ? work : { ...work, ...text, tags, genreLabel: tags[0] ?? work.genreLabel }; // 영어판 반환(장르 이름은 화면에서 장르 키로 표시)
 } // 함수 종료

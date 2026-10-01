@@ -43,7 +43,7 @@ function WorkCard({ work: original, onSelect }: { work: TextPlayWork; onSelect(w
         <button type="button" className={`${styles.card} ${styles.genre}`} data-genre={work.genre} aria-label={`${work.title} - ${work.summary}`} onClick={() => onSelect(original)}> {/* 작품 카드 */}
             <span className={styles.cardMedia}> {/* 이미지 영역 */}
                 <WorkCover work={work} /> {/* 작품 표지 */}
-                <em className={styles.genreChip}>{language === "ko" ? work.genreLabel : text.genreNames[work.genre]}</em> {/* 장르 표시 */}
+                <em className={styles.genreChip}>{language === "ko" || work.genre === "other" ? work.genreLabel : text.genreNames[work.genre]}</em> {/* 장르 표시 */}
                 <em className={styles.statusChip} data-playable={work.playable}>{work.playable ? text.playable : text.preparing}</em> {/* 공개 상태 */}
             </span> {/* 이미지 영역 종료 */}
             <span className={styles.cardBody}> {/* 카드 설명 */}
@@ -190,7 +190,7 @@ export function TextPlayHome({ repository, showHeader = false }: TextPlayHomePro
                     <div className={`${styles.detail} ${styles.genre}`} data-genre={detail.genre}> {/* 상세 내용 */}
                         <span className={styles.detailCover}><WorkCover work={detail} /></span> {/* 상세 표지 */}
                         <div> {/* 상세 설명 */}
-                            <span className={styles.featuredLabel}>{language === "ko" ? detail.genreLabel : text.genreNames[detail.genre]}</span> {/* 장르 표시 */}
+                            <span className={styles.featuredLabel}>{language === "ko" || detail.genre === "other" ? detail.genreLabel : text.genreNames[detail.genre]}</span> {/* 장르 표시 */}
                             <h2 id="work-detail-title">{detail.title}</h2> {/* 작품 제목 */}
                             <p className={styles.detailLead}>{text.leadInfo(detail.leadName, text.plays(detail.playCount.toLocaleString(dateLocale(language))))}</p> {/* 작품 정보 */}
                             <p id="work-detail-description">{detail.description}</p> {/* 상세 소개 */}

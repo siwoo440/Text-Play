@@ -20,6 +20,6 @@ describe("Text-Play 전체 플레이 흐름", () => // 플레이 흐름 묶음
         await chooseTextPlayRecommendation(user, "기록을 해독한다"); // 기록 해독
         expect(screen.getByRole("heading", { name: "기록의 진실" })).toBeInTheDocument(); // 엔딩 제목 확인
         await user.click(screen.getByRole("button", { name: "상태 패널 열기" })); // 상태 패널 열기
-        expect(screen.getByText("완료: voices-below")).toBeInTheDocument(); // 완료 퀘스트 확인
+        expect(screen.getByText("완료: 숲 아래의 목소리")).toBeInTheDocument(); // 완료 퀘스트 확인(표시 이름)
     }); // 테스트 종료
 }); // 묶음 종료

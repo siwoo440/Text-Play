@@ -16,7 +16,7 @@ export type TextPlaySessionAction = // 세션 동작 묶음
     | { type: "ai-chunk"; chunk: string } // AI 조각 동작
     | { type: "ai-succeeded"; game: TextPlayState } // AI 성공 동작
     | { type: "ai-failed"; message: string } // AI 실패 동작
-    | { type: "ai-aborted" } // AI 중지 동작
+    | { type: "ai-aborted"; message?: string } // AI 중지 동작(안내 문구가 없으면 한국어)
     | { type: "game-changed"; game: TextPlayState } // 게임 변경 동작
     | { type: "game-restored"; game: TextPlayState } // 게임 복원 동작
     | { type: "save-notice"; message: string | null } // 저장 안내 동작
@@ -42,7 +42,7 @@ export function textPlayReducer(state: TextPlaySessionState, action: TextPlaySes
     } // 조건 종료
     if (action.type === "ai-aborted") // AI 중지 확인
     { // 조건 시작
-        return { ...state, streamedText: "", isStreaming: false, error: "응답 생성을 중지했습니다." }; // 중지 상태 반환
+        return { ...state, streamedText: "", isStreaming: false, error: action.message ?? "응답 생성을 중지했습니다." }; // 중지 상태 반환
     } // 조건 종료
     if (action.type === "game-changed" || action.type === "game-restored") // 게임 변경 확인
     { // 조건 시작

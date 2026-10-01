@@ -8,13 +8,13 @@ export type TextPlayRecommendation = // 추천 답안 계약
     | { kind: "choice"; id: string; label: string } // 작품 선택지 답안
     | { kind: "free-action"; id: string; label: string }; // 자유 행동 답안
 
-export function buildTextPlayRecommendations(choices: TextPlayChoice[]): TextPlayRecommendation[] // 추천 답안 생성기
+export function buildTextPlayRecommendations(choices: TextPlayChoice[], freeActions: readonly string[] = FREE_ACTION_SUGGESTIONS): TextPlayRecommendation[] // 추천 답안 생성기(자유 행동 문구는 고른 언어로)
 { // 함수 시작
     if (choices.length === 0) // 종료 장면 확인
     { // 조건 시작
         return []; // 빈 추천 반환
     } // 조건 종료
     const choiceAnswers: TextPlayRecommendation[] = choices.slice(0, TEXT_PLAY_RECOMMENDATION_COUNT).map((choice) => ({ kind: "choice", id: choice.id, label: choice.label })); // 선택지 답안 변환
-    const freeAnswers: TextPlayRecommendation[] = FREE_ACTION_SUGGESTIONS.slice(0, TEXT_PLAY_RECOMMENDATION_COUNT - choiceAnswers.length).map((label, index) => ({ kind: "free-action", id: `free-action-${index}`, label })); // 부족분 자유 행동 채움
+    const freeAnswers: TextPlayRecommendation[] = freeActions.slice(0, TEXT_PLAY_RECOMMENDATION_COUNT - choiceAnswers.length).map((label, index) => ({ kind: "free-action", id: `free-action-${index}`, label })); // 부족분 자유 행동 채움
     return [...choiceAnswers, ...freeAnswers]; // 추천 답안 반환
 } // 함수 종료

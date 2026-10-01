@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event"; // 사용자 동작
 import { describe, expect, it, vi } from "vitest"; // 테스트 도구
 import { AiModelsScreen } from "@/desktop/ai-models/AiModelsScreen"; // AI 모델 화면
 import type { DownloadEvent, ModelStoreClient, ModelView, RuntimeStatus, StoreView } from "@/desktop/ai-models/model-store-client"; // 보관함 계약
+import { TextPlayPreferencesProvider } from "@/features/text-play/preferences/TextPlayPreferencesProvider"; // 설정 공급자
+import { DEFAULT_TEXT_PLAY_PREFERENCES, saveTextPlayPreferences } from "@/features/text-play/preferences/text-play-preferences"; // 설정 저장 도구
 
 const GIB = 1_073_741_824; // 1GiB
 
@@ -57,6 +59,19 @@ describe("AI 모델 화면", () => // 화면 묶음
         const high = screen.getByRole("article", { name: "고성능 · Qwen3.5-9B" }); // 고성능 카드
         expect(within(high).getByText("이 PC 사양으로는 부족할 수 있습니다.")).toBeInTheDocument(); // 부족 경고 확인
         expect(within(high).getByRole("button", { name: "그래도 다운로드" })).toBeEnabled(); // 경고 후 받기 확인
+    }); // 테스트 종료
+
+    it("영어를 고르면 화면 글자를 영어로 보여 준다", async () => // 영어 화면 검증
+    { // 테스트 시작
+        saveTextPlayPreferences(window.localStorage, { ...DEFAULT_TEXT_PLAY_PREFERENCES, language: "en" }); // 영어 설정 저장
+        const { client } = createClient([model({}), model({ id: "qwen3.5-9b", label: "Qwen3.5-9B", role: "high", fitness: "insufficient" })]); // 통신기
+        const { container } = render(<TextPlayPreferencesProvider><AiModelsScreen client={client} /></TextPlayPreferencesProvider>); // 화면 렌더
+        expect(await screen.findByRole("heading", { level: 1, name: "AI models" })).toBeInTheDocument(); // 제목 확인
+        expect(await screen.findByText("Off · starts when you send an action with the built-in AI")).toBeInTheDocument(); // 엔진 상태 확인
+        expect(within(screen.getByRole("article", { name: "Qwen3.5-9B" })).getByRole("button", { name: "Download anyway" })).toBeEnabled(); // 받기 버튼 확인
+        expect(screen.getByRole("article", { name: "Mi:dm 2.0 Mini" })).toBeInTheDocument(); // 한국어 앞말 뺀 모델 이름 확인
+        expect(container.textContent ?? "").not.toMatch(/[가-힣]/u); // 한글 없음
+        window.localStorage.clear(); // 설정 정리
     }); // 테스트 종료
 
     it("받기 정보가 없거나 공간이 부족하면 다운로드를 막는다", async () => // 받기 막기 검증

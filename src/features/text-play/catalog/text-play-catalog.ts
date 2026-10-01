@@ -1,3 +1,4 @@
+import type { AppLanguage } from "@/features/text-play/preferences/text-play-preferences"; // 앱 언어
 import { DEMO_TEXT_PLAY_PACKAGE } from "@/features/text-play/data/demo-package"; // 샘플 작품
 import { mockCharacters } from "@/mocks/fixtures"; // 기본 캐릭터 기준값
 import { rankingCharacterConcepts } from "@/mocks/ranking-character-concepts"; // 랭킹 캐릭터 콘셉트
@@ -122,4 +123,25 @@ export function filterTextPlayWorks(works: readonly TextPlayWork[], query: strin
         const searchTarget = `${work.title} ${work.leadName} ${work.summary} ${work.tags.join(" ")}`.toLowerCase(); // 검색 대상
         return categoryMatch && (normalized.length === 0 || searchTarget.includes(normalized)); // 복합 결과
     }); // 필터 종료
+} // 함수 종료
+
+type TextPlayWorkText = Pick<TextPlayWork, "title" | "leadName" | "summary" | "description" | "tags" | "genreLabel">; // 작품 글 묶음
+
+const ENGLISH_WORK_TEXT: Readonly<Record<string, TextPlayWorkText>> = // 영어판이 있는 작품(나머지 작품은 아직 한국어)
+{ // 목록 시작
+    [DEMO_TEXT_PLAY_PACKAGE.id]: // 샘플 작품
+    { // 영어판 시작
+        title: DEMO_TEXT_PLAY_PACKAGE.translations?.en?.title ?? DEMO_TEXT_PLAY_PACKAGE.title, // 작품 제목
+        leadName: "Lyra", // 주요 등장인물
+        summary: DEMO_TEXT_PLAY_PACKAGE.translations?.en?.description ?? DEMO_TEXT_PLAY_PACKAGE.description, // 한 줄 소개
+        description: "Carry the moon lantern, follow the lost records and uncover the voices beneath the forest in this fantasy mystery. Continue the story with choices and your own words.", // 상세 소개
+        tags: ["Fantasy", "Mystery", "Records"], // 태그
+        genreLabel: "Fantasy", // 대표 장르 이름
+    }, // 영어판 종료
+}; // 목록 종료
+
+export function localizeTextPlayWork(work: TextPlayWork, language: AppLanguage): TextPlayWork // 고른 언어의 작품 카드 글(영어판이 없으면 원문)
+{ // 함수 시작
+    const text = language === "en" ? ENGLISH_WORK_TEXT[work.id] : undefined; // 영어판 조회
+    return text === undefined ? work : { ...work, ...text }; // 작품 반환
 } // 함수 종료

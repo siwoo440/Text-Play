@@ -8,7 +8,10 @@ import type { AppLanguage } from "@/features/text-play/preferences/text-play-pre
 import type { TextPlaySessionAction, TextPlaySessionState } from "@/features/text-play/session/text-play-reducer"; // 세션 계약
 import type { TextPlaySaveRepository } from "@/features/text-play/storage/save-repository"; // 저장소 계약
 import type { LLMAdapter } from "@/lib/adapters/llm-adapter"; // LLM 계약
+import { SESSION_MESSAGES } from "@/features/text-play/session/session-messages"; // 언어별 세션 안내
 import { LLMServiceError } from "@/lib/adapters/llm-service-error"; // 서비스 오류
+
+type SessionMessages = (typeof SESSION_MESSAGES)["ko"]; // 세션 안내 묶음
 
 interface TextPlayControllerDependencies // 제어기 의존성
 { // 구조 시작
@@ -26,37 +29,9 @@ export interface TextPlayController // 제어기 계약
     sendFreeInput(input: string, signal: AbortSignal): Promise<void>; // 자유 입력 전송
 } // 구조 종료
 
-function getLLMErrorMessage(error: unknown): string // LLM 오류 안내 생성
+function getLLMErrorMessage(error: unknown, messages: SessionMessages): string // LLM 오류 안내 생성
 { // 함수 시작
-    if (!(error instanceof LLMServiceError)) // 서비스 오류 확인
-    { // 조건 시작
-        return "응답을 생성하지 못했습니다."; // 기본 오류 반환
-    } // 조건 종료
-    if (error.code === "authentication-required") // 인증 오류 확인
-    { // 조건 시작
-        return "로그인이 필요합니다."; // 인증 안내 반환
-    } // 조건 종료
-    if (error.code === "insufficient-credit") // 크레딧 오류 확인
-    { // 조건 시작
-        return "AI 서비스 크레딧이 부족합니다."; // 크레딧 안내 반환
-    } // 조건 종료
-    if (error.code === "rate-limited") // 요청 제한 확인
-    { // 조건 시작
-        return "요청이 많습니다. 잠시 후 다시 시도하세요."; // 제한 안내 반환
-    } // 조건 종료
-    if (error.code === "unavailable") // 연결 오류 확인
-    { // 조건 시작
-        return "AI 서비스에 연결할 수 없습니다."; // 연결 안내 반환
-    } // 조건 종료
-    if (error.code === "model-unavailable") // 모델 누락 확인
-    { // 조건 시작
-        return "선택한 로컬 모델이 설치되어 있지 않습니다."; // 모델 누락 안내 반환
-    } // 조건 종료
-    if (error.code === "local-ai-not-ready") // 내장 AI 미준비 확인
-    { // 조건 시작
-        return "내장 AI가 아직 준비되지 않았습니다. 다른 AI를 선택해 주세요."; // 미준비 안내 반환
-    } // 조건 종료
-    return "AI 서비스 응답 형식이 올바르지 않습니다."; // 응답 안내 반환
+    return error instanceof LLMServiceError ? messages.errors[error.code] : messages.generationFailed; // 서비스 오류면 코드별 안내, 아니면 기본 안내
 } // 함수 종료
 
 function appendAIResponse(state: TextPlayState, input: string, narration: string, dialogue: { speaker: string; content: string } | null, now: string): TextPlayState // AI 기록 추가
@@ -76,6 +51,7 @@ function appendAIResponse(state: TextPlayState, input: string, narration: string
 export function createTextPlayController(dependencies: TextPlayControllerDependencies): TextPlayController // 세션 제어기 생성
 { // 함수 시작
     const packageData = dependencies.packageData ?? DEMO_TEXT_PLAY_PACKAGE; // 작품 선택
+    const messages = SESSION_MESSAGES[dependencies.language ?? "ko"]; // 고른 언어의 안내
     return { // 제어기 반환
         async sendFreeInput(input: string, signal: AbortSignal): Promise<void> // 자유 입력 처리
         { // 함수 시작
@@ -88,7 +64,7 @@ export function createTextPlayController(dependencies: TextPlayControllerDepende
                 { // 순회 시작
                     if (signal.aborted) // 중지 여부 확인
                     { // 조건 시작
-                        dependencies.dispatch({ type: "ai-aborted" }); // 중지 상태 반영
+                        dependencies.dispatch({ type: "ai-aborted", message: messages.aborted }); // 중지 상태 반영
                         return; // 처리 종료
                     } // 조건 종료
                     raw += chunk; // 원본 조각 누적
@@ -96,13 +72,13 @@ export function createTextPlayController(dependencies: TextPlayControllerDepende
                 } // 순회 종료
                 if (signal.aborted) // 최종 중지 확인
                 { // 조건 시작
-                    dependencies.dispatch({ type: "ai-aborted" }); // 중지 상태 반영
+                    dependencies.dispatch({ type: "ai-aborted", message: messages.aborted }); // 중지 상태 반영
                     return; // 처리 종료
                 } // 조건 종료
                 const parsed = parseTextPlayResponse(raw); // 응답 해석
                 if (!parsed.ok) // 해석 실패 확인
                 { // 조건 시작
-                    dependencies.dispatch({ type: "ai-failed", message: "응답을 해석하지 못했습니다." }); // 해석 오류 전달
+                    dependencies.dispatch({ type: "ai-failed", message: messages.parseFailed }); // 해석 오류 전달
                     return; // 처리 종료
                 } // 조건 종료
                 const selection = selectApplicableActions(packageData, confirmed, parsed.value.proposedActions); // 지금 적용할 수 있는 행동만 고르기(나머지는 빼고 서술은 살림)
@@ -110,7 +86,7 @@ export function createTextPlayController(dependencies: TextPlayControllerDepende
                 const applied = applyTextPlayActions(packageData, confirmed, selection.accepted, now); // 고른 행동 일괄 적용
                 if (!applied.ok) // 엔진 실패 확인
                 { // 조건 시작
-                    dependencies.dispatch({ type: "ai-failed", message: "게임 상태를 변경하지 못했습니다." }); // 엔진 오류 전달
+                    dependencies.dispatch({ type: "ai-failed", message: messages.engineFailed }); // 엔진 오류 전달
                     return; // 처리 종료
                 } // 조건 종료
                 const completed = appendAIResponse(applied.state, input, parsed.value.narration, parsed.value.dialogue, now); // 기록 포함 상태 생성
@@ -118,21 +94,21 @@ export function createTextPlayController(dependencies: TextPlayControllerDepende
                 try // 자동 저장 시도
                 { // 저장 시작
                     await dependencies.repository.save("auto", completed, parsed.value.narration); // 자동 저장 실행
-                    dependencies.dispatch({ type: "save-notice", message: "자동 저장했습니다." }); // 저장 성공 안내
+                    dependencies.dispatch({ type: "save-notice", message: messages.autoSaved }); // 저장 성공 안내
                 } // 저장 종료
                 catch // 저장 실패 처리
                 { // 오류 시작
-                    dependencies.dispatch({ type: "save-notice", message: "플레이는 계속할 수 있지만 저장하지 못했습니다." }); // 저장 실패 안내
+                    dependencies.dispatch({ type: "save-notice", message: messages.saveFailed }); // 저장 실패 안내
                 } // 오류 종료
             } // 시도 종료
             catch (error) // LLM 오류 처리
             { // 오류 시작
                 if (signal.aborted || (error instanceof DOMException && error.name === "AbortError")) // 사용자 중단 확인
                 { // 조건 시작
-                    dependencies.dispatch({ type: "ai-aborted" }); // 중단 상태 반영
+                    dependencies.dispatch({ type: "ai-aborted", message: messages.aborted }); // 중단 상태 반영
                     return; // 처리 종료
                 } // 조건 종료
-                dependencies.dispatch({ type: "ai-failed", message: getLLMErrorMessage(error) }); // 생성 오류 전달
+                dependencies.dispatch({ type: "ai-failed", message: getLLMErrorMessage(error, messages) }); // 생성 오류 전달
             } // 오류 종료
         }, // 함수 종료
     }; // 제어기 종료

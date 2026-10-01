@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, type MouseEvent, type ReactElement, type ReactNode } from "react"; // 리액트 대화상자 도구
 import { createPortal } from "react-dom"; // 포털 생성기
+import { useAppLanguage } from "@/features/text-play/preferences/TextPlayPreferencesProvider"; // 고른 언어
 import styles from "@/features/text-play/ui/TextPlayDialog.module.css"; // 대화상자 스타일
+import { TEXT_PLAY_UI_TEXT } from "@/features/text-play/ui/text-play-ui-text"; // 언어별 화면 글자
 
 interface TextPlayDialogProps // 대화상자 속성
 { // 구조 시작
@@ -18,6 +20,7 @@ const FOCUSABLE_SELECTOR = "button:not(:disabled), input:not(:disabled), select:
 
 export function TextPlayDialog({ labelledBy, describedBy, open, tone = "dark", onClose, children }: TextPlayDialogProps): ReactElement | null // 공통 대화상자
 { // 함수 시작
+    const closeLabel = TEXT_PLAY_UI_TEXT[useAppLanguage()].dialog.close; // 닫기 버튼 이름
     const panelRef = useRef<HTMLDivElement | null>(null); // 패널 참조
     const backdropRef = useRef<HTMLDivElement | null>(null); // 배경 참조
     useEffect(() => // 대화상자 효과
@@ -96,7 +99,7 @@ export function TextPlayDialog({ labelledBy, describedBy, open, tone = "dark", o
     return createPortal( // 대화상자 포털 반환
         <div ref={backdropRef} className={styles.backdrop} data-tone={tone} role="presentation" onMouseDown={closeBackdrop}> {/* 대화상자 배경 */}
             <div ref={panelRef} className={styles.panel} role="dialog" aria-modal="true" aria-labelledby={labelledBy} aria-describedby={describedBy} tabIndex={-1}> {/* 대화상자 패널 */}
-                <button type="button" className={styles.close} aria-label="닫기" onClick={onClose}>×</button> {/* 닫기 버튼 */}
+                <button type="button" className={styles.close} aria-label={closeLabel} onClick={onClose}>×</button> {/* 닫기 버튼 */}
                 {children} {/* 대화상자 내용 */}
             </div> {/* 패널 종료 */}
         </div>, // 배경 종료

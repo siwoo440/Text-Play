@@ -4,7 +4,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer,
 import { createTextPlayState, selectTextPlayChoice } from "@/features/text-play/core/engine"; // 게임 엔진
 import type { TextPlaySaveSlot, TextPlaySlotId } from "@/features/text-play/core/types"; // 슬롯 계약
 import { DEMO_TEXT_PLAY_PACKAGE } from "@/features/text-play/data/demo-package"; // 샘플 작품
+import { useAppLanguage } from "@/features/text-play/preferences/TextPlayPreferencesProvider"; // 고른 앱 언어
 import type { AppLanguage } from "@/features/text-play/preferences/text-play-preferences"; // 앱 언어
+import { SESSION_MESSAGES } from "@/features/text-play/session/session-messages"; // 언어별 세션 안내
 import { createTextPlayController } from "@/features/text-play/session/text-play-controller"; // 세션 제어기
 import { textPlayReducer, type TextPlaySessionState } from "@/features/text-play/session/text-play-reducer"; // 세션 리듀서
 import { createBrowserTextPlaySaveRepository } from "@/features/text-play/storage/browser-save-repository"; // 브라우저 저장소 생성기
@@ -35,13 +37,21 @@ interface TextPlayProviderProps // 공급자 속성
     llm?: LLMAdapter; // LLM 주입
     llmLabel?: string; // LLM 표시 문구
     resumeSlot?: TextPlaySlotId | null; // 시작 복원 슬롯
-    language?: AppLanguage; // AI 답변 언어(없으면 한국어)
+    language?: AppLanguage; // AI 답변·안내 언어(없으면 설정의 언어)
 } // 구조 종료
 
 const TextPlayContext = createContext<TextPlayStore | null>(null); // Text-Play 문맥
 
-export function TextPlayProvider({ children, initialState, repository, llm, llmLabel, resumeSlot = null, language = "ko" }: TextPlayProviderProps) // Text-Play 공급자
+export function TextPlayProvider({ children, initialState, repository, llm, llmLabel, resumeSlot = null, language: languageOverride }: TextPlayProviderProps) // Text-Play 공급자
 { // 함수 시작
+    const appLanguage = useAppLanguage(); // 설정에서 고른 언어
+    const language = languageOverride ?? appLanguage; // 실제 사용할 언어
+    const messages = SESSION_MESSAGES[language]; // 고른 언어의 안내
+    const messagesRef = useRef(messages); // 저장·불러오기 안내 참조(언어가 바뀌어도 동작 함수는 그대로)
+    useEffect(() => // 안내 참조 동기화 효과
+    { // 효과 시작
+        messagesRef.current = messages; // 최신 안내 반영
+    }, [messages]); // 안내 의존
     const initial = initialState ?? { game: createTextPlayState(DEMO_TEXT_PLAY_PACKAGE, new Date().toISOString()), streamedText: "", pendingInput: "", isStreaming: false, error: null, saveNotice: null, isStatePanelOpen: false }; // 초기 세션 생성
     const [state, dispatch] = useReducer(textPlayReducer, initial); // 세션 리듀서 연결
     const stateRef = useRef(state); // 최신 상태 참조
@@ -54,7 +64,7 @@ export function TextPlayProvider({ children, initialState, repository, llm, llmL
     const [storageWarning, setStorageWarning] = useState<string | null>(null); // 화면 표시 후 반영할 저장 경고
     const [defaultLLM] = useState<LLMAdapter>(() => new MockLLMAdapter()); // 기본 임시 인공지능
     const activeLLM = llm ?? defaultLLM; // 현재 인공지능 선택
-    const activeLLMLabel = llm === undefined ? "임시 인공지능" : llmLabel ?? "사용자 지정 인공지능"; // 현재 연결 문구
+    const activeLLMLabel = llm === undefined ? messages.temporaryAI : llmLabel ?? messages.customAI; // 현재 연결 문구
     const llmRef = useRef<LLMAdapter>(activeLLM); // LLM 참조
     useEffect(() => // LLM 참조 동기화 효과
     { // 효과 시작
@@ -99,7 +109,7 @@ export function TextPlayProvider({ children, initialState, repository, llm, llmL
         const result = selectTextPlayChoice(DEMO_TEXT_PLAY_PACKAGE, stateRef.current.game, choiceId, new Date().toISOString()); // 선택지 적용
         if (!result.ok) // 적용 실패 확인
         { // 조건 시작
-            dispatch({ type: "ai-failed", message: "선택지를 적용하지 못했습니다." }); // 오류 전달
+            dispatch({ type: "ai-failed", message: messagesRef.current.choiceFailed }); // 오류 전달
             return; // 처리 종료
         } // 조건 종료
         dispatch({ type: "game-changed", game: result.state }); // 게임 상태 반영
@@ -107,13 +117,13 @@ export function TextPlayProvider({ children, initialState, repository, llm, llmL
         { // 시도 시작
             await repositoryRef.current.save("auto", result.state, result.state.sceneId); // 자동 저장 실행
             syncStorageWarning(); // 저장 경고 갱신
-            dispatch({ type: "save-notice", message: "자동 저장했습니다." }); // 저장 성공 안내
+            dispatch({ type: "save-notice", message: messagesRef.current.autoSaved }); // 저장 성공 안내
             await refreshSlots(); // 자동 저장 목록 갱신
         } // 시도 종료
         catch // 저장 실패 처리
         { // 오류 시작
             syncStorageWarning(); // 저장 경고 갱신
-            dispatch({ type: "save-notice", message: "플레이는 계속할 수 있지만 저장하지 못했습니다." }); // 저장 실패 안내
+            dispatch({ type: "save-notice", message: messagesRef.current.saveFailed }); // 저장 실패 안내
         } // 오류 종료
     }, [refreshSlots, syncStorageWarning]); // 슬롯 갱신 의존
     const save = useCallback(async (slotId: TextPlaySlotId) => // 수동 저장 처리
@@ -122,13 +132,13 @@ export function TextPlayProvider({ children, initialState, repository, llm, llmL
         { // 시도 시작
             await repositoryRef.current.save(slotId, stateRef.current.game, stateRef.current.game.sceneId); // 슬롯 저장
             syncStorageWarning(); // 저장 경고 갱신
-            dispatch({ type: "save-notice", message: "저장했습니다." }); // 저장 안내
+            dispatch({ type: "save-notice", message: messagesRef.current.saved }); // 저장 안내
             await refreshSlots(); // 수동 저장 목록 갱신
         } // 시도 종료
         catch // 저장 실패 처리
         { // 오류 시작
             syncStorageWarning(); // 저장 경고 갱신
-            dispatch({ type: "save-notice", message: "플레이는 계속할 수 있지만 저장하지 못했습니다." }); // 저장 실패 안내
+            dispatch({ type: "save-notice", message: messagesRef.current.saveFailed }); // 저장 실패 안내
         } // 오류 종료
     }, [refreshSlots, syncStorageWarning]); // 슬롯 갱신 의존
     const load = useCallback(async (slotId: TextPlaySlotId) => // 복원 처리
@@ -138,7 +148,7 @@ export function TextPlayProvider({ children, initialState, repository, llm, llmL
         if (slot !== null) // 슬롯 존재 확인
         { // 조건 시작
             dispatch({ type: "game-restored", game: slot.state }); // 게임 복원
-            dispatch({ type: "save-notice", message: "저장한 게임을 불러왔습니다." }); // 복원 안내
+            dispatch({ type: "save-notice", message: messagesRef.current.loaded }); // 복원 안내
         } // 조건 종료
     }, [syncStorageWarning]); // 경고 동기화 의존
     useEffect(() => // 시작 복원 효과
@@ -152,7 +162,7 @@ export function TextPlayProvider({ children, initialState, repository, llm, llmL
     { // 함수 시작
         await repositoryRef.current.remove(DEMO_TEXT_PLAY_PACKAGE.id, slotId); // 슬롯 삭제
         syncStorageWarning(); // 저장 경고 갱신
-        dispatch({ type: "save-notice", message: "저장 데이터를 삭제했습니다." }); // 삭제 안내
+        dispatch({ type: "save-notice", message: messagesRef.current.removed }); // 삭제 안내
         await refreshSlots(); // 저장 슬롯 목록 갱신
     }, [refreshSlots, syncStorageWarning]); // 슬롯 갱신 의존
     const value = useMemo<TextPlayStore>(() => ({ state, slots, corruptSlotIds, llmLabel: activeLLMLabel, storageWarning, selectChoice, sendFreeInput, save, load, remove, toggleStatePanel: () => dispatch({ type: "toggle-state-panel" }) }), [activeLLMLabel, corruptSlotIds, load, remove, save, selectChoice, sendFreeInput, slots, state, storageWarning]); // 문맥 값 생성

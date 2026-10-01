@@ -1,10 +1,12 @@
 "use client"; // 클라이언트 컴포넌트
 
 import { useEffect, useState, type ReactElement } from "react"; // 리액트 도구
+import { DESKTOP_UI_TEXT } from "@/desktop/desktop-ui-text"; // 언어별 틀 글자
 import Link from "@/desktop/next-compat/link"; // 데스크톱 링크
 import styles from "@/desktop/shell/DesktopShell.module.css"; // 데스크톱 틀 스타일
 import type { TextPlaySaveSlot, TextPlaySlotId } from "@/features/text-play/core/types"; // 저장 슬롯 계약
 import { DEMO_TEXT_PLAY_PACKAGE } from "@/features/text-play/data/demo-package"; // 샘플 작품
+import { useAppLanguage } from "@/features/text-play/preferences/TextPlayPreferencesProvider"; // 고른 언어
 import type { TextPlaySaveRepository } from "@/features/text-play/storage/save-repository"; // 저장소 계약
 import { formatTextPlaySaveSummary, getTextPlaySlotLabel, getTextPlayWorkTitle } from "@/features/text-play/ui/text-play-save-summary"; // 저장 요약 도구
 
@@ -23,6 +25,8 @@ function createResumeHref(slotId: TextPlaySlotId): string // 이어하기 주소
 
 export function TextPlayRoomPanel({ repository, refreshKey }: TextPlayRoomPanelProps): ReactElement // Text-Play 대화방
 { // 함수 시작
+    const language = useAppLanguage(); // 고른 언어
+    const text = DESKTOP_UI_TEXT[language].rooms; // 언어별 대화방 글자
     const [rooms, setRooms] = useState<RoomState>({ status: "loading" }); // 기록 조회 상태
     useEffect(() => // 저장 기록 동기화
     { // 효과 시작
@@ -48,23 +52,23 @@ export function TextPlayRoomPanel({ repository, refreshKey }: TextPlayRoomPanelP
     return ( // 대화방 반환
         <section className={styles.playRooms} aria-labelledby="text-play-rooms-title"> {/* Text-Play 대화방 */}
             <div className={styles.playRoomsHeading}> {/* 제목 영역 */}
-                <h2 id="text-play-rooms-title">Text-Play 대화방</h2> {/* 영역 제목 */}
+                <h2 id="text-play-rooms-title">{text.title}</h2> {/* 영역 제목 */}
                 <span aria-hidden="true">MY PLAYS</span> {/* 영역 표제 */}
             </div> {/* 제목 영역 종료 */}
-            <Link href="/text-play" className={styles.playRoomsCreate}>＋ Text-Play 작품 고르기</Link> {/* 작품 고르기 */}
-            {rooms.status === "error" ? <p className={styles.playRoomsEmpty} role="status">Text-Play 기록을 불러오지 못했습니다.</p> : null} {/* 조회 실패 안내 */}
-            {rooms.status === "ready" && rooms.slots.length === 0 ? <p className={styles.playRoomsEmpty}>아직 Text-Play 기록이 없습니다.</p> : null} {/* 빈 기록 안내 */}
+            <Link href="/text-play" className={styles.playRoomsCreate}>{text.choose}</Link> {/* 작품 고르기 */}
+            {rooms.status === "error" ? <p className={styles.playRoomsEmpty} role="status">{text.loadFailed}</p> : null} {/* 조회 실패 안내 */}
+            {rooms.status === "ready" && rooms.slots.length === 0 ? <p className={styles.playRoomsEmpty}>{text.empty}</p> : null} {/* 빈 기록 안내 */}
             {rooms.status === "ready" && rooms.slots.length > 0 ? ( // 기록 목록 판정
-                <ul className={styles.playRoomList} aria-label="Text-Play 진행 기록"> {/* 기록 목록 */}
+                <ul className={styles.playRoomList} aria-label={text.list}> {/* 기록 목록 */}
                     {rooms.slots.map((slot) => // 기록 순회
                     { // 순회 시작
-                        const title = getTextPlayWorkTitle(slot.packageId); // 작품 제목
-                        const label = getTextPlaySlotLabel(slot.slotId); // 슬롯 이름
+                        const title = getTextPlayWorkTitle(slot.packageId, language); // 작품 제목
+                        const label = getTextPlaySlotLabel(slot.slotId, language); // 슬롯 이름
                         return ( // 기록 항목 반환
                             <li key={slot.key}> {/* 기록 항목 */}
-                                <Link href={createResumeHref(slot.slotId)} className={styles.playRoomLink} data-slot={slot.slotId} aria-label={`${title} ${label} 이어하기`}> {/* 이어하기 링크 */}
+                                <Link href={createResumeHref(slot.slotId)} className={styles.playRoomLink} data-slot={slot.slotId} aria-label={text.resume(title, label)}> {/* 이어하기 링크 */}
                                     <strong>{title}</strong> {/* 작품 제목 */}
-                                    <span>{`${label} · ${formatTextPlaySaveSummary(slot)}`}</span> {/* 슬롯·장면·시간 요약 */}
+                                    <span>{`${label} · ${formatTextPlaySaveSummary(slot, language)}`}</span> {/* 슬롯·장면·시간 요약 */}
                                 </Link> {/* 링크 종료 */}
                             </li> // 항목 종료
                         ); // 반환 종료

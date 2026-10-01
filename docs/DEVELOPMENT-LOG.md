@@ -1047,3 +1047,36 @@ Windows 실행 파일(exe)이 최신 ChatBot(Mate Verse) 기능을 똑같이 제
 - 3단계: 화면 글자 영어판(Text-Play 플레이·홈·설정·저장 창, 사이드바·상단 바·AI 모델 화면)
 - 4단계: ChatBot 저장소에 언어 기능 요청 후 동기화
 - 영어 답변 품질: 가끔 `The player`로 부름, 리라 대사가 서술처럼 나옴, 1번은 서술이 끊기고 저장 안내 없이 끝남(다시 3번 해 보니 재현 안 됨)
+
+---
+## 2026-10-01 — 한국어·영어 나누기 3단계(화면 글자 영어판)
+
+---
+### 변경 파일
+
+- 기반: 새 `src/features/text-play/i18n/localized-text.ts`(`defineText(한국어, 영어)`, `dateLocale`), `TextPlayPreferencesProvider.tsx`(`useAppLanguage`)
+- Text-Play 화면: 새 `ui/text-play-ui-text.ts`, `TextPlayScreen`·`StoryLog`·`ChoiceList`·`StatusPanel`·`InventoryPanel`·`SaveManager`·`TextPlaySettingsDialog`·`TextPlayDialog`·`TextPlayHome`, `text-play-recommendations.ts`, `text-play-save-summary.ts`, `catalog/text-play-catalog.ts`(`localizeTextPlayWork`)
+- 세션 안내: 새 `session/session-messages.ts`, `text-play-controller.ts`, `TextPlayProvider.tsx`(언어 기본값은 설정, 안내는 참조로 읽어 언어를 바꿔도 저장을 다시 불러오지 않음), `text-play-reducer.ts`(중지 안내 문구 전달)
+- 작품 언어판: `data/localize-package.ts`(`createSpeakerNamer`), `ai/context-builder.ts`(같은 함수 사용)
+- 데스크톱: 새 `src/desktop/desktop-ui-text.ts`, `router/desktop-routes.ts`(`getDesktopRouteTitle(match, language)`), `shell/DesktopShell.tsx`, `shell/TextPlayRoomPanel.tsx`, `desktop-llm.ts`, `DesktopRoutes.tsx`, `ai-models/ai-model-view.ts`(`AI_MODELS_TEXT`, `modelDisplayName`), `ai-models/AiModelsScreen.tsx`
+- 테스트: 새 `tests/components/text-play-english-ui.test.tsx`, `tests/unit/desktop-english-text.test.ts`, AI 모델 화면 영어 테스트, 제어기 영어 안내 테스트, 내부 식별자 대신 표시 이름을 보는 기존 테스트 3개·데스크톱 통합 테스트 2개 수정
+
+---
+### 사용자 기능
+
+- 설정에서 English를 고르면 Text-Play 메인·플레이 화면·상태 패널·저장 창·설정 창, 사이드바 메뉴·상단 바 제목·Text-Play 대화방, AI 모델 화면이 영어로 바뀜
+- 샘플 작품은 제목·장면·선택지·엔딩·아이템·퀘스트 이름까지 영어. 이미 저장된 한국어 장면 서술·선택 기록도 영어로 보임(AI가 이미 한 말은 그대로)
+- 한국어 화면에서도 `FOREST-GATE`, `lyra`, `moon-lantern`, `voices-below` 같은 내부 식별자 대신 표시 이름이 보임
+
+---
+### 검증 결과
+
+- 새 테스트는 구현 전 실패를 확인한 뒤 구현해 통과
+- 테스트 파일 118개, 테스트 718개 통과, 타입 검사·코드 검사 통과, 데스크톱 통합 테스트 13개 통과(1420 서버를 다시 띄운 뒤), `pnpm exe:rebuild` 성공
+- exe에서 English로 메인·플레이·설정·AI 모델 화면 캡처 확인
+
+---
+### 남은 작업
+
+- 4단계: ChatBot 저장소에 언어 기능 요청(요청 문장은 계획 문서 끝) 후 동기화. 그 전까지 사이드바 대화방 목록·캐릭터·설정 화면은 한국어
+- 메인의 샘플 외 작품 50개 내용(제목·소개·태그) 영어판, 엔진(Rust)이 보내는 실패 이유 문구 영어판

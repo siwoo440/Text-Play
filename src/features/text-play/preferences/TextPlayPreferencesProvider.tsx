@@ -1,7 +1,7 @@
 "use client"; // 클라이언트 컴포넌트
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactElement, type ReactNode } from "react"; // 리액트 문맥 도구
-import { DEFAULT_TEXT_PLAY_PREFERENCES, loadTextPlayPreferences, saveTextPlayPreferences, type TextPlayPreferences } from "@/features/text-play/preferences/text-play-preferences"; // 설정 저장 도구
+import { DEFAULT_TEXT_PLAY_PREFERENCES, loadTextPlayPreferences, saveTextPlayPreferences, type AppLanguage, type TextPlayPreferences } from "@/features/text-play/preferences/text-play-preferences"; // 설정 저장 도구
 
 interface TextPlayPreferencesContextValue // 설정 문맥 구조
 { // 구조 시작
@@ -91,4 +91,9 @@ export function useTextPlayPreferences(): TextPlayPreferencesContextValue // 설
         throw new Error("TextPlayPreferencesProvider가 필요합니다."); // 공급자 오류
     } // 조건 종료
     return context; // 설정 문맥 반환
+} // 함수 종료
+
+export function useAppLanguage(): AppLanguage // 고른 앱 언어(설정 공급자 밖에서는 한국어)
+{ // 함수 시작
+    return useContext(TextPlayPreferencesContext)?.preferences.language ?? "ko"; // 언어 반환
 } // 함수 종료

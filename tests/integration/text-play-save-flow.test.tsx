@@ -31,7 +31,7 @@ describe("Text-Play 저장 흐름", () => // 저장 흐름 묶음
         render(<TextPlayPlatformProvider value={TEST_TEXT_PLAY_PLATFORM}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={repository} resumeSlot="auto"><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 이어하기 화면 렌더
         expect(await screen.findByRole("heading", { name: "폐허 회랑" })).toBeInTheDocument(); // 저장 장면 복원 확인
         await userEvent.setup().click(screen.getByRole("button", { name: "상태 패널 열기" })); // 상태 패널 열기
-        expect(screen.getByText("moon-lantern × 1")).toBeInTheDocument(); // 저장 아이템 복원 확인
+        expect(screen.getByText("달빛 등불 × 1")).toBeInTheDocument(); // 저장 아이템 복원 확인(표시 이름)
     }); // 테스트 종료
 
     it("수동 저장 뒤 진행한 상태를 저장 시점으로 복원한다", async () => // 저장 복원 검증
@@ -62,7 +62,8 @@ describe("Text-Play 저장 흐름", () => // 저장 흐름 묶음
         await user.click(screen.getByRole("button", { name: "저장 슬롯 열기" })); // 저장 모달 열기
         const firstSlot = screen.getByRole("group", { name: "수동 저장 슬롯 1" }); // 첫 슬롯 조회
         await user.click(within(firstSlot).getByRole("button", { name: "저장" })); // 수동 저장
-        expect(await within(firstSlot).findByText("moonlit-hall")).toBeInTheDocument(); // 저장 장면 확인
+        expect(await within(firstSlot).findByText("폐허 회랑")).toBeInTheDocument(); // 저장 장면 제목 확인
+        expect(within(firstSlot).queryByText("moonlit-hall")).not.toBeInTheDocument(); // 내부 식별자 숨김 확인
         expect(within(firstSlot).getByText(/플레이 \d+분 \d+초/)).toBeInTheDocument(); // 플레이 시간 확인
         expect(within(firstSlot).getByText(/저장 /)).toBeInTheDocument(); // 저장 시각 확인
     }); // 테스트 종료

@@ -117,7 +117,7 @@ export function DesktopRoutes({ repository, localAIClient, modelStoreClient }: D
     const { preferences } = useTextPlayPreferences(); // Text-Play 설정
     const llmSelection = useMemo(() => createDesktopLLMSelection(preferences, localAIClient), [localAIClient, preferences]); // 설정 기반 AI 생성
     const match = matchDesktopRoute(location); // 경로 찾기
-    const title = getDesktopRouteTitle(match); // 화면 제목
+    const title = getDesktopRouteTitle(match, preferences.language); // 화면 제목(고른 언어)
     const redirectTo = match.kind === "redirect" ? match.to : null; // 이동 대상
     useEffect(() => // 주소 이동 처리
     { // 효과 시작

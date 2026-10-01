@@ -89,6 +89,24 @@ describe("Text-Play 세션 제어기", () => // 제어기 검증 묶음
         expect(state.game.log.at(-1)?.content).toBe("The mist clears."); // 영어 서술 기록 확인
     }); // 테스트 종료
 
+    it("영어를 고르면 오류·저장 안내도 영어로 보여 준다", async () => // 영어 안내 검증
+    { // 테스트 시작
+        let state = createPreparedTextPlaySessionState(); // 세션 상태 생성
+        const failing = createTextPlayController({ llm: new FailingAdapter("unavailable"), repository: new MemoryTextPlaySaveRepository(), getState: () => state, dispatch: (action) => { state = textPlayReducer(state, action); }, now: () => "2026-09-26T00:00:00.000Z", language: "en" }); // 실패 제어기
+        await failing.sendFreeInput("Look around", new AbortController().signal); // 자유 입력 전송
+        expect(state.error).toBe("Could not connect to the AI service."); // 영어 오류 확인
+        const broken = createTextPlayController({ llm: new FixedAdapter("broken"), repository: new MemoryTextPlaySaveRepository(), getState: () => state, dispatch: (action) => { state = textPlayReducer(state, action); }, now: () => "2026-09-26T00:00:00.000Z", language: "en" }); // 해석 실패 제어기
+        await broken.sendFreeInput("Look around", new AbortController().signal); // 자유 입력 전송
+        expect(state.error).toBe("Could not read the response."); // 영어 해석 오류 확인
+        const working = createTextPlayController({ llm: new FixedAdapter(JSON.stringify({ narration: "The mist clears.", dialogue: null, proposedActions: [] })), repository: new MemoryTextPlaySaveRepository(), getState: () => state, dispatch: (action) => { state = textPlayReducer(state, action); }, now: () => "2026-09-26T00:00:00.000Z", language: "en" }); // 성공 제어기
+        await working.sendFreeInput("Look around", new AbortController().signal); // 자유 입력 전송
+        expect(state.saveNotice).toBe("Auto-saved."); // 영어 저장 안내 확인
+        const aborter = new AbortController(); // 중지 제어기
+        aborter.abort(); // 미리 중지
+        await working.sendFreeInput("Look around", aborter.signal); // 중지된 입력 전송
+        expect(state.error).toBe("Stopped generating the response."); // 영어 중지 안내 확인
+    }); // 테스트 종료
+
     it("지금 상황에 맞지 않는 행동만 빼고 서술과 나머지 행동은 반영한다", async () => // 부분 적용 검증
     { // 테스트 시작
         let state = createPreparedTextPlaySessionState(); // 세션 상태 생성

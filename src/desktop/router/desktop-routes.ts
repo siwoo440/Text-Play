@@ -1,3 +1,5 @@
+import { DESKTOP_UI_TEXT } from "@/desktop/desktop-ui-text"; // 언어별 틀 글자
+import type { AppLanguage } from "@/features/text-play/preferences/text-play-preferences"; // 앱 언어
 import type { TextPlaySlotId } from "@/features/text-play/core/types"; // 저장 슬롯 계약
 
 export interface DesktopLocation // 데스크톱 화면 위치
@@ -29,15 +31,6 @@ export type DesktopRouteMatch = // 화면 경로 결과
     | { kind: "text-play-play"; resumeSlot: TextPlaySlotId | null } // Text-Play 플레이
     | { kind: "redirect"; to: string } // 주소 이동
     | { kind: "not-found" }; // 찾을 수 없음
-
-const settingsSections: Record<DesktopSettingsSection, string> = // 설정 화면 제목
-{ // 객체 시작
-    profile: "프로필 관리", // 프로필
-    tokens: "토큰 이용 내역", // 토큰
-    display: "화면 레이아웃", // 화면
-    notifications: "알림과 선제 메시지", // 알림
-    privacy: "개인정보 및 보안", // 개인정보
-}; // 객체 종료
 
 const resumeSlots: TextPlaySlotId[] = ["auto", "manual-1", "manual-2", "manual-3", "manual-4", "manual-5", "manual-6"]; // 이어하기 가능 슬롯
 
@@ -132,7 +125,7 @@ export function matchDesktopRoute(location: DesktopLocation): DesktopRouteMatch 
     { // 조건 시작
         return { kind: "library" }; // 보관함 반환
     } // 조건 종료
-    if (first === "settings" && second !== undefined && segments.length === 2 && second in settingsSections) // 설정 확인
+    if (first === "settings" && second !== undefined && segments.length === 2 && second in DESKTOP_UI_TEXT.ko.settingsSections) // 설정 확인
     { // 조건 시작
         return { kind: "settings", section: second as DesktopSettingsSection }; // 설정 반환
     } // 조건 종료
@@ -180,28 +173,8 @@ export function matchDesktopRoute(location: DesktopLocation): DesktopRouteMatch 
     return { kind: "not-found" }; // 찾을 수 없음 반환
 } // 함수 종료
 
-export function getDesktopRouteTitle(match: DesktopRouteMatch): string // 화면 제목
+export function getDesktopRouteTitle(match: DesktopRouteMatch, language: AppLanguage = "ko"): string // 화면 제목(고른 언어)
 { // 함수 시작
-    switch (match.kind) // 화면 분기
-    { // 분기 시작
-        case "home": return "메인"; // 메인 제목
-        case "explore": return "탐색"; // 탐색 제목
-        case "character": return "캐릭터 상세"; // 상세 제목
-        case "character-new": return "캐릭터 만들기"; // 만들기 제목
-        case "character-edit": return "캐릭터 수정"; // 수정 제목
-        case "chat": return "대화"; // 대화 제목
-        case "library": return "내 작품"; // 보관함 제목
-        case "settings": return `설정 · ${settingsSections[match.section]}`; // 설정 제목
-        case "support": return "고객 지원"; // 지원 제목
-        case "ai-models": return "AI 모델"; // AI 모델 제목
-        case "story-home": return "스토리 모드"; // 스토리 홈 제목
-        case "story-new": return "새 스토리 만들기"; // 새 스토리 제목
-        case "story": return "스토리 상세"; // 스토리 상세 제목
-        case "story-chat": return "스토리 대화"; // 스토리 대화 제목
-        case "story-edit": return "스토리 수정"; // 스토리 수정 제목
-        case "text-play-home": return "Text-Play"; // Text-Play 제목
-        case "text-play-play": return "Text-Play 플레이"; // 플레이 제목
-        case "redirect": return "이동 중"; // 이동 제목
-        case "not-found": return "페이지를 찾을 수 없음"; // 없는 화면 제목
-    } // 분기 종료
+    const text = DESKTOP_UI_TEXT[language]; // 언어별 틀 글자
+    return match.kind === "settings" ? text.settingsTitle(text.settingsSections[match.section]) : text.routeTitles[match.kind]; // 설정은 세부 화면 이름을 붙임
 } // 함수 종료

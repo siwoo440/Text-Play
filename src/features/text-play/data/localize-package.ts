@@ -34,3 +34,14 @@ export function createTextTranslator(packageData: TextPlayPackage, language: App
     }); // 순회 종료
     return (text) => pairs.get(text) ?? text; // 바꾼 글 반환(모르는 글은 그대로)
 } // 함수 종료
+
+export function createSpeakerNamer(packageData: TextPlayPackage, language: AppLanguage): (speaker: string) => string // 기록 속 발화자(식별자·어느 언어 이름이든)를 고른 언어 이름으로 바꾸는 함수
+{ // 함수 시작
+    const localized = localizeTextPlayPackage(packageData, language); // 언어판 작품
+    const names = [packageData, packageData.translations?.en].map((source) => source?.glossary?.characters ?? {}); // 모든 언어의 인물 이름
+    return (speaker) => // 발화자 이름 변환
+    { // 변환 시작
+        const id = packageData.characterIds.find((candidate) => candidate === speaker || names.some((characters) => characters[candidate]?.name === speaker)); // 식별자나 이름으로 인물 찾기
+        return id === undefined ? speaker : localized.glossary?.characters[id]?.name ?? id; // 고른 언어 이름 반환(모르는 이름은 그대로)
+    }; // 변환 종료
+} // 함수 종료

@@ -1,7 +1,7 @@
 import { createTextPlayResponseJsonSchema } from "@/features/text-play/ai/response-json-schema"; // 응답 JSON 스키마 생성기
 import { findTextPlayScene, getAvailableChoices } from "@/features/text-play/core/conditions"; // 장면·선택지 조회
 import type { TextPlayLogEntry, TextPlayPackage, TextPlayState } from "@/features/text-play/core/types"; // 도메인 계약
-import { createTextTranslator, localizeTextPlayPackage } from "@/features/text-play/data/localize-package"; // 작품 언어판
+import { createSpeakerNamer, createTextTranslator, localizeTextPlayPackage } from "@/features/text-play/data/localize-package"; // 작품 언어판
 import type { AppLanguage } from "@/features/text-play/preferences/text-play-preferences"; // 앱 언어
 import type { StructuredLLMInput } from "@/lib/adapters/llm-adapter"; // 구조화 LLM 계약
 
@@ -106,12 +106,6 @@ function characterName(packageData: TextPlayPackage, id: string): string // 인�
     return packageData.glossary?.characters[id]?.name ?? id; // 이름이 없으면 식별자
 } // 함수 종료
 
-function speakerName(original: TextPlayPackage, localized: TextPlayPackage, speaker: string): string // 기록 속 발화자를 고른 언어 이름으로
-{ // 함수 시작
-    const id = original.characterIds.find((candidate) => candidate === speaker || original.glossary?.characters[candidate]?.name === speaker || localized.glossary?.characters[candidate]?.name === speaker); // 식별자·원문 이름·언어판 이름으로 인물 찾기
-    return id === undefined ? speaker : characterName(localized, id); // 이름 반환
-} // 함수 종료
-
 function describeLogEntry(words: ContextWords, translate: (text: string) => string, name: (speaker: string) => string, entry: TextPlayLogEntry): string // 기록 한 줄
 { // 함수 시작
     if (entry.kind === "system") // 플레이어 행동·선택 확인
@@ -125,7 +119,7 @@ function describeLogEntry(words: ContextWords, translate: (text: string) => stri
     return `${words.narration}: ${translate(entry.content)}`; // 서술 줄
 } // 함수 종료
 
-function createContext(original: TextPlayPackage, packageData: TextPlayPackage, state: TextPlayState, words: ContextWords, translate: (text: string) => string): string // 쉬운 말 장면 문맥
+function createContext(name: (speaker: string) => string, packageData: TextPlayPackage, state: TextPlayState, words: ContextWords, translate: (text: string) => string): string // 쉬운 말 장면 문맥
 { // 함수 시작
     const scene = findTextPlayScene(packageData, state.sceneId); // 현재 장면
     const items = Object.entries(state.inventory).map(([id, count]) => words.itemCount(packageData.glossary?.items[id] ?? id, count)); // 가진 물건
@@ -133,7 +127,7 @@ function createContext(original: TextPlayPackage, packageData: TextPlayPackage, 
     const characters = packageData.characterIds.map((id) => `- ${characterName(packageData, id)}: ${packageData.glossary?.characters[id]?.description ?? words.noDescription}`); // 등장인물
     const relations = packageData.characterIds.map((id) => words.relation(characterName(packageData, id), state.relations[id] ?? 0)); // 관계도
     const choices = getAvailableChoices(packageData, state).map((choice) => choice.label); // 선택지
-    const recent = state.log.slice(-RECENT_LOG_COUNT).map((entry) => describeLogEntry(words, translate, (speaker) => speakerName(original, packageData, speaker), entry)); // 최근 기록
+    const recent = state.log.slice(-RECENT_LOG_COUNT).map((entry) => describeLogEntry(words, translate, name, entry)); // 최근 기록
     return [ // 문맥 줄 반환
         `${words.work}: ${packageData.title} — ${packageData.description}`, // 작품
         `${words.scene}: ${scene?.title ?? words.unknown} — ${scene?.narration ?? ""}`, // 장면
@@ -155,7 +149,7 @@ export function buildTextPlayContext(packageData: TextPlayPackage, state: TextPl
     const words = WORDS[language]; // 언어별 문구
     return { // 구조화 입력 반환
         system: words.rules(localized.title, characterName(localized, localized.characterIds[0] ?? "")).join("\n"), // 이야기꾼 규칙
-        context: createContext(packageData, localized, state, words, createTextTranslator(packageData, language)), // 쉬운 말 장면 문맥
+        context: createContext(createSpeakerNamer(packageData, language), localized, state, words, createTextTranslator(packageData, language)), // 쉬운 말 장면 문맥
         userInput, // 사용자 입력
         responseSchema: "{ narration: string, dialogue: { speaker: string, content: string } | null, proposedActions: ({ type: \"change-stat\", stat: \"hp\" | \"sanity\" | \"gold\", amount: number } | { type: \"add-item\" | \"remove-item\", itemId: string, quantity: number } | { type: \"change-relation\", characterId: string, amount: number })[] }", // 응답 형식 설명(형식 강제가 없는 AI용)
         jsonSchema: createTextPlayResponseJsonSchema(localized, language), // 형식 강제 스키마(발화자는 고른 언어 이름)

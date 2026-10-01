@@ -60,7 +60,7 @@ test("수동 저장을 불러오고 삭제한다", async ({ page }) => // 수동
     await page.getByRole("button", { name: "저장 슬롯 열기" }).click(); // 저장 모달 열기
     const firstSlot = page.getByRole("group", { name: "수동 저장 슬롯 1" }); // 첫 저장 슬롯 조회
     await firstSlot.getByRole("button", { name: "저장" }).click(); // 수동 저장 실행
-    await expect(firstSlot.getByText("moonlit-hall")).toBeVisible(); // 저장 장면 확인
+    await expect(firstSlot.getByText("폐허 회랑", { exact: true })).toBeVisible(); // 저장 장면 제목 확인
     await page.getByRole("button", { name: "닫기" }).click(); // 저장 모달 닫기
     await chooseRecommendation(page, "봉인된 서재로 간다"); // 서재 이동
     await expect(page.getByRole("heading", { name: "봉인된 서재" })).toBeVisible(); // 이동 장면 확인
@@ -95,7 +95,7 @@ test("1280×720에서 설정과 여섯 번째 슬롯 전체 흐름을 제공한�
     await page.getByRole("button", { name: "저장 슬롯 열기" }).click(); // 저장 모달 열기
     const sixthSlot = page.getByRole("group", { name: "수동 저장 슬롯 6" }); // 여섯 번째 슬롯 조회
     await sixthSlot.getByRole("button", { name: "저장" }).click(); // 여섯 번째 슬롯 저장
-    await expect(sixthSlot.getByText("forest-gate")).toBeVisible(); // 저장 장면 확인
+    await expect(sixthSlot.getByText("달빛 숲 입구", { exact: true })).toBeVisible(); // 저장 장면 제목 확인
     await page.getByRole("button", { name: "닫기" }).click(); // 저장 모달 닫기
     await chooseRecommendation(page, "달빛 등불을 든다"); // 장면 진행
     await expect(page.getByRole("heading", { name: "폐허 회랑" })).toBeVisible(); // 진행 장면 확인

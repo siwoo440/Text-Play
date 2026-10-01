@@ -534,3 +534,34 @@ Character Chat과 Text-Play가 같은 서버 경계를 사용하고 실제 비�
 
 - 이어하기 요약이 장면 제목 대신 장면 식별자(예: `truth-ending`)를 표시
 - 개발 기록에 게임 화면 개편·턴 이동·올라마 연결 기록이 빠져 있음
+
+---
+## 2026-10-01 — Windows 실행 파일 빌드 복구와 교체 명령
+
+---
+### 목표
+
+수정한 내용을 Windows 실행 파일(exe)로 바로 확인할 수 있게 합니다.
+
+---
+### 변경 파일
+
+- `package.json`, `pnpm-lock.yaml`
+- `scripts/rebuild-local-exe.ps1`
+- `tests/unit/tauri-config.test.ts`
+- `README.md`, `docs/HANDOFF.md`
+
+---
+### 사용자 기능
+
+- `@tauri-apps/api`를 2.0.0에서 2.12.0으로 변경해 Rust `tauri` 2.12.0과 버전 불일치로 실패하던 `pnpm tauri:build` 수정
+- `pnpm exe:rebuild` 추가: 실행 중인 앱 종료, 실행 파일만 다시 빌드, 새 실행 파일 실행
+- Tauri 자바스크립트 패키지와 Rust 크레이트의 주·부 버전 일치 테스트 추가
+
+---
+### 검증 결과
+
+- Rust 1.98.1 설치 후 `pnpm tauri:build`로 실행 파일(24.85MB)과 NSIS 설치 파일(16.58MB) 생성
+- 실행 파일 실행, 창 제목 `MATE Text-Play Preview`와 홈 화면 표시 확인
+- `pnpm exe:rebuild` 재빌드·재실행 약 74초 확인
+- 테스트 파일 54개, 테스트 225개 통과, 타입 검사와 코드 검사 통과

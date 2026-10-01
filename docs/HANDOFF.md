@@ -55,6 +55,17 @@
 임시 인공지능과 로컬 올라마 모드는 비밀키 없이 사용할 수 있습니다. 실제 서버 모드는 `.env.example`을 참고해 별도 계약 정보가 있을 때만 설정합니다.
 
 ---
+## 실행 파일(exe)로 확인하며 수정하기
+
+- 준비: Rust(`winget install Rustlang.Rustup`), Visual Studio 또는 Build Tools의 C++ 데스크톱 개발 도구, WebView2
+- 실시간 수정: `pnpm tauri:dev` — 실제 실행 프로그램 창에서 화면 코드 변경이 바로 반영
+- 실행 파일 교체: `pnpm exe:rebuild` — 실행 중인 앱 종료, 실행 파일만 다시 빌드, 새 실행 파일 실행
+- 실행 파일 위치: `src-tauri/target/release/mate-text-play-preview.exe` (설치 없이 실행)
+- 설치 파일: `pnpm tauri:build` → `src-tauri/target/release/bundle/nsis/MATE Text-Play Preview_0.1.0-preview.1_x64-setup.exe`
+- 소요 시간(2026-10-01 측정): 첫 빌드 약 5분 30초, 이후 `pnpm exe:rebuild` 약 1분 15초
+- Tauri의 자바스크립트 패키지(`@tauri-apps/api`, `@tauri-apps/cli`)와 Rust 크레이트(`tauri`)는 주·부 버전이 같아야 빌드됩니다. 단위 테스트가 이를 검사합니다.
+
+---
 ## 검증 명령
 
 - 단위·컴포넌트·통합 테스트: `pnpm test:run`

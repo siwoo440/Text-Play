@@ -18,12 +18,13 @@
     "desktop:verify-assets": "node scripts/verify-desktop-assets.mjs",
     "tauri:dev": "tauri dev",
     "tauri:check": "cargo check --manifest-path src-tauri/Cargo.toml",
-    "tauri:build": "tauri build --bundles nsis"
+    "tauri:build": "tauri build --bundles nsis",
+    "exe:rebuild": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/rebuild-local-exe.ps1"
   },
   "keywords": [],
   "type": "module",
   "dependencies": {
-    "@tauri-apps/api": "2.0.0",
+    "@tauri-apps/api": "2.12.0",
     "next": "^16.3.5",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"

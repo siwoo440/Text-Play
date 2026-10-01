@@ -27,4 +27,15 @@ describe("Tauri Windows 설정", () => // Tauri 설정 묶음
         const manifest = readFileSync("src-tauri/Cargo.toml", "utf8"); // Rust 설정 읽기
         expect(manifest).toContain('features = ["config-toml"]'); // TOML 기능 확인
     }); // 테스트 종료
+
+    it("Tauri 자바스크립트·CLI 패키지와 Rust 크레이트의 주·부 버전을 맞춘다", () => // 버전 일치 검증
+    { // 테스트 시작
+        const packageJson = JSON.parse(readFileSync("package.json", "utf8")) as { dependencies: Record<string, string>; devDependencies: Record<string, string> }; // 패키지 정보 읽기
+        const lockfile = readFileSync("src-tauri/Cargo.lock", "utf8"); // Rust 잠금 파일 읽기
+        const crateVersion = /\[\[package\]\]\r?\nname = "tauri"\r?\nversion = "(\d+\.\d+)\.\d+"/u.exec(lockfile)?.[1]; // Tauri 크레이트 주·부 버전
+        const toMinor = (version: string) => /(\d+\.\d+)\.\d+/u.exec(version)?.[1]; // 주·부 버전 추출기
+        expect(crateVersion).toBeDefined(); // 크레이트 버전 확인
+        expect(toMinor(packageJson.dependencies["@tauri-apps/api"])).toBe(crateVersion); // API 패키지 일치 확인
+        expect(toMinor(packageJson.devDependencies["@tauri-apps/cli"])).toBe(crateVersion); // CLI 패키지 일치 확인
+    }); // 테스트 종료
 }); // 묶음 종료

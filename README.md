@@ -80,10 +80,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows-previe
 
 생성 파일은 `MATE-Text-Play-Preview_0.1.0-preview.1_x64-setup.exe`입니다. 설치 안내와 제한은 [시험판 Release 문서](docs/releases/v0.1.0-preview.1.md)를 확인합니다.
 
-개발 실행은 다음 명령을 사용합니다.
+개발 실행은 다음 명령을 사용합니다. 실제 실행 프로그램 창이 열리고 화면 코드를 고치면 바로 반영됩니다.
 
 ```powershell
 pnpm tauri:dev
+```
+
+수정한 내용을 실제 실행 파일로 확인할 때는 다음 명령을 사용합니다. 실행 중인 앱을 닫고 설치 파일 없이 실행 파일만 다시 빌드한 뒤 새 실행 파일을 엽니다. 결과는 `src-tauri/target/release/mate-text-play-preview.exe`입니다.
+
+```powershell
+pnpm exe:rebuild
 ```
 
 Windows 빌드에는 Rust, MSVC Build Tools와 WebView2가 필요합니다. 코드 서명이 없어 SmartScreen 경고가 표시될 수 있습니다.

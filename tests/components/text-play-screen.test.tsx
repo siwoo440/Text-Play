@@ -1,5 +1,6 @@
-import { render, screen } from "@testing-library/react"; // 렌더 도구
+import { render, screen, within } from "@testing-library/react"; // 렌더 도구
 import userEvent from "@testing-library/user-event"; // 사용자 동작
+import { chooseTextPlayRecommendation } from "@/test/text-play-recommendations"; // 추천 답안 선택 도우미
 import { describe, expect, it, vi } from "vitest"; // 테스트 도구
 import { TextPlayPlatformProvider, type TextPlayPlatform } from "@/features/text-play/platform/text-play-platform"; // 플랫폼 계약
 import { TextPlayPreferencesProvider } from "@/features/text-play/preferences/TextPlayPreferencesProvider"; // 설정 공급자
@@ -49,7 +50,7 @@ describe("Text-Play 플레이 화면", () => // 플레이 검증 묶음
     { // 테스트 시작
         render(<TextPlayPlatformProvider value={createPlatform()}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new MemoryTextPlaySaveRepository()}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 화면 렌더
         expect(screen.getByRole("heading", { name: "달빛 숲 입구" })).toBeInTheDocument(); // 장면 제목 확인
-        expect(screen.getByRole("button", { name: "달빛 등불을 든다" })).toBeInTheDocument(); // 선택지 확인
+        expect(screen.getByRole("button", { name: "AI 추천 답안" })).toHaveAttribute("aria-expanded", "false"); // 추천 펼침 버튼 확인
         expect(screen.getByRole("textbox", { name: "행동 직접 입력" })).toBeInTheDocument(); // 자유 입력 확인
         expect(screen.getByRole("button", { name: "전송" })).toBeInTheDocument(); // 전송 버튼 확인
         expect(screen.getByRole("button", { name: "상태 패널 열기" })).toHaveAttribute("aria-controls", "text-play-state-panel"); // 패널 제어 확인
@@ -91,7 +92,7 @@ describe("Text-Play 플레이 화면", () => // 플레이 검증 묶음
         render(<TextPlayPlatformProvider value={createPlatform()}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new MemoryTextPlaySaveRepository()}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 화면 렌더
         expect(screen.getByLabelText("현재 턴 1")).toHaveTextContent("1"); // 초기 현재 턴 확인
         expect(screen.getByLabelText("전체 턴 1")).toHaveTextContent("1"); // 초기 전체 턴 확인
-        await user.click(screen.getByRole("button", { name: "달빛 등불을 든다" })); // 다음 장면 생성
+        await chooseTextPlayRecommendation(user, "달빛 등불을 든다"); // 다음 장면 생성
         expect(screen.getByLabelText("현재 턴 2")).toHaveTextContent("2"); // 최신 현재 턴 확인
         expect(screen.getByLabelText("전체 턴 2")).toHaveTextContent("2"); // 생성된 전체 턴 확인
         expect(screen.getByTestId("scene-image")).toHaveTextContent("/images/scenes/dawn-letter.svg"); // 최신 이미지 확인
@@ -101,9 +102,56 @@ describe("Text-Play 플레이 화면", () => // 플레이 검증 묶음
         expect(screen.getByTestId("scene-image")).toHaveTextContent("/images/scenes/moon-library.svg"); // 이전 이미지 확인
         expect(screen.getByText("은빛 안개 너머에서 낡은 등불이 희미하게 빛난다.")).toBeInTheDocument(); // 이전 이야기 확인
         expect(screen.getByRole("button", { name: "1턴 보기" })).toHaveAttribute("aria-current", "step"); // 현재 위치 점 확인
-        await user.click(screen.getByRole("button", { name: "봉인된 서재로 간다" })); // 과거 열람 중 새 장면 생성
+        await chooseTextPlayRecommendation(user, "봉인된 서재로 간다"); // 과거 열람 중 새 장면 생성
         expect(screen.getByLabelText("현재 턴 3")).toHaveTextContent("3"); // 새 최신 턴 이동 확인
         expect(screen.getByRole("heading", { name: "봉인된 서재" })).toBeInTheDocument(); // 새 최신 장면 확인
+    }); // 테스트 종료
+
+    it("AI 추천 답안은 접힌 상태로 시작하고 누르면 제목 아래에 답안 3개를 펼친다", async () => // 추천 펼침 검증
+    { // 테스트 시작
+        const user = userEvent.setup(); // 사용자 동작 준비
+        render(<TextPlayPlatformProvider value={createPlatform()}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new MemoryTextPlaySaveRepository()}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 화면 렌더
+        expect(screen.queryByText("AI ASSIST")).not.toBeInTheDocument(); // AI 표제 제거 확인
+        expect(screen.queryByText("다음 행동을 선택하세요")).not.toBeInTheDocument(); // 도크 안내 제거 확인
+        const toggle = screen.getByRole("button", { name: "AI 추천 답안" }); // 펼침 버튼 조회
+        expect(toggle).toHaveAttribute("aria-expanded", "false"); // 접힘 상태 확인
+        expect(screen.queryByRole("button", { name: "달빛 등불을 든다" })).not.toBeInTheDocument(); // 답안 숨김 확인
+        await user.click(toggle); // 추천 펼치기
+        expect(toggle).toHaveAttribute("aria-expanded", "true"); // 펼침 상태 확인
+        const list = screen.getByRole("list", { name: "AI 추천 답안 목록" }); // 답안 목록 조회
+        const answers = within(list).getAllByRole("button"); // 답안 버튼 조회
+        expect(answers).toHaveLength(3); // 답안 3개 확인
+        expect(answers.map((answer) => answer.textContent)).toEqual(["달빛 등불을 든다", "숲 밖으로 후퇴한다", "주변을 자세히 살핀다"]); // 답안 순서 확인
+        expect(toggle.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy(); // 제목 아래 목록 확인
+        await user.click(screen.getByRole("button", { name: "달빛 등불을 든다" })); // 답안 선택
+        expect(screen.getByRole("button", { name: "AI 추천 답안" })).toHaveAttribute("aria-expanded", "false"); // 새 턴 접힘 확인
+    }); // 테스트 종료
+
+    it("선택지가 3개보다 적으면 자유 행동 추천으로 채우고 누르면 자유 입력으로 보낸다", async () => // 자유 행동 추천 검증
+    { // 테스트 시작
+        const user = userEvent.setup(); // 사용자 동작 준비
+        const inputs: string[] = []; // 받은 입력 목록
+        const adapter: LLMAdapter = // 입력 기록 어댑터
+        { // 객체 시작
+            async *streamStructuredReply(input: StructuredLLMInput) // 구조화 응답
+            { // 함수 시작
+                inputs.push(input.userInput); // 입력 기록
+                yield JSON.stringify({ narration: "주변을 살폈다", dialogue: null, proposedActions: [] }); // 응답 반환
+            }, // 함수 종료
+            async *streamReply() // 일반 응답
+            { // 함수 시작
+                yield "응답"; // 응답 반환
+            }, // 함수 종료
+            async summarizeConversation() // 대화 요약
+            { // 함수 시작
+                return "요약"; // 요약 반환
+            }, // 함수 종료
+        }; // 객체 종료
+        render(<TextPlayPlatformProvider value={createPlatform()}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new MemoryTextPlaySaveRepository()} llm={adapter}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 화면 렌더
+        await user.click(screen.getByRole("button", { name: "AI 추천 답안" })); // 추천 펼치기
+        await user.click(screen.getByRole("button", { name: "주변을 자세히 살핀다" })); // 자유 행동 추천 선택
+        expect(await screen.findByText("주변을 살폈다")).toBeInTheDocument(); // 응답 기록 확인
+        expect(inputs).toEqual(["주변을 자세히 살핀다"]); // 자유 입력 전달 확인
     }); // 테스트 종료
 
     it("추천 답안을 직접 작성 영역 바로 위에 배치한다", () => // 도크 순서 검증

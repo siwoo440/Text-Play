@@ -17,11 +17,21 @@ async function blockExternalRequests(page: Page): Promise<string[]> // 외부 �
     return externalRequests; // 요청 목록 반환
 } // 함수 종료
 
+async function chooseRecommendation(page: Page, label: string): Promise<void> // 추천 답안 선택 도우미
+{ // 함수 시작
+    const toggle = page.getByRole("button", { name: "AI 추천 답안" }); // 펼침 버튼 조회
+    if (await toggle.getAttribute("aria-expanded") !== "true") // 접힘 상태 확인
+    { // 조건 시작
+        await toggle.click(); // 추천 펼치기
+    } // 조건 종료
+    await page.getByRole("button", { name: label }).click(); // 답안 선택
+} // 함수 종료
+
 test("Mock 플레이를 저장하고 새 세션에서 이어간다", async ({ page, context }) => // 자동 저장 흐름 검증
 { // 테스트 시작
     await page.goto("/"); // 데스크톱 홈 진입
     await page.getByRole("button", { name: "새 게임" }).click(); // 새 게임 시작
-    await page.getByRole("button", { name: "달빛 등불을 든다" }).click(); // 선택지 진행
+    await chooseRecommendation(page, "달빛 등불을 든다"); // 선택지 진행
     await expect(page.getByRole("heading", { name: "폐허 회랑" })).toBeVisible(); // 자동 저장 장면 확인
     const resumedPage = await context.newPage(); // 새 앱 화면 생성
     await page.close(); // 기존 앱 화면 종료
@@ -46,13 +56,13 @@ test("수동 저장을 불러오고 삭제한다", async ({ page }) => // 수동
 { // 테스트 시작
     await page.goto("/"); // 데스크톱 홈 진입
     await page.getByRole("button", { name: "새 게임" }).click(); // 새 게임 시작
-    await page.getByRole("button", { name: "달빛 등불을 든다" }).click(); // 회랑 이동
+    await chooseRecommendation(page, "달빛 등불을 든다"); // 회랑 이동
     await page.getByRole("button", { name: "저장 슬롯 열기" }).click(); // 저장 모달 열기
     const firstSlot = page.getByRole("group", { name: "수동 저장 슬롯 1" }); // 첫 저장 슬롯 조회
     await firstSlot.getByRole("button", { name: "저장" }).click(); // 수동 저장 실행
     await expect(firstSlot.getByText("moonlit-hall")).toBeVisible(); // 저장 장면 확인
     await page.getByRole("button", { name: "닫기" }).click(); // 저장 모달 닫기
-    await page.getByRole("button", { name: "봉인된 서재로 간다" }).click(); // 서재 이동
+    await chooseRecommendation(page, "봉인된 서재로 간다"); // 서재 이동
     await expect(page.getByRole("heading", { name: "봉인된 서재" })).toBeVisible(); // 이동 장면 확인
     await page.getByRole("button", { name: "불러오기 슬롯 열기" }).click(); // 불러오기 모달 열기
     page.once("dialog", async (dialog) => // 불러오기 확인 처리
@@ -87,7 +97,7 @@ test("1280×720에서 설정과 여섯 번째 슬롯 전체 흐름을 제공한�
     await sixthSlot.getByRole("button", { name: "저장" }).click(); // 여섯 번째 슬롯 저장
     await expect(sixthSlot.getByText("forest-gate")).toBeVisible(); // 저장 장면 확인
     await page.getByRole("button", { name: "닫기" }).click(); // 저장 모달 닫기
-    await page.getByRole("button", { name: "달빛 등불을 든다" }).click(); // 장면 진행
+    await chooseRecommendation(page, "달빛 등불을 든다"); // 장면 진행
     await expect(page.getByRole("heading", { name: "폐허 회랑" })).toBeVisible(); // 진행 장면 확인
     await page.getByRole("button", { name: "불러오기 슬롯 열기" }).click(); // 불러오기 모달 열기
     page.once("dialog", async (dialog) => // 불러오기 확인 처리

@@ -12,6 +12,7 @@ import { StatusPanel } from "@/features/text-play/ui/StatusPanel"; // 상태 패
 import { StoryLog } from "@/features/text-play/ui/StoryLog"; // 이야기 기록
 import { TextPlayFrameDecoration, TextPlayIcon } from "@/features/text-play/ui/TextPlayIcons"; // 벡터 UI
 import { TextPlaySettingsDialog } from "@/features/text-play/ui/TextPlaySettingsDialog"; // 설정 대화상자
+import { buildTextPlayRecommendations, type TextPlayRecommendation } from "@/features/text-play/ui/text-play-recommendations"; // 추천 답안 생성기
 import { buildTextPlayStoryPages } from "@/features/text-play/ui/text-play-story-pages"; // 이야기 페이지 생성기
 import styles from "@/features/text-play/ui/TextPlayScreen.module.css"; // 화면 스타일
 
@@ -30,12 +31,23 @@ export function TextPlayScreen() // Text-Play 플레이 화면
     const viewedTurnIndex = storyPages.length - 1 - safeTurnsBack; // 열람 턴 계산
     const viewedPage = storyPages[viewedTurnIndex]; // 현재 페이지 조회
     const scene = useMemo(() => DEMO_TEXT_PLAY_PACKAGE.scenes.find((candidate) => candidate.id === viewedPage.sceneId) ?? DEMO_TEXT_PLAY_PACKAGE.scenes[0], [viewedPage.sceneId]); // 열람 장면 조회
-    const choices = useMemo(() => getAvailableChoices(DEMO_TEXT_PLAY_PACKAGE, state.game), [state.game]); // 현재 선택지 조회
+    const recommendations = useMemo(() => buildTextPlayRecommendations(getAvailableChoices(DEMO_TEXT_PLAY_PACKAGE, state.game)), [state.game]); // 현재 추천 답안 생성
+    const [expandedTurn, setExpandedTurn] = useState<string | null>(null); // 추천 펼침 턴 상태
+    const recommendationsExpanded = expandedTurn === state.game.updatedAt; // 현재 턴 펼침 여부
     const startRequest = (value: string) => // 자유 입력 요청 시작
     { // 함수 시작
         const controller = new AbortController(); // 중지 제어기 생성
         abortRef.current = controller; // 중지 제어기 저장
         void sendFreeInput(value, controller.signal); // 자유 입력 전송
+    }; // 함수 종료
+    const selectRecommendation = (recommendation: TextPlayRecommendation) => // 추천 답안 선택
+    { // 함수 시작
+        if (recommendation.kind === "choice") // 작품 선택지 확인
+        { // 조건 시작
+            void selectChoice(recommendation.id); // 선택지 진행
+            return; // 처리 종료
+        } // 조건 종료
+        startRequest(recommendation.label); // 자유 행동 전송
     }; // 함수 종료
     const submit = (event: FormEvent<HTMLFormElement>) => // 자유 입력 제출
     { // 함수 시작
@@ -98,12 +110,8 @@ export function TextPlayScreen() // Text-Play 플레이 화면
                     </section> {/* 스토리 상자 종료 */}
                 </section> {/* 장면 무대 종료 */}
                 <aside className={styles.commandDock} aria-label="진행 명령"> {/* 명령 도크 */}
-                    <div className={styles.dockHeading}> {/* 도크 제목 */}
-                        <span><TextPlayIcon name="ai" size={18} />AI ASSIST</span> {/* AI 표제 */}
-                        <strong>다음 행동을 선택하세요</strong> {/* 도크 안내 */}
-                    </div> {/* 도크 제목 종료 */}
                     <div className={styles.recommendations}> {/* 추천 영역 */}
-                        <ChoiceList choices={choices} disabled={state.isStreaming} onSelect={(choiceId) => void selectChoice(choiceId)} /> {/* 선택지 */}
+                        <ChoiceList recommendations={recommendations} expanded={recommendationsExpanded} disabled={state.isStreaming} onToggle={() => setExpandedTurn(recommendationsExpanded ? null : state.game.updatedAt)} onSelect={selectRecommendation} /> {/* 추천 답안 */}
                     </div> {/* 추천 영역 종료 */}
                     <div className={styles.inputPanel}> {/* 직접 입력 영역 */}
                         <form onSubmit={submit}> {/* 자유 입력 폼 */}

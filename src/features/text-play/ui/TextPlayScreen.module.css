@@ -478,7 +478,7 @@
 .commandDock /* 명령 도크 */
 { /* 도크 시작 */
     display: grid; /* 세로 배치 */
-    grid-template-rows: auto minmax(0, 1fr) auto; /* 도크 구획 */
+    grid-template-rows: minmax(0, 1fr) auto; /* 도크 구획 */
     min-width: 0; /* 축소 허용 */
     min-height: 0; /* 축소 허용 */
     overflow: hidden; /* 도크 넘침 차단 */
@@ -486,37 +486,13 @@
     background: linear-gradient(180deg, var(--panel-bg), var(--page-bg)); /* 도크 배경 */
 } /* 도크 종료 */
 
-.dockHeading /* 도크 제목 */
-{ /* 제목 시작 */
-    display: grid; /* 세로 배치 */
-    gap: 4px; /* 제목 간격 */
-    padding: 20px 20px 14px; /* 제목 여백 */
-    border-bottom: 1px solid var(--panel-line); /* 하단 구분선 */
-} /* 제목 종료 */
-
-.dockHeading span /* AI 표제 */
-{ /* 표제 시작 */
-    display: flex; /* 가로 배치 */
-    gap: 7px; /* 내용 간격 */
-    align-items: center; /* 세로 중앙 */
-    color: var(--accent); /* 표제 색상 */
-    font-size: .62rem; /* 표제 크기 */
-    font-weight: 900; /* 표제 굵기 */
-    letter-spacing: .14em; /* 표제 자간 */
-} /* 표제 종료 */
-
-.dockHeading strong /* 도크 안내 */
-{ /* 안내 시작 */
-    font-size: .96rem; /* 안내 크기 */
-} /* 안내 종료 */
-
 .recommendations /* 추천 영역 */
 { /* 영역 시작 */
     display: flex; /* 하단 정렬 준비 */
     align-items: flex-end; /* 입력창 위 배치 */
     min-height: 0; /* 축소 허용 */
     overflow: hidden auto; /* 선택지 스크롤 */
-    padding: 16px 18px; /* 영역 여백 */
+    padding: 16px 18px 8px; /* 영역 여백 */
 } /* 영역 종료 */
 
 .recommendations section /* 선택지 영역 */
@@ -526,21 +502,95 @@
     width: 100%; /* 전체 너비 */
 } /* 선택지 종료 */
 
-.recommendations h2 /* 선택지 제목 */
-{ /* 제목 시작 */
-    margin: 0; /* 기본 여백 제거 */
-    color: var(--muted-text); /* 제목 색상 */
-    font-size: .72rem; /* 제목 크기 */
-    letter-spacing: .08em; /* 제목 자간 */
-} /* 제목 종료 */
+.recommendations section[data-expanded] /* 추천 카드 */
+{ /* 카드 시작 */
+    gap: 10px; /* 카드 내부 간격 */
+    padding: 8px 12px; /* 카드 여백 */
+    border: 1px solid var(--panel-line); /* 카드 테두리 */
+    border-radius: 16px; /* 카드 모서리 */
+    background: rgb(7 9 15 / 56%); /* 카드 배경 */
+    transition: border-color .18s ease; /* 테두리 전환 */
+} /* 카드 종료 */
 
-.recommendations section > div /* 선택지 목록 */
+.recommendations section[data-expanded="true"] /* 펼친 추천 카드 */
+{ /* 카드 시작 */
+    padding-bottom: 12px; /* 목록 아래 여백 */
+    border-color: var(--accent); /* 강조 테두리 */
+} /* 카드 종료 */
+
+.recommendations section > p /* 종료 안내 */
+{ /* 안내 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    color: var(--muted-text); /* 안내 색상 */
+    font-size: .84rem; /* 안내 크기 */
+} /* 안내 종료 */
+
+.recommendations [data-recommendation-toggle] /* 추천 펼침 버튼 */
+{ /* 버튼 시작 */
+    display: flex; /* 가로 배치 */
+    align-items: center; /* 세로 중앙 */
+    justify-content: space-between; /* 양끝 배치 */
+    width: 100%; /* 전체 너비 */
+    min-height: 40px; /* 터치 높이 */
+    padding: 0 2px; /* 버튼 여백 */
+    border: 0; /* 테두리 제거 */
+    background: transparent; /* 카드 배경 사용 */
+    color: var(--main-text); /* 버튼 글자 */
+    cursor: pointer; /* 선택 커서 */
+    font-size: .98rem; /* 제목 크기 */
+    font-weight: 900; /* 제목 굵기 */
+    letter-spacing: .02em; /* 제목 자간 */
+    transition: color .18s ease; /* 강조 전환 */
+} /* 버튼 종료 */
+
+.recommendations [data-recommendation-toggle] span /* 펼침 버튼 글자 */
+{ /* 글자 시작 */
+    color: inherit; /* 버튼 색상 사용 */
+} /* 글자 종료 */
+
+.recommendations [data-recommendation-toggle]:hover, /* 펼침 올림 */
+.recommendations [data-recommendation-toggle]:focus-visible /* 펼침 초점 */
+{ /* 강조 시작 */
+    color: var(--accent); /* 강조 글자 */
+    outline: none; /* 기본 외곽선 제거 */
+} /* 강조 종료 */
+
+.recommendations section[data-expanded]:has([data-recommendation-toggle]:focus-visible) /* 키보드 초점 카드 */
+{ /* 초점 시작 */
+    border-color: var(--accent); /* 초점 테두리 */
+} /* 초점 종료 */
+
+.recommendations ul /* 선택지 목록 */
 { /* 목록 시작 */
     display: grid; /* 세로 배치 */
     gap: 10px; /* 선택지 간격 */
+    margin: 0; /* 기본 여백 제거 */
+    padding: 0; /* 기본 안쪽 여백 제거 */
+    list-style: none; /* 목록 표시 제거 */
+    transform-origin: bottom; /* 아래 기준 펼침 */
+    animation: recommendationsRise .22s ease-out; /* 위로 펼침 효과 */
 } /* 목록 종료 */
 
-.recommendations button /* 추천 버튼 */
+.recommendations li /* 선택지 항목 */
+{ /* 항목 시작 */
+    display: grid; /* 버튼 채움 */
+} /* 항목 종료 */
+
+@keyframes recommendationsRise /* 위로 펼침 */
+{ /* 효과 시작 */
+    from /* 시작 상태 */
+    { /* 시작 */
+        opacity: 0; /* 투명 시작 */
+        transform: translateY(12px) scaleY(.92); /* 아래에서 시작 */
+    } /* 시작 종료 */
+    to /* 끝 상태 */
+    { /* 끝 */
+        opacity: 1; /* 불투명 종료 */
+        transform: none; /* 원래 위치 */
+    } /* 끝 종료 */
+} /* 효과 종료 */
+
+.recommendations li button /* 추천 버튼 */
 { /* 버튼 시작 */
     position: relative; /* 번호 기준 */
     min-height: 54px; /* 버튼 높이 */
@@ -555,7 +605,7 @@
     text-align: left; /* 왼쪽 정렬 */
 } /* 버튼 종료 */
 
-.recommendations button::before /* 추천 표시 */
+.recommendations li button::before /* 추천 표시 */
 { /* 표시 시작 */
     position: absolute; /* 왼쪽 배치 */
     top: 50%; /* 세로 중앙 */
@@ -569,8 +619,8 @@
     transform: translateY(-50%); /* 중앙 보정 */
 } /* 표시 종료 */
 
-.recommendations button:hover, /* 추천 올림 */
-.recommendations button:focus-visible /* 추천 초점 */
+.recommendations li button:hover, /* 추천 올림 */
+.recommendations li button:focus-visible /* 추천 초점 */
 { /* 추천 강조 시작 */
     border-color: var(--accent); /* 강조 테두리 */
     outline: none; /* 기본 외곽선 제거 */
@@ -581,22 +631,32 @@
 { /* 영역 시작 */
     display: grid; /* 세로 배치 */
     gap: 10px; /* 내용 간격 */
-    padding: 16px 18px 18px; /* 영역 여백 */
-    border-top: 1px solid var(--panel-line); /* 상단 구분선 */
-    background: rgb(7 9 15 / 56%); /* 영역 배경 */
+    padding: 8px 18px 18px; /* 영역 여백 */
 } /* 영역 종료 */
 
-.inputPanel form /* 입력 폼 */
-{ /* 폼 시작 */
+.inputPanel form /* 입력 카드 */
+{ /* 카드 시작 */
     display: grid; /* 세로 배치 */
-    gap: 8px; /* 폼 간격 */
-} /* 폼 종료 */
+    gap: 10px; /* 카드 내부 간격 */
+    padding: 12px; /* 카드 여백 */
+    border: 1px solid var(--panel-line); /* 카드 테두리 */
+    border-radius: 16px; /* 카드 모서리 */
+    background: rgb(7 9 15 / 56%); /* 카드 배경 */
+    transition: border-color .18s ease; /* 테두리 전환 */
+} /* 카드 종료 */
+
+.inputPanel form:focus-within /* 입력 중 카드 */
+{ /* 카드 시작 */
+    border-color: var(--accent); /* 강조 테두리 */
+} /* 카드 종료 */
 
 .inputPanel label /* 입력 표제 */
 { /* 표제 시작 */
-    color: var(--muted-text); /* 표제 색상 */
-    font-size: .72rem; /* 표제 크기 */
-    font-weight: 800; /* 표제 굵기 */
+    padding: 4px 2px 0; /* 제목 여백 */
+    color: var(--main-text); /* 표제 색상 */
+    font-size: .98rem; /* 표제 크기 */
+    font-weight: 900; /* 표제 굵기 */
+    letter-spacing: .02em; /* 표제 자간 */
 } /* 표제 종료 */
 
 .inputPanel textarea /* 자유 입력 */
@@ -898,4 +958,9 @@
     { /* 버튼 시작 */
         transition: none; /* 전환 제거 */
     } /* 버튼 종료 */
+
+    .recommendations ul /* 추천 목록 */
+    { /* 목록 시작 */
+        animation: none; /* 펼침 효과 제거 */
+    } /* 목록 종료 */
 } /* 미디어 종료 */

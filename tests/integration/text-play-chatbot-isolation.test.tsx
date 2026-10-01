@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react"; // 렌더 도구
 import userEvent from "@testing-library/user-event"; // 사용자 동작
+import { chooseTextPlayRecommendation } from "@/test/text-play-recommendations"; // 추천 답안 선택 도우미
 import { describe, expect, it } from "vitest"; // 테스트 도구
 import { AppProvider, useAppStore } from "@/features/core/AppProvider"; // 앱 상태 공급자
 import { createInitialState } from "@/features/core/initial-state"; // 앱 초기 상태
@@ -24,7 +25,7 @@ describe("Text-Play와 챗봇 상태 격리", () => // 격리 검증 묶음
         const appState = createInitialState(); // 기준 앱 상태 생성
         const before = JSON.stringify(appState); // 기준 상태 직렬화
         render(<AppProvider initialState={appState} repository={{ load: () => appState, save: () => undefined }}><TextPlayPlatformProvider value={TEST_TEXT_PLAY_PLATFORM}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new MemoryTextPlaySaveRepository()}><AppStateProbe /><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider></AppProvider>); // 통합 화면 렌더
-        await user.click(screen.getByRole("button", { name: "달빛 등불을 든다" })); // 게임 선택
+        await chooseTextPlayRecommendation(user, "달빛 등불을 든다"); // 게임 선택
         await user.click(screen.getByRole("button", { name: "저장 슬롯 열기" })); // 저장 모달 열기
         const firstSave = within(screen.getByRole("group", { name: "수동 저장 슬롯 1" })).getByRole("button", { name: "저장" }); // 첫 저장 버튼 조회
         await user.click(firstSave); // 게임 저장

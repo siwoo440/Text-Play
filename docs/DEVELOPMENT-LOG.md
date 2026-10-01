@@ -439,3 +439,49 @@ Character Chat과 Text-Play가 같은 서버 경계를 사용하고 실제 비�
 - MSI 미제공
 - WebView2 미설치 환경의 완전한 오프라인 설치 미지원
 - 설치 앱 시작 이전 네트워크 요청은 CDP 감시 범위 밖이며 사용자 승인에 따라 CSP·번들 검사로 대체 검증
+
+---
+## 2026-10-01 — AI 추천 답안 접기·펼치기
+
+---
+### 목표
+
+명령 도크의 불필요한 제목을 없애고, AI 추천 답안을 필요할 때만 펼쳐 보도록 바꿉니다.
+
+---
+### 변경 파일
+
+- `src/features/text-play/ui/ChoiceList.tsx`
+- `src/features/text-play/ui/text-play-recommendations.ts`
+- `src/features/text-play/ui/TextPlayScreen.tsx`
+- `src/features/text-play/ui/TextPlayScreen.module.css`
+- `src/test/text-play-recommendations.ts`
+- `tests/components/text-play-screen.test.tsx`
+- `tests/integration`의 선택지 진행 테스트 3개
+- `tests/e2e/desktop-preview.spec.ts`
+
+---
+### 사용자 기능
+
+- 명령 도크 상단의 `AI ASSIST`와 `다음 행동을 선택하세요` 제목 삭제
+- `AI 추천 답안` 막대는 접힌 상태로 시작하고, 누르면 위로 펼쳐지며 막대 아래에 답안 3개 표시
+- 작품 선택지가 3개보다 적으면 자유 행동 추천으로 채우고, 누르면 자유 입력과 같은 경로로 인공지능에 전달
+- 답안을 고르거나 자유 입력으로 턴이 바뀌면 다시 접힘
+- 종료 장면에서는 펼침 막대 없이 `이야기가 끝났습니다.` 안내만 표시
+- 동작 감소 설정에서는 펼침 효과 제거
+- 추천 답안과 행동 직접 입력을 테두리가 있는 별도 카드로 분리하고, 펼치거나 입력 중인 카드 테두리를 강조색으로 변경
+- `AI 추천 답안`, `행동 직접 입력` 제목을 더 크고 굵게(0.98rem, 900) 변경
+
+---
+### 검증 결과
+
+- 테스트 파일 51개, 테스트 214개 통과
+- 타입 검사와 코드 검사 통과
+- 데스크톱 통합 테스트 4개 통과
+- 인앱 브라우저 1280×720·768×1024·375×812에서 접힘·펼침·자유 행동 진행과 가로 넘침 없음 확인
+
+---
+### 알려진 제한
+
+- 자유 행동 추천 문구는 장면과 무관한 고정 문구 3개
+- 자유 행동 응답이 스트리밍되는 동안 이야기 상자에 응답 원문(JSON)이 그대로 보임

@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react"; // 렌더 도구
 import userEvent from "@testing-library/user-event"; // 사용자 동작
+import { chooseTextPlayRecommendation } from "@/test/text-play-recommendations"; // 추천 답안 선택 도우미
 import { describe, expect, it, vi } from "vitest"; // 테스트 도구
 import { TextPlayPlatformProvider } from "@/features/text-play/platform/text-play-platform"; // 플랫폼 공급자
 import { TextPlayPreferencesProvider } from "@/features/text-play/preferences/TextPlayPreferencesProvider"; // 설정 공급자
@@ -37,13 +38,13 @@ describe("Text-Play 저장 흐름", () => // 저장 흐름 묶음
     { // 테스트 시작
         const user = userEvent.setup(); // 사용자 생성
         render(<TextPlayPlatformProvider value={TEST_TEXT_PLAY_PLATFORM}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new MemoryTextPlaySaveRepository()}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 화면 렌더
-        await user.click(screen.getByRole("button", { name: "달빛 등불을 든다" })); // 회랑 이동
+        await chooseTextPlayRecommendation(user, "달빛 등불을 든다"); // 회랑 이동
         await user.click(screen.getByRole("button", { name: "저장 슬롯 열기" })); // 저장 모달 열기
         const manager = screen.getByRole("dialog", { name: "게임 저장" }); // 저장 관리자 조회
         const firstSlot = within(manager).getByRole("group", { name: "수동 저장 슬롯 1" }); // 첫 슬롯 조회
         await user.click(within(firstSlot).getByRole("button", { name: "저장" })); // 수동 저장
         await user.click(within(manager).getByRole("button", { name: "닫기" })); // 저장 모달 닫기
-        await user.click(screen.getByRole("button", { name: "봉인된 서재로 간다" })); // 서재 이동
+        await chooseTextPlayRecommendation(user, "봉인된 서재로 간다"); // 서재 이동
         expect(screen.getByRole("heading", { name: "봉인된 서재" })).toBeInTheDocument(); // 이동 확인
         const confirm = vi.spyOn(window, "confirm").mockReturnValue(true); // 불러오기 확인 설정
         await user.click(screen.getByRole("button", { name: "불러오기 슬롯 열기" })); // 불러오기 모달 열기
@@ -57,7 +58,7 @@ describe("Text-Play 저장 흐름", () => // 저장 흐름 묶음
     { // 테스트 시작
         const user = userEvent.setup(); // 사용자 생성
         render(<TextPlayPlatformProvider value={TEST_TEXT_PLAY_PLATFORM}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new MemoryTextPlaySaveRepository()}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 화면 렌더
-        await user.click(screen.getByRole("button", { name: "달빛 등불을 든다" })); // 회랑 이동
+        await chooseTextPlayRecommendation(user, "달빛 등불을 든다"); // 회랑 이동
         await user.click(screen.getByRole("button", { name: "저장 슬롯 열기" })); // 저장 모달 열기
         const firstSlot = screen.getByRole("group", { name: "수동 저장 슬롯 1" }); // 첫 슬롯 조회
         await user.click(within(firstSlot).getByRole("button", { name: "저장" })); // 수동 저장
@@ -70,12 +71,12 @@ describe("Text-Play 저장 흐름", () => // 저장 흐름 묶음
     { // 테스트 시작
         const user = userEvent.setup(); // 사용자 생성
         render(<TextPlayPlatformProvider value={TEST_TEXT_PLAY_PLATFORM}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new MemoryTextPlaySaveRepository()}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 화면 렌더
-        await user.click(screen.getByRole("button", { name: "달빛 등불을 든다" })); // 회랑 이동
+        await chooseTextPlayRecommendation(user, "달빛 등불을 든다"); // 회랑 이동
         await user.click(screen.getByRole("button", { name: "저장 슬롯 열기" })); // 저장 모달 열기
         const firstSlot = screen.getByRole("group", { name: "수동 저장 슬롯 1" }); // 첫 슬롯 조회
         await user.click(within(firstSlot).getByRole("button", { name: "저장" })); // 수동 저장
         await user.click(screen.getByRole("button", { name: "닫기" })); // 저장 모달 닫기
-        await user.click(screen.getByRole("button", { name: "봉인된 서재로 간다" })); // 서재 이동
+        await chooseTextPlayRecommendation(user, "봉인된 서재로 간다"); // 서재 이동
         const confirm = vi.spyOn(window, "confirm").mockReturnValue(false); // 확인 취소 설정
         await user.click(screen.getByRole("button", { name: "불러오기 슬롯 열기" })); // 불러오기 모달 열기
         const loadSlot = screen.getByRole("group", { name: "수동 저장 슬롯 1" }); // 불러오기 슬롯 조회

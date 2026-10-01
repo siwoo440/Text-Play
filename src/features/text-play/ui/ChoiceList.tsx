@@ -1,11 +1,27 @@
-import type { TextPlayChoice } from "@/features/text-play/core/types"; // 선택지 계약
+import type { TextPlayRecommendation } from "@/features/text-play/ui/text-play-recommendations"; // 추천 답안 계약
 
-export function ChoiceList({ choices, disabled, onSelect }: { choices: TextPlayChoice[]; disabled: boolean; onSelect(choiceId: string): void }) // 선택지 목록
+interface ChoiceListProps // 추천 목록 속성
+{ // 구조 시작
+    recommendations: TextPlayRecommendation[]; // 추천 답안 목록
+    expanded: boolean; // 펼침 여부
+    disabled: boolean; // 선택 비활성 여부
+    onToggle(): void; // 펼침 전환
+    onSelect(recommendation: TextPlayRecommendation): void; // 답안 선택
+} // 구조 종료
+
+export function ChoiceList({ recommendations, expanded, disabled, onToggle, onSelect }: ChoiceListProps) // 추천 답안 목록
 { // 함수 시작
+    if (recommendations.length === 0) // 종료 장면 확인
+    { // 조건 시작
+        return <section aria-label="추천 답안"><p>이야기가 끝났습니다.</p></section>; // 종료 안내 반환
+    } // 조건 종료
     return ( // 목록 반환
-        <section aria-label="추천 답안"> {/* 선택지 영역 */}
-            <h2>AI 추천 답안</h2> {/* 선택지 제목 */}
-            {choices.length === 0 ? <p>이야기가 끝났습니다.</p> : <div>{choices.map((choice) => <button key={choice.id} type="button" disabled={disabled} onClick={() => onSelect(choice.id)}>{choice.label}</button>)}</div>} {/* 선택지 버튼 */}
-        </section> // 선택지 종료
+        <section aria-label="추천 답안" data-expanded={expanded}> {/* 추천 영역 */}
+            <button type="button" data-recommendation-toggle aria-expanded={expanded} aria-controls={expanded ? "text-play-recommendation-list" : undefined} onClick={onToggle}> {/* 펼침 버튼 */}
+                <span>AI 추천 답안</span> {/* 펼침 제목 */}
+                <span aria-hidden="true">{expanded ? "▾" : "▴"}</span> {/* 펼침 방향 */}
+            </button> {/* 펼침 버튼 종료 */}
+            {expanded ? <ul id="text-play-recommendation-list" aria-label="AI 추천 답안 목록">{recommendations.map((recommendation) => <li key={recommendation.id}><button type="button" data-kind={recommendation.kind} disabled={disabled} onClick={() => onSelect(recommendation)}>{recommendation.label}</button></li>)}</ul> : null} {/* 펼친 답안 */}
+        </section> // 추천 영역 종료
     ); // 반환 종료
 } // 함수 종료

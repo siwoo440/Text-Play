@@ -51,6 +51,7 @@ pub struct RuntimeConfig // 엔진 관리자 설정
     pub runtime_root: Option<PathBuf>, // vulkan·cpu 하위 폴더를 가진 실행 엔진 폴더
     pub model: Option<ModelSpec>, // 현재 모델
     pub log_path: Option<PathBuf>, // 실행 엔진 기록 파일
+    pub preferred_gpu: Option<String>, // 전용 메모리 2GB 이상 그래픽 이름(DXGI, 없으면 CPU만)
 } // 구조 종료
 
 #[derive(Clone, Debug, PartialEq)] // 복사·비교 가능
@@ -94,7 +95,7 @@ pub fn config_from_values(runtime_dir: Option<String>, model_path: Option<String
 { // 함수 시작
     let runtime_root = runtime_dir.map(|value| value.trim().to_string()).filter(|value| !value.is_empty()).map(PathBuf::from).or(default_runtime_root); // 실행 엔진 폴더
     let model = model_path.map(PathBuf::from).filter(|path| path.is_file() && path.extension().is_some_and(|extension| extension.eq_ignore_ascii_case("gguf"))).map(|path| ModelSpec { path, context_length: DEFAULT_CONTEXT_LENGTH, generation: Map::new(), chat_template_kwargs: None }); // 있는 GGUF 모델만
-    RuntimeConfig { runtime_root, model, log_path } // 설정 반환
+    RuntimeConfig { runtime_root, model, log_path, preferred_gpu: None } // 설정 반환(그래픽 이름은 시작 때 채움)
 } // 함수 종료
 
 pub fn parse_list_devices(output: &str) -> Vec<ListedDevice> // 장치 목록 해석
@@ -113,9 +114,15 @@ pub fn parse_list_devices(output: &str) -> Vec<ListedDevice> // 장치 목록 �
     }).collect() // 목록 반환
 } // 함수 종료
 
-pub fn pick_largest_device(devices: &[ListedDevice]) -> Option<String> // 그래픽 메모리가 가장 큰 장치
+pub fn choose_runtime_root(candidates: &[PathBuf]) -> Option<PathBuf> // 실행 엔진이 들어 있는 첫 폴더
 { // 함수 시작
-    devices.iter().max_by_key(|device| device.total_mib).map(|device| device.name.clone()) // 장치 이름 반환
+    candidates.iter().find(|root| [RuntimeVariant::Vulkan, RuntimeVariant::Cpu].iter().any(|variant| root.join(variant.label()).join(SERVER_FILE_NAME).is_file())).cloned() // 폴더 반환
+} // 함수 종료
+
+pub fn pick_vulkan_device(devices: &[ListedDevice], preferred_gpu: Option<&str>) -> Option<String> // 전용 그래픽과 이름이 같은 Vulkan 장치
+{ // 함수 시작
+    let preferred = preferred_gpu?.trim().to_ascii_lowercase(); // 전용 그래픽 이름(없으면 CPU)
+    devices.iter().find(|device| device.description.trim().to_ascii_lowercase() == preferred).map(|device| device.name.clone()) // 내장 그래픽은 공유 메모리를 크게 보고하므로 메모리 크기가 아니라 이름으로 고름
 } // 함수 종료
 
 pub fn build_server_args(model: &ModelSpec, port: u16, api_key: &str, backend: &RuntimeBackend) -> Vec<String> // 실행 인자
@@ -216,7 +223,8 @@ impl LocalRuntimeManager // 관리자 동작
         let vulkan = root.join(RuntimeVariant::Vulkan.label()).join(SERVER_FILE_NAME); // 그래픽 빌드
         if vulkan.is_file() // 그래픽 빌드 확인
         { // 조건 시작
-            if let Some(device) = pick_largest_device(&parse_list_devices(&self.launcher.list_devices(&vulkan))) // 그래픽 장치 확인
+            let preferred = self.config.lock().ok().and_then(|config| config.preferred_gpu.clone()); // 전용 그래픽 이름
+            if let Some(device) = preferred.as_deref().and_then(|name| pick_vulkan_device(&parse_list_devices(&self.launcher.list_devices(&vulkan)), Some(name))) // 그래픽 장치 확인
             { // 조건 시작
                 candidates.push(RuntimeBackend { variant: RuntimeVariant::Vulkan, device: Some(device) }); // 그래픽 후보
             } // 조건 종료
@@ -627,16 +635,47 @@ mod tests // 단위 테스트 모듈
 
     fn manager(launcher: FakeLauncher, root: Option<PathBuf>, model: Option<ModelSpec>) -> LocalRuntimeManager // 시험 관리자
     { // 함수 시작
-        LocalRuntimeManager::new(RuntimeConfig { runtime_root: root, model, log_path: None }, Box::new(launcher), Duration::from_secs(5)) // 관리자 반환
+        LocalRuntimeManager::new(RuntimeConfig { runtime_root: root, model, log_path: None, preferred_gpu: Some("NVIDIA GeForce RTX 5070 Ti".to_string()) }, Box::new(launcher), Duration::from_secs(5)) // 관리자 반환
     } // 함수 종료
 
     #[test] // 테스트 표시
-    fn largest_vulkan_device_is_selected() // 장치 선택 검증
+    fn the_dedicated_graphics_card_is_selected_by_name() // 장치 선택 검증
     { // 함수 시작
         let devices = parse_list_devices(DEVICES); // 장치 해석
         assert_eq!(devices.len(), 2); // 장치 수 확인
-        assert_eq!(pick_largest_device(&devices), Some("Vulkan1".to_string())); // 큰 장치 선택
-        assert_eq!(pick_largest_device(&parse_list_devices("Available devices:\n")), None); // 장치 없음
+        assert_eq!(pick_vulkan_device(&devices, Some("NVIDIA GeForce RTX 5070 Ti")), Some("Vulkan1".to_string())); // 이름이 같은 전용 그래픽
+        assert_eq!(pick_vulkan_device(&devices, None), None); // 전용 그래픽 없음 → CPU
+        assert_eq!(pick_vulkan_device(&devices, Some("없는 그래픽")), None); // 이름이 안 맞으면 CPU
+        assert_eq!(pick_vulkan_device(&parse_list_devices("Available devices:\n"), Some("NVIDIA GeForce RTX 5070 Ti")), None); // 장치 없음
+    } // 함수 종료
+
+    #[test] // 테스트 표시
+    fn integrated_graphics_reporting_shared_memory_does_not_win() // 내장 그래픽 공유 메모리 검증(이 PC 실제 출력)
+    { // 함수 시작
+        let devices = parse_list_devices("Available devices:\n  Vulkan0: NVIDIA GeForce RTX 5070 Ti (15995 MiB, 15227 MiB free)\n  Vulkan1: AMD Radeon(TM) Graphics (16209 MiB, 15398 MiB free)\n"); // 내장 그래픽이 더 크게 보이는 목록
+        assert_eq!(pick_vulkan_device(&devices, Some("NVIDIA GeForce RTX 5070 Ti")), Some("Vulkan0".to_string())); // 전용 그래픽 선택
+    } // 함수 종료
+
+    #[test] // 테스트 표시
+    fn the_first_folder_that_has_an_engine_is_used() // 실행 엔진 폴더 선택 검증
+    { // 함수 시작
+        let (root, _model) = temp_runtime(false); // 엔진 있는 폴더
+        let empty = root.join("빈 폴더"); // 엔진 없는 폴더
+        assert_eq!(choose_runtime_root(&[empty.clone(), root.clone()]), Some(root.clone())); // 엔진 있는 폴더 선택
+        assert_eq!(choose_runtime_root(&[empty]), None); // 엔진 없음
+    } // 함수 종료
+
+    #[test] // 테스트 표시
+    fn without_a_dedicated_graphics_card_only_cpu_is_tried() // 전용 그래픽 없음 검증
+    { // 함수 시작
+        let (root, model) = temp_runtime(true); // 그래픽·CPU 폴더
+        let launcher = FakeLauncher::new(false, false); // 정상 실행기
+        let launches = launcher.launches.clone(); // 실행 횟수
+        let args = launcher.last_args.clone(); // 마지막 인자
+        let runtime = LocalRuntimeManager::new(RuntimeConfig { runtime_root: Some(root), model: Some(model), log_path: None, preferred_gpu: None }, Box::new(launcher), Duration::from_secs(5)); // 전용 그래픽 없는 관리자
+        tauri::async_runtime::block_on(runtime.ensure_ready()).expect("준비"); // 준비
+        assert_eq!(launches.load(Ordering::SeqCst), 1); // CPU 한 번만 실행
+        assert!(args.lock().expect("잠금").ends_with(&["-ngl".to_string(), "0".to_string()])); // CPU 인자 확인
     } // 함수 종료
 
     #[test] // 테스트 표시

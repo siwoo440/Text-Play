@@ -24,7 +24,8 @@
     "chatbot:sync": "node scripts/sync-chatbot.mjs ../ChatBot",
     "local-ai:runtime": "node scripts/fetch-llama-runtime.mjs",
     "local-ai:models": "node scripts/build-local-models.mjs",
-    "local-ai:eval": "node scripts/evaluate-local-models.mjs"
+    "local-ai:eval": "node scripts/evaluate-local-models.mjs",
+    "local-ai:install": "node scripts/install-local-ai.mjs"
   },
   "keywords": [],
   "type": "module",

@@ -11,8 +11,12 @@ use tauri::Manager; // 앱 상태·경로 도구
 fn create_runtime_manager(app: &tauri::App) -> local_runtime::LocalRuntimeManager // 엔진 관리자 생성
 { // 함수 시작
     let resource_root = app.path().resource_dir().ok().map(|directory| directory.join("llama-runtime")); // 설치본 실행 엔진 폴더
+    let user_root = app.path().local_data_dir().ok().map(|directory| directory.join("MATE Text-Play").join("runtime")); // 모델 옆 실행 엔진 폴더(설치 프로그램 전 로컬 확인용)
+    let default_root = local_runtime::choose_runtime_root(&[resource_root.clone(), user_root].into_iter().flatten().collect::<Vec<_>>()).or(resource_root); // 엔진이 있는 폴더
     let log_path = app.path().app_log_dir().ok().and_then(|directory| std::fs::create_dir_all(&directory).ok().map(|_| directory.join("llama-server.log"))); // 실행 엔진 기록 파일
-    let config = local_runtime::config_from_values(std::env::var(local_runtime::RUNTIME_DIR_ENV).ok(), std::env::var(local_runtime::MODEL_ENV).ok(), resource_root, log_path); // 설정
+    let mut config = local_runtime::config_from_values(std::env::var(local_runtime::RUNTIME_DIR_ENV).ok(), std::env::var(local_runtime::MODEL_ENV).ok(), default_root, log_path); // 설정
+    let hardware = hardware::detect_hardware(); // PC 사양
+    config.preferred_gpu = hardware.gpu_name.filter(|_| hardware.vram_bytes >= 2 * 1_073_741_824); // 전용 메모리 2GB 이상 그래픽만 Vulkan 사용
     local_runtime::LocalRuntimeManager::new(config, Box::new(local_runtime::SystemLauncher::new()), local_runtime::HEALTH_TIMEOUT) // 관리자 반환
 } // 함수 종료
 

@@ -30,10 +30,9 @@ export function parseListDevices(output) // llama-server --list-devices 출력 �
     return output.split(/\r?\n/u).map((line) => line.match(pattern)).filter((match) => match !== null).map((match) => ({ name: match[1], description: match[2], totalMiB: Number(match[3]), freeMiB: Number(match[4]) })); // 장치 목록 반환
 } // 함수 종료
 
-export function pickLargestDevice(devices) // 그래픽 메모리가 가장 큰 장치
+export function pickSingleDevice(devices) // 그래픽 장치가 하나일 때만 자동 선택
 { // 함수 시작
-    const sorted = [...devices].sort((left, right) => right.totalMiB - left.totalMiB); // 메모리 큰 순
-    return sorted[0]?.name ?? null; // 첫 장치 이름 반환
+    return devices.length === 1 ? devices[0].name : null; // 여러 개면 내장 그래픽이 공유 메모리를 크게 보고할 수 있어 직접 고르게 함
 } // 함수 종료
 
 export function buildLlamaServerArgs(options) // llama-server 실행 인자

@@ -6,7 +6,7 @@
       "label": "가벼움 · Mi:dm 2.0 Mini",
       "role": "light",
       "file": "midm-2.0-mini-Q4_K_M.gguf",
-      "sizeBytes": 1600000000,
+      "sizeBytes": 1426272800,
       "license": "MIT",
       "contextLength": 4096,
       "generation": { "temperature": 0.8, "top_p": 0.75, "top_k": 20 },

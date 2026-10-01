@@ -68,15 +68,16 @@ pnpm build
 ```
 
 ---
-## 내장 로컬 AI 측정(준비 중)
+## 내장 로컬 AI(시험 적용)
 
 ```powershell
 pnpm local-ai:runtime
-pnpm local-ai:models
-pnpm local-ai:eval
+pnpm local-ai:models --models midm-2.0-mini
+pnpm local-ai:eval --models midm-2.0-mini:Q4_K_M --backends vulkan:Vulkan0,cpu
+pnpm local-ai:install
 ```
 
-llama.cpp 고정 빌드와 공식 모델 가중치(약 35GB)를 받아 GGUF로 변환하고, Text-Play 평가 문맥 30개로 형식·행동·속도·메모리를 측정합니다. 받은 파일과 결과는 Git에서 제외한 `.local-ai/`에 저장합니다. 자세한 내용은 [`docs/plans/2026-10-01-bundled-local-ai.md`](docs/plans/2026-10-01-bundled-local-ai.md)를 봅니다.
+llama.cpp 고정 빌드와 공식 모델 가중치를 받아 GGUF로 변환하고(가벼운 모델 4.3GB, 세 모델 전체 약 35GB), Text-Play 평가 문맥 30개로 형식·행동·속도를 측정한 뒤, 실행 엔진과 모델을 앱 데이터 폴더에 복사합니다. exe의 `AI 모델` 화면에서 `사용하기`를 누르고 Text-Play AI 선택에서 `내장 AI(이 PC)`를 고르면 이 PC의 모델이 대답합니다. 받은 파일과 결과는 Git에서 제외한 `.local-ai/`에 저장합니다. 자세한 내용은 [`docs/plans/2026-10-01-bundled-local-ai.md`](docs/plans/2026-10-01-bundled-local-ai.md)를 봅니다.
 
 ---
 ## Windows Mock 시험판

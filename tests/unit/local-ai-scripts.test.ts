@@ -91,6 +91,20 @@ describe("실행 엔진 받기 스크립트", () => // 실행 엔진 묶음
     }); // 테스트 종료
 }); // 묶음 종료
 
+describe("로컬 설치 스크립트", () => // 로컬 설치 묶음
+{ // 묶음 시작
+    it("실행 엔진과 앱 목록에 있는 모델을 앱 데이터 폴더로 옮기는 계획을 보여 준다", () => // 계획 출력 검증
+    { // 테스트 시작
+        const target = mkdtempSync(join(tmpdir(), "local-install-")); // 대상 폴더
+        const result = runScript(["scripts/install-local-ai.mjs", "--dry-run", "--target", target]); // 계획 실행
+        expect(result.code, result.output).toBe(0); // 성공 확인
+        expect(result.output).toContain(join(target, "runtime", "vulkan")); // 그래픽 엔진 위치 확인
+        expect(result.output).toContain(join(target, "runtime", "cpu")); // CPU 엔진 위치 확인
+        expect(result.output).toContain("midm-2.0-mini-Q4_K_M.gguf"); // 앱 목록 가벼운 모델 확인
+        expect(result.output).not.toContain("midm-2.0-mini-Q5_K_M.gguf"); // 앱 목록에 없는 비교용 파일 제외 확인
+    }); // 테스트 종료
+}); // 묶음 종료
+
 describe("모델 만들기 스크립트", () => // 모델 만들기 묶음
 { // 묶음 시작
     it("공식 가중치 리비전·변환·양자화 결과 파일을 계획으로 보여 준다", () => // 계획 출력 검증

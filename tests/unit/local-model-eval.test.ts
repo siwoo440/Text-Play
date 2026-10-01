@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"; // 테스트 도구
-import { buildChatRequestBody, buildLlamaServerArgs, createSseDecoder, parseBackendSpec, parseListDevices, percentile, pickLargestDevice, renderEvalReport, summarizeBufferSizes, summarizeRuns } from "../../scripts/lib/local-model-eval.mjs"; // 평가 도구
+import { buildChatRequestBody, buildLlamaServerArgs, createSseDecoder, parseBackendSpec, parseListDevices, percentile, pickSingleDevice, renderEvalReport, summarizeBufferSizes, summarizeRuns } from "../../scripts/lib/local-model-eval.mjs"; // 평가 도구
 
 const DEVICE_OUTPUT = // 장치 목록 출력 예시
 [ // 줄 목록 시작
@@ -36,7 +36,7 @@ describe("실행 방식 해석", () => // 실행 방식 묶음
         expect(() => parseBackendSpec("cpu:0")).toThrow("스레드"); // 잘못된 스레드
     }); // 테스트 종료
 
-    it("장치 목록에서 그래픽 메모리가 가장 큰 장치를 고른다", () => // 장치 선택 검증
+    it("그래픽 장치가 하나일 때만 자동으로 고른다", () => // 장치 선택 검증
     { // 테스트 시작
         const devices = parseListDevices(DEVICE_OUTPUT); // 장치 해석
         expect(devices).toEqual( // 장치 목록 확인
@@ -44,8 +44,9 @@ describe("실행 방식 해석", () => // 실행 방식 묶음
             { name: "Vulkan0", description: "NVIDIA GeForce RTX 5070 Ti", totalMiB: 16303, freeMiB: 15012 }, // 외장 그래픽
             { name: "Vulkan1", description: "AMD Radeon(TM) Graphics", totalMiB: 8146, freeMiB: 7900 }, // 내장 그래픽
         ]); // 기대 목록 종료
-        expect(pickLargestDevice(devices)).toBe("Vulkan0"); // 선택 확인
-        expect(pickLargestDevice([])).toBeNull(); // 장치 없음 확인
+        expect(pickSingleDevice(devices)).toBeNull(); // 여러 장치는 고르지 않음(내장 그래픽이 공유 메모리를 크게 보고함)
+        expect(pickSingleDevice(devices.slice(0, 1))).toBe("Vulkan0"); // 하나면 그 장치
+        expect(pickSingleDevice([])).toBeNull(); // 장치 없음 확인
     }); // 테스트 종료
 
     it("로컬 전용 주소·일회용 키·단일 슬롯으로 실행 인자를 만든다", () => // 실행 인자 검증

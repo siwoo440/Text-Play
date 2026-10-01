@@ -179,7 +179,8 @@
 - 데스크톱 자산 검사: `pnpm desktop:verify-assets`
 - 데스크톱 통합 테스트: `pnpm test:e2e:desktop` (포트 1420을 쓰므로 `pnpm desktop:dev`를 먼저 종료, 1420 서버가 이미 떠 있으면 `node node_modules/@playwright/test/cli.js test --config playwright.desktop.config.ts`)
 - ChatBot 새 기능 확인과 가져오기: `pnpm chatbot:status`, `pnpm chatbot:sync` (ChatBot 저장소가 Text-Play 옆 `../ChatBot`에 있어야 함)
-- 내장 로컬 AI 측정 준비와 측정: `pnpm local-ai:runtime`, `pnpm local-ai:models`, `pnpm local-ai:eval` (작업 폴더 `.local-ai/`는 Git 제외, 계획 문서의 `작업 0 준비 상태` 참고)
+- 내장 로컬 AI 측정 준비와 측정: `pnpm local-ai:runtime`, `pnpm local-ai:models`, `pnpm local-ai:eval` (작업 폴더 `.local-ai/`는 Git 제외, 계획 문서의 `작업 0 준비 상태` 참고). 이 PC처럼 그래픽 장치가 여럿이면 `--backends vulkan:Vulkan0,cpu`처럼 장치를 고름
+- 만든 엔진·모델을 exe에 적용: `pnpm local-ai:install`(SHA-256 확인 후 `%LOCALAPPDATA%\MATE Text-Play\{runtime,models}`로 복사) → exe `AI 모델` 화면에서 `사용하기`
 - 내장 AI를 모델 없이 exe에서 확인: 가짜 서버(`node scripts/local-ai/fake-openai-server.mjs` + `MATE_TEXT_PLAY_BUNDLED_AI_URL`) 또는 가짜 엔진(`fake_llama_server` 예제 + `MATE_TEXT_PLAY_LLAMA_RUNTIME_DIR`·`MATE_TEXT_PLAY_BUNDLED_MODEL`). 화면 조작은 `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9333`으로 exe를 띄워 Playwright `connectOverCDP`로 함(계획 문서 진행 상태 참고)
 - Rust 검사: `pnpm tauri:check`
 - Windows 설치 파일 빌드: `pnpm tauri:build`
@@ -222,7 +223,7 @@
 ---
 ## 이어서 진행할 작업
 
-0. 내장 로컬 인공지능: 설치 때 가벼운 모델(Mi:dm 2.0 Mini) 자동 준비, 표준·고성능(Qwen3.5-4B·9B)은 `AI 모델` 화면 다운로드 버튼. 계획 `docs/plans/2026-10-01-bundled-local-ai.md` 참고. 사용자 지시로 **기반을 먼저 만들고 기능을 덧붙이는 순서**로 진행: 기반 1 `AI 연결 통로` 완료 → 기반 2 `엔진 관리자` 완료(`local_runtime.rs`) → 기반 3 `모델 보관함` 완료(`hardware.rs`·`model_store.rs`·`resources/model-catalog.json`, 받기 정보는 아직 비어 `준비 중`) → 기반 4 `AI 모델` 화면 완료(`src/desktop/ai-models`, 사이드바 `설정 · AI 모델 · 고객 지원`) — **기반 완성** → 이후 덧붙이기: 모델 실측(작업 0, 사용자가 다운로드를 미룸: `pnpm local-ai:runtime` → `local-ai:models` → `local-ai:eval`)·설치 프로그램·응답 품질. 끝의 결정 필요 항목 4개도 확인
+0. 내장 로컬 인공지능: 설치 때 가벼운 모델(Mi:dm 2.0 Mini) 자동 준비, 표준·고성능(Qwen3.5-4B·9B)은 `AI 모델` 화면 다운로드 버튼. 계획 `docs/plans/2026-10-01-bundled-local-ai.md` 참고. 사용자 지시로 **기반을 먼저 만들고 기능을 덧붙이는 순서**로 진행: 기반 1 `AI 연결 통로` 완료 → 기반 2 `엔진 관리자` 완료(`local_runtime.rs`) → 기반 3 `모델 보관함` 완료(`hardware.rs`·`model_store.rs`·`resources/model-catalog.json`, 받기 정보는 아직 비어 `준비 중`) → 기반 4 `AI 모델` 화면 완료(`src/desktop/ai-models`, 사이드바 `설정 · AI 모델 · 고객 지원`) — **기반 완성** → 가벼운 모델 Mi:dm 2.0 Mini를 받아 만들고 exe에 적용 완료(Q4_K_M 1.33GiB, 측정·SHA-256은 계획 문서 `가벼운 모델 … 적용`). 다음 덧붙이기: **응답 품질(작업 5)** — 문맥에 장면 서술·인물 표시 이름·역할 규칙 넣기, 잘못된 행동만 빼고 서술 살리기 → 표준·고성능 모델 받기·측정 → 보관 위치(결정 1)와 받기 정보 → 설치 프로그램. 끝의 결정 필요 항목 4개도 확인
 1. exe에서 ChatBot 기능 직접 확인: JSON 내보내기·백업 파일 저장, 링크 복사, `window.confirm` 확인 창이 WebView2에서 동작하는지
 2. exe 메인 화면 아래쪽(인기 랭킹, 전체 작품, 작품 상세 창) 직접 확인과 세부 디자인 조정
 3. 게임 플레이 화면을 메인과 같은 밝은 다채색 디자인으로 변경

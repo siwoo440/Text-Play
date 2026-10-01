@@ -9,7 +9,7 @@ import { dirname, join, resolve } from "node:path"; // 경로 도구
 import { parseArgs } from "node:util"; // 명령 인자 해석기
 import { runnerImport } from "vite"; // 앱 TypeScript 모듈 불러오기
 import { findManifestModel, getLocalAiRoot, getRepositoryRoot, getRuntimeDir } from "./lib/local-ai-files.mjs"; // 작업 파일 도구
-import { buildChatRequestBody, buildLlamaServerArgs, createSseDecoder, parseBackendSpec, parseListDevices, pickLargestDevice, renderEvalReport, summarizeBufferSizes, summarizeRuns } from "./lib/local-model-eval.mjs"; // 측정 도구
+import { buildChatRequestBody, buildLlamaServerArgs, createSseDecoder, parseBackendSpec, parseListDevices, pickSingleDevice, renderEvalReport, summarizeBufferSizes, summarizeRuns } from "./lib/local-model-eval.mjs"; // 측정 도구
 import { LLAMA_CPP_RELEASE, LOCAL_MODEL_SOURCES, findModelSource } from "./local-ai/local-ai-pins.mjs"; // 고정 버전
 
 const REQUEST_TIMEOUT_MS = 600_000; // 한 요청 최대 대기
@@ -274,7 +274,12 @@ async function measureWithServer(context) // llama-server를 띄워 한 모델·
     { // 조건 시작
         return { ...result, error: `실행 엔진이 없습니다: ${serverExe} (먼저 node scripts/fetch-llama-runtime.mjs 실행)` }; // 준비 안내
     } // 조건 종료
-    const device = backend.kind === "vulkan" ? backend.device ?? pickLargestDevice(listVulkanDevices(serverExe)) : null; // 그래픽 장치
+    const devices = backend.kind === "vulkan" && backend.device === null ? listVulkanDevices(serverExe) : []; // 자동 선택용 장치 목록
+    const device = backend.kind === "vulkan" ? backend.device ?? pickSingleDevice(devices) : null; // 그래픽 장치
+    if (backend.kind === "vulkan" && device === null) // 장치 확인
+    { // 조건 시작
+        return { ...result, error: `그래픽 장치를 하나로 정해 주세요(--backends vulkan:<장치>): ${devices.map((item) => `${item.name} ${item.description}`).join(", ") || "장치 없음"}` }; // 장치 선택 안내
+    } // 조건 종료
     const port = await findFreePort(); // 빈 포트
     const apiKey = randomBytes(24).toString("hex"); // 일회용 키
     const gpuBefore = readNvidiaMemoryUsedMiB(); // 실행 전 그래픽 메모리

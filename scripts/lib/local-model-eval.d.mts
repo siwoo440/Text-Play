@@ -57,7 +57,7 @@ export interface EvalRunSummary // 측정 요약
 
 export function parseBackendSpec(spec: string): BackendSpec; // 실행 방식 해석
 export function parseListDevices(output: string): ListedDevice[]; // 장치 목록 해석
-export function pickLargestDevice(devices: ListedDevice[]): string | null; // 가장 큰 장치
+export function pickSingleDevice(devices: ListedDevice[]): string | null; // 장치가 하나일 때만 선택
 export function buildLlamaServerArgs(options: LlamaServerArgsOptions): string[]; // 실행 인자
 export function buildChatRequestBody(options: ChatRequestBodyOptions): Record<string, unknown>; // 요청 본문
 export function createSseDecoder(): { push(text: string): (Record<string, unknown> | "[DONE]")[] }; // SSE 해석기

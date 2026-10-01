@@ -174,13 +174,14 @@ pub struct LocalRuntimeManager // 엔진 관리자
     engine: Mutex<Option<RunningEngine>>, // 실행 중 엔진
     status: Mutex<RuntimeStatus>, // 상태
     last_used: Mutex<Option<u64>>, // 마지막 사용 시각
+    generation: std::sync::atomic::AtomicU64, // 모델 변경·끄기 횟수(시작 중 변경 감지)
 } // 구조 종료
 
 impl LocalRuntimeManager // 관리자 동작
 { // 구현 시작
     pub fn new(config: RuntimeConfig, launcher: Box<dyn ProcessLauncher>, health_timeout: Duration) -> Self // 생성자
     { // 함수 시작
-        Self { config: Mutex::new(config), launcher, health_timeout, start_lock: tokio::sync::Mutex::new(()), engine: Mutex::new(None), status: Mutex::new(RuntimeStatus::stopped()), last_used: Mutex::new(None) } // 관리자 반환
+        Self { config: Mutex::new(config), launcher, health_timeout, start_lock: tokio::sync::Mutex::new(()), engine: Mutex::new(None), status: Mutex::new(RuntimeStatus::stopped()), last_used: Mutex::new(None), generation: std::sync::atomic::AtomicU64::new(0) } // 관리자 반환
     } // 함수 종료
 
     pub fn status(&self) -> RuntimeStatus // 현재 상태
@@ -270,6 +271,7 @@ impl LocalRuntimeManager // 관리자 동작
         { // 조건 시작
             return Ok(endpoint); // 그대로 사용
         } // 조건 종료
+        let generation = self.generation.load(std::sync::atomic::Ordering::SeqCst); // 시작 시점 변경 횟수
         let config = self.config.lock().map(|config| config.clone()).map_err(|_| NOT_READY_MESSAGE.to_string())?; // 설정 복사
         let (Some(root), Some(model)) = (config.runtime_root, config.model) else { return Err(NOT_READY_MESSAGE.to_string()); }; // 실행 엔진·모델 확인
         let candidates = self.candidates(&root); // 시도할 방식
@@ -283,8 +285,14 @@ impl LocalRuntimeManager // 관리자 동작
         { // 반복 시작
             match self.try_start(&root, &model, config.log_path.as_deref(), &backend).await // 켜기 시도
             { // 분기 시작
-                Ok(engine) => // 성공
+                Ok(mut engine) => // 성공
                 { // 처리 시작
+                    if self.generation.load(std::sync::atomic::Ordering::SeqCst) != generation // 시작 중 모델 변경·끄기 확인
+                    { // 조건 시작
+                        engine.process.kill(); // 낡은 설정의 엔진 종료
+                        self.set_status(RuntimeStatus::stopped()); // 꺼짐 반영
+                        return Err("MODEL_CHANGED: 시작하는 동안 사용할 모델이 바뀌었습니다. 다시 보내 주세요.".to_string()); // 다시 시도 안내
+                    } // 조건 종료
                     let endpoint = engine.endpoint.clone(); // 연결 정보
                     if let Ok(mut current) = self.engine.lock() // 엔진 잠금
                     { // 조건 시작
@@ -303,6 +311,7 @@ impl LocalRuntimeManager // 관리자 동작
 
     pub fn stop(&self) // 엔진 끄기
     { // 함수 시작
+        self.generation.fetch_add(1, std::sync::atomic::Ordering::SeqCst); // 시작 중인 엔진이 있으면 버리도록 표시
         if let Ok(mut engine) = self.engine.lock() // 엔진 잠금
         { // 조건 시작
             if let Some(mut running) = engine.take() // 실행 중 확인
@@ -311,6 +320,20 @@ impl LocalRuntimeManager // 관리자 동작
             } // 조건 종료
         } // 조건 종료
         self.set_status(RuntimeStatus::stopped()); // 꺼짐 반영
+    } // 함수 종료
+
+    pub fn set_model(&self, model: Option<ModelSpec>) // 사용할 모델 변경(켜진 엔진은 끄고 다음 요청에 새 모델로 켬)
+    { // 함수 시작
+        if let Ok(mut config) = self.config.lock() // 설정 잠금
+        { // 조건 시작
+            config.model = model; // 모델 반영
+        } // 조건 종료
+        self.stop(); // 기존 엔진 끄기
+    } // 함수 종료
+
+    pub fn has_model(&self) -> bool // 모델 지정 여부
+    { // 함수 시작
+        self.config.lock().map(|config| config.model.is_some()).unwrap_or(false) // 지정 여부 반환
     } // 함수 종료
 
     pub fn touch(&self, now: u64) // 사용 시각 기록
@@ -707,6 +730,44 @@ mod tests // 단위 테스트 모듈
         let status = runtime.status(); // 상태
         assert_eq!(status.state, "failed"); // 실패 상태 확인
         assert!(status.message.is_some()); // 실패 이유 확인
+    } // 함수 종료
+
+    #[test] // 테스트 표시
+    fn changing_the_model_stops_the_engine_and_uses_the_new_model_next_time() // 모델 변경 검증
+    { // 함수 시작
+        let (root, model) = temp_runtime(false); // CPU 폴더
+        let launcher = FakeLauncher::new(false, false); // 정상 실행기
+        let processes = launcher.processes.clone(); // 프로세스 표시
+        let args = launcher.last_args.clone(); // 마지막 인자
+        let runtime = manager(launcher, Some(root.clone()), Some(model)); // 관리자
+        tauri::async_runtime::block_on(runtime.ensure_ready()).expect("준비"); // 준비
+        let other = root.join("other.gguf"); // 새 모델
+        std::fs::write(&other, b"GGUF").expect("새 모델"); // 새 모델 파일
+        runtime.set_model(Some(ModelSpec { path: other.clone(), context_length: 4096, generation: Map::new(), chat_template_kwargs: None })); // 모델 변경
+        assert!(!processes.lock().expect("잠금")[0].load(Ordering::SeqCst)); // 기존 엔진 종료 확인
+        tauri::async_runtime::block_on(runtime.ensure_ready()).expect("새 모델 준비"); // 새 모델로 준비
+        assert_eq!(args.lock().expect("잠금")[1], other.to_string_lossy()); // 새 모델 인자 확인
+        runtime.set_model(None); // 모델 해제
+        assert!(tauri::async_runtime::block_on(runtime.ensure_ready()).expect_err("미준비").starts_with("BUNDLED_NOT_READY")); // 미준비 확인
+    } // 함수 종료
+
+    #[test] // 테스트 표시
+    fn changing_the_model_while_starting_discards_the_new_engine() // 시작 중 모델 변경 검증
+    { // 함수 시작
+        let (root, model) = temp_runtime(false); // CPU 폴더
+        let launcher = FakeLauncher::new(false, false); // 정상 실행기(첫 준비 확인은 적재 중)
+        let processes = launcher.processes.clone(); // 프로세스 표시
+        let runtime = Arc::new(manager(launcher, Some(root), Some(model))); // 공유 관리자
+        let starter = runtime.clone(); // 시작 스레드용
+        let handle = std::thread::spawn(move || tauri::async_runtime::block_on(starter.ensure_ready())); // 시작
+        while processes.lock().expect("잠금").is_empty() // 엔진 실행까지 대기
+        { // 반복 시작
+            std::thread::sleep(Duration::from_millis(5)); // 잠시 대기
+        } // 반복 종료
+        runtime.set_model(None); // 시작 중 모델 해제(삭제 흉내)
+        assert!(handle.join().expect("스레드").is_err()); // 시작 결과 버림 확인
+        assert!(!processes.lock().expect("잠금")[0].load(Ordering::SeqCst)); // 새 엔진 종료 확인
+        assert_eq!(runtime.status().state, "stopped"); // 꺼짐 확인
     } // 함수 종료
 
     #[test] // 테스트 표시

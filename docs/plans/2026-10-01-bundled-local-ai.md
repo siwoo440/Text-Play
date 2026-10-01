@@ -189,6 +189,19 @@ pnpm local-ai:eval --models midm-2.0-mini:Q4_K_M,qwen3.5-2b:Q4_K_M --backends cp
 - 확인용 가짜 엔진: `cargo build --release --example fake_llama_server --manifest-path src-tauri/Cargo.toml` 결과를 `.local-ai\fake-runtime\{vulkan,cpu}\llama-server.exe`로 복사(그래픽 폴더에서는 일부러 실패)
 - exe 확인: 엔진 꺼진 상태에서 첫 응답까지 3.9초(그래픽 실패 → CPU 전환 포함), 응답 표시, 앱을 강제 종료하면 2초 안에 엔진도 종료
 
+#### 진행 상태 (2026-10-01): 기반 3 "모델 보관함" 완료
+
+- `src-tauri/src/hardware.rs`: DXGI로 전용 메모리가 가장 큰 실제 그래픽 장치(소프트웨어 장치 제외), `GlobalMemoryStatusEx`로 전체 RAM, `GetDiskFreeSpaceExW`로 모델 폴더 드라이브의 남은 공간
+- `src-tauri/resources/model-catalog.json`(앱 실행 파일에 포함): 가벼움 Mi:dm 2.0 Mini, 표준 Qwen3.5-4B, 고성능 Qwen3.5-9B. 크기는 예상치이고 받기 정보(`download`)는 결정 1(보관 위치)과 작업 0 실측 뒤 채운다. 그 전까지 화면은 `준비 중`으로 표시한다.
+- 목록 검증: 형식 버전 1, 식별자 중복·역할·안전한 파일 이름(폴더 밖 금지)·크기·문맥 길이, 받기 주소는 HTTPS와 허용 호스트(huggingface.co, *.hf.co, github.com, *.githubusercontent.com)만, SHA-256 64자리
+- `src-tauri/src/model_store.rs`: 적합도(이 문서 표 그대로), 디스크 1.2배 여유 확인, 받기(`.part` 이어받기, 허용 호스트로만 최대 5번 이동, 크기 초과 차단, SHA-256 불일치 시 삭제, 취소 시 받은 부분 보존, 250ms마다 진행률·속도), 삭제(받는 중 금지, 선택 모델이면 엔진 끄고 선택 해제), 선택(설치된 모델만, `store.json`에 저장, 엔진 관리자에 반영)
+- 모델 폴더: `%LOCALAPPDATA%\MATE Text-Play\models`. 앱을 시작할 때 저장된 선택 모델이 설치돼 있으면 엔진 관리자가 그 모델을 쓴다(개발용 `MATE_TEXT_PLAY_BUNDLED_MODEL`이 있으면 그것을 우선).
+- Tauri 명령: `get_model_store`(PC 사양·남은 공간·모델별 상태·적합도·사용 중), `download_model`(Channel 진행률), `cancel_model_download`, `delete_model`, `select_model`
+- 엔진 관리자 보강: 시작하는 동안 모델이 바뀌거나 꺼지면 막 켜진 엔진을 버린다(exe 확인 중 발견한 문제, 테스트로 재현 후 수정).
+- 개발·확인용 목록: `MATE_TEXT_PLAY_MODEL_CATALOG`(이 목록에서만 `http://127.0.0.1` 받기 허용)
+- exe 확인: 이 PC를 RTX 5070 Ti 그래픽 15.6GiB·RAM 31.2GiB·남은 공간 100GB·세 모델 모두 권장으로 판정, 시험 목록으로 받기 → 검사 → 선택 → 내장 AI 응답(받은 모델로 엔진 시작) → 삭제 → 엔진 꺼짐·프로세스 0개
+
+
 
 ### 작업 2: 모델 관리 (2~3일)
 

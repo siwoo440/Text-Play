@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "models": [
+    {
+      "id": "midm-2.0-mini",
+      "label": "가벼움 · Mi:dm 2.0 Mini",
+      "role": "light",
+      "file": "midm-2.0-mini-Q4_K_M.gguf",
+      "sizeBytes": 1600000000,
+      "license": "MIT",
+      "contextLength": 4096,
+      "generation": { "temperature": 0.8, "top_p": 0.75, "top_k": 20 },
+      "chatTemplateKwargs": null,
+      "download": null
+    },
+    {
+      "id": "qwen3.5-4b",
+      "label": "표준 · Qwen3.5-4B",
+      "role": "standard",
+      "file": "qwen3.5-4b-Q4_K_M.gguf",
+      "sizeBytes": 2900000000,
+      "license": "Apache-2.0",
+      "contextLength": 4096,
+      "generation": { "temperature": 0.7, "top_p": 0.8, "top_k": 20, "min_p": 0, "presence_penalty": 1.5 },
+      "chatTemplateKwargs": { "enable_thinking": false },
+      "download": null
+    },
+    {
+      "id": "qwen3.5-9b",
+      "label": "고성능 · Qwen3.5-9B",
+      "role": "high",
+      "file": "qwen3.5-9b-Q4_K_M.gguf",
+      "sizeBytes": 5900000000,
+      "license": "Apache-2.0",
+      "contextLength": 4096,
+      "generation": { "temperature": 0.7, "top_p": 0.8, "top_k": 20, "min_p": 0, "presence_penalty": 1.5 },
+      "chatTemplateKwargs": { "enable_thinking": false },
+      "download": null
+    }
+  ]
+}

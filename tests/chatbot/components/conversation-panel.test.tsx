@@ -5,6 +5,7 @@ import { AppShell } from "@chatbot/components/app-shell/AppShell"; // 앱 셸
 import type { StateRepository } from "@chatbot/features/core/AppProvider"; // 저장소 계약
 import { createInitialState } from "@chatbot/features/core/initial-state"; // 초기 상태
 import type { AppState } from "@chatbot/features/core/types"; // 상태 타입
+import { createStoryConversation } from "@chatbot/features/story/story-model"; // 스토리 대화 생성
 import { renderWithApp } from "@chatbot/test/render-with-app"; // 앱 렌더
 
 const navigation = vi.hoisted(() => ({ pathname: "/", search: "", push: vi.fn() })); // 경로 대역 상태
@@ -198,7 +199,7 @@ describe("왼쪽 대화방 창", () => // 대화방 창 묶음
         expect(confirm).toHaveTextContent("메시지 3개"); // 메시지 수 안내 확인
         expect(within(confirm).getByRole("button", { name: "취소" })).toHaveFocus(); // 안전 초점 확인
         await user.click(within(confirm).getByRole("button", { name: "대화 삭제 확인" })); // 삭제 확인
-        expect(repository.createBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 9 }), "conversation-delete"); // 백업 확인
+        expect(repository.createBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 10 }), "conversation-delete"); // 백업 확인
         expect(cardTitles(panel)).not.toContain("새벽 도서관의 리안"); // 삭제 확인
         expect(within(panel).getByRole("status")).toHaveTextContent("‘새벽 도서관의 리안’ 대화를 삭제했습니다."); // 삭제 안내 확인
         expect(within(panel).getByRole("button", { name: "안내 닫기" })).toHaveFocus(); // 사라진 카드 대신 초점 확인
@@ -242,6 +243,25 @@ describe("왼쪽 대화방 창", () => // 대화방 창 묶음
         expect(sera).not.toHaveTextContent("우산 하나로 충분할까?"); // 메시지 숨김 확인
         await user.type(within(panel).getByRole("searchbox", { name: "대화방 검색" }), "우산"); // 메시지 검색
         expect(cardTitles(panel)).toEqual([]); // 검색 제외 확인
+    }); // 검증 종료
+
+    it("스토리 대화는 스토리 표시·등장인물 수·마지막 대사와 스토리 주소로 보여 준다", async () => // 스토리 카드 검증
+    { // 검증 시작
+        const user = userEvent.setup(); // 사용자 생성
+        const started = createStoryConversation(createInitialState(), "story-moonlit-archive", "2026-09-22T06:30:00.000Z"); // 스토리 대화
+        const panel = renderShell(started.state); // 화면 렌더
+        const card = getCard(panel, "비 그친 밤의 기록관"); // 스토리 카드
+        expect(card).toHaveAttribute("data-mode", "story"); // 종류 표시 확인
+        expect(within(card).getByText("스토리", { selector: ".conversation-card-mode" })).toBeInTheDocument(); // 스토리 표시 확인
+        expect(card).toHaveTextContent("등장인물 3명"); // 인물 수 확인
+        expect(card).toHaveTextContent("노아: …달이 지기 전에 찾아야 해."); // 마지막 대사 확인
+        expect(card.querySelector(".conversation-card-link")).toHaveAttribute("href", started.href); // 스토리 주소 확인
+        expect(card.querySelector("[role='meter']")).not.toBeInTheDocument(); // 관계 막대 없음 확인
+        await user.click(within(card).getByRole("button", { name: "비 그친 밤의 기록관 더보기" })); // 메뉴 열기
+        expect(within(panel).getByRole("menuitem", { name: "스토리 보기" })).toHaveAttribute("href", "/stories/story-moonlit-archive"); // 스토리 보기 확인
+        await user.keyboard("{Escape}"); // 메뉴 닫기
+        await user.type(within(panel).getByRole("searchbox", { name: "대화방 검색" }), "노아"); // 등장인물로 검색
+        expect(cardTitles(panel)).toEqual(expect.arrayContaining(["비 그친 밤의 기록관", "달빛 기록관의 노아"])); // 스토리 검색 확인
     }); // 검증 종료
 
     it("진행 중인 대화가 없으면 첫 대화를 안내한다", () => // 빈 목록 검증

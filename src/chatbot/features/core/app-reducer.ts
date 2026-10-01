@@ -1,7 +1,7 @@
 import { removeMessageFromVersion, removeVersionTree } from "@chatbot/features/conversation/conversation-versioning"; // 버전 변경 함수
 import { CONVERSATION_PIN_LIMIT } from "@chatbot/features/conversation/conversation-list-model"; // 고정 한도
 import { isAdultVerified } from "@chatbot/features/adult/adult-access"; // 성인 인증 판정
-import type { AdultVerification, AppSettings, AppState, Character, CharacterReport, Conversation, ConversationVersion, Message, PublicationStatus, UserProfile } from "@chatbot/features/core/types"; // 상태 타입
+import type { AdultVerification, AppSettings, AppState, Character, CharacterReport, Conversation, ConversationVersion, Message, PublicationStatus, Story, UserProfile } from "@chatbot/features/core/types"; // 상태 타입
 import { trySpend, type TokenAction } from "@chatbot/lib/story/token-policy"; // 토큰 정책
 
 export type AppAction = // 앱 동작
@@ -17,6 +17,8 @@ export type AppAction = // 앱 동작
     | { type: "upsert-conversation"; conversation: Conversation } // 대화방 저장
     | { type: "upsert-character"; character: Character } // 캐릭터 저장
     | { type: "delete-character"; characterId: string } // 캐릭터 삭제
+    | { type: "upsert-story"; story: Story } // 스토리 저장
+    | { type: "delete-story"; storyId: string } // 스토리 삭제
     | { type: "toggle-bookmark"; characterId: string } // 보관 전환
     | { type: "toggle-character-like"; characterId: string } // 좋아요 전환
     | { type: "toggle-creator-follow"; creatorId: string } // 제작자 팔로우 전환
@@ -77,13 +79,35 @@ export function appReducer(state: AppState, action: AppAction): AppState // 앱 
         case "delete-character": // 캐릭터 삭제
         { // 삭제 범위 시작
             const deletedCharacter = state.characters.find((character) => character.id === action.characterId); // 삭제 캐릭터 조회
-            const conversationIds = state.conversations.filter((conversation) => conversation.characterId === action.characterId).map((conversation) => conversation.id); // 연결 대화 식별자
+            const remainingCharacterIds = new Set(state.characters.filter((character) => character.id !== action.characterId).map((character) => character.id)); // 남는 캐릭터
+            const trimmedStories = state.stories.map((story) => story.cast.some((member) => member.characterId === action.characterId) ? { ...story, cast: story.cast.filter((member) => member.characterId !== action.characterId) } : story); // 등장인물에서 제외
+            const removedStoryIds = new Set(trimmedStories.filter((story) => story.cast.length === 0).map((story) => story.id)); // 인물이 남지 않은 스토리
+            const keptConversations = state.conversations.flatMap((conversation) => // 남길 대화 계산
+            { // 계산 시작
+                if (conversation.mode !== "story") // 캐릭터 대화 판정
+                { // 조건 시작
+                    return conversation.characterId === action.characterId ? [] : [conversation]; // 연결 대화 제거
+                } // 조건 종료
+                if (conversation.storyId !== null && removedStoryIds.has(conversation.storyId)) // 삭제 스토리 대화 판정
+                { // 조건 시작
+                    return []; // 함께 제거
+                } // 조건 종료
+                if (conversation.characterId !== action.characterId) // 다른 첫 인물 판정
+                { // 조건 시작
+                    return [conversation]; // 그대로 유지
+                } // 조건 종료
+                const nextLead = conversation.storyCast.find((member) => member.characterId !== action.characterId && remainingCharacterIds.has(member.characterId)); // 다음 첫 인물
+                return nextLead === undefined ? [] : [{ ...conversation, characterId: nextLead.characterId }]; // 첫 인물 교체
+            }); // 계산 종료
+            const keptIds = new Set(keptConversations.map((conversation) => conversation.id)); // 남는 대화 식별자
+            const conversationIds = state.conversations.filter((conversation) => !keptIds.has(conversation.id)).map((conversation) => conversation.id); // 제거 대화 식별자
             const creatorStillExists = deletedCharacter !== undefined && state.characters.some((character) => character.id !== action.characterId && character.creatorId === deletedCharacter.creatorId); // 같은 제작자 잔존 확인
             return ( // 삭제 상태 반환
             { // 상태 시작
                 ...state, // 기존 상태 복사
                 characters: state.characters.filter((character) => character.id !== action.characterId), // 캐릭터 제거
-                conversations: state.conversations.filter((conversation) => conversation.characterId !== action.characterId), // 연결 대화 제거
+                stories: trimmedStories.filter((story) => !removedStoryIds.has(story.id)), // 빈 스토리 제거
+                conversations: keptConversations, // 연결 대화 제거
                 conversationVersions: state.conversationVersions.filter((version) => !conversationIds.includes(version.conversationId)), // 연결 버전 제거
                 messages: state.messages.filter((message) => !conversationIds.includes(message.conversationId)), // 연결 메시지 제거
                 bookmarkedCharacterIds: state.bookmarkedCharacterIds.filter((id) => id !== action.characterId), // 보관 상태 제거
@@ -93,6 +117,27 @@ export function appReducer(state: AppState, action: AppAction): AppState // 앱 
                 memories: state.memories.filter((memory) => memory.characterId !== action.characterId && !conversationIds.includes(memory.conversationId)), // 기억 상태 제거
                 pinnedConversationIds: state.pinnedConversationIds.filter((id) => !conversationIds.includes(id)), // 고정 상태 제거
                 selectedConversationId: state.selectedConversationId !== null && conversationIds.includes(state.selectedConversationId) ? null : state.selectedConversationId, // 선택 대화 정리
+            }); // 상태 종료
+        } // 삭제 범위 종료
+        case "upsert-story": // 스토리 저장
+        { // 저장 범위 시작
+            const exists = state.stories.some((story) => story.id === action.story.id); // 기존 스토리 확인
+            const stories = exists ? state.stories.map((story) => story.id === action.story.id ? structuredClone(action.story) : story) : [...state.stories, structuredClone(action.story)]; // 스토리 목록 생성
+            return { ...state, stories }; // 스토리 상태 반환
+        } // 저장 범위 종료
+        case "delete-story": // 스토리 삭제
+        { // 삭제 범위 시작
+            const conversationIds = state.conversations.filter((conversation) => conversation.mode === "story" && conversation.storyId === action.storyId).map((conversation) => conversation.id); // 연결 대화
+            return ( // 삭제 상태 반환
+            { // 상태 시작
+                ...state, // 기존 상태 복사
+                stories: state.stories.filter((story) => story.id !== action.storyId), // 스토리 제거
+                conversations: state.conversations.filter((conversation) => !conversationIds.includes(conversation.id)), // 연결 대화 제거
+                conversationVersions: state.conversationVersions.filter((version) => !conversationIds.includes(version.conversationId)), // 연결 버전 제거
+                messages: state.messages.filter((message) => !conversationIds.includes(message.conversationId)), // 연결 메시지 제거
+                memories: state.memories.filter((memory) => !conversationIds.includes(memory.conversationId)), // 연결 기억 제거
+                pinnedConversationIds: state.pinnedConversationIds.filter((id) => !conversationIds.includes(id)), // 고정 정리
+                selectedConversationId: state.selectedConversationId !== null && conversationIds.includes(state.selectedConversationId) ? null : state.selectedConversationId, // 선택 정리
             }); // 상태 종료
         } // 삭제 범위 종료
         case "toggle-bookmark": // 보관 전환

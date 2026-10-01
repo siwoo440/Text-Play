@@ -44,6 +44,36 @@
     justify-content: space-between; /* 양끝 정렬 */
 } /* 헤더 종료 */
 
+.aiBadge /* AI 표시 */
+{ /* 표시 시작 */
+    display: inline-grid; /* 중앙 배치 */
+    min-width: 28px; /* 최소 너비 */
+    height: 20px; /* 높이 */
+    padding: 0 6px; /* 내부 여백 */
+    border: 1px solid #8f72dc; /* 보라 테두리 */
+    border-radius: 999px; /* 알약 모양 */
+    background: #241b39; /* 어두운 보라 배경 */
+    color: #e4dbff; /* 밝은 보라 글자 */
+    font-size: .68rem; /* 작은 글자 */
+    font-weight: 800; /* 굵은 글자 */
+    letter-spacing: .04em; /* 자간 */
+    vertical-align: middle; /* 제목과 정렬 */
+    place-items: center; /* 가운데 정렬 */
+} /* 표시 종료 */
+
+.aiNotice /* AI 이용 안내 */
+{ /* 안내 시작 */
+    margin: 12px 0 0; /* 위 여백 */
+    padding: 8px 12px; /* 내부 여백 */
+    border: 1px solid #3a3150; /* 은은한 테두리 */
+    border-radius: 12px; /* 둥근 모서리 */
+    background: rgb(36 27 57 / 60%); /* 반투명 보라 배경 */
+    color: #cfc6e6; /* 밝은 회보라 글자 */
+    font-size: .8rem; /* 작은 글자 */
+    line-height: 1.5; /* 행간 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 안내 종료 */
+
 .story ol /* 메시지 목록 */
 { /* 목록 시작 */
     display: flex; /* 세로 배치 */
@@ -61,7 +91,7 @@
     box-shadow: 0 0 0 1px rgb(143 114 220 / 18%); /* 진행 강조 */
 } /* 스트리밍 종료 */
 
-.story li[data-streaming="true"] p::after /* 스트리밍 표시 */
+.story li[data-streaming="true"] [data-stream-tail]::after /* 스트리밍 표시(마지막 글자 뒤에만) */
 { /* 표시 시작 */
     display: inline-block; /* 커서 배치 */
     width: 0.45em; /* 커서 너비 */
@@ -145,6 +175,143 @@
     padding: 10px; /* 내부 여백 */
 } /* 선택 종료 */
 
+.storyControls /* 스토리 조작 */
+{ /* 조작 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 좁은 화면 줄바꿈 */
+    align-items: center; /* 세로 중앙 */
+    justify-content: space-between; /* 양끝 배치 */
+    gap: 8px 12px; /* 요소 간격 */
+    margin-bottom: 10px; /* 아래 간격 */
+} /* 조작 종료 */
+
+.storyControls label /* 말 걸 상대 */
+{ /* 상대 시작 */
+    display: flex; /* 가로 배치 */
+    align-items: center; /* 세로 중앙 */
+    gap: 8px; /* 요소 간격 */
+    color: #cfc6e6; /* 글자 */
+    font-size: .82rem; /* 글자 크기 */
+    font-weight: 700; /* 글자 굵기 */
+} /* 상대 종료 */
+
+.storyControls select /* 상대 선택 */
+{ /* 선택 시작 */
+    min-height: 38px; /* 조작 높이 */
+    padding: 0 10px; /* 내부 여백 */
+    border: 1px solid #3a3150; /* 테두리 */
+    border-radius: 10px; /* 모서리 */
+    background: #0c0f16; /* 배경 */
+    color: #f0ebff; /* 글자 */
+    font: inherit; /* 글꼴 상속 */
+} /* 선택 종료 */
+
+.continueButton /* 이야기 진행 */
+{ /* 진행 시작 */
+    min-height: 38px; /* 조작 높이 */
+    padding: 0 14px; /* 내부 여백 */
+    border: 1px solid #8f72dc; /* 보라 테두리 */
+    border-radius: 999px; /* 알약 모양 */
+    background: #2a1f45; /* 보라 배경 */
+    color: #f0ebff; /* 밝은 글자 */
+    font-size: .84rem; /* 글자 크기 */
+    font-weight: 800; /* 글자 굵기 */
+    cursor: pointer; /* 선택 커서 */
+} /* 진행 종료 */
+
+.continueButton:disabled /* 진행 비활성 */
+{ /* 비활성 시작 */
+    opacity: .5; /* 흐리게 */
+    cursor: not-allowed; /* 금지 커서 */
+} /* 비활성 종료 */
+
+.castPanel /* 등장인물 패널 */
+{ /* 패널 시작 */
+    margin-bottom: 18px; /* 아래 간격 */
+} /* 패널 종료 */
+
+.castPanel h2 /* 패널 제목 */
+{ /* 제목 시작 */
+    margin: 0 0 10px; /* 여백 */
+    font-size: 1rem; /* 제목 크기 */
+} /* 제목 종료 */
+
+.castPanel ul /* 등장인물 목록 */
+{ /* 목록 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 10px; /* 항목 간격 */
+    margin: 0; /* 기본 여백 제거 */
+    padding: 0; /* 기본 여백 제거 */
+    list-style: none; /* 표시 제거 */
+} /* 목록 종료 */
+
+.castPanel li /* 등장인물 항목 */
+{ /* 항목 시작 */
+    display: grid; /* 두 열 배치 */
+    grid-template-columns: 40px minmax(0, 1fr); /* 얼굴·글 */
+    gap: 10px; /* 열 간격 */
+    align-items: center; /* 세로 중앙 */
+} /* 항목 종료 */
+
+.castPanel li strong /* 인물 이름 */
+{ /* 이름 시작 */
+    display: block; /* 줄 분리 */
+    color: #f0ebff; /* 밝은 글자 */
+    font-size: .9rem; /* 글자 크기 */
+} /* 이름 종료 */
+
+.castPanel li span:not(.castAvatar) /* 인물 역할 */
+{ /* 역할 시작 */
+    display: block; /* 줄 분리 */
+    color: #a9a3bd; /* 보조 글자 */
+    font-size: .76rem; /* 작은 글자 */
+    line-height: 1.45; /* 행간 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 역할 종료 */
+
+.castAvatar /* 인물 얼굴 */
+{ /* 얼굴 시작 */
+    display: grid; /* 중앙 배치 */
+    width: 40px; /* 너비 */
+    height: 40px; /* 높이 */
+    overflow: hidden; /* 원형 자르기 */
+    border: 2px solid #8f72dc; /* 보라 테 */
+    border-radius: 50%; /* 원형 */
+    background: #241b39; /* 배경 */
+    color: #e4dbff; /* 글자 */
+    font-weight: 800; /* 글자 굵기 */
+    place-items: center; /* 가운데 정렬 */
+} /* 얼굴 종료 */
+
+.castAvatar img /* 얼굴 이미지 */
+{ /* 이미지 시작 */
+    width: 100%; /* 너비 채움 */
+    height: 100%; /* 높이 채움 */
+    object-fit: cover; /* 비율 유지 */
+    object-position: center 20%; /* 얼굴 쪽 */
+} /* 이미지 종료 */
+
+.userRole /* 내 역할 */
+{ /* 역할 시작 */
+    margin: 12px 0 0; /* 위 여백 */
+    padding: 10px 12px; /* 내부 여백 */
+    border: 1px dashed #3a3150; /* 점선 테두리 */
+    border-radius: 12px; /* 모서리 */
+    color: #cfc6e6; /* 글자 */
+    font-size: .82rem; /* 글자 크기 */
+    line-height: 1.5; /* 행간 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 역할 종료 */
+
+.userRole span /* 내 역할 표제 */
+{ /* 표제 시작 */
+    display: block; /* 줄 분리 */
+    margin-bottom: 2px; /* 아래 간격 */
+    color: #bca7ff; /* 보라 글자 */
+    font-size: .72rem; /* 작은 글자 */
+    font-weight: 800; /* 굵은 글자 */
+} /* 표제 종료 */
+
 .chat[data-layout="M1"], /* 모바일 균형 */
 .chat[data-layout="M2"], /* 모바일 장면 */
 .chat[data-layout="M3"] /* 모바일 채팅 */
@@ -209,7 +376,7 @@
 
 @media (prefers-reduced-motion: reduce) /* 동작 축소 환경 */
 { /* 축소 시작 */
-    .story li[data-streaming="true"] p::after /* 스트리밍 표시 */
+    .story li[data-streaming="true"] [data-stream-tail]::after /* 스트리밍 표시 */
     { /* 표시 시작 */
         animation: none; /* 동작 제거 */
     } /* 표시 종료 */

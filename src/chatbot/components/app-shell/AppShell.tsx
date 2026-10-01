@@ -8,6 +8,8 @@ import { ConversationPanel } from "@chatbot/components/app-shell/ConversationPan
 import { MobileBottomNavigation } from "@chatbot/components/app-shell/MobileBottomNavigation"; // 모바일 메뉴
 import { UserPanel } from "@chatbot/components/app-shell/UserPanel"; // 사용자 패널
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 저장소
+import { formatUsageDuration } from "@chatbot/features/safety/usage-time"; // 이용 시간 표시
+import { useUsageReminder } from "@chatbot/features/safety/useUsageReminder"; // 이용 시간 알림
 import styles from "@chatbot/components/app-shell/AppShell.module.css"; // 앱 셸 스타일
 
 export function AppShell({ children }: { children: ReactNode }) // 앱 셸
@@ -17,6 +19,7 @@ export function AppShell({ children }: { children: ReactNode }) // 앱 셸
     const leftButtonRef = useRef<HTMLButtonElement>(null); // 왼쪽 버튼 참조
     const rightButtonRef = useRef<HTMLButtonElement>(null); // 오른쪽 버튼 참조
     const lastButton = useRef<"left" | "right">("left"); // 최근 버튼
+    const usageReminder = useUsageReminder(); // 이용 시간 알림
     useEffect(() => // 화면 크기 효과
     { // 효과 시작
         const update = () => setMobile(window.innerWidth <= 760); // 크기 갱신
@@ -61,8 +64,14 @@ export function AppShell({ children }: { children: ReactNode }) // 앱 셸
     return ( // 셸 반환
         <div className={styles.shell} data-left-open={state.settings.leftPanelOpen} data-right-open={state.settings.rightPanelOpen} data-mobile={mobile}> {/* 셸 영역 */}
             <AppHeader leftOpen={state.settings.leftPanelOpen} rightOpen={state.settings.rightPanelOpen} onToggleLeft={toggleLeft} onToggleRight={toggleRight} onNavigate={closePanelsForNavigation} leftButtonRef={leftButtonRef} rightButtonRef={rightButtonRef} /> {/* 앱 헤더 */}
-            {storageError === null && storageNotice === null ? null : ( // 저장소 메시지 판정
-                <div className={styles.storageMessages}> {/* 저장소 메시지 묶음 */}
+            {storageError === null && storageNotice === null && !usageReminder.due ? null : ( // 상단 메시지 판정
+                <div className={styles.storageMessages}> {/* 상단 메시지 묶음 */}
+                    {usageReminder.due ? ( // 이용 시간 알림 판정
+                        <div className={styles.storageNotice} data-tone="rest" role="status"> {/* 이용 시간 알림 */}
+                            <p>{formatUsageDuration(usageReminder.activeMs)} 동안 이용했어요. 잠깐 쉬어 가도 대화는 그대로 남아 있어요.</p> {/* 알림 문구 */}
+                            <button type="button" onClick={usageReminder.acknowledge}>계속 이용하기</button> {/* 알림 확인 */}
+                        </div> // 이용 시간 알림 종료
+                    ) : null} {/* 이용 시간 알림 판정 종료 */}
                     {storageError === null ? null : <p className={styles.storageError} role="alert">{storageError}</p>} {/* 저장 오류 */}
                     {storageNotice === null ? null : ( // 저장소 안내 판정
                         <div className={styles.storageNotice} data-tone={storageNotice.tone} role="status"> {/* 저장소 안내 */}

@@ -26,7 +26,7 @@ export function createConversationHref(characterId: string, conversationId: stri
 
 export function resolveConversationRoute(state: AppState, characterId: string, conversationId?: string, versionId?: string): ConversationRouteSelection // 대화 주소 선택
 { // 함수 시작
-    const characterConversations = state.conversations.filter((conversation) => conversation.characterId === characterId && conversation.archivedAt === null); // 캐릭터 대화 목록
+    const characterConversations = state.conversations.filter((conversation) => conversation.mode === "character" && conversation.characterId === characterId && conversation.archivedAt === null); // 캐릭터 대화 목록(스토리 대화 제외)
     const requestedConversation = characterConversations.find((conversation) => conversation.id === conversationId); // 요청 대화 조회
     const fallbackConversation = [...characterConversations].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.id.localeCompare(right.id))[0]; // 최근 대화 조회
     const conversation = requestedConversation ?? fallbackConversation; // 안전 대화 선택
@@ -105,7 +105,7 @@ export function getRelatedCharacters(character: Character, allCharacters: Charac
 
 export function getLatestActiveConversation(conversations: Conversation[], characterId: string): Conversation | null // 최근 활성 대화 조회
 { // 함수 시작
-    const matches = conversations.filter((conversation) => conversation.characterId === characterId && conversation.archivedAt === null); // 활성 대화 목록
+    const matches = conversations.filter((conversation) => conversation.mode === "character" && conversation.characterId === characterId && conversation.archivedAt === null); // 활성 대화 목록(스토리 대화 제외)
     return matches.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0] ?? null; // 최신 대화 반환
 } // 함수 종료
 
@@ -114,9 +114,9 @@ export function createCharacterReport(characterId: string, reason: ReportReason,
     return { id: `report-${characterId}-${now}`, characterId, reason, createdAt: now }; // 신고 정보 반환
 } // 함수 종료
 
-function createUniqueConversationId(state: AppState, characterId: string, now: string): string // 고유 대화 식별자 생성
+export function createUniqueConversationId(state: AppState, sourceId: string, now: string): string // 고유 대화 식별자 생성(캐릭터 또는 스토리 기준)
 { // 함수 시작
-    const baseId = `conversation-${characterId}-${now}`; // 기본 식별자 생성
+    const baseId = `conversation-${sourceId}-${now}`; // 기본 식별자 생성
     const usedIds = new Set(state.conversations.map((conversation) => conversation.id)); // 사용 식별자 수집
     if (!usedIds.has(baseId)) // 기본 식별자 확인
     { // 조건 시작
@@ -158,6 +158,9 @@ export function createConversationFromPreset(state: AppState, characterId: strin
         archivedAt: null, // 보관 시각
         createdAt: now, // 생성 시각
         updatedAt: now, // 수정 시각
+        mode: "character", // 캐릭터 모드
+        storyId: null, // 연결 스토리 없음
+        storyCast: [], // 등장인물 묶음 없음
     }; // 대화 종료
     const version: ConversationVersion = { id: versionId, conversationId, parentVersionId: null, forkRootVersionId: null, forkedFromMessageId: null, ordinal: 1, relationshipLevel: preset.relationshipLevel, relationshipStage: preset.relationshipStage, emotion: preset.emotion, currentScene: sceneImage, lastMessage: preset.greeting, createdAt: now, updatedAt: now }; // 최초 버전 생성
     const message: Message = { id: `${conversationId}-message-1`, conversationId, versionId, sourceMessageId: null, role: "assistant", content: preset.greeting, emotion: preset.emotion, sceneEvent: null, createdAt: now }; // 첫 메시지 생성
@@ -167,7 +170,7 @@ export function createConversationFromPreset(state: AppState, characterId: strin
 
 export function ensureConversationForCharacter(state: AppState, characterId: string, now = new Date().toISOString()): ConversationStartResult // 대화 준비
 { // 함수 시작
-    const selected = state.selectedConversationId === null ? undefined : state.conversations.find((conversation) => conversation.id === state.selectedConversationId && conversation.characterId === characterId); // 선택 대화 조회
+    const selected = state.selectedConversationId === null ? undefined : state.conversations.find((conversation) => conversation.id === state.selectedConversationId && conversation.mode === "character" && conversation.characterId === characterId && conversation.archivedAt === null); // 선택 대화 조회(스토리·보관 대화 제외)
     const existing = selected ?? getLatestActiveConversation(state.conversations, characterId); // 이어갈 대화 선택
     if (existing !== null && existing !== undefined) // 기존 대화 확인
     { // 조건 시작

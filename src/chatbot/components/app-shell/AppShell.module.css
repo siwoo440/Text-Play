@@ -89,6 +89,13 @@
     color: #78350f; /* 경고 글자 */
 } /* 경고 종료 */
 
+.storageNotice[data-tone="rest"] /* 쉬어 가기 안내 */
+{ /* 쉬어 가기 시작 */
+    border-color: #a7f3d0; /* 차분한 초록 테두리 */
+    background: #ecfdf5; /* 차분한 초록 배경 */
+    color: #065f46; /* 진한 초록 글자 */
+} /* 쉬어 가기 종료 */
+
 .storageNotice p /* 안내 문구 */
 { /* 문구 시작 */
     flex: 1 1 240px; /* 남은 너비 */
@@ -705,6 +712,23 @@
     flex: none; /* 크기 고정 */
     color: #6d28d9; /* 고정 색 */
 } /* 고정 아이콘 종료 */
+
+.grid :global(.conversation-card-mode) /* 스토리 대화 표시 */
+{ /* 표시 시작 */
+    flex: none; /* 크기 유지 */
+    padding: 1px 6px; /* 안쪽 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    background: #fae8ff; /* 연한 자홍 배경 */
+    color: #86198f; /* 진한 자홍 글자 */
+    font-size: .64rem; /* 글자 크기 */
+    font-weight: 800; /* 글자 굵기 */
+    line-height: 1.5; /* 행간 */
+} /* 표시 종료 */
+
+.grid :global(.conversation-card[data-mode="story"] .conversation-card-avatar) /* 스토리 표지 */
+{ /* 표지 시작 */
+    border-radius: 10px; /* 둥근 사각형(인물 얼굴과 구분) */
+} /* 표지 종료 */
 
 .grid :global(.conversation-card-title) /* 대화 카드 제목 */
 { /* 카드 제목 시작 */

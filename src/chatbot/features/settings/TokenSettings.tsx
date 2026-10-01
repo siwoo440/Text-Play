@@ -2,7 +2,7 @@
 
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 상태
 import { SettingsPageHeader } from "@chatbot/features/settings/SettingsShell"; // 페이지 머리말
-import { tokenActionLabels, tokenCosts, type TokenAction } from "@chatbot/lib/story/token-policy"; // 토큰 비용표
+import { getDailyUsage, tokenActionLabels, tokenCosts, type TokenAction } from "@chatbot/lib/story/token-policy"; // 토큰 비용표
 import styles from "@chatbot/features/settings/SettingsScreen.module.css"; // 설정 스타일
 
 const costOrder: TokenAction[] = ["chat", "advanced-chat", "auto-image", "manual-image", "regenerate-image"]; // 비용 표시 순서
@@ -16,12 +16,13 @@ export function TokenSettings() // 토큰 이용 내역 화면
 { // 함수 시작
     const { state } = useAppStore(); // 앱 상태 조회
     const wallet = state.wallet; // 토큰 지갑
+    const daily = getDailyUsage(wallet, new Date()); // 오늘 사용량(날짜가 바뀌면 0)
     return ( // 화면 반환
         <> {/* 토큰 화면 */}
             <SettingsPageHeader kicker="ACCOUNT · TOKENS" title="토큰 이용 내역" description="대화와 장면 이미지에 쓰이는 토큰의 잔액과 항목별 비용을 확인합니다." /> {/* 페이지 머리말 */}
             <section className={styles.statGrid} aria-label="토큰 요약"> {/* 토큰 요약 */}
                 <div className={styles.stat}><span>보유 토큰</span><strong>{wallet.balance.toLocaleString()}</strong><small>마지막 변경 {formatDateTime(wallet.updatedAt)}</small></div> {/* 잔액 */}
-                <div className={styles.stat}><span>오늘 사용</span><strong>{wallet.dailyChatUsed.toLocaleString()}</strong><small>대화 토큰 · 이미지 {wallet.dailyImageUsed}회</small></div> {/* 오늘 사용량 */}
+                <div className={styles.stat}><span>오늘 사용</span><strong>{daily.chat.toLocaleString()}</strong><small>대화 토큰 · 이미지 {daily.image}회</small></div> {/* 오늘 사용량 */}
                 <div className={styles.stat}><span>누적 사용</span><strong>{wallet.totalUsed.toLocaleString()}</strong><small>지금까지 사용한 토큰</small></div> {/* 누적 사용량 */}
             </section> {/* 토큰 요약 종료 */}
             <section className={styles.card} aria-labelledby="token-cost-title"> {/* 비용표 */}
@@ -32,7 +33,7 @@ export function TokenSettings() // 토큰 이용 내역 화면
             </section> {/* 비용표 종료 */}
             <section className={styles.card} aria-labelledby="token-history-title"> {/* 사용 내역 */}
                 <h2 id="token-history-title">사용 내역</h2> {/* 사용 내역 제목 */}
-                <p className={styles.note}>토큰을 어디에 썼는지 남기는 사용 내역과 날짜별 사용량 초기화는 준비 중입니다. 지금은 잔액과 합계만 확인할 수 있습니다.</p> {/* 준비 안내 */}
+                <p className={styles.note}>오늘 사용량은 한국 시간 기준으로 날짜가 바뀌면 0부터 다시 셉니다. 토큰을 어디에 썼는지 남기는 사용 내역은 준비 중이라, 지금은 잔액과 합계만 확인할 수 있습니다.</p> {/* 준비 안내 */}
             </section> {/* 사용 내역 종료 */}
             <section className={styles.card} aria-labelledby="token-charge-title"> {/* 충전 */}
                 <h2 id="token-charge-title">토큰 충전</h2> {/* 충전 제목 */}

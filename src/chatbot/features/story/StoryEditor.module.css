@@ -1,0 +1,357 @@
+.picker /* 등장인물 고르기 */
+{ /* 고르기 시작 */
+    position: relative; /* 인원 표시 기준 */
+    display: grid; /* 세로 배치 */
+    gap: 10px; /* 간격 */
+    min-width: 0; /* 줄임 허용 */
+    margin: 14px 0 0; /* 위 여백 */
+    padding: 0; /* 기본 여백 제거 */
+    border: 0; /* 기본 테두리 제거 */
+} /* 고르기 종료 */
+
+.picker legend /* 고르기 제목 */
+{ /* 제목 시작 */
+    margin-bottom: 10px; /* 아래 여백 */
+    color: #dfe0e8; /* 글자 색 */
+    font-weight: 700; /* 굵기 */
+} /* 제목 종료 */
+
+.pickerCount /* 인원 표시 */
+{ /* 표시 시작 */
+    position: absolute; /* 제목 줄 오른쪽 */
+    top: 0; /* 위쪽 */
+    right: 0; /* 오른쪽 */
+    padding: 2px 10px; /* 안쪽 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    background: #27233a; /* 배경 */
+    color: #e9b8ff; /* 글자 색 */
+    font-size: 12px; /* 글자 크기 */
+    font-weight: 800; /* 굵기 */
+} /* 표시 종료 */
+
+.pickerCount[data-full="true"] /* 가득 참 */
+{ /* 가득 시작 */
+    background: #a21caf; /* 진한 자홍 */
+    color: #ffffff; /* 흰 글자 */
+} /* 가득 종료 */
+
+.picker .pickerSearch /* 후보 검색 */
+{ /* 검색 시작 */
+    min-height: 42px; /* 높이 */
+} /* 검색 종료 */
+
+.pickerGrid /* 후보 목록 */
+{ /* 목록 시작 */
+    display: grid; /* 격자 */
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* 자동 열 */
+    gap: 8px; /* 간격 */
+    max-height: 300px; /* 많은 후보는 목록 안에서 스크롤 */
+    overflow-y: auto; /* 세로 스크롤 */
+    padding: 4px; /* 초점 테두리 자리 */
+    margin: -4px; /* 바깥 정렬 유지 */
+    overscroll-behavior: contain; /* 바깥 스크롤 전파 방지 */
+} /* 목록 종료 */
+
+.pickerGrid label /* 후보 항목 */
+{ /* 항목 시작 */
+    position: relative; /* 선택 상자 기준 */
+    display: flex; /* 가로 배치 */
+    align-items: center; /* 세로 중앙 */
+    gap: 10px; /* 간격 */
+    min-height: 52px; /* 터치 높이 */
+    padding: 7px 10px 7px 7px; /* 안쪽 여백 */
+    border: 1.5px solid #343748; /* 테두리 */
+    border-radius: 14px; /* 모서리 */
+    background: #0f1118; /* 배경 */
+    color: #dfe0e8; /* 글자 색 */
+    font-size: 13px; /* 글자 크기 */
+    font-weight: 700; /* 굵기 */
+    line-height: 1.35; /* 행간 */
+    cursor: pointer; /* 선택 커서 */
+} /* 항목 종료 */
+
+.pickerGrid label:has(input:disabled) /* 고를 수 없는 후보 */
+{ /* 막힘 시작 */
+    opacity: .45; /* 흐리게 */
+    cursor: not-allowed; /* 막힘 커서 */
+} /* 막힘 종료 */
+
+.pickerGrid label[data-selected="true"] /* 고른 후보 */
+{ /* 선택 시작 */
+    border-color: #d062ff; /* 강조 테두리 */
+    background: rgb(208 98 255 / 12%); /* 연한 강조 배경 */
+} /* 선택 종료 */
+
+.pickerGrid label:focus-within /* 후보 초점 */
+{ /* 초점 시작 */
+    outline: 3px solid rgb(208 98 255 / 55%); /* 초점 테두리 */
+    outline-offset: 2px; /* 초점 간격 */
+} /* 초점 종료 */
+
+.pickerGrid input /* 선택 상자 */
+{ /* 상자 시작 */
+    position: absolute; /* 화면 배치 제외 */
+    width: 1px !important; /* 최소 너비(공통 입력 크기 덮어쓰기) */
+    min-height: 0 !important; /* 최소 높이 해제 */
+    height: 1px; /* 최소 높이 */
+    padding: 0 !important; /* 여백 제거 */
+    opacity: 0; /* 숨김 */
+} /* 상자 종료 */
+
+.pickerGrid img /* 후보 얼굴 */
+{ /* 얼굴 시작 */
+    flex: none; /* 크기 유지 */
+    width: 38px; /* 너비 */
+    height: 38px; /* 높이 */
+    border-radius: 50%; /* 원형 */
+    object-fit: cover; /* 채움 */
+    object-position: center 20%; /* 얼굴 위치 */
+} /* 얼굴 종료 */
+
+.pickerGrid small /* 후보 등급 */
+{ /* 등급 시작 */
+    color: #fda4af; /* 경고 색 */
+    font-weight: 700; /* 굵기 */
+} /* 등급 종료 */
+
+.castList /* 고른 인물 목록 */
+{ /* 목록 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 10px; /* 간격 */
+    margin: 4px 0 0; /* 위 여백 */
+    padding: 0; /* 기본 여백 제거 */
+    list-style: none; /* 번호 제거 */
+} /* 목록 종료 */
+
+.castList li /* 고른 인물 */
+{ /* 인물 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 10px; /* 간격 */
+    padding: 12px; /* 안쪽 여백 */
+    border: 1px solid #343748; /* 테두리 */
+    border-radius: 16px; /* 모서리 */
+    background: #10121a; /* 배경 */
+} /* 인물 종료 */
+
+.castList li:first-child /* 대표 인물 */
+{ /* 대표 시작 */
+    border-color: rgb(208 98 255 / 60%); /* 강조 테두리 */
+} /* 대표 종료 */
+
+.castHead /* 인물 머리 */
+{ /* 머리 시작 */
+    display: flex; /* 가로 배치 */
+    align-items: center; /* 세로 중앙 */
+    gap: 10px; /* 간격 */
+    min-width: 0; /* 줄임 허용 */
+} /* 머리 종료 */
+
+.castFace /* 인물 얼굴 */
+{ /* 얼굴 시작 */
+    display: grid; /* 글자 대체 중앙 */
+    flex: none; /* 크기 유지 */
+    place-items: center; /* 중앙 */
+    width: 36px; /* 너비 */
+    height: 36px; /* 높이 */
+    border-radius: 50%; /* 원형 */
+    background: #27233a; /* 대체 배경 */
+    color: #e9b8ff; /* 대체 글자 */
+    object-fit: cover; /* 채움 */
+    object-position: center 20%; /* 얼굴 위치 */
+} /* 얼굴 종료 */
+
+.castTitle /* 이름·표시 */
+{ /* 이름 시작 */
+    display: flex; /* 가로 배치 */
+    flex: 1; /* 남은 공간 */
+    flex-wrap: wrap; /* 줄바꿈 허용 */
+    align-items: center; /* 세로 중앙 */
+    gap: 6px; /* 간격 */
+    min-width: 0; /* 줄임 허용 */
+    color: #f7f7fb; /* 글자 색 */
+    font-size: 14px; /* 글자 크기 */
+} /* 이름 종료 */
+
+.leadBadge, /* 대표 표시 */
+.missing /* 삭제 표시 */
+{ /* 표시 시작 */
+    padding: 1px 8px; /* 안쪽 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    background: #a21caf; /* 자홍 배경 */
+    color: #ffffff; /* 흰 글자 */
+    font-size: 11px; /* 글자 크기 */
+    font-weight: 800; /* 굵기 */
+} /* 표시 종료 */
+
+.missing /* 삭제 표시 */
+{ /* 삭제 시작 */
+    background: #7f1d1d; /* 붉은 배경 */
+} /* 삭제 종료 */
+
+.castButtons /* 인물 동작 */
+{ /* 동작 시작 */
+    display: flex; /* 가로 배치 */
+    flex: none; /* 크기 유지 */
+    gap: 6px; /* 간격 */
+} /* 동작 종료 */
+
+.castButtons button /* 인물 버튼 */
+{ /* 버튼 시작 */
+    min-width: 40px; /* 최소 너비 */
+    min-height: 36px; /* 터치 높이 */
+    padding: 0 10px; /* 안쪽 여백 */
+    border: 1px solid #44475b; /* 테두리 */
+    border-radius: 10px; /* 모서리 */
+    background: transparent; /* 투명 */
+    color: #f7f7fb; /* 글자 색 */
+    font-weight: 700; /* 굵기 */
+    cursor: pointer; /* 클릭 커서 */
+} /* 버튼 종료 */
+
+.castButtons button:disabled /* 쓸 수 없는 버튼 */
+{ /* 막힘 시작 */
+    opacity: .35; /* 흐리게 */
+    cursor: default; /* 기본 커서 */
+} /* 막힘 종료 */
+
+.castFields /* 인물 입력 */
+{ /* 입력 시작 */
+    display: grid; /* 격자 */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); /* 이름·역할 */
+    gap: 8px; /* 간격 */
+} /* 입력 종료 */
+
+.castFields label /* 인물 입력 묶음 */
+{ /* 묶음 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 5px; /* 간격 */
+    color: #a9adbd; /* 글자 색 */
+    font-size: 12px; /* 글자 크기 */
+    font-weight: 700; /* 굵기 */
+} /* 묶음 종료 */
+
+.castFields .wide /* 첫 대사 */
+{ /* 넓은 칸 시작 */
+    grid-column: 1 / -1; /* 전체 너비 */
+} /* 넓은 칸 종료 */
+
+.covers /* 표지 목록 */
+{ /* 표지 시작 */
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* 세 열 */
+} /* 표지 종료 */
+
+.covers img /* 표지 썸네일 */
+{ /* 썸네일 시작 */
+    aspect-ratio: 16 / 10 !important; /* 가로 비율 */
+} /* 썸네일 종료 */
+
+.viewLink /* 스토리 보기 */
+{ /* 링크 시작 */
+    justify-self: start; /* 왼쪽 */
+    min-height: 44px; /* 터치 높이 */
+    padding: 11px 18px; /* 안쪽 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    background: #a21caf; /* 자홍 배경 */
+    color: #ffffff; /* 흰 글자 */
+    font-weight: 800; /* 굵기 */
+    text-decoration: none; /* 밑줄 제거 */
+} /* 링크 종료 */
+
+.preview > img /* 미리보기 표지 */
+{ /* 표지 시작 */
+    aspect-ratio: 16 / 10; /* 가로 비율 */
+} /* 표지 종료 */
+
+.previewCast /* 미리보기 인물 */
+{ /* 인물 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 */
+    gap: 8px; /* 간격 */
+    margin-top: 14px; /* 위 여백 */
+} /* 인물 종료 */
+
+.previewCast > span /* 인물 칩 */
+{ /* 칩 시작 */
+    display: inline-flex; /* 가로 배치 */
+    align-items: center; /* 세로 중앙 */
+    gap: 6px; /* 간격 */
+    padding: 3px 10px 3px 3px; /* 안쪽 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    background: #27233a; /* 배경 */
+    color: #e9b8ff; /* 글자 색 */
+    font-size: 13px; /* 글자 크기 */
+    font-weight: 700; /* 굵기 */
+} /* 칩 종료 */
+
+.previewCast img /* 인물 얼굴 */
+{ /* 얼굴 시작 */
+    width: 26px; /* 너비 */
+    height: 26px; /* 높이 */
+    border-radius: 50%; /* 원형 */
+    object-fit: cover; /* 채움 */
+    object-position: center 20%; /* 얼굴 위치 */
+} /* 얼굴 종료 */
+
+.previewCast .previewEmpty /* 빈 인물 */
+{ /* 빈 시작 */
+    padding: 4px 10px; /* 안쪽 여백 */
+    background: transparent; /* 투명 */
+    color: #8f93a6; /* 흐린 글자 */
+} /* 빈 종료 */
+
+.previewScene /* 미리보기 시작 장면 */
+{ /* 장면 시작 */
+    margin-top: 18px; /* 위 여백 */
+    padding: 16px; /* 안쪽 여백 */
+    border-left: 3px solid #d062ff; /* 강조선 */
+    border-radius: 0 12px 12px 0; /* 모서리 */
+    background: #10121a; /* 배경 */
+} /* 장면 종료 */
+
+.previewBody .previewNarration /* 내레이션 */
+{ /* 내레이션 시작 */
+    margin: 0; /* 여백 제거 */
+    color: #c9c3dc; /* 글자 색 */
+    font-style: italic; /* 기울임 */
+} /* 내레이션 종료 */
+
+.previewScene ul /* 첫 대사 목록 */
+{ /* 목록 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 6px; /* 간격 */
+    margin: 12px 0 0; /* 위 여백 */
+    padding: 0; /* 여백 제거 */
+    list-style: none; /* 점 제거 */
+} /* 목록 종료 */
+
+.previewScene li /* 첫 대사 */
+{ /* 대사 시작 */
+    display: flex; /* 가로 배치 */
+    gap: 8px; /* 간격 */
+    color: #e7e8ef; /* 글자 색 */
+    line-height: 1.55; /* 행간 */
+} /* 대사 종료 */
+
+.previewBody .previewScene li span /* 첫 대사 문장 */
+{ /* 문장 시작 */
+    color: #e7e8ef; /* 밝은 글자 */
+} /* 문장 종료 */
+
+.previewScene strong /* 대사 이름 */
+{ /* 이름 시작 */
+    flex: none; /* 크기 유지 */
+    color: #e9b8ff; /* 강조 글자 */
+} /* 이름 종료 */
+
+.previewRole /* 내 역할 */
+{ /* 역할 시작 */
+    margin: 14px 0 0; /* 위 여백 */
+    font-size: 14px; /* 글자 크기 */
+} /* 역할 종료 */
+
+@media (max-width: 760px) /* 모바일 화면 */
+{ /* 모바일 시작 */
+    .pickerGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } /* 두 열 */
+    .castFields { grid-template-columns: 1fr; } /* 한 열 */
+    .covers { grid-template-columns: repeat(3, minmax(0, 1fr)); } /* 세 열 유지 */
+} /* 모바일 종료 */

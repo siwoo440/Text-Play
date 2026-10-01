@@ -117,6 +117,17 @@ describe("데스크톱 앱 틀", () => // 데스크톱 틀 묶음
         expect(screen.getByRole("button", { name: "이전 메뉴: AI 모델" })).toBeEnabled(); // 이전 활성 확인
     }); // 테스트 종료
 
+    it("ChatBot 스토리 모드 화면을 사이드바 틀 안에서 연다", async () => // 스토리 모드 검증
+    { // 테스트 시작
+        window.history.replaceState(null, "", "/#/stories"); // 스토리 홈 주소
+        render(<DesktopApp createRepository={() => new MemoryTextPlaySaveRepository()} />); // 데스크톱 앱 렌더
+        expect(await screen.findByRole("heading", { level: 1, name: /하나의 이야기/u })).toBeInTheDocument(); // 스토리 홈 확인
+        expect(screen.getByRole("navigation", { name: "주요 메뉴" })).toBeInTheDocument(); // 사이드바 틀 확인
+        window.history.replaceState(null, "", "/#/stories/new"); // 새 스토리 주소
+        window.dispatchEvent(new HashChangeEvent("hashchange")); // 주소 변경 알림
+        expect(await screen.findByRole("heading", { level: 1, name: "새 스토리 만들기" })).toBeInTheDocument(); // 새 스토리 확인
+    }); // 테스트 종료
+
     it("프로그램 메뉴의 AI 모델로 모델 화면을 연다", async () => // AI 모델 메뉴 검증
     { // 테스트 시작
         const user = userEvent.setup(); // 사용자 동작 준비

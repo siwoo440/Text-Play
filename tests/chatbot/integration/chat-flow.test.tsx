@@ -654,6 +654,13 @@ describe("채팅 흐름", () => // 채팅 묶음
         expect(screen.getByText("오늘 기록할 이야기가 많아.")).toBeVisible(); // 메시지 유지 확인
     }); // 검증 종료
 
+    it("채팅 화면에 AI가 만든 허구의 대화라는 안내를 항상 보여 준다", () => // AI 고지 검증
+    { // 검증 시작
+        renderWithApp(<ChatScreen characterId="rian" llm={new MockLLMAdapter({ delayMs: 0 })} images={new MockImageAdapter()} />); // 채팅 화면 렌더
+        expect(screen.getByRole("note", { name: "AI 이용 안내" })).toHaveTextContent("AI가 만든 허구의 대화"); // 안내 문구 확인
+        expect(screen.getByText("AI", { selector: "[data-ai-badge]" })).toBeInTheDocument(); // AI 표시 확인
+    }); // 검증 종료
+
     it("채팅 중 왼쪽 창에서 바꾼 이름·고정·정렬은 메시지를 보내도 유지된다", async () => // 외부 변경 유지 검증
     { // 검증 시작
         const user = userEvent.setup(); // 사용자 도구 생성

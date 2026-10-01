@@ -24,6 +24,90 @@
     overflow-wrap: anywhere; /* 긴 문장 줄바꿈 */
 } /* 문장 종료 */
 
+.item:has(.storyBody) /* 스토리 응답 */
+{ /* 스토리 응답 시작 */
+    max-width: 94%; /* 여러 인물 대사 공간 */
+} /* 스토리 응답 종료 */
+
+.storyBody /* 스토리 본문 */
+{ /* 본문 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 10px; /* 조각 간격 */
+    margin-top: 8px; /* 위 간격 */
+} /* 본문 종료 */
+
+.storyBody .narration /* 내레이션 */
+{ /* 내레이션 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    padding: 8px 12px; /* 내부 여백 */
+    border-left: 3px solid #8f72dc; /* 보라 띠 */
+    border-radius: 0 10px 10px 0; /* 오른쪽 모서리 */
+    background: rgb(255 255 255 / 4%); /* 은은한 배경 */
+    color: #cfd4e6; /* 차분한 글자 */
+    font-style: italic; /* 기울임 */
+} /* 내레이션 종료 */
+
+.speakerLine /* 인물 대사 */
+{ /* 대사 시작 */
+    display: grid; /* 두 열 배치 */
+    grid-template-columns: 36px minmax(0, 1fr); /* 얼굴·대사 */
+    gap: 10px; /* 열 간격 */
+    align-items: start; /* 위 정렬 */
+} /* 대사 종료 */
+
+.speakerLine strong /* 인물 이름 */
+{ /* 이름 시작 */
+    display: block; /* 줄 분리 */
+    color: #d7c9ff; /* 보라 글자 */
+    font-size: .8rem; /* 작은 글자 */
+} /* 이름 종료 */
+
+.speakerLine p /* 인물 대사 문장 */
+{ /* 문장 시작 */
+    margin: 2px 0 0; /* 여백 */
+} /* 문장 종료 */
+
+.speakerAvatar /* 인물 얼굴 */
+{ /* 얼굴 시작 */
+    display: grid; /* 중앙 배치 */
+    width: 36px; /* 너비 */
+    height: 36px; /* 높이 */
+    overflow: hidden; /* 원형 자르기 */
+    border: 2px solid rgb(188 167 255 / 60%); /* 보라 테 */
+    border-radius: 50%; /* 원형 */
+    background: #241b39; /* 배경 */
+    color: #e4dbff; /* 글자 */
+    font-size: .8rem; /* 글자 크기 */
+    font-weight: 800; /* 글자 굵기 */
+    place-items: center; /* 가운데 정렬 */
+} /* 얼굴 종료 */
+
+.speakerAvatar img /* 얼굴 이미지 */
+{ /* 이미지 시작 */
+    width: 100%; /* 너비 채움 */
+    height: 100%; /* 높이 채움 */
+    object-fit: cover; /* 비율 유지 */
+    object-position: center 20%; /* 얼굴 쪽 */
+} /* 이미지 종료 */
+
+.continueChip /* 이야기 진행 표시 */
+{ /* 진행 시작 */
+    display: inline-flex; /* 가로 배치 */
+    gap: 6px; /* 요소 간격 */
+    align-items: center; /* 세로 중앙 */
+    color: #f0ebff; /* 밝은 글자 */
+    font-weight: 800; /* 굵은 글자 */
+} /* 진행 종료 */
+
+.mention /* 지목 표시 */
+{ /* 지목 시작 */
+    display: inline-block; /* 줄 안 배치 */
+    padding: 0 8px; /* 내부 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    background: rgb(255 255 255 / 20%); /* 밝은 배경 */
+    font-weight: 800; /* 굵은 글자 */
+} /* 지목 종료 */
+
 .actions /* 메시지 동작 */
 { /* 동작 시작 */
     display: flex; /* 가로 배치 */

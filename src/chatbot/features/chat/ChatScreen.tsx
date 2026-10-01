@@ -1,6 +1,7 @@
 "use client"; // 클라이언트 컴포넌트
 
 import type { Route } from "@/desktop/next-compat/route"; // 경로 타입
+import Image from "@/desktop/next-compat/image"; // 최적화 이미지
 import Link from "@/desktop/next-compat/link"; // 내부 경로 링크
 import { useEffect, useRef, useState } from "react"; // 리액트 도구
 import { StatusScreen } from "@chatbot/components/feedback/StatusScreen"; // 공통 상태 화면
@@ -12,7 +13,8 @@ import { ChatController, type ChatProgress, type EditMessageResult, type SendRes
 import { LayoutSelector } from "@chatbot/features/chat/LayoutSelector"; // 레이아웃 선택기
 import { MessageList } from "@chatbot/features/chat/MessageList"; // 메시지 목록
 import { SceneViewer } from "@chatbot/features/chat/SceneViewer"; // 장면 보기
-import { createConversationHref, ensureConversationForCharacter, resolveConversationRoute } from "@chatbot/features/character/character-detail-model"; // 대화 준비
+import { ensureConversationForCharacter, resolveConversationRoute } from "@chatbot/features/character/character-detail-model"; // 대화 준비
+import { createSessionHref, ensureConversationForStory, getStoryCastEntries, isStoryLocked, resolveStoryConversationRoute, STORY_CONTINUE_TEXT } from "@chatbot/features/story/story-model"; // 스토리 대화 준비
 import { getConversationVersion, getMessageVersionGroup, getVersionMessages, removeVersionTree } from "@chatbot/features/conversation/conversation-versioning"; // 버전 도메인 함수
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 저장소
 import { appReducer } from "@chatbot/features/core/app-reducer"; // 앱 리듀서
@@ -26,7 +28,8 @@ import styles from "@chatbot/features/chat/ChatScreen.module.css"; // 채팅 스
 
 interface ChatScreenProps // 채팅 화면 속성
 { // 구조 시작
-    characterId: string; // 캐릭터 식별자
+    characterId?: string; // 캐릭터 식별자(캐릭터 모드)
+    storyId?: string; // 스토리 식별자(스토리 모드)
     initialConversationId?: string; // 초기 대화 식별자
     initialVersionId?: string; // 초기 버전 식별자
     llm?: LLMAdapter; // 대화 어댑터
@@ -36,6 +39,24 @@ interface ChatScreenProps // 채팅 화면 속성
 export function ChatScreen(props: ChatScreenProps) // 채팅 화면
 { // 함수 시작
     const { state } = useAppStore(); // 앱 상태
+    if (props.storyId !== undefined) // 스토리 모드 판정
+    { // 조건 시작
+        const story = state.stories.find((item) => item.id === props.storyId); // 스토리 조회
+        if (story === undefined) // 스토리 부재 판정
+        { // 조건 시작
+            return ( // 부재 화면 반환
+                <StatusScreen tone="not-found" label="STORY NOT FOUND" title="스토리를 찾을 수 없습니다" description="주소가 잘못되었거나 이 브라우저에서 삭제된 스토리입니다. 스토리 모드에서 다른 이야기를 골라 주세요."> {/* 부재 안내 */}
+                    <Link href={"/stories" as Route}>스토리 모드로 이동</Link> {/* 스토리 목록 링크 */}
+                    <Link href="/">메인으로 이동</Link> {/* 메인 링크 */}
+                </StatusScreen> // 부재 안내 종료
+            ); // 반환 종료
+        } // 조건 종료
+        if (isStoryLocked(story, state, new Date())) // 19세 잠금 판정
+        { // 조건 시작
+            return <AdultContentGate subject={{ kind: "story", name: story.title, coverImage: story.coverImage }} target="chat" />; // 잠금 화면 반환
+        } // 조건 종료
+        return <ChatConversationScreen {...props} />; // 스토리 대화 화면 반환
+    } // 조건 종료
     const character = state.characters.find((item) => item.id === props.characterId); // 대화 캐릭터 조회
     if (character === undefined) // 캐릭터 부재 판정
     { // 조건 시작
@@ -48,23 +69,24 @@ export function ChatScreen(props: ChatScreenProps) // 채팅 화면
     } // 조건 종료
     if (isCharacterLocked(character, state, new Date())) // 19세 잠금 판정
     { // 조건 시작
-        return <AdultContentGate character={character} target="chat" />; // 잠금 화면 반환
+        return <AdultContentGate subject={{ kind: "character", name: character.name, coverImage: character.coverImage }} target="chat" />; // 잠금 화면 반환
     } // 조건 종료
     return <ChatConversationScreen {...props} />; // 대화 화면 반환
 } // 함수 종료
 
-function ChatConversationScreen({ characterId, initialConversationId, initialVersionId, llm, images }: ChatScreenProps) // 대화 화면
+function ChatConversationScreen({ characterId: requestedCharacterId, storyId, initialConversationId, initialVersionId, llm, images }: ChatScreenProps) // 대화 화면
 { // 함수 시작
     const { state, dispatch, createBackup, commitState } = useAppStore(); // 앱 상태
     const router = useRouter(); // 경로 이동기
     const [prepared] = useState(() => // 초기 대화 준비
     { // 초기화 시작
-        const base = ensureConversationForCharacter(state, characterId); // 기본 대화 준비
-        const route = resolveConversationRoute(base.state, characterId, initialConversationId, initialVersionId); // 주소 대화 선택
+        const base = storyId === undefined ? ensureConversationForCharacter(state, requestedCharacterId ?? "") : ensureConversationForStory(state, storyId); // 기본 대화 준비(캐릭터·스토리)
+        const route = storyId === undefined ? resolveConversationRoute(base.state, requestedCharacterId ?? "", initialConversationId, initialVersionId) : resolveStoryConversationRoute(base.state, storyId, initialConversationId, initialVersionId); // 주소 대화 선택
         const routedState = appReducer(base.state, { type: "select-conversation-version", conversationId: route.conversation.id, versionId: route.version.id }); // 선택 버전 적용
         const created = !state.conversations.some((conversation) => conversation.id === route.conversation.id); // 이 화면에서 새로 만든 대화 여부
         return { ...base, state: routedState, conversation: route.conversation, version: route.version, href: route.canonicalHref, recovered: route.recovered, created }; // 준비 결과 반환
     }); // 초기화 종료
+    const characterId = prepared.conversation.characterId; // 대화 캐릭터(스토리는 첫 등장인물)
     const allowCreate = useRef(prepared.created); // 새 대화 첫 저장 허용
     const latestGlobalState = useRef(state); // 최신 전역 상태
     useEffect(() => // 전역 상태 기록 효과
@@ -150,6 +172,10 @@ function ChatConversationScreen({ characterId, initialConversationId, initialVer
     { // 함수 시작
         await runRequest((onProgress) => controller.sendMessage(text, onProgress)); // 새 메시지 요청
     }; // 함수 종료
+    const continueStory = async () => // 입력 없이 이야기 진행
+    { // 함수 시작
+        await runRequest((onProgress) => controller.sendMessage(STORY_CONTINUE_TEXT, onProgress)); // 진행 요청
+    }; // 함수 종료
     const regenerate = async () => // 응답 다시 생성
     { // 함수 시작
         await runRequest((onProgress) => controller.regenerateLastReply(onProgress)); // 마지막 응답 요청
@@ -179,7 +205,7 @@ function ChatConversationScreen({ characterId, initialConversationId, initialVer
                 } // 실패 종료
                 allowCreate.current = false; // 첫 저장 이후 재생성 차단
                 setSnapshot(nextState); // 확정 화면 반영
-                replaceRoute(createConversationHref(characterId, conversation.id, result.versionId) as Route, { scroll: false }); // 새 버전 주소 적용
+                replaceRoute(createSessionHref(conversation, result.versionId) as Route, { scroll: false }); // 새 버전 주소 적용
             } // 조건 종료
             else // 수정 실패 판정
             { // 실패 시작
@@ -223,7 +249,7 @@ function ChatConversationScreen({ characterId, initialConversationId, initialVer
         const nextConversation = nextState.conversations.find((item) => item.id === conversation.id); // 삭제 후 대화 조회
         if (nextConversation !== undefined && nextConversation.currentVersionId !== version.id) // 원본 복귀 판정
         { // 조건 시작
-            replaceRoute(createConversationHref(characterId, nextConversation.id, nextConversation.currentVersionId) as Route, { scroll: false }); // 복귀 주소 적용
+            replaceRoute(createSessionHref(nextConversation) as Route, { scroll: false }); // 복귀 주소 적용
         } // 조건 종료
         setNotice(versionRemoved ? "분기 기준 메시지와 해당 버전을 삭제했습니다." : "현재 버전에서 메시지를 삭제했습니다."); // 삭제 안내
     }; // 함수 종료
@@ -231,7 +257,7 @@ function ChatConversationScreen({ characterId, initialConversationId, initialVer
     { // 함수 시작
         const nextState = appReducer(controller.snapshot(), { type: "select-conversation-version", conversationId: conversation.id, versionId }); // 선택 상태 생성
         applyControllerState(nextState); // 선택 상태 적용
-        replaceRoute(createConversationHref(characterId, conversation.id, versionId) as Route, { scroll: false }); // 선택 주소 적용
+        replaceRoute(createSessionHref(conversation, versionId) as Route, { scroll: false }); // 선택 주소 적용
         const focusLabel = direction === "previous" ? "이전 대화 버전" : "다음 대화 버전"; // 포커스 이름 결정
         window.setTimeout(() => (document.querySelector(`[aria-label="${focusLabel}"]`) as HTMLButtonElement | null)?.focus(), 0); // 전환 버튼 포커스 복원
     }; // 함수 종료
@@ -251,7 +277,7 @@ function ChatConversationScreen({ characterId, initialConversationId, initialVer
         const nextConversation = preview.state.conversations.find((item) => item.id === conversation.id); // 다음 대화 조회
         if (nextConversation !== undefined) // 다음 대화 존재 판정
         { // 조건 시작
-            replaceRoute(createConversationHref(characterId, nextConversation.id, nextConversation.currentVersionId) as Route, { scroll: false }); // 복구 주소 적용
+            replaceRoute(createSessionHref(nextConversation) as Route, { scroll: false }); // 복구 주소 적용
         } // 조건 종료
         setNotice("수정 대화 버전을 삭제했습니다."); // 삭제 안내
     }; // 함수 종료
@@ -265,23 +291,42 @@ function ChatConversationScreen({ characterId, initialConversationId, initialVer
         sync(); // 상태 동기화
         setNotice(result.ok ? "새 장면을 만들었습니다." : result.reason === "insufficient-token" ? "이미지를 만들 토큰이 부족합니다." : "장면을 만들지 못했습니다."); // 안내 갱신
     }; // 함수 종료
+    const storyMode = conversation.mode === "story"; // 스토리 모드 여부
+    const story = storyMode ? snapshot.stories.find((item) => item.id === conversation.storyId) : undefined; // 연결 스토리
+    const castEntries = storyMode ? getStoryCastEntries(snapshot, conversation.storyCast) : undefined; // 등장인물과 캐릭터
+    const title = storyMode ? conversation.title : character.name; // 화면 제목
     return ( // 채팅 반환
-        <main className={styles.chat} data-layout={layout}> {/* 채팅 본문 */}
+        <main className={styles.chat} data-layout={layout} data-mode={conversation.mode}> {/* 채팅 본문 */}
             <section className={styles.scene}> {/* 장면 영역 */}
-                <SceneViewer src={version.currentScene} name={character.name} /> {/* 현재 장면 */}
+                <SceneViewer src={version.currentScene} name={title} /> {/* 현재 장면 */}
                 <button type="button" onClick={generateScene}>장면 이미지 생성 · 20</button> {/* 이미지 버튼 */}
             </section> {/* 장면 종료 */}
             <section className={styles.story}> {/* 대화 영역 */}
-                <header><div><span>{version.relationshipStage}</span><h1>{character.name}</h1></div><div><span>{version.emotion}</span><strong>{snapshot.wallet.balance} 토큰</strong></div></header> {/* 캐릭터 상태 */}
-                <MessageList messages={getVersionMessages(snapshot, conversation.id, version.id)} streamingMessageId={streamingMessageId} busy={busy} allowRegenerate={!busy && !retryAvailable} onRegenerate={regenerate} getVersionGroup={(message) => getMessageVersionGroup(snapshot, version.id, message.id)} onEdit={editMessage} onDelete={deleteMessage} onSelectVersion={selectVersion} onDeleteVersion={deleteVersion} /> {/* 메시지 목록 */}
+                <header><div><span>{storyMode ? `스토리 모드 · 등장인물 ${conversation.storyCast.length}명` : version.relationshipStage}</span><h1>{title} <span className={styles.aiBadge} data-ai-badge="" title={storyMode ? "AI 스토리" : "AI 캐릭터"}>AI</span></h1></div><div><span>{version.emotion}</span><strong>{snapshot.wallet.balance} 토큰</strong></div></header> {/* 대화 상태 */}
+                <p className={styles.aiNotice} role="note" aria-label="AI 이용 안내">{storyMode ? "AI가 만든 허구의 대화입니다. 등장인물은 실제 사람이 아니며, 건강·법률·금융처럼 중요한 결정은 전문가와 상의하세요." : "AI가 만든 허구의 대화입니다. 캐릭터는 실제 사람이 아니며, 건강·법률·금융처럼 중요한 결정은 전문가와 상의하세요."}</p> {/* AI 이용 안내 */}
+                <MessageList messages={getVersionMessages(snapshot, conversation.id, version.id)} streamingMessageId={streamingMessageId} busy={busy} allowRegenerate={!busy && !retryAvailable} onRegenerate={regenerate} getVersionGroup={(message) => getMessageVersionGroup(snapshot, version.id, message.id)} onEdit={editMessage} onDelete={deleteMessage} onSelectVersion={selectVersion} onDeleteVersion={deleteVersion} storyCast={castEntries} /> {/* 메시지 목록 */}
                 <p role="status">{notice}</p> {/* 상태 안내 */}
                 {retryAvailable ? <div className={styles.requestActions}><button type="button" onClick={regenerate}>다시 시도</button></div> : null} {/* 재시도 영역 */}
-                <ChatComposer busy={busy} onSend={send} onCancel={cancel} /> {/* 메시지 입력 */}
+                <ChatComposer busy={busy} onSend={send} onCancel={cancel} storyCast={storyMode ? conversation.storyCast : undefined} onContinue={storyMode ? continueStory : undefined} /> {/* 메시지 입력 */}
             </section> {/* 대화 종료 */}
             <aside className={styles.controls}> {/* 화면 설정 */}
+                {castEntries === undefined ? null : ( // 등장인물 패널 판정
+                    <section className={styles.castPanel} aria-labelledby="story-cast-title"> {/* 등장인물 패널 */}
+                        <h2 id="story-cast-title">등장인물</h2> {/* 패널 제목 */}
+                        <ul> {/* 등장인물 목록 */}
+                            {castEntries.map((entry) => ( // 인물 순회
+                                <li key={entry.member.characterId}> {/* 인물 항목 */}
+                                    <span className={styles.castAvatar} aria-hidden="true">{entry.character === undefined ? entry.member.displayName.slice(0, 1) : <Image src={entry.character.coverImage} alt="" width={80} height={80} />}</span> {/* 인물 얼굴 */}
+                                    <div><strong>{entry.member.displayName}</strong><span>{entry.member.role}</span></div> {/* 이름과 역할 */}
+                                </li> // 인물 항목 종료
+                            ))} {/* 인물 순회 종료 */}
+                        </ul> {/* 목록 종료 */}
+                        {story === undefined || story.userRole.length === 0 ? null : <p className={styles.userRole}><span>내 역할</span>{story.userRole}</p>} {/* 내 역할 */}
+                    </section> // 등장인물 패널 종료
+                )} {/* 등장인물 패널 판정 종료 */}
                 <h2>화면 배치</h2> {/* 설정 제목 */}
                 <LayoutSelector width={width} height={height} /> {/* 레이아웃 선택 */}
-                <p>관계 {version.relationshipLevel}/100</p> {/* 관계 수치 */}
+                {storyMode ? null : <p>관계 {version.relationshipLevel}/100</p>} {/* 관계 수치(캐릭터 모드) */}
             </aside> {/* 설정 종료 */}
         </main> // 본문 종료
     ); // 반환 종료

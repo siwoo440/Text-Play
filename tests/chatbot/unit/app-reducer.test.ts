@@ -2,6 +2,36 @@ import { describe, expect, it } from "vitest"; // 테스트 도구
 import { appReducer } from "@chatbot/features/core/app-reducer"; // 상태 리듀서
 import { createVersionFork } from "@chatbot/features/conversation/conversation-versioning"; // 버전 분기 함수
 import { createInitialState } from "@chatbot/features/core/initial-state"; // 초기 상태
+import { createStoryConversation } from "@chatbot/features/story/story-model"; // 스토리 대화 생성
+
+describe("스토리 모드 리듀서", () => // 스토리 리듀서 묶음
+{ // 묶음 시작
+    it("스토리를 추가·수정하고 지우면 그 스토리 대화도 함께 지운다", () => // 스토리 저장·삭제 검증
+    { // 검증 시작
+        const started = createStoryConversation(createInitialState(), "story-closing-cafe", "2026-10-01T09:00:00.000Z"); // 스토리 대화 시작
+        const cafe = started.state.stories.find((story) => story.id === "story-closing-cafe")!; // 카페 스토리
+        const renamed = appReducer(started.state, { type: "upsert-story", story: { ...cafe, title: "비 오는 카페의 마지막 손님" } }); // 스토리 수정
+        const added = appReducer(renamed, { type: "upsert-story", story: { ...cafe, id: "story-new", title: "새 스토리" } }); // 스토리 추가
+        const pinned = appReducer(added, { type: "toggle-conversation-pin", conversationId: started.conversation.id }); // 대화 고정
+        const removed = appReducer(pinned, { type: "delete-story", storyId: "story-closing-cafe" }); // 스토리 삭제
+        expect(renamed.stories.find((story) => story.id === "story-closing-cafe")?.title).toBe("비 오는 카페의 마지막 손님"); // 수정 확인
+        expect(added.stories).toHaveLength(renamed.stories.length + 1); // 추가 확인
+        expect(removed.stories.some((story) => story.id === "story-closing-cafe")).toBe(false); // 스토리 삭제 확인
+        expect(removed.conversations.some((conversation) => conversation.storyId === "story-closing-cafe")).toBe(false); // 대화 삭제 확인
+        expect(removed.messages.some((message) => message.conversationId === started.conversation.id)).toBe(false); // 메시지 삭제 확인
+        expect(removed.pinnedConversationIds).not.toContain(started.conversation.id); // 고정 정리 확인
+        expect(removed.selectedConversationId).toBeNull(); // 선택 정리 확인
+    }); // 검증 종료
+
+    it("캐릭터를 지우면 스토리 등장인물에서 빼고 인물이 남지 않은 스토리는 지운다", () => // 캐릭터 삭제 연쇄 검증
+    { // 검증 시작
+        const state = createInitialState(); // 초기 상태
+        const withoutSera = appReducer(state, { type: "delete-character", characterId: "sera" }); // 세라 삭제
+        const withoutKyle = appReducer(state, { type: "delete-character", characterId: "kyle" }); // 카일 삭제
+        expect(withoutSera.stories.find((story) => story.id === "story-moonlit-archive")?.cast.map((member) => member.characterId)).toEqual(["rian", "noah"]); // 등장인물 정리 확인
+        expect(withoutKyle.stories.some((story) => story.id === "story-star-signal")).toBe(false); // 빈 스토리 삭제 확인
+    }); // 검증 종료
+}); // 묶음 종료
 
 describe("앱 상태 리듀서", () => // 리듀서 묶음
 { // 묶음 시작

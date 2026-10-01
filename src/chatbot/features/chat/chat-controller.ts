@@ -1,7 +1,7 @@
 import { CHAT_MESSAGE_MAX_LENGTH, CHAT_VERSION_LIMIT, createVersionFork, getConversationVersion, getMessageVersionGroup, getVersionMessages, type VersionStateInput } from "@chatbot/features/conversation/conversation-versioning"; // 버전 도메인 함수
 import type { AppState, Character, Conversation, ConversationVersion, Message } from "@chatbot/features/core/types"; // 앱 타입
 import type { ImageGenerationAdapter } from "@chatbot/lib/adapters/image-generation-adapter"; // 이미지 계약
-import type { LLMAdapter } from "@chatbot/lib/adapters/llm-adapter"; // 대화 계약
+import type { LLMAdapter, LLMInput } from "@chatbot/lib/adapters/llm-adapter"; // 대화 계약
 import { evaluateStory } from "@chatbot/lib/story/story-engine"; // 스토리 판정
 import { trySpend } from "@chatbot/lib/story/token-policy"; // 토큰 정책
 
@@ -89,6 +89,16 @@ export class ChatController // 채팅 제어기
         return `${this.options.conversationId}-${role}-${this.sequence}`; // 식별자 반환
     } // 함수 종료
 
+    private createLLMInput(character: Character, conversation: Conversation, version: ConversationVersion, messages: Message[]): LLMInput // 응답 입력 생성
+    { // 함수 시작
+        if (conversation.mode !== "story") // 캐릭터 모드 판정
+        { // 조건 시작
+            return { character, conversation, version, messages }; // 캐릭터 입력 반환
+        } // 조건 종료
+        const story = this.state.stories.find((item) => item.id === conversation.storyId); // 연결 스토리
+        return { character, conversation, version, messages, story: { title: story?.title ?? conversation.title, synopsis: story?.synopsis ?? "", userRole: story?.userRole ?? "", cast: conversation.storyCast } }; // 스토리 입력 반환(등장인물은 시작 시점 묶음)
+    } // 함수 종료
+
     private reportProgress(handler: ChatProgressHandler | undefined, phase: ChatProgressPhase, messageId: string): void // 진행 상태 전달
     { // 함수 시작
         handler?.({ state: this.snapshot(), phase, messageId }); // 복사 상태 전달
@@ -159,7 +169,7 @@ export class ChatController // 채팅 제어기
         const abortController = new AbortController(); // 요청 중단 제어기
         this.activeAbortController = abortController; // 활성 제어기 저장
         let reply = ""; // 응답 누적
-        const iterator = this.options.llm.streamReply({ character, conversation, version, messages: promptMessages }, abortController.signal)[Symbol.asyncIterator](); // 응답 반복기
+        const iterator = this.options.llm.streamReply(this.createLLMInput(character, conversation, version, promptMessages), abortController.signal)[Symbol.asyncIterator](); // 응답 반복기
         try // 스트림 처리 시도
         { // 시도 시작
             while (true) // 응답 조각 순회
@@ -295,7 +305,7 @@ export class ChatController // 채팅 제어기
         const assistantMessageId = this.nextId("assistant"); // 응답 식별자 생성
         const now = new Date().toISOString(); // 요청 시각 생성
         const abortController = new AbortController(); // 중단 제어기 생성
-        const iterator = this.options.llm.streamReply({ character, conversation, version: forkBaseVersion, messages: promptMessages }, abortController.signal)[Symbol.asyncIterator](); // 수정 응답 반복기 생성
+        const iterator = this.options.llm.streamReply(this.createLLMInput(character, conversation, forkBaseVersion, promptMessages), abortController.signal)[Symbol.asyncIterator](); // 수정 응답 반복기 생성
         this.activeAbortController = abortController; // 활성 제어기 저장
         this.busy = true; // 응답 잠금
         let reply = ""; // 응답 누적

@@ -5,10 +5,10 @@ import Image from "@/desktop/next-compat/image"; // 최적화 이미지
 import Link from "@/desktop/next-compat/link"; // 내부 경로 링크
 import { usePathname, useRouter, useSearchParams } from "@/desktop/next-compat/navigation"; // 경로 도구
 import { Suspense, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react"; // 리액트 도구
-import { createConversationHref } from "@chatbot/features/character/character-detail-model"; // 대화 주소 생성
 import { buildConversationListItems, CONVERSATION_PIN_LIMIT, conversationSortOptions, formatConversationTime, groupConversationItems, matchesConversationQuery, type ConversationListItem } from "@chatbot/features/conversation/conversation-list-model"; // 대화 목록 계산
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 저장소
 import type { ConversationSort } from "@chatbot/features/core/types"; // 정렬 타입
+import { createSessionHref, summarizeStoryContent } from "@chatbot/features/story/story-model"; // 스토리 주소·미리보기
 import { getGenreKey } from "@chatbot/lib/theme/genre-theme"; // 장르 색 조회
 
 interface ConversationPanelProps // 패널 속성
@@ -32,7 +32,8 @@ function RoutedConversationPanel(props: ConversationPanelProps) // 현재 대화
 { // 함수 시작
     const pathname = usePathname() ?? ""; // 현재 경로
     const searchParams = useSearchParams(); // 검색 매개변수
-    const activeConversationId = pathname.startsWith("/chat/") ? searchParams?.get("conversation") ?? null : null; // 보고 있는 대화
+    const chatPage = pathname.startsWith("/chat/") || /^\/stories\/[^/]+\/chat$/.test(pathname); // 캐릭터·스토리 대화 화면 판정
+    const activeConversationId = chatPage ? searchParams?.get("conversation") ?? null : null; // 보고 있는 대화
     return <ConversationPanelView {...props} activeConversationId={activeConversationId} />; // 패널 반환
 } // 함수 종료
 
@@ -202,7 +203,7 @@ function ConversationPanelView({ open, onNavigate, activeConversationId }: Conve
         } // 조건 종료
         if (item.conversation.id === activeConversationId) // 보고 있는 대화 판정
         { // 조건 시작
-            router.push(`/characters/${encodeURIComponent(item.character.id)}` as Route); // 캐릭터 상세로 이동
+            router.push((item.story === null ? `/characters/${encodeURIComponent(item.character.id)}` : `/stories/${encodeURIComponent(item.story.id)}`) as Route); // 캐릭터·스토리 상세로 이동
         } // 조건 종료
         dispatch({ type: "delete-conversation", conversationId: item.conversation.id }); // 대화 삭제
         setNotice({ message: `‘${item.conversation.title}’ 대화를 삭제했습니다.`, undoConversationId: null }); // 삭제 안내
@@ -290,20 +291,20 @@ function ConversationPanelView({ open, onNavigate, activeConversationId }: Conve
                     <ul className="conversation-list"> {/* 대화 목록 */}
                         {group.items.map((item) => // 대화 순회
                         { // 순회 시작
-                            const { conversation, character, summary } = item; // 항목 분해
+                            const { conversation, character, story, summary } = item; // 항목 분해
                             const tone = (cardOrder.get(conversation.id) ?? 0) % 2 === 0 ? "primary" : "secondary"; // 대비 교차
                             const active = conversation.id === activeConversationId; // 현재 대화 여부
                             return ( // 카드 반환
-                                <li key={conversation.id} className="conversation-card" data-tone={tone} data-genre={getGenreKey(character.tags)} data-locked={item.locked ? "true" : undefined} data-active={active ? "true" : undefined}> {/* 대화 카드 */}
+                                <li key={conversation.id} className="conversation-card" data-mode={conversation.mode} data-tone={tone} data-genre={getGenreKey(story?.tags ?? character.tags)} data-locked={item.locked ? "true" : undefined} data-active={active ? "true" : undefined}> {/* 대화 카드 */}
                                     <div className="conversation-card-main"> {/* 링크·더보기 영역 */}
-                                        <Link href={createConversationHref(conversation.characterId, conversation.id, conversation.currentVersionId) as Route} className="conversation-card-link" aria-current={active ? "page" : undefined} onClick={onNavigate}> {/* 대화 링크 */}
-                                            <span className="conversation-card-avatar"><Image src={character.coverImage} alt="" width={88} height={88} /></span> {/* 캐릭터 얼굴 */}
+                                        <Link href={createSessionHref(conversation) as Route} className="conversation-card-link" aria-current={active ? "page" : undefined} onClick={onNavigate}> {/* 대화 링크 */}
+                                            <span className="conversation-card-avatar"><Image src={story?.coverImage ?? character.coverImage} alt="" width={88} height={88} /></span> {/* 캐릭터 얼굴·스토리 표지 */}
                                             <span className="conversation-card-body"> {/* 카드 본문 */}
-                                                <span className="conversation-card-heading">{item.pinned ? <PinIcon label="고정한 대화" /> : null}<strong className="conversation-card-title">{conversation.title}</strong></span> {/* 대화 제목 */}
-                                                <span className="conversation-card-message">{item.locked ? "19+ 잠금 · 19+를 켜면 대화를 볼 수 있습니다." : summary.lastMessage}</span> {/* 최근 메시지 */}
+                                                <span className="conversation-card-heading">{item.pinned ? <PinIcon label="고정한 대화" /> : null}{story === null ? null : <span className="conversation-card-mode">스토리</span>}<strong className="conversation-card-title">{conversation.title}</strong></span> {/* 대화 제목 */}
+                                                <span className="conversation-card-message">{item.locked ? "19+ 잠금 · 19+를 켜면 대화를 볼 수 있습니다." : story === null ? summary.lastMessage : summarizeStoryContent(summary.lastMessage, conversation.storyCast)}</span> {/* 최근 메시지 */}
                                                 <span className="conversation-card-relation"> {/* 관계 정보 */}
-                                                    <span className="conversation-card-stage">{summary.relationshipStage} · {summary.emotion}</span> {/* 관계 단계·감정 */}
-                                                    <span className="conversation-card-meter" role="meter" aria-label="관계 수치" aria-valuemin={0} aria-valuemax={100} aria-valuenow={summary.relationshipLevel}><span style={{ width: `${summary.relationshipLevel}%` }} /></span> {/* 관계 막대 */}
+                                                    <span className="conversation-card-stage">{story === null ? summary.relationshipStage : `등장인물 ${conversation.storyCast.length}명`} · {summary.emotion}</span> {/* 관계 단계·인물 수·감정 */}
+                                                    {story === null ? <span className="conversation-card-meter" role="meter" aria-label="관계 수치" aria-valuemin={0} aria-valuemax={100} aria-valuenow={summary.relationshipLevel}><span style={{ width: `${summary.relationshipLevel}%` }} /></span> : null} {/* 관계 막대(캐릭터 대화만) */}
                                                 </span> {/* 관계 정보 종료 */}
                                             </span> {/* 카드 본문 종료 */}
                                             <span className="conversation-card-meta"> {/* 오른쪽 정보 */}
@@ -316,7 +317,7 @@ function ConversationPanelView({ open, onNavigate, activeConversationId }: Conve
                                             <div ref={menuRef} className="conversation-menu" role="menu" aria-label={`${conversation.title} 메뉴`} onKeyDown={(event) => handleMenuKey(event, conversation.id)}> {/* 대화 메뉴 */}
                                                 <button type="button" role="menuitem" tabIndex={-1} onClick={() => togglePin(item)}>{item.pinned ? "고정 해제" : "고정"}</button> {/* 고정 전환 */}
                                                 <button type="button" role="menuitem" tabIndex={-1} onClick={() => startRename(item)}>이름 변경</button> {/* 이름 변경 */}
-                                                <Link href={`/characters/${character.id}` as Route} role="menuitem" tabIndex={-1} onClick={() => { setMenuFor(null); onNavigate(); }}>캐릭터 보기</Link> {/* 캐릭터 상세 */}
+                                                <Link href={(story === null ? `/characters/${character.id}` : `/stories/${story.id}`) as Route} role="menuitem" tabIndex={-1} onClick={() => { setMenuFor(null); onNavigate(); }}>{story === null ? "캐릭터 보기" : "스토리 보기"}</Link> {/* 캐릭터·스토리 상세 */}
                                                 <button type="button" role="menuitem" tabIndex={-1} onClick={() => archive(item)}>보관</button> {/* 보관 */}
                                                 <button type="button" role="menuitem" tabIndex={-1} className="conversation-menu-danger" onClick={() => startDelete(item)}>삭제</button> {/* 삭제 */}
                                             </div> // 메뉴 종료

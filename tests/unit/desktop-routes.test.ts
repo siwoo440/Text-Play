@@ -48,6 +48,17 @@ describe("데스크톱 화면 경로", () => // 화면 경로 묶음
         expect(matchDesktopRoute(at("/ai-models"))).toEqual({ kind: "ai-models" }); // AI 모델 확인
     }); // 테스트 종료
 
+    it("ChatBot 스토리 모드 경로를 찾는다", () => // 스토리 경로 검증
+    { // 테스트 시작
+        expect(matchDesktopRoute(at("/stories"))).toEqual({ kind: "story-home" }); // 스토리 홈 확인
+        expect(matchDesktopRoute(at("/stories/new"))).toEqual({ kind: "story-new" }); // 새 스토리 확인
+        expect(matchDesktopRoute(at("/stories/rain-archive"))).toEqual({ kind: "story", id: "rain-archive" }); // 스토리 상세 확인
+        expect(matchDesktopRoute(at("/stories/rain-archive/chat", "?conversation=c1&version=v2"))).toEqual({ kind: "story-chat", id: "rain-archive", conversationId: "c1", versionId: "v2" }); // 스토리 대화 확인
+        expect(matchDesktopRoute(at("/stories/rain-archive/edit"))).toEqual({ kind: "story-edit", id: "rain-archive" }); // 스토리 수정 확인
+        expect(getDesktopRouteTitle({ kind: "story-home" })).toBe("스토리 모드"); // 홈 제목 확인
+        expect(getDesktopRouteTitle({ kind: "story-chat", id: "a", conversationId: undefined, versionId: undefined })).toBe("스토리 대화"); // 대화 제목 확인
+    }); // 테스트 종료
+
     it("ChatBot 주소 이동 규칙을 그대로 따른다", () => // 이동 규칙 검증
     { // 테스트 시작
         expect(matchDesktopRoute(at("/settings"))).toEqual({ kind: "redirect", to: "/settings/profile" }); // 설정 첫 화면 확인

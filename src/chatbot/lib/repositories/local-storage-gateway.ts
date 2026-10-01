@@ -1,7 +1,9 @@
 import { createInitialState } from "@chatbot/features/core/initial-state"; // 초기 상태 함수
 import { isConversationVersionGraphValid } from "@chatbot/features/conversation/conversation-versioning"; // 버전 그래프 검증
-import type { AdultVerification, AppSettings, AppState, Character, CharacterMemory, CharacterReport, Conversation, ConversationStartSettings, ConversationVersion, Message, TokenWallet, UserProfile } from "@chatbot/features/core/types"; // 도메인 타입
+import type { AdultVerification, AppSettings, AppState, Character, CharacterMemory, CharacterReport, Conversation, ConversationStartSettings, ConversationVersion, Message, Story, StoryCastMember, TokenWallet, UserProfile } from "@chatbot/features/core/types"; // 도메인 타입
+import { STORY_CAST_LIMIT } from "@chatbot/features/story/story-model"; // 등장인물 최대 수
 import { mockCharacters } from "@chatbot/mocks/fixtures"; // 기본 캐릭터 목록
+import { mockStories } from "@chatbot/mocks/story-fixtures"; // 예시 스토리
 
 const stateKey = "mateverse:v1:state"; // 상태 저장 키
 const backupKey = "mateverse:v1:backup"; // 백업 저장 키
@@ -19,7 +21,8 @@ const reportReasons = ["incorrect-rating", "harmful-content", "copyright", "spam
 const contentRatings = ["all", "teen", "mature"] as const; // 이용 등급 목록
 const adultVerificationMethods = ["mock"] as const; // 성인 인증 방식 목록
 const conversationSorts = ["recent", "relationship", "turns", "title"] as const; // 대화방 정렬 목록
-const backupReasons = ["manual", "import", "reset", "restore", "recovery", "message-delete", "version-delete", "conversation-delete"] as const; // 백업 사유 목록
+const backupReasons = ["manual", "import", "reset", "restore", "recovery", "message-delete", "version-delete", "conversation-delete", "character-delete", "story-delete"] as const; // 백업 사유 목록
+const conversationModes = ["character", "story"] as const; // 대화 종류 목록
 
 export interface LoadResult // 읽기 결과 구조
 { // 구조 시작
@@ -375,7 +378,62 @@ function hasSchemaNineFields(value: Record<string, unknown>): boolean // 스키�
         && isOneOf(settings.conversationSort, conversationSorts); // 대화방 정렬 확인
 } // 함수 종료
 
+function isStoryCastMember(value: unknown): value is StoryCastMember // 등장인물 판정 함수
+{ // 함수 시작
+    return isRecord(value) // 객체 확인
+        && isString(value.characterId) // 캐릭터 확인
+        && isString(value.displayName) && value.displayName.trim().length > 0 // 이야기 속 이름 확인
+        && isString(value.role) // 역할 확인
+        && isString(value.firstLine); // 첫 대사 확인
+} // 함수 종료
+
+function isStory(value: unknown): value is Story // 스토리 판정 함수
+{ // 함수 시작
+    return isRecord(value) // 객체 확인
+        && isString(value.id) // 식별자 확인
+        && isString(value.creatorId) // 제작자 확인
+        && isString(value.creatorName) // 제작자 이름 확인
+        && isString(value.title) // 제목 확인
+        && isString(value.summary) // 소개 확인
+        && isString(value.synopsis) // 줄거리 확인
+        && isString(value.opening) // 시작 장면 확인
+        && isString(value.userRole) // 사용자 역할 확인
+        && Array.isArray(value.cast) && value.cast.length >= 1 && value.cast.length <= STORY_CAST_LIMIT && value.cast.every(isStoryCastMember) // 등장인물 확인
+        && isStringArray(value.tags) // 태그 확인
+        && isString(value.coverImage) // 대표 이미지 확인
+        && isOneOf(value.visibility, visibilities) // 공개 범위 확인
+        && isOneOf(value.contentRating, contentRatings) // 이용 등급 확인
+        && isOneOf(value.publicationStatus, publicationStatuses) // 발행 상태 확인
+        && isFiniteNumber(value.popularity) // 이용 지표 확인
+        && isString(value.createdAt) // 생성 시각 확인
+        && isString(value.updatedAt); // 수정 시각 확인
+} // 함수 종료
+
+function hasSchemaTenFields(value: Record<string, unknown>): boolean // 스키마 10 필드 판정 함수
+{ // 함수 시작
+    if (!Array.isArray(value.stories) || !value.stories.every(isStory)) // 스토리 목록 확인
+    { // 조건 시작
+        return false; // 상태 거부
+    } // 조건 종료
+    const storyIds = new Set((value.stories as Story[]).map((story) => story.id)); // 스토리 식별자
+    return (value.conversations as Array<Record<string, unknown>>).every((conversation) => // 대화 순회
+    { // 판정 시작
+        if (!isOneOf(conversation.mode, conversationModes) || !Array.isArray(conversation.storyCast) || !conversation.storyCast.every(isStoryCastMember)) // 공통 필드 확인
+        { // 조건 시작
+            return false; // 대화 거부
+        } // 조건 종료
+        return conversation.mode === "story" // 종류별 확인
+            ? isString(conversation.storyId) && storyIds.has(conversation.storyId) && conversation.storyCast.length >= 1 // 스토리 대화는 있는 스토리와 등장인물 필요
+            : conversation.storyId === null && conversation.storyCast.length === 0; // 캐릭터 대화는 스토리 없음
+    }); // 판정 종료
+} // 함수 종료
+
 export function isAppState(value: unknown): value is AppState // 앱 상태 판정 함수
+{ // 함수 시작
+    return hasVersionedGraph(value, 10) && hasSchemaEightFields(value) && hasSchemaNineFields(value) && hasSchemaTenFields(value); // 버전 10 상태 반환
+} // 함수 종료
+
+function isVersionNineState(value: unknown): value is Record<string, unknown> // 버전 9 상태 판정 함수
 { // 함수 시작
     return hasVersionedGraph(value, 9) && hasSchemaEightFields(value) && hasSchemaNineFields(value); // 버전 9 상태 반환
 } // 함수 종료
@@ -390,7 +448,7 @@ function isVersionSevenState(value: unknown): value is VersionSevenState // 버�
     return hasVersionedGraph(value, 7); // 버전 7 상태 반환
 } // 함수 종료
 
-function hasVersionedGraph(value: unknown, schemaVersion: 7 | 8 | 9): value is Record<string, unknown> // 버전 7 이후 공통 구조 판정 함수
+function hasVersionedGraph(value: unknown, schemaVersion: 7 | 8 | 9 | 10): value is Record<string, unknown> // 버전 7 이후 공통 구조 판정 함수
 { // 함수 시작
     if (!hasAppStateData(value) // 공통 상태 확인
         || value.schemaVersion !== schemaVersion // 버전 확인
@@ -467,7 +525,7 @@ export function migrateVersionSix(value: Record<string, unknown>): AppState | nu
         return null; // 비파괴 거부
     } // 손상 상태 종료
     const versionIds = new Map(value.conversations.map((conversation) => [conversation.id, `${conversation.id}-version-1`])); // 최초 버전 식별자 색인
-    const conversations: Conversation[] = value.conversations.map((conversation) => // 대화 버전 연결
+    const conversations: Array<Omit<Conversation, "mode" | "storyId" | "storyCast">> = value.conversations.map((conversation) => // 대화 버전 연결(버전 7 형식)
     { // 변환 시작
         return { id: conversation.id, characterId: conversation.characterId, userId: conversation.userId, title: conversation.title, startSettings: conversation.startSettings, currentVersionId: versionIds.get(conversation.id) as string, archivedAt: conversation.archivedAt, createdAt: conversation.createdAt, updatedAt: conversation.updatedAt }; // 공통 대화 반환
     }); // 변환 종료
@@ -510,6 +568,19 @@ export function migrateVersionEight(value: Record<string, unknown>): AppState | 
     } // 잘못된 상태 종료
     const settings = { ...value.settings, conversationSort: "recent" }; // 최근 대화순 정렬
     const candidate: unknown = { ...value, schemaVersion: 9, pinnedConversationIds: [], settings }; // 버전 9 후보
+    return isVersionNineState(candidate) ? migrateVersionNine(candidate) : null; // 연속 변환 반환
+} // 함수 종료
+
+export function migrateVersionNine(value: Record<string, unknown>): AppState | null // 버전 9 변환 함수
+{ // 함수 시작
+    if (!isVersionNineState(value)) // 버전 9 유효성 판정
+    { // 잘못된 상태 시작
+        return null; // 변환 중단
+    } // 잘못된 상태 종료
+    const conversations = (value.conversations as Array<Record<string, unknown>>).map((conversation) => ({ ...conversation, mode: "character", storyId: null, storyCast: [] })); // 기존 대화는 캐릭터 모드
+    const characterIds = new Set((value.characters as Character[]).map((character) => character.id)); // 남아 있는 캐릭터
+    const stories = structuredClone(mockStories).filter((story) => story.cast.every((member) => characterIds.has(member.characterId))); // 등장인물이 모두 있는 예시 스토리
+    const candidate: unknown = { ...value, schemaVersion: 10, conversations, stories }; // 버전 10 후보
     return isAppState(candidate) ? candidate : null; // 유효 변환 반환
 } // 함수 종료
 
@@ -692,12 +763,16 @@ function migrateParsedState(parsed: unknown): AppState | null // 분석 상태 �
     } // 버전 6 종료
     if (parsed.schemaVersion === 7) // 버전 7 판정
     { // 버전 7 시작
-        return migrateVersionSeven(parsed); // 버전 9 변환
+        return migrateVersionSeven(parsed); // 버전 10 변환
     } // 버전 7 종료
     if (parsed.schemaVersion === 8) // 버전 8 판정
     { // 버전 8 시작
-        return migrateVersionEight(parsed); // 버전 9 변환
+        return migrateVersionEight(parsed); // 버전 10 변환
     } // 버전 8 종료
+    if (parsed.schemaVersion === 9) // 버전 9 판정
+    { // 버전 9 시작
+        return migrateVersionNine(parsed); // 버전 10 변환
+    } // 버전 9 종료
     return null; // 지원하지 않는 상태 반환
 } // 함수 종료
 
@@ -712,7 +787,7 @@ function parseImportState(raw: string): AppState // 가져오기 분석 함수
     { // 실패 시작
         throw new ImportValidationError("올바른 JSON 파일이 아닙니다.", error); // 분석 오류 변환
     } // 실패 종료
-    if (isRecord(parsed) && isFiniteNumber(parsed.schemaVersion) && parsed.schemaVersion > 9) // 미래 버전 판정
+    if (isRecord(parsed) && isFiniteNumber(parsed.schemaVersion) && parsed.schemaVersion > 10) // 미래 버전 판정
     { // 미래 버전 시작
         throw new ImportValidationError("지원하지 않는 데이터 버전입니다."); // 미래 버전 오류
     } // 미래 버전 종료

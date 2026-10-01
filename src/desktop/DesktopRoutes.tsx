@@ -16,6 +16,9 @@ import { CharacterEditor } from "@chatbot/features/character/CharacterEditor"; /
 import { ChatScreen } from "@chatbot/features/chat/ChatScreen"; // ChatBot 대화 화면
 import { ExploreScreen } from "@chatbot/features/explore/ExploreScreen"; // ChatBot 탐색 화면
 import { SettingsShell } from "@chatbot/features/settings/SettingsShell"; // ChatBot 설정 틀
+import { StoryDetail } from "@chatbot/features/story/StoryDetail"; // ChatBot 스토리 상세
+import { StoryEditor } from "@chatbot/features/story/StoryEditor"; // ChatBot 스토리 편집기
+import { StoryHome } from "@chatbot/features/story/StoryHome"; // ChatBot 스토리 홈
 import { AiModelsScreen } from "@/desktop/ai-models/AiModelsScreen"; // AI 모델 화면
 import type { ModelStoreClient } from "@/desktop/ai-models/model-store-client"; // 보관함 통신 계약
 import { createDesktopLLMSelection } from "@/desktop/desktop-llm"; // 데스크톱 AI 생성기
@@ -95,6 +98,11 @@ function renderPage(match: DesktopRouteMatch, repository: TextPlaySaveRepository
         } // 분기 내용 종료
         case "support": return <SupportPage />; // 고객 지원
         case "ai-models": return <AiModelsScreen client={modelStoreClient} />; // 내장 AI 모델
+        case "story-home": return <StoryHome />; // 스토리 홈
+        case "story-new": return <StoryEditor key="new" />; // 새 스토리
+        case "story": return <StoryDetail key={match.id} storyId={match.id} />; // 스토리 상세
+        case "story-chat": return <ChatScreen key={`story:${match.id}:${match.conversationId ?? "new"}:${match.versionId ?? "current"}`} storyId={match.id} initialConversationId={match.conversationId} initialVersionId={match.versionId} />; // 스토리 대화(ChatBot 페이지와 같은 키에 스토리 포함)
+        case "story-edit": return <StoryEditor key={match.id} storyId={match.id} />; // 스토리 수정
         case "text-play-home": return <TextPlayHome repository={repository} />; // Text-Play 홈
         case "text-play-play": return null; // 틀 밖에서 출력
         case "redirect": return null; // 이동 대기

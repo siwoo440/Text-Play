@@ -7,6 +7,7 @@ import { CategoryFilter } from "@chatbot/features/discovery/CategoryFilter"; // 
 import { CharacterRail } from "@chatbot/features/discovery/CharacterRail"; // 캐릭터 레일
 import { FeaturedCharacter } from "@chatbot/features/discovery/FeaturedCharacter"; // 추천 캐릭터
 import { RankingRail } from "@chatbot/features/discovery/RankingRail"; // 랭킹 레일
+import { ModeSwitch } from "@chatbot/features/story/ModeSwitch"; // 캐릭터·스토리 모드 전환
 import styles from "@chatbot/features/discovery/DiscoveryHome.module.css"; // 탐색 스타일
 
 const categories = ["전체", "힐링", "판타지", "현대", "로맨스", "미스터리", "SF"]; // 카테고리 목록
@@ -47,6 +48,7 @@ export function DiscoveryHome() // 탐색 홈
     }; // 함수 종료
     return ( // 홈 반환
         <main className={styles.home} data-surface="light"> {/* 탐색 본문 */}
+            <ModeSwitch /> {/* 캐릭터·스토리 모드 전환 */}
             <header className={styles.hero}> {/* 탐색 헤더 */}
                 <div> {/* 헤더 문구 */}
                     <span className={styles.eyebrow}>감정과 이야기가 이어지는 공간</span> {/* 상단 문구 */}

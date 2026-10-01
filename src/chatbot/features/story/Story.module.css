@@ -1,0 +1,622 @@
+.page /* 스토리 화면 */
+{ /* 화면 시작 */
+    min-height: calc(100vh - 64px); /* 화면 높이 */
+    overflow-x: clip; /* 장식 가로 넘침 자르기 */
+    padding: clamp(24px, 4vw, 48px) clamp(16px, 4vw, 64px) 96px; /* 화면 여백 */
+    background: radial-gradient(circle at 6% 0%, rgb(240 171 252 / 36%), transparent 30%), radial-gradient(circle at 94% 6%, rgb(196 181 253 / 40%), transparent 28%), radial-gradient(circle at 60% 60%, rgb(254 215 170 / 26%), transparent 34%), var(--mv-canvas); /* 여러 색 배경 */
+    color: var(--mv-ink); /* 기본 글자 */
+    color-scheme: light; /* 밝은 입력 요소 */
+} /* 화면 종료 */
+
+.page > * /* 화면 구역 */
+{ /* 구역 시작 */
+    max-width: 1280px; /* 최대 너비 */
+    margin-right: auto; /* 가운데 정렬 */
+    margin-left: auto; /* 가운데 정렬 */
+} /* 구역 종료 */
+
+.modeBar /* 모드 전환 바깥 틀(페이지 내용 너비를 따름) */
+{ /* 틀 시작 */
+    margin-bottom: 22px; /* 아래 간격 */
+} /* 틀 종료 */
+
+.modeSwitch /* 모드 전환 */
+{ /* 전환 시작 */
+    display: grid; /* 두 칸 배치 */
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* 같은 너비 */
+    gap: 6px; /* 칸 간격 */
+    max-width: 560px; /* 최대 너비 */
+    padding: 6px; /* 내부 여백 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 18px; /* 모서리 */
+    background: rgb(255 255 255 / 82%); /* 반투명 흰 배경 */
+    box-shadow: 0 10px 26px rgb(76 29 149 / 8%); /* 그림자 */
+} /* 전환 종료 */
+
+.modeSwitch a /* 모드 칸 */
+{ /* 칸 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 2px; /* 줄 간격 */
+    padding: 10px 14px; /* 내부 여백 */
+    border-radius: 13px; /* 모서리 */
+    color: var(--mv-muted); /* 기본 글자 */
+    text-decoration: none; /* 밑줄 제거 */
+    transition: background 150ms ease, color 150ms ease; /* 전환 */
+} /* 칸 종료 */
+
+.modeSwitch a strong /* 모드 이름 */
+{ /* 이름 시작 */
+    color: var(--mv-ink); /* 진한 글자 */
+    font-size: .92rem; /* 글자 크기 */
+} /* 이름 종료 */
+
+.modeSwitch a span /* 모드 설명 */
+{ /* 설명 시작 */
+    font-size: .74rem; /* 작은 글자 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 설명 종료 */
+
+.modeSwitch a:hover /* 모드 올림 */
+{ /* 올림 시작 */
+    background: #faf5ff; /* 연한 보라 */
+} /* 올림 종료 */
+
+.modeSwitch a[aria-current="page"][data-mode="character"] /* 현재 캐릭터 모드 */
+{ /* 현재 시작 */
+    background: linear-gradient(110deg, #7c3aed, #6d28d9); /* 보라 채움 */
+    color: #ede9fe; /* 밝은 글자 */
+} /* 현재 종료 */
+
+.modeSwitch a[aria-current="page"][data-mode="story"] /* 현재 스토리 모드 */
+{ /* 현재 시작 */
+    background: linear-gradient(110deg, #a21caf, #86198f); /* 자홍 채움 */
+    color: #fae8ff; /* 밝은 글자 */
+} /* 현재 종료 */
+
+.modeSwitch a[aria-current="page"] strong /* 현재 모드 이름 */
+{ /* 이름 시작 */
+    color: #ffffff; /* 흰 글자 */
+} /* 이름 종료 */
+
+.modeSwitch a:focus-visible, /* 모드 초점 */
+.createLink:focus-visible, /* 만들기 초점 */
+.cardLink:focus-visible, /* 카드 초점 */
+.primaryButton:focus-visible, /* 주요 버튼 초점 */
+.secondaryButton:focus-visible, /* 보조 버튼 초점 */
+.castLink:focus-visible /* 인물 링크 초점 */
+{ /* 초점 시작 */
+    outline: 3px solid var(--mv-focus); /* 초점 외곽선 */
+    outline-offset: 2px; /* 외곽선 간격 */
+} /* 초점 종료 */
+
+.hero /* 머리말 */
+{ /* 머리말 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 */
+    gap: 20px 32px; /* 요소 간격 */
+    align-items: end; /* 아래 정렬 */
+    justify-content: space-between; /* 양끝 배치 */
+    margin-bottom: 28px; /* 아래 간격 */
+} /* 머리말 종료 */
+
+.eyebrow /* 표제 */
+{ /* 표제 시작 */
+    display: inline-flex; /* 알약 배치 */
+    padding: 6px 14px; /* 내부 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    background: linear-gradient(100deg, #fae8ff, #ede9fe); /* 연한 배경 */
+    color: #86198f; /* 진한 자홍 */
+    font-size: .8rem; /* 글자 크기 */
+    font-weight: 800; /* 글자 굵기 */
+    letter-spacing: .02em; /* 자간 */
+} /* 표제 종료 */
+
+.hero h1, /* 목록 제목 */
+.detailCopy h1 /* 상세 제목 */
+{ /* 제목 시작 */
+    max-width: 760px; /* 제목 너비 */
+    margin: 14px 0 0; /* 여백 */
+    font-size: clamp(1.9rem, 4.2vw, 3.4rem); /* 반응형 크기 */
+    line-height: 1.12; /* 행간 */
+    letter-spacing: -.04em; /* 자간 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 제목 종료 */
+
+.titleHighlight /* 제목 강조 */
+{ /* 강조 시작 */
+    background: linear-gradient(100deg, #a21caf, #7c3aed 55%, #db2777); /* 강조 그라데이션 */
+    background-clip: text; /* 글자 자르기 */
+    color: transparent; /* 글자 투명 */
+} /* 강조 종료 */
+
+.lead /* 설명 */
+{ /* 설명 시작 */
+    max-width: 620px; /* 설명 너비 */
+    margin: 12px 0 0; /* 여백 */
+    color: var(--mv-muted); /* 보조 글자 */
+    line-height: 1.7; /* 행간 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 설명 종료 */
+
+.createLink /* 새 스토리 만들기 */
+{ /* 만들기 시작 */
+    display: inline-flex; /* 가로 배치 */
+    align-items: center; /* 세로 중앙 */
+    min-height: 48px; /* 조작 높이 */
+    padding: 0 22px; /* 내부 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    background: linear-gradient(110deg, #a21caf, #7e22ce); /* 자홍 채움 */
+    color: #ffffff; /* 흰 글자 */
+    box-shadow: 0 12px 26px rgb(162 28 175 / 24%); /* 그림자 */
+    font-weight: 800; /* 글자 굵기 */
+    text-decoration: none; /* 밑줄 제거 */
+} /* 만들기 종료 */
+
+.section /* 목록 구역 */
+{ /* 구역 시작 */
+    margin-top: 12px; /* 위 간격 */
+    margin-bottom: 36px; /* 아래 간격 */
+} /* 구역 종료 */
+
+.sectionTitle /* 구역 제목 */
+{ /* 제목 시작 */
+    margin: 0 0 16px; /* 여백 */
+    font-size: 1.25rem; /* 제목 크기 */
+    letter-spacing: -.02em; /* 자간 */
+} /* 제목 종료 */
+
+.grid /* 카드 목록 */
+{ /* 목록 시작 */
+    display: grid; /* 격자 배치 */
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); /* 반응형 칸 */
+    gap: 18px; /* 칸 간격 */
+} /* 목록 종료 */
+
+.empty /* 빈 목록 */
+{ /* 빈 시작 */
+    padding: 22px; /* 내부 여백 */
+    border: 1px dashed #e9d5ff; /* 점선 */
+    border-radius: 16px; /* 모서리 */
+    background: #ffffff; /* 흰 배경 */
+    color: var(--mv-muted); /* 보조 글자 */
+} /* 빈 종료 */
+
+.card /* 스토리 카드 */
+{ /* 카드 시작 */
+    overflow: hidden; /* 모서리 자르기 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 20px; /* 모서리 */
+    background: #ffffff; /* 흰 배경 */
+    box-shadow: 0 14px 30px rgb(76 29 149 / 8%); /* 그림자 */
+    transition: transform 150ms ease, box-shadow 150ms ease; /* 전환 */
+} /* 카드 종료 */
+
+.card:hover /* 카드 올림 */
+{ /* 올림 시작 */
+    box-shadow: 0 18px 36px rgb(162 28 175 / 14%); /* 강조 그림자 */
+    transform: translateY(-2px); /* 위로 이동 */
+} /* 올림 종료 */
+
+.cardLink /* 카드 링크 */
+{ /* 링크 시작 */
+    display: grid; /* 세로 배치 */
+    height: 100%; /* 높이 채움 */
+    color: inherit; /* 글자 상속 */
+    text-decoration: none; /* 밑줄 제거 */
+} /* 링크 종료 */
+
+.cardMedia /* 카드 이미지 */
+{ /* 이미지 시작 */
+    position: relative; /* 표시 기준 */
+    display: block; /* 블록 */
+    aspect-ratio: 16 / 9; /* 이미지 비율 */
+    overflow: hidden; /* 자르기 */
+    background: #f5f3ff; /* 이미지 전 배경 */
+} /* 이미지 종료 */
+
+.cardMedia img /* 카드 그림 */
+{ /* 그림 시작 */
+    width: 100%; /* 너비 채움 */
+    height: 100%; /* 높이 채움 */
+    object-fit: cover; /* 비율 유지 */
+} /* 그림 종료 */
+
+.ratingChip, /* 등급 표시 */
+.draftChip /* 임시 저장 표시 */
+{ /* 표시 시작 */
+    position: absolute; /* 이미지 위 */
+    top: 12px; /* 위 위치 */
+    left: 12px; /* 왼쪽 위치 */
+    padding: 4px 10px; /* 내부 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    background: rgb(17 24 39 / 72%); /* 어두운 배경 */
+    color: #ffffff; /* 흰 글자 */
+    font-size: .72rem; /* 작은 글자 */
+    font-weight: 800; /* 굵은 글자 */
+} /* 표시 종료 */
+
+.card[data-rating="mature"] .ratingChip /* 19세 표시 */
+{ /* 19세 시작 */
+    background: #be123c; /* 빨간 배경 */
+} /* 19세 종료 */
+
+.draftChip /* 임시 저장 위치 */
+{ /* 위치 시작 */
+    right: 12px; /* 오른쪽 위치 */
+    left: auto; /* 왼쪽 해제 */
+    background: #92400e; /* 호박 배경 */
+} /* 위치 종료 */
+
+.cardBody /* 카드 본문 */
+{ /* 본문 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 10px; /* 줄 간격 */
+    padding: 16px 18px 18px; /* 내부 여백 */
+} /* 본문 종료 */
+
+.cardBody h3 /* 카드 제목 */
+{ /* 제목 시작 */
+    margin: 0; /* 여백 제거 */
+    font-size: 1.1rem; /* 제목 크기 */
+    letter-spacing: -.02em; /* 자간 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 제목 종료 */
+
+.cardSummary /* 한 줄 소개 */
+{ /* 소개 시작 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-size: .88rem; /* 글자 크기 */
+    line-height: 1.55; /* 행간 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 소개 종료 */
+
+.castRow /* 등장인물 줄 */
+{ /* 줄 시작 */
+    display: flex; /* 가로 배치 */
+    align-items: center; /* 세로 중앙 */
+    gap: 10px; /* 요소 간격 */
+    min-width: 0; /* 줄임 허용 */
+} /* 줄 종료 */
+
+.castFaces /* 얼굴 묶음 */
+{ /* 묶음 시작 */
+    display: flex; /* 가로 배치 */
+    flex: none; /* 크기 유지 */
+} /* 묶음 종료 */
+
+.castFaces > span /* 얼굴 */
+{ /* 얼굴 시작 */
+    display: grid; /* 중앙 배치 */
+    width: 32px; /* 너비 */
+    height: 32px; /* 높이 */
+    margin-left: -8px; /* 겹치기 */
+    overflow: hidden; /* 원형 자르기 */
+    border: 2px solid #ffffff; /* 흰 테 */
+    border-radius: 50%; /* 원형 */
+    background: #f3e8ff; /* 배경 */
+    color: #86198f; /* 글자 */
+    font-size: .74rem; /* 글자 크기 */
+    font-weight: 800; /* 굵은 글자 */
+    place-items: center; /* 가운데 정렬 */
+} /* 얼굴 종료 */
+
+.castFaces > span:first-child /* 첫 얼굴 */
+{ /* 첫 얼굴 시작 */
+    margin-left: 0; /* 겹침 없음 */
+} /* 첫 얼굴 종료 */
+
+.castFaces img /* 얼굴 그림 */
+{ /* 그림 시작 */
+    width: 100%; /* 너비 채움 */
+    height: 100%; /* 높이 채움 */
+    object-fit: cover; /* 비율 유지 */
+    object-position: center 20%; /* 얼굴 쪽 */
+} /* 그림 종료 */
+
+.castNames /* 등장인물 이름 */
+{ /* 이름 시작 */
+    overflow: hidden; /* 넘침 숨김 */
+    color: #6b21a8; /* 보라 글자 */
+    font-size: .84rem; /* 글자 크기 */
+    font-weight: 800; /* 굵은 글자 */
+    text-overflow: ellipsis; /* 말줄임 */
+    white-space: nowrap; /* 줄바꿈 방지 */
+} /* 이름 종료 */
+
+.cardMeta /* 인물 수·태그 */
+{ /* 메타 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 */
+    gap: 6px; /* 간격 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-size: .76rem; /* 작은 글자 */
+} /* 메타 종료 */
+
+.castCount /* 인물 수 */
+{ /* 인물 수 시작 */
+    padding: 2px 8px; /* 내부 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    background: #fae8ff; /* 연한 자홍 */
+    color: #86198f; /* 진한 자홍 */
+    font-weight: 800; /* 굵은 글자 */
+} /* 인물 수 종료 */
+
+.detailHero /* 상세 머리말 */
+{ /* 머리말 시작 */
+    display: grid; /* 두 칸 배치 */
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); /* 이미지·글 */
+    gap: clamp(20px, 3vw, 40px); /* 칸 간격 */
+    align-items: center; /* 세로 중앙 */
+    margin-bottom: 28px; /* 아래 간격 */
+} /* 머리말 종료 */
+
+.detailMedia /* 상세 이미지 */
+{ /* 이미지 시작 */
+    overflow: hidden; /* 모서리 자르기 */
+    border: 6px solid #ffffff; /* 흰 액자 */
+    border-radius: 26px; /* 모서리 */
+    background: #f5f3ff; /* 배경 */
+    box-shadow: 0 22px 48px rgb(134 25 143 / 18%); /* 그림자 */
+} /* 이미지 종료 */
+
+.detailMedia img /* 상세 그림 */
+{ /* 그림 시작 */
+    display: block; /* 블록 */
+    width: 100%; /* 너비 채움 */
+    height: auto; /* 비율 유지 */
+    aspect-ratio: 3 / 2; /* 비율 */
+    object-fit: cover; /* 채움 */
+} /* 그림 종료 */
+
+.detailCopy /* 상세 문구 */
+{ /* 문구 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 10px; /* 줄 간격 */
+    justify-items: start; /* 왼쪽 정렬 */
+} /* 문구 종료 */
+
+.detailCopy h1 /* 상세 제목 여백 */
+{ /* 제목 시작 */
+    margin-top: 4px; /* 위 여백 */
+} /* 제목 종료 */
+
+.detailMeta /* 등급·제작자 */
+{ /* 메타 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 */
+    gap: 8px; /* 간격 */
+    align-items: center; /* 세로 중앙 */
+    margin: 0; /* 여백 제거 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-size: .86rem; /* 글자 크기 */
+} /* 메타 종료 */
+
+.ratingInline /* 등급 표시 */
+{ /* 등급 시작 */
+    padding: 2px 10px; /* 내부 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    background: #ede9fe; /* 연한 보라 */
+    color: #5b21b6; /* 진한 보라 */
+    font-weight: 800; /* 굵은 글자 */
+} /* 등급 종료 */
+
+.ratingInline[data-rating="mature"] /* 19세 등급 */
+{ /* 19세 시작 */
+    background: #ffe4e6; /* 연한 빨강 */
+    color: #9f1239; /* 진한 빨강 */
+} /* 19세 종료 */
+
+.tagLine /* 태그 줄 */
+{ /* 태그 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 */
+    gap: 6px; /* 간격 */
+    margin: 0; /* 여백 제거 */
+    color: #86198f; /* 자홍 글자 */
+    font-size: .82rem; /* 글자 크기 */
+    font-weight: 700; /* 글자 굵기 */
+} /* 태그 종료 */
+
+.detailActions /* 시작 동작 */
+{ /* 동작 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 */
+    gap: 10px; /* 버튼 간격 */
+    margin-top: 6px; /* 위 간격 */
+} /* 동작 종료 */
+
+.primaryButton, /* 주요 버튼 */
+.secondaryButton /* 보조 버튼 */
+{ /* 버튼 시작 */
+    display: inline-flex; /* 가로 배치 */
+    align-items: center; /* 세로 중앙 */
+    justify-content: center; /* 가로 중앙 */
+    min-height: 48px; /* 조작 높이 */
+    padding: 0 22px; /* 내부 여백 */
+    border: 1px solid transparent; /* 테두리 */
+    border-radius: 999px; /* 알약 모양 */
+    font: inherit; /* 글꼴 상속 */
+    font-weight: 800; /* 굵은 글자 */
+    text-decoration: none; /* 밑줄 제거 */
+    cursor: pointer; /* 선택 커서 */
+} /* 버튼 종료 */
+
+.primaryButton /* 주요 버튼 */
+{ /* 주요 시작 */
+    background: linear-gradient(110deg, #a21caf, #7e22ce); /* 자홍 채움 */
+    color: #ffffff; /* 흰 글자 */
+    box-shadow: 0 12px 24px rgb(162 28 175 / 24%); /* 그림자 */
+} /* 주요 종료 */
+
+.secondaryButton /* 보조 버튼 */
+{ /* 보조 시작 */
+    border-color: #e9d5ff; /* 연한 테두리 */
+    background: #ffffff; /* 흰 배경 */
+    color: #6b21a8; /* 보라 글자 */
+} /* 보조 종료 */
+
+.detailGrid /* 상세 구역 */
+{ /* 구역 시작 */
+    display: grid; /* 격자 */
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* 두 칸 */
+    gap: 18px; /* 칸 간격 */
+} /* 구역 종료 */
+
+.detailCard /* 상세 카드 */
+{ /* 카드 시작 */
+    padding: 20px 22px; /* 내부 여백 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-top: 4px solid #d946ef; /* 자홍 윗선 */
+    border-radius: 20px; /* 모서리 */
+    background: #ffffff; /* 흰 배경 */
+} /* 카드 종료 */
+
+.detailCard:nth-child(2) /* 시작 장면 카드 */
+{ /* 카드 시작 */
+    border-top-color: #8b5cf6; /* 보라 윗선 */
+} /* 카드 종료 */
+
+.detailCard:nth-child(3) /* 내 역할 카드 */
+{ /* 카드 시작 */
+    border-top-color: #f59e0b; /* 호박 윗선 */
+} /* 카드 종료 */
+
+.detailCard h2 /* 카드 제목 */
+{ /* 제목 시작 */
+    margin: 0 0 10px; /* 여백 */
+    font-size: 1.05rem; /* 제목 크기 */
+} /* 제목 종료 */
+
+.detailCard p /* 카드 문장 */
+{ /* 문장 시작 */
+    margin: 0; /* 여백 제거 */
+    color: #3f3a4f; /* 본문 글자 */
+    line-height: 1.75; /* 행간 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 문장 종료 */
+
+.openingNarration /* 시작 내레이션 */
+{ /* 내레이션 시작 */
+    padding: 10px 14px; /* 내부 여백 */
+    border-left: 3px solid #8b5cf6; /* 보라 띠 */
+    border-radius: 0 12px 12px 0; /* 오른쪽 모서리 */
+    background: #faf5ff; /* 연한 보라 */
+    font-style: italic; /* 기울임 */
+} /* 내레이션 종료 */
+
+.firstLines /* 첫 대사 목록 */
+{ /* 목록 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 8px; /* 간격 */
+    margin: 12px 0 0; /* 여백 */
+    padding: 0; /* 기본 여백 제거 */
+    list-style: none; /* 표시 제거 */
+} /* 목록 종료 */
+
+.firstLines li /* 첫 대사 */
+{ /* 대사 시작 */
+    display: grid; /* 두 열 */
+    grid-template-columns: 52px minmax(0, 1fr); /* 이름·대사 */
+    gap: 8px; /* 열 간격 */
+    color: #3f3a4f; /* 글자 */
+    line-height: 1.6; /* 행간 */
+} /* 대사 종료 */
+
+.firstLines strong /* 첫 대사 이름 */
+{ /* 이름 시작 */
+    color: #86198f; /* 자홍 글자 */
+} /* 이름 종료 */
+
+.castCard /* 등장인물 카드 */
+{ /* 카드 시작 */
+    grid-column: 1 / -1; /* 전체 너비 */
+    border-top-color: #ec4899; /* 분홍 윗선 */
+} /* 카드 종료 */
+
+.castList /* 등장인물 목록 */
+{ /* 목록 시작 */
+    display: grid; /* 격자 */
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); /* 반응형 칸 */
+    gap: 14px; /* 간격 */
+    margin: 0; /* 여백 제거 */
+    padding: 0; /* 기본 여백 제거 */
+    list-style: none; /* 표시 제거 */
+} /* 목록 종료 */
+
+.castList li /* 등장인물 항목 */
+{ /* 항목 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 8px; /* 간격 */
+    padding: 14px; /* 내부 여백 */
+    border: 1px solid #f3e8ff; /* 연한 테두리 */
+    border-radius: 16px; /* 모서리 */
+    background: #fdfaff; /* 연한 배경 */
+} /* 항목 종료 */
+
+.castList p /* 역할 설명 */
+{ /* 설명 시작 */
+    font-size: .86rem; /* 글자 크기 */
+    line-height: 1.6; /* 행간 */
+} /* 설명 종료 */
+
+.castLink, /* 인물 링크 */
+.castMissing /* 삭제된 인물 */
+{ /* 링크 시작 */
+    display: flex; /* 가로 배치 */
+    gap: 10px; /* 간격 */
+    align-items: center; /* 세로 중앙 */
+    color: inherit; /* 글자 상속 */
+    text-decoration: none; /* 밑줄 제거 */
+} /* 링크 종료 */
+
+.castLink strong, /* 인물 이름 */
+.castMissing strong /* 삭제 인물 이름 */
+{ /* 이름 시작 */
+    display: block; /* 줄 분리 */
+    color: #6b21a8; /* 보라 글자 */
+} /* 이름 종료 */
+
+.castLink span span, /* 캐릭터 이름 */
+.castMissing span /* 삭제 표시 */
+{ /* 보조 시작 */
+    display: block; /* 줄 분리 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-size: .78rem; /* 작은 글자 */
+} /* 보조 종료 */
+
+.castFace /* 인물 얼굴 */
+{ /* 얼굴 시작 */
+    display: block; /* 블록 */
+    flex: none; /* 크기 유지 */
+    width: 48px; /* 너비 */
+    height: 48px; /* 높이 */
+    overflow: hidden; /* 원형 자르기 */
+    border: 2px solid #f0abfc; /* 자홍 테 */
+    border-radius: 50%; /* 원형 */
+} /* 얼굴 종료 */
+
+.castFace img /* 얼굴 그림 */
+{ /* 그림 시작 */
+    width: 100%; /* 너비 채움 */
+    height: 100%; /* 높이 채움 */
+    object-fit: cover; /* 비율 유지 */
+    object-position: center 20%; /* 얼굴 쪽 */
+} /* 그림 종료 */
+
+@media (max-width: 860px) /* 좁은 화면 */
+{ /* 미디어 시작 */
+    .detailHero, /* 상세 머리말 */
+    .detailGrid /* 상세 구역 */
+    { /* 한 칸 시작 */
+        grid-template-columns: minmax(0, 1fr); /* 한 칸 */
+    } /* 한 칸 종료 */
+} /* 미디어 종료 */
+
+@media (prefers-reduced-motion: reduce) /* 동작 축소 */
+{ /* 축소 시작 */
+    .card, /* 카드 */
+    .modeSwitch a /* 모드 칸 */
+    { /* 전환 시작 */
+        transition: none; /* 전환 제거 */
+    } /* 전환 종료 */
+} /* 축소 종료 */

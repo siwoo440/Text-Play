@@ -1,4 +1,5 @@
 import type { LLMAdapter, LLMInput, SummaryInput } from "@chatbot/lib/adapters/llm-adapter"; // 대화 계약
+import { composeStoryReply } from "@chatbot/lib/story/mock-story-writer"; // Mock 스토리 응답
 
 interface MockLLMOptions // Mock 설정
 { // 구조 시작
@@ -60,7 +61,7 @@ export class MockLLMAdapter implements LLMAdapter // Mock 대화 어댑터
     { // 함수 시작
         const lastMessage = input.messages.at(-1)?.content.trim().toLowerCase() ?? ""; // 최근 입력
         const key = `${input.character.id}|${input.version.emotion}|${input.version.relationshipStage}|${lastMessage}|${this.seed}`; // 결정 키
-        const response = responses[hash(key) % responses.length]; // 응답 선택
+        const response = input.story === undefined ? responses[hash(key) % responses.length] : composeStoryReply({ story: input.story, messages: input.messages, seed: this.seed }); // 응답 선택(스토리는 여러 인물 형식)
         const words = response.split(" "); // 단어 분리
         for (const [index, word] of words.entries()) // 단어 순회
         { // 순회 시작

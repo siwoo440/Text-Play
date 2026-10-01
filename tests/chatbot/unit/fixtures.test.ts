@@ -6,7 +6,7 @@ describe("초기 앱 상태", () => // 초기 상태 묶음
     it("스키마 버전과 Mock 공급자를 고정한다", () => // 기본값 검증
     { // 검증 시작
         const state = createInitialState(); // 초기 상태 생성
-        expect(state.schemaVersion).toBe(9); // 스키마 버전 확인
+        expect(state.schemaVersion).toBe(10); // 스키마 버전 확인
         expect(state.providerMode).toBe("mock"); // Mock 공급자 확인
         expect(state.settings.leftPanelOpen).toBe(true); // 왼쪽 패널 확인
         expect(state.settings.rightPanelOpen).toBe(false); // 오른쪽 패널 확인
@@ -21,6 +21,8 @@ describe("초기 앱 상태", () => // 초기 상태 묶음
         expect(state.localReports).toEqual([]); // 신고 목록 확인
         expect(state.pinnedConversationIds).toEqual([]); // 고정 대화 확인
         expect(state.settings.conversationSort).toBe("recent"); // 대화방 정렬 확인
+        expect(state.stories).toHaveLength(3); // 예시 스토리 확인
+        expect(state.conversations.every((conversation) => conversation.mode === "character")).toBe(true); // 기본 대화 종류 확인
     }); // 검증 종료
 
     it("랭킹 캐릭터의 식별자와 이름을 중복 없이 제공한다", () => // 랭킹 중복 방지

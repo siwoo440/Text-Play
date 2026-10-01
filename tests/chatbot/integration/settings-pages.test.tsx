@@ -114,6 +114,6 @@ describe("설정 페이지", () => // 페이지 묶음
     { // 테스트 시작
         renderWithApp(<SupportScreen />); // 고객 지원 렌더링
         expect(screen.getAllByRole("group").length).toBeGreaterThanOrEqual(6); // 질문 개수 확인
-        expect(screen.getByText("데이터 버전").nextElementSibling).toHaveTextContent("9"); // 데이터 버전 확인
+        expect(screen.getByText("데이터 버전").nextElementSibling).toHaveTextContent("10"); // 데이터 버전 확인
     }); // 테스트 종료
 }); // 묶음 종료

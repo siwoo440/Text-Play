@@ -1,4 +1,5 @@
 import type { TokenWallet } from "@chatbot/features/core/types"; // 지갑 타입
+import { getDateKey } from "@chatbot/lib/time/date-key"; // 날짜 키
 
 export type TokenAction = "chat" | "advanced-chat" | "auto-image" | "manual-image" | "regenerate-image"; // 토큰 동작
 
@@ -29,6 +30,12 @@ export const tokenActionLabels: Readonly<Record<TokenAction, { label: string; de
     "regenerate-image": { label: "이미지 다시 생성", description: "장면 이미지를 새로 요청(준비 중)" }, // 재생성 설명
 }; // 설명 종료
 
+export function getDailyUsage(wallet: TokenWallet, now = new Date()): { chat: number; image: number } // 오늘 사용량(날짜가 바뀌면 0)
+{ // 함수 시작
+    const sameDay = getDateKey(new Date(wallet.updatedAt)) === getDateKey(now); // 마지막 사용과 같은 날인지 확인
+    return sameDay ? { chat: wallet.dailyChatUsed, image: wallet.dailyImageUsed } : { chat: 0, image: 0 }; // 오늘 사용량 반환
+} // 함수 종료
+
 export function trySpend(wallet: TokenWallet, action: TokenAction, now = new Date().toISOString()): SpendResult // 토큰 차감
 { // 함수 시작
     const cost = costs[action]; // 비용 조회
@@ -37,6 +44,7 @@ export function trySpend(wallet: TokenWallet, action: TokenAction, now = new Dat
         return { ok: false, wallet, cost }; // 실패 반환
     } // 조건 종료
     const imageAction = action === "auto-image" || action === "manual-image" || action === "regenerate-image"; // 이미지 판정
+    const daily = getDailyUsage(wallet, new Date(now)); // 날짜가 바뀌었으면 0부터
     return ( // 성공 반환
     { // 결과 시작
         ok: true, // 성공 표시
@@ -46,9 +54,9 @@ export function trySpend(wallet: TokenWallet, action: TokenAction, now = new Dat
             ...wallet, // 기존 값
             balance: wallet.balance - cost, // 잔액 차감
             totalUsed: wallet.totalUsed + cost, // 누적 사용량
-            dailyChatUsed: wallet.dailyChatUsed + (imageAction ? 0 : cost), // 대화 사용량
-            dailyImageUsed: wallet.dailyImageUsed + (imageAction ? 1 : 0), // 이미지 사용량
-            updatedAt: now, // 수정 시각
+            dailyChatUsed: daily.chat + (imageAction ? 0 : cost), // 대화 사용량
+            dailyImageUsed: daily.image + (imageAction ? 1 : 0), // 이미지 사용량
+            updatedAt: now, // 수정 시각(오늘 사용량의 기준 날짜)
         }, // 지갑 종료
     }); // 결과 종료
 } // 함수 종료

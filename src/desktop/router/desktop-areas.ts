@@ -29,12 +29,17 @@ export function getDesktopAreaId(match: DesktopRouteMatch): DesktopAreaId | null
         case "home": // 메인
         case "character": // 메인·탐색 카드에서 여는 상세
         case "chat": // 상세에서 시작하는 대화
+        case "story-home": // 메인의 모드 전환으로 여는 스토리 홈
+        case "story": // 스토리 상세
+        case "story-chat": // 스토리 대화
             return "home"; // 메인 소속
         case "explore": // 탐색
             return "explore"; // 탐색 소속
         case "library": // 보관함
         case "character-new": // 내 캐릭터 만들기
         case "character-edit": // 내 캐릭터 수정
+        case "story-new": // 내 스토리 만들기
+        case "story-edit": // 내 스토리 수정
             return "library"; // 내 작품 소속
         case "text-play-home": // Text-Play 홈
         case "text-play-play": // Text-Play 플레이

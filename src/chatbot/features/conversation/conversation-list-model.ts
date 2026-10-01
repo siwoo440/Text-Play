@@ -1,6 +1,8 @@
 import { canViewMatureContent, isMatureCharacter } from "@chatbot/features/adult/adult-access"; // 19세 콘텐츠 판정
 import { getConversationSummary, type ConversationSummary } from "@chatbot/features/conversation/conversation-versioning"; // 대화 요약 조회
-import type { AppState, Character, Conversation, ConversationSort } from "@chatbot/features/core/types"; // 도메인 타입
+import type { AppState, Character, Conversation, ConversationSort, Story } from "@chatbot/features/core/types"; // 도메인 타입
+import { isMatureStory } from "@chatbot/features/story/story-model"; // 19세 스토리 판정
+import { getDateParts, getDayNumber } from "@chatbot/lib/time/date-key"; // 시간대 기준 날짜
 
 export const CONVERSATION_PIN_LIMIT = 5; // 대화방 고정 최대 개수
 
@@ -15,7 +17,8 @@ export const conversationSortOptions: ReadonlyArray<{ id: ConversationSort; labe
 export interface ConversationListItem // 대화방 목록 항목
 { // 구조 시작
     conversation: Conversation; // 대화방
-    character: Character; // 대화 캐릭터
+    character: Character; // 대화 캐릭터(스토리는 대표 등장인물)
+    story: Story | null; // 스토리 대화의 스토리(캐릭터 대화는 null)
     summary: ConversationSummary; // 현재 버전 요약
     lastActivityAt: string; // 마지막 활동 시각
     turnCount: number; // 진행한 턴 수(현재 버전의 사용자 메시지 수)
@@ -30,29 +33,15 @@ export interface ConversationListGroup // 대화방 묶음
     items: ConversationListItem[]; // 묶음 항목
 } // 구조 종료
 
-const seoulDateParts = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Seoul", year: "numeric", month: "numeric", day: "numeric" }); // 서울 날짜 분해 도구
 const choseongList = ["ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"]; // 초성 목록
 const choseongSet = new Set(choseongList); // 초성 판정 집합
 const hangulBase = 0xac00; // 한글 음절 시작
 const hangulCount = 11172; // 한글 음절 수
 const syllablesPerInitial = 588; // 초성당 음절 수
 
-function getSeoulDate(date: Date): { year: number; month: number; day: number } // 서울 날짜 조회
-{ // 함수 시작
-    const parts = seoulDateParts.formatToParts(date); // 날짜 분해
-    const read = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value ?? 0); // 부분 값 조회
-    return { year: read("year"), month: read("month"), day: read("day") }; // 연월일 반환
-} // 함수 종료
-
-function toDayNumber(date: Date): number // 서울 기준 날짜 번호
-{ // 함수 시작
-    const { year, month, day } = getSeoulDate(date); // 서울 연월일
-    return Date.UTC(year, month - 1, day) / 86_400_000; // 날짜 번호 반환
-} // 함수 종료
-
 export function getCalendarDayDifference(iso: string, now: Date): number // 서울 기준 날짜 차이
 { // 함수 시작
-    return toDayNumber(now) - toDayNumber(new Date(iso)); // 날짜 차이 반환
+    return getDayNumber(now) - getDayNumber(new Date(iso)); // 날짜 차이 반환
 } // 함수 종료
 
 export function formatConversationTime(iso: string, now: Date): string // 짧은 상대 시간 표시
@@ -84,8 +73,8 @@ export function formatConversationTime(iso: string, now: Date): string // 짧은
     { // 조건 시작
         return `${days}일 전`; // 일 표시
     } // 조건 종료
-    const target = getSeoulDate(time); // 대상 날짜
-    return target.year === getSeoulDate(now).year ? `${target.month}월 ${target.day}일` : `${target.year}. ${target.month}. ${target.day}.`; // 날짜 표시
+    const target = getDateParts(time); // 대상 날짜
+    return target.year === getDateParts(now).year ? `${target.month}월 ${target.day}일` : `${target.year}. ${target.month}. ${target.day}.`; // 날짜 표시
 } // 함수 종료
 
 function getInitial(character: string): string // 음절 초성 조회
@@ -120,7 +109,8 @@ export function matchesKoreanText(text: string, query: string): boolean // 한�
 
 export function matchesConversationQuery(item: ConversationListItem, query: string): boolean // 대화방 검색 판정
 { // 함수 시작
-    const fields = [item.conversation.title, item.character.name, ...(item.locked ? [] : [item.summary.lastMessage])]; // 검색 대상(잠금 시 메시지 제외)
+    const storyFields = item.story === null ? [] : [item.story.title, ...item.conversation.storyCast.map((member) => member.displayName)]; // 스토리 제목·등장인물 이름
+    const fields = [item.conversation.title, item.character.name, ...storyFields, ...(item.locked ? [] : [item.summary.lastMessage])]; // 검색 대상(잠금 시 메시지 제외)
     return fields.some((field) => matchesKoreanText(field, query)); // 일치 여부 반환
 } // 함수 종료
 
@@ -140,12 +130,14 @@ export function buildConversationListItems(state: AppState, now: Date): Conversa
     { // 변환 시작
         const character = state.characters.find((item) => item.id === conversation.characterId); // 캐릭터 조회
         const summary = getConversationSummary(state, conversation.id); // 현재 버전 요약
-        if (conversation.archivedAt !== null || character === undefined || summary === null) // 보관·손상 판정
+        const story = conversation.mode === "story" ? state.stories.find((item) => item.id === conversation.storyId) ?? null : null; // 스토리 조회
+        if (conversation.archivedAt !== null || character === undefined || summary === null || (conversation.mode === "story" && story === null)) // 보관·손상 판정
         { // 조건 시작
             return []; // 항목 제외
         } // 조건 종료
         const lastActivityAt = summary.updatedAt.localeCompare(conversation.updatedAt) > 0 ? summary.updatedAt : conversation.updatedAt; // 더 최근 시각
-        return [{ conversation, character, summary, lastActivityAt, turnCount: turnCounts.get(summary.versionId) ?? 0, locked: isMatureCharacter(character) && !showMature, pinned: pinned.has(conversation.id) }]; // 항목 반환
+        const mature = story === null ? isMatureCharacter(character) : isMatureStory(story); // 19세 판정(스토리는 스토리 등급 기준)
+        return [{ conversation, character, story, summary, lastActivityAt, turnCount: turnCounts.get(summary.versionId) ?? 0, locked: mature && !showMature, pinned: pinned.has(conversation.id) }]; // 항목 반환
     }); // 변환 종료
 } // 함수 종료
 

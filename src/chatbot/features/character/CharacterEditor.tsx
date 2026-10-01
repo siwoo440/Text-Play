@@ -3,12 +3,13 @@
 import Link from "@/desktop/next-compat/link"; // 내부 링크
 import Image from "@/desktop/next-compat/image"; // 최적화 이미지
 import type { Route } from "@/desktop/next-compat/route"; // 경로 타입
-import { useEffect, useMemo, useState } from "react"; // 리액트 도구
+import { useMemo, useState } from "react"; // 리액트 도구
 import { StatusScreen } from "@chatbot/components/feedback/StatusScreen"; // 공통 상태 화면
 import { isAdultVerified } from "@chatbot/features/adult/adult-access"; // 성인 인증 판정
 import { CharacterPreview } from "@chatbot/features/character/CharacterPreview"; // 미리보기
 import { normalizeCharacterDraft, validateCharacterDraft, type CharacterValidationResult } from "@chatbot/features/character/character-validation"; // 초안 검증
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 상태
+import { useUnsavedChangesGuard } from "@chatbot/features/core/useUnsavedChangesGuard"; // 이탈 경고
 import type { Character, CharacterDraft, PublicationStatus } from "@chatbot/features/core/types"; // 캐릭터 타입
 import styles from "@chatbot/features/character/CharacterEditor.module.css"; // 편집기 스타일
 
@@ -61,51 +62,7 @@ export function CharacterEditor({ characterId }: { characterId?: string }) // �
     const [savedId] = useState(() => existing?.id ?? `character-${Date.now()}`); // 저장 식별자
     const [dirty, setDirty] = useState(false); // 변경 표시
     const adultVerified = isAdultVerified(state.profile, new Date()); // 성인 인증 상태
-    useEffect(() => // 이탈 경고 효과
-    { // 효과 시작
-        const warn = (event: BeforeUnloadEvent) => // 이탈 처리
-        { // 처리 시작
-            if (dirty) // 변경 판정
-            { // 조건 시작
-                event.preventDefault(); // 이탈 경고
-            } // 조건 종료
-        }; // 처리 종료
-        const confirmNavigation = (event: MouseEvent) => // 내부 이동 처리
-        { // 처리 시작
-            if (!dirty || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) // 경고 제외 판정
-            { // 조건 시작
-                return; // 처리 종료
-            } // 조건 종료
-            const target = event.target; // 클릭 대상
-            if (!(target instanceof Element)) // 요소 여부 판정
-            { // 조건 시작
-                return; // 처리 종료
-            } // 조건 종료
-            const anchor = target.closest("a[href]"); // 링크 탐색
-            if (!(anchor instanceof HTMLAnchorElement)) // 링크 여부 판정
-            { // 조건 시작
-                return; // 처리 종료
-            } // 조건 종료
-            const destination = new URL(anchor.href, window.location.href); // 이동 주소 생성
-            if (destination.origin !== window.location.origin) // 외부 주소 판정
-            { // 조건 시작
-                return; // 처리 종료
-            } // 조건 종료
-            const accepted = window.confirm("저장하지 않은 변경 사항이 있습니다. 페이지를 이동하시겠습니까?"); // 이동 확인
-            if (!accepted) // 이동 취소 판정
-            { // 조건 시작
-                event.preventDefault(); // 기본 이동 취소
-                event.stopPropagation(); // 링크 전파 중단
-            } // 조건 종료
-        }; // 처리 종료
-        window.addEventListener("beforeunload", warn); // 경고 구독
-        document.addEventListener("click", confirmNavigation, true); // 내부 이동 구독
-        return () => // 경고 정리
-        { // 정리 시작
-            window.removeEventListener("beforeunload", warn); // 새로고침 경고 해제
-            document.removeEventListener("click", confirmNavigation, true); // 내부 이동 해제
-        }; // 정리 종료
-    }, [dirty]); // 변경 상태 의존
+    useUnsavedChangesGuard(dirty); // 저장하지 않은 변경 이탈 경고
     if (characterId !== undefined && existing === undefined) // 수정 대상 부재 판정
     { // 조건 시작
         return ( // 부재 화면 반환

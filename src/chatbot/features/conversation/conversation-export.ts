@@ -196,9 +196,24 @@ function createImportedConversationId(state: AppState, sourceId: string): string
     return candidate; // 고유 식별자 반환
 } // 함수 종료
 
-export function mergeConversationExport(state: AppState, imported: ConversationExport): AppState // 대화 파일 병합
+function normalizeConversationMode(conversation: Conversation): Conversation // 대화 종류 기본값 채우기(이전 파일 호환)
 { // 함수 시작
-    validateConversationExport(imported); // 병합 전 검증
+    const record = conversation as Partial<Conversation>; // 선택 필드 접근
+    if (record.mode === "story") // 스토리 대화 판정
+    { // 조건 시작
+        return { ...conversation, storyId: record.storyId ?? null, storyCast: record.storyCast ?? [] }; // 스토리 필드 유지
+    } // 조건 종료
+    return { ...conversation, mode: "character", storyId: null, storyCast: [] }; // 캐릭터 대화로 정리
+} // 함수 종료
+
+export function mergeConversationExport(state: AppState, rawImport: ConversationExport): AppState // 대화 파일 병합
+{ // 함수 시작
+    validateConversationExport(rawImport); // 병합 전 검증
+    const imported = { ...rawImport, conversation: normalizeConversationMode(rawImport.conversation) }; // 대화 종류 정리
+    if (imported.conversation.mode === "story" && !state.stories.some((story) => story.id === imported.conversation.storyId)) // 스토리 부재 판정
+    { // 조건 시작
+        throw new Error("이 대화의 스토리가 이 브라우저에 없어 가져올 수 없습니다."); // 스토리 부재 오류
+    } // 조건 종료
     const existingConversationIds = new Set(state.conversations.map((conversation) => conversation.id)); // 기존 대화 식별자 집합
     const existingVersionIds = new Set(state.conversationVersions.map((version) => version.id)); // 기존 버전 식별자 집합
     const existingMessageIds = new Set(state.messages.map((message) => message.id)); // 기존 메시지 식별자 집합

@@ -33,6 +33,11 @@ describe("데스크톱 메뉴 영역", () => // 메뉴 영역 묶음
         expect(getDesktopAreaId({ kind: "settings", section: "tokens" })).toBe("settings"); // 설정 세부 확인
         expect(getDesktopAreaId({ kind: "support" })).toBe("support"); // 지원 확인
         expect(getDesktopAreaId({ kind: "ai-models" })).toBe("ai-models"); // AI 모델 확인
+        expect(getDesktopAreaId({ kind: "story-home" })).toBe("home"); // 스토리 홈은 메인 소속(메인의 모드 전환)
+        expect(getDesktopAreaId({ kind: "story", id: "a" })).toBe("home"); // 스토리 상세 소속 확인
+        expect(getDesktopAreaId({ kind: "story-chat", id: "a", conversationId: undefined, versionId: undefined })).toBe("home"); // 스토리 대화 소속 확인
+        expect(getDesktopAreaId({ kind: "story-new" })).toBe("library"); // 새 스토리는 내 작품 소속
+        expect(getDesktopAreaId({ kind: "story-edit", id: "a" })).toBe("library"); // 스토리 수정 소속 확인
         expect(getDesktopAreaId({ kind: "not-found" })).toBeNull(); // 없는 화면 확인
     }); // 테스트 종료
 }); // 묶음 종료

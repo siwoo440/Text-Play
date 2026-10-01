@@ -3,6 +3,7 @@ import Link from "@/desktop/next-compat/link"; // 내부 경로 링크
 import type { AppSettings, TokenWallet, UserProfile } from "@chatbot/features/core/types"; // 사용자 타입
 import { isAdultVerified } from "@chatbot/features/adult/adult-access"; // 성인 인증 판정
 import { settingsNavigation } from "@chatbot/features/settings/settings-navigation"; // 공통 메뉴 정의
+import { getDailyUsage } from "@chatbot/lib/story/token-policy"; // 오늘 사용량
 
 interface UserPanelProps // 패널 속성
 { // 구조 시작
@@ -36,7 +37,7 @@ export function UserPanel({ profile, wallet, settings, open, onNavigate }: UserP
                 </div> {/* 토큰 잔액 종료 */}
                 <div className="user-panel-wallet-secondary"> {/* 이미지 사용량 */}
                     <span className="user-panel-wallet-label">오늘 이미지</span> {/* 이미지 표제 */}
-                    <strong>{wallet.dailyImageUsed}회</strong> {/* 이미지 값 */}
+                    <strong>{getDailyUsage(wallet, new Date()).image}회</strong> {/* 이미지 값(날짜가 바뀌면 0) */}
                 </div> {/* 이미지 사용량 종료 */}
             </section> {/* 토큰 영역 종료 */}
             <nav className="user-panel-menu" aria-label="사용자 메뉴"> {/* 사용자 메뉴 */}

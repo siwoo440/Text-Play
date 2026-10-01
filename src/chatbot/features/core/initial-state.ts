@@ -1,14 +1,16 @@
 import type { AppState } from "@chatbot/features/core/types"; // 앱 상태 타입
 import { mockCharacters, mockConversations, mockConversationVersions, mockMessages, mockProfile } from "@chatbot/mocks/fixtures"; // Mock 기준값
+import { mockStories } from "@chatbot/mocks/story-fixtures"; // 예시 스토리
 
 export function createInitialState(): AppState // 초기 상태 생성 함수
 { // 함수 시작
     return ( // 초기 상태 반환
     { // 상태 시작
-        schemaVersion: 9, // 스키마 버전
+        schemaVersion: 10, // 스키마 버전
         providerMode: "mock", // Mock 공급자
         profile: structuredClone(mockProfile), // 사용자 복사본
         characters: structuredClone(mockCharacters), // 캐릭터 복사본
+        stories: structuredClone(mockStories), // 예시 스토리 복사본
         conversations: structuredClone(mockConversations), // 대화방 복사본
         conversationVersions: structuredClone(mockConversationVersions), // 대화 버전 복사본
         messages: structuredClone(mockMessages), // 메시지 복사본

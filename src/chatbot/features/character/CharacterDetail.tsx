@@ -46,7 +46,7 @@ export function CharacterDetail({ characterId }: { characterId: string }) // 캐
     const showMature = canViewMatureContent(state, new Date()); // 19세 콘텐츠 표시 여부
     if (isMatureCharacter(character) && !showMature) // 잠긴 캐릭터 판정
     { // 조건 시작
-        return <AdultContentGate character={character} target="detail" />; // 잠금 화면 반환
+        return <AdultContentGate subject={{ kind: "character", name: character.name, coverImage: character.coverImage }} target="detail" />; // 잠금 화면 반환
     } // 조건 종료
     const visibleCharacters = showMature ? state.characters : state.characters.filter((item) => !isMatureCharacter(item)); // 등급 허용 캐릭터
     const profile = initialProfile; // 상세 프로필 확정

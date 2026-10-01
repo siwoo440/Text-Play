@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from "@testing-library/react"; // 화면 도구
+import { act, fireEvent, screen, within } from "@testing-library/react"; // 화면 도구
 import userEvent from "@testing-library/user-event"; // 사용자 동작
 import { describe, expect, it, vi } from "vitest"; // 테스트 도구
 import { AppShell } from "@chatbot/components/app-shell/AppShell"; // 앱 셸
@@ -13,6 +13,26 @@ vi.mock("@/desktop/next-compat/navigation", () => // 경로 도구 대체
 
 describe("앱 셸 패널", () => // 패널 묶음
 { // 묶음 시작
+    it("60분 동안 이용하면 쉬어 가기 알림을 보여 주고 확인하면 닫는다", () => // 이용 시간 알림 검증
+    { // 검증 시작
+        vi.useFakeTimers({ now: new Date("2026-10-01T00:00:00.000Z") }); // 시각 고정
+        window.sessionStorage.clear(); // 이전 기록 제거
+        try // 시계 복원 보장
+        { // 시도 시작
+            renderWithApp(<AppShell><main>본문</main></AppShell>); // 화면 렌더
+            act(() => { vi.advanceTimersByTime(59 * 60_000); }); // 59분 경과
+            expect(screen.queryByText(/동안 이용했어요/)).not.toBeInTheDocument(); // 알림 미표시 확인
+            act(() => { vi.advanceTimersByTime(60_000); }); // 60분 도달
+            expect(screen.getByText(/1시간 동안 이용했어요/)).toBeInTheDocument(); // 알림 표시 확인
+            fireEvent.click(screen.getByRole("button", { name: "계속 이용하기" })); // 알림 확인
+            expect(screen.queryByText(/동안 이용했어요/)).not.toBeInTheDocument(); // 알림 닫힘 확인
+        } // 시도 종료
+        finally // 정리
+        { // 정리 시작
+            vi.useRealTimers(); // 실제 시계 복원
+        } // 정리 종료
+    }); // 검증 종료
+
     it("승인된 Mate Verse 이미지 로고를 표시한다", () => // 로고 검증
     { // 검증 시작
         renderWithApp(<AppShell><main>본문</main></AppShell>); // 화면 렌더

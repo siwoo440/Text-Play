@@ -20,6 +20,11 @@ export type DesktopRouteMatch = // 화면 경로 결과
     | { kind: "settings"; section: DesktopSettingsSection } // 설정
     | { kind: "support" } // 고객 지원
     | { kind: "ai-models" } // 내장 AI 모델
+    | { kind: "story-home" } // 스토리 모드 홈
+    | { kind: "story-new" } // 새 스토리 만들기
+    | { kind: "story"; id: string } // 스토리 상세
+    | { kind: "story-chat"; id: string; conversationId: string | undefined; versionId: string | undefined } // 스토리 대화
+    | { kind: "story-edit"; id: string } // 스토리 수정
     | { kind: "text-play-home" } // Text-Play 홈
     | { kind: "text-play-play"; resumeSlot: TextPlaySlotId | null } // Text-Play 플레이
     | { kind: "redirect"; to: string } // 주소 이동
@@ -135,6 +140,26 @@ export function matchDesktopRoute(location: DesktopLocation): DesktopRouteMatch 
     { // 조건 시작
         return { kind: "support" }; // 지원 반환
     } // 조건 종료
+    if (first === "stories" && segments.length === 1) // 스토리 홈 확인
+    { // 조건 시작
+        return { kind: "story-home" }; // 스토리 홈 반환
+    } // 조건 종료
+    if (first === "stories" && second === "new" && segments.length === 2) // 새 스토리 확인
+    { // 조건 시작
+        return { kind: "story-new" }; // 새 스토리 반환
+    } // 조건 종료
+    if (first === "stories" && second !== undefined && segments.length === 2) // 스토리 상세 확인
+    { // 조건 시작
+        return { kind: "story", id: second }; // 스토리 상세 반환
+    } // 조건 종료
+    if (first === "stories" && second !== undefined && segments[2] === "chat" && segments.length === 3) // 스토리 대화 확인
+    { // 조건 시작
+        return { kind: "story-chat", id: second, conversationId: query.get("conversation") ?? undefined, versionId: query.get("version") ?? undefined }; // 스토리 대화 반환
+    } // 조건 종료
+    if (first === "stories" && second !== undefined && segments[2] === "edit" && segments.length === 3) // 스토리 수정 확인
+    { // 조건 시작
+        return { kind: "story-edit", id: second }; // 스토리 수정 반환
+    } // 조건 종료
     if (first === "ai-models" && segments.length === 1) // AI 모델 확인
     { // 조건 시작
         return { kind: "ai-models" }; // AI 모델 반환
@@ -169,6 +194,11 @@ export function getDesktopRouteTitle(match: DesktopRouteMatch): string // 화면
         case "settings": return `설정 · ${settingsSections[match.section]}`; // 설정 제목
         case "support": return "고객 지원"; // 지원 제목
         case "ai-models": return "AI 모델"; // AI 모델 제목
+        case "story-home": return "스토리 모드"; // 스토리 홈 제목
+        case "story-new": return "새 스토리 만들기"; // 새 스토리 제목
+        case "story": return "스토리 상세"; // 스토리 상세 제목
+        case "story-chat": return "스토리 대화"; // 스토리 대화 제목
+        case "story-edit": return "스토리 수정"; // 스토리 수정 제목
         case "text-play-home": return "Text-Play"; // Text-Play 제목
         case "text-play-play": return "Text-Play 플레이"; // 플레이 제목
         case "redirect": return "이동 중"; // 이동 제목

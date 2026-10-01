@@ -11,6 +11,36 @@ export type MemoryCategory = "summary" | "event" | "preference"; // 기억 분�
 export type ReportReason = "incorrect-rating" | "harmful-content" | "copyright" | "spam" | "other"; // 신고 사유
 export type AdultVerificationMethod = "mock"; // 성인 인증 방식
 export type ConversationSort = "recent" | "relationship" | "turns" | "title"; // 대화방 정렬 기준
+export type ConversationMode = "character" | "story"; // 대화 종류(캐릭터 1명 대화 / 스토리 상황극)
+
+export interface StoryCastMember // 스토리 등장인물
+{ // 구조 시작
+    characterId: string; // 연결 캐릭터 식별자
+    displayName: string; // 이야기 속 이름(대사 앞 표시)
+    role: string; // 이 이야기에서 맡은 역할
+    firstLine: string; // 시작 장면 첫 대사(없으면 빈 문자열)
+} // 구조 종료
+
+export interface Story // 스토리(여러 인물 또는 한 명과 펼치는 상황극)
+{ // 구조 시작
+    id: string; // 스토리 식별자
+    creatorId: string; // 제작자 식별자
+    creatorName: string; // 제작자 이름
+    title: string; // 제목
+    summary: string; // 한 줄 소개
+    synopsis: string; // 줄거리·세계관
+    opening: string; // 시작 장면 내레이션
+    userRole: string; // 사용자가 맡는 역할
+    cast: StoryCastMember[]; // 등장인물(1~4명)
+    tags: string[]; // 태그
+    coverImage: string; // 대표 이미지
+    visibility: CharacterVisibility; // 공개 범위
+    contentRating: ContentRating; // 이용 등급
+    publicationStatus: PublicationStatus; // 발행 상태
+    popularity: number; // 이용 지표
+    createdAt: string; // 생성 시각
+    updatedAt: string; // 수정 시각
+} // 구조 종료
 
 export interface AdultVerification // 성인 인증 구조
 { // 구조 시작
@@ -77,6 +107,9 @@ export interface Conversation // 대화방 구조
     archivedAt: string | null; // 보관 시각
     createdAt: string; // 생성 시각
     updatedAt: string; // 수정 시각
+    mode: ConversationMode; // 대화 종류
+    storyId: string | null; // 연결 스토리(캐릭터 모드는 null)
+    storyCast: StoryCastMember[]; // 시작 시점 등장인물 묶음(캐릭터 모드는 빈 목록)
 } // 구조 종료
 
 export interface ConversationVersion // 대화 버전 구조
@@ -224,10 +257,11 @@ export interface AppSettings // 앱 설정 구조
 
 export interface AppState // 앱 상태 구조
 { // 구조 시작
-    schemaVersion: 9; // 스키마 버전
+    schemaVersion: 10; // 스키마 버전
     providerMode: ProviderMode; // 공급자 설정
     profile: UserProfile; // 사용자 프로필
     characters: Character[]; // 캐릭터 목록
+    stories: Story[]; // 스토리 목록
     conversations: Conversation[]; // 대화방 목록
     conversationVersions: ConversationVersion[]; // 대화 버전 목록
     messages: Message[]; // 메시지 목록

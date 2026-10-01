@@ -168,6 +168,9 @@ export const mockConversations: Conversation[] = // 대화방 기준값
         archivedAt: null, // 보관 시각
         createdAt: "2026-09-18T20:00:00.000Z", // 생성 시각
         updatedAt: "2026-09-22T06:20:00.000Z", // 수정 시각
+        mode: "character", // 대화 종류
+        storyId: null, // 연결 스토리
+        storyCast: [], // 등장인물 묶음
     }, // 리안 대화 종료
     { // 세라 대화 시작
         id: "conversation-sera", // 대화방 식별자
@@ -179,6 +182,9 @@ export const mockConversations: Conversation[] = // 대화방 기준값
         archivedAt: null, // 보관 시각
         createdAt: "2026-09-19T19:00:00.000Z", // 생성 시각
         updatedAt: "2026-09-22T06:12:00.000Z", // 수정 시각
+        mode: "character", // 대화 종류
+        storyId: null, // 연결 스토리
+        storyCast: [], // 등장인물 묶음
     }, // 세라 대화 종료
     { // 노아 대화 시작
         id: "conversation-noah", // 대화방 식별자
@@ -190,6 +196,9 @@ export const mockConversations: Conversation[] = // 대화방 기준값
         archivedAt: null, // 보관 시각
         createdAt: "2026-09-20T21:00:00.000Z", // 생성 시각
         updatedAt: "2026-09-21T23:40:00.000Z", // 수정 시각
+        mode: "character", // 대화 종류
+        storyId: null, // 연결 스토리
+        storyCast: [], // 등장인물 묶음
     }, // 노아 대화 종료
 ]; // 대화방 목록 종료
 

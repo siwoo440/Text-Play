@@ -5,11 +5,11 @@ export type TextPlayJsonSchema = Record<string, unknown>; // JSON 스키마 객�
 const STAT_KEYS: TextPlayStatKey[] = ["hp", "sanity", "gold"]; // 능력치 식별자 목록
 const NARRATION_MAX_LENGTH = 300; // 서술 최대 글자 수
 const DIALOGUE_MAX_LENGTH = 150; // 대사 최대 글자 수
-const SPEAKER_MAX_LENGTH = 20; // 발화자 최대 글자 수
 const MAX_PROPOSED_ACTIONS = 4; // 제안 액션 최대 개수
-const STAT_CHANGE_LIMIT = 20; // 능력치 한 번 변화 상한
-const RELATION_CHANGE_LIMIT = 10; // 관계도 한 번 변화 상한
-const ITEM_QUANTITY_LIMIT = 3; // 아이템 한 번 수량 상한
+export const STAT_CHANGE_LIMIT = 20; // 능력치 한 번 변화 상한
+export const RELATION_CHANGE_LIMIT = 10; // 관계도 한 번 변화 상한
+export const ITEM_QUANTITY_LIMIT = 3; // 아이템 한 번 수량 상한
+export const AI_ACTION_TYPES = ["change-stat", "add-item", "remove-item", "change-relation"] as const; // AI가 제안할 수 있는 행동(이동·퀘스트·사건·엔딩은 작품 선택지 전용)
 
 function idEnum(ids: string[]): TextPlayJsonSchema // 식별자 목록 스키마
 { // 함수 시작
@@ -39,24 +39,16 @@ function createActionSchemas(packageData: TextPlayPackage): TextPlayJsonSchema[]
         actions.push(actionSchema("add-item", { itemId: idEnum(packageData.itemIds), quantity: integerRange(1, ITEM_QUANTITY_LIMIT) })); // 아이템 추가 액션
         actions.push(actionSchema("remove-item", { itemId: idEnum(packageData.itemIds), quantity: integerRange(1, ITEM_QUANTITY_LIMIT) })); // 아이템 제거 액션
     } // 조건 종료
-    if (packageData.locationIds.length > 0) // 장소 존재 확인
-    { // 조건 시작
-        actions.push(actionSchema("move-location", { locationId: idEnum(packageData.locationIds) })); // 위치 이동 액션
-    } // 조건 종료
     if (packageData.characterIds.length > 0) // 인물 존재 확인
     { // 조건 시작
         actions.push(actionSchema("change-relation", { characterId: idEnum(packageData.characterIds), amount: integerRange(-RELATION_CHANGE_LIMIT, RELATION_CHANGE_LIMIT) })); // 관계도 액션
     } // 조건 종료
-    if (packageData.questIds.length > 0) // 퀘스트 존재 확인
-    { // 조건 시작
-        actions.push(actionSchema("start-quest", { questId: idEnum(packageData.questIds) })); // 퀘스트 시작 액션
-        actions.push(actionSchema("complete-quest", { questId: idEnum(packageData.questIds) })); // 퀘스트 완료 액션
-    } // 조건 종료
-    if (packageData.eventIds.length > 0) // 이벤트 존재 확인
-    { // 조건 시작
-        actions.push(actionSchema("trigger-event", { eventId: idEnum(packageData.eventIds) })); // 이벤트 액션
-    } // 조건 종료
     return actions; // 후보 목록 반환
+} // 함수 종료
+
+export function speakerNames(packageData: TextPlayPackage): string[] // 대사를 말할 수 있는 등장인물 표시 이름
+{ // 함수 시작
+    return packageData.characterIds.map((id) => packageData.glossary?.characters[id]?.name ?? id); // 표시 이름(없으면 식별자)
 } // 함수 종료
 
 export function createTextPlayResponseJsonSchema(packageData: TextPlayPackage): TextPlayJsonSchema // 응답 JSON 스키마 생성
@@ -66,14 +58,14 @@ export function createTextPlayResponseJsonSchema(packageData: TextPlayPackage): 
         properties: // 응답 필드(생성 순서)
         { // 필드 시작
             narration: { type: "string", minLength: 1, maxLength: NARRATION_MAX_LENGTH }, // 장면 서술
-            dialogue: // 선택 대사
+            dialogue: packageData.characterIds.length === 0 ? { type: "null" } : // 등장인물이 없으면 대사 없음
             { // 대사 시작
                 anyOf: // 대사 후보
                 [ // 후보 시작
                     { type: "null" }, // 대사 없음
                     { // 대사 객체 시작
                         type: "object", // 객체 형식
-                        properties: { speaker: { type: "string", minLength: 1, maxLength: SPEAKER_MAX_LENGTH }, content: { type: "string", minLength: 1, maxLength: DIALOGUE_MAX_LENGTH } }, // 발화자와 내용
+                        properties: { speaker: idEnum(speakerNames(packageData)), content: { type: "string", minLength: 1, maxLength: DIALOGUE_MAX_LENGTH } }, // 등장인물만 발화자로
                         required: ["speaker", "content"], // 필수 필드
                         additionalProperties: false, // 추가 필드 차단
                     }, // 대사 객체 종료

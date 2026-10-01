@@ -1,4 +1,4 @@
-import { validateProposedActions } from "@/features/text-play/ai/action-validator"; // AI 액션 검증기
+import { selectApplicableActions } from "@/features/text-play/ai/action-validator"; // AI 행동 고르기
 import { buildTextPlayContext } from "@/features/text-play/ai/context-builder"; // AI 문맥 생성기
 import { parseTextPlayResponse } from "@/features/text-play/ai/response-schema"; // AI 응답 해석기
 import { applyTextPlayActions } from "@/features/text-play/core/engine"; // 게임 액션 처리기
@@ -103,14 +103,9 @@ export function createTextPlayController(dependencies: TextPlayControllerDepende
                     dependencies.dispatch({ type: "ai-failed", message: "응답을 해석하지 못했습니다." }); // 해석 오류 전달
                     return; // 처리 종료
                 } // 조건 종료
-                const validated = validateProposedActions(packageData, confirmed, parsed.value.proposedActions); // 액션 검증
-                if (!validated.ok) // 액션 실패 확인
-                { // 조건 시작
-                    dependencies.dispatch({ type: "ai-failed", message: "허용되지 않은 상태 변경을 거부했습니다." }); // 액션 오류 전달
-                    return; // 처리 종료
-                } // 조건 종료
+                const selection = selectApplicableActions(packageData, confirmed, parsed.value.proposedActions); // 지금 적용할 수 있는 행동만 고르기(나머지는 빼고 서술은 살림)
                 const now = dependencies.now(); // 확정 시각 생성
-                const applied = applyTextPlayActions(packageData, confirmed, validated.actions, now); // 액션 일괄 적용
+                const applied = applyTextPlayActions(packageData, confirmed, selection.accepted, now); // 고른 행동 일괄 적용
                 if (!applied.ok) // 엔진 실패 확인
                 { // 조건 시작
                     dependencies.dispatch({ type: "ai-failed", message: "게임 상태를 변경하지 못했습니다." }); // 엔진 오류 전달

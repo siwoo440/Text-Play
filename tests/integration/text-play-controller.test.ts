@@ -77,6 +77,19 @@ describe("Text-Play 세션 제어기", () => // 제어기 검증 묶음
         expect(adapter.receivedSignal).toBe(signal); // 중단 신호 전달 확인
     }); // 테스트 종료
 
+    it("지금 상황에 맞지 않는 행동만 빼고 서술과 나머지 행동은 반영한다", async () => // 부분 적용 검증
+    { // 테스트 시작
+        let state = createPreparedTextPlaySessionState(); // 세션 상태 생성
+        const repository = new MemoryTextPlaySaveRepository(); // 저장소 생성
+        const raw = JSON.stringify({ narration: "안개가 걷힌다.", dialogue: null, proposedActions: [{ type: "complete-quest", questId: "voices-below" }, { type: "change-relation", characterId: "lyra", amount: 3 }] }); // 선택지 전용 행동이 섞인 응답
+        const controller = createTextPlayController({ llm: new FixedAdapter(raw), repository, getState: () => state, dispatch: (action) => { state = textPlayReducer(state, action); }, now: () => "2026-09-26T00:00:00.000Z" }); // 제어기 생성
+        await controller.sendFreeInput("안개를 헤친다", new AbortController().signal); // 자유 입력 전송
+        expect(state.error).toBeNull(); // 턴 거부 없음 확인
+        expect(state.game.relations.lyra).toBe(3); // 가능한 행동 반영 확인
+        expect(state.game.completedQuestIds).toEqual([]); // 선택지 전용 행동 제외 확인
+        expect(state.game.log.at(-1)?.content).toBe("안개가 걷힌다."); // 서술 기록 확인
+    }); // 테스트 종료
+
     it("잘못된 JSON 응답에서는 확정 상태를 유지하고 저장하지 않는다", async () => // 실패 흐름 검증
     { // 테스트 시작
         let state = createPreparedTextPlaySessionState(); // 세션 상태 생성

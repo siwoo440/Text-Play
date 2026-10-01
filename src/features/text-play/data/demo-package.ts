@@ -24,6 +24,14 @@ export const DEMO_TEXT_PLAY_PACKAGE: TextPlayPackage = // 공식 샘플 패키�
     questIds: ["voices-below"], // 퀘스트 목록
     eventIds: ["truth-revealed"], // 이벤트 목록
     characterIds: ["lyra"], // 캐릭터 목록
+    glossary: // 표시 이름과 소개
+    { // 용어 시작
+        characters: { lyra: { name: "리라", description: "달빛 숲의 기록을 지키던 기록관. 숲 아래 목소리를 조사하다 자취를 감췄고, 지금은 희미한 목소리로만 플레이어 곁에 머문다. 차분하고 조심스러운 말투를 쓴다." } }, // 인물
+        items: { "moon-lantern": "달빛 등불" }, // 아이템
+        locations: { "forest-gate": "달빛 숲 입구", "moonlit-hall": "폐허 회랑", "sealed-study": "봉인된 서재" }, // 장소
+        quests: { "voices-below": "숲 아래의 목소리" }, // 퀘스트
+        events: { "truth-revealed": "기록의 진실" }, // 이벤트
+    }, // 용어 종료
     scenes: // 장면 목록
     [ // 장면 시작
         { // 숲 입구 시작

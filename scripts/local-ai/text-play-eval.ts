@@ -1,9 +1,8 @@
-import { validateProposedActions } from "@/features/text-play/ai/action-validator"; // 앱 행동 검증기
+import { selectApplicableActions, type TextPlayActionRejection } from "@/features/text-play/ai/action-validator"; // 앱 행동 고르기
 import { buildTextPlayContext } from "@/features/text-play/ai/context-builder"; // 앱 문맥 생성기
 import { createTextPlayResponseJsonSchema, type TextPlayJsonSchema } from "@/features/text-play/ai/response-json-schema"; // 응답 JSON 스키마 생성기
 import { parseTextPlayResponse } from "@/features/text-play/ai/response-schema"; // 앱 응답 해석기
 import type { TextPlayDialogue, TextPlayResponseFailure } from "@/features/text-play/ai/types"; // 응답 계약
-import type { TextPlayEngineFailure } from "@/features/text-play/core/actions"; // 엔진 실패 종류
 import { createTextPlayState, selectTextPlayChoice } from "@/features/text-play/core/engine"; // 상태 생성기
 import type { TextPlayAction, TextPlayStatKey, TextPlayState } from "@/features/text-play/core/types"; // 도메인 계약
 import { DEMO_TEXT_PLAY_PACKAGE } from "@/features/text-play/data/demo-package"; // 샘플 작품
@@ -35,7 +34,7 @@ export interface TextPlayEvalRequest // 모델에 보낼 평가 요청
 export interface TextPlayEvalJudgement // 응답 판정 결과
 { // 구조 시작
     parse: "ok" | TextPlayResponseFailure; // 형식 해석 결과
-    validation: "ok" | "skipped" | TextPlayEngineFailure; // 행동 검증 결과
+    validation: "ok" | "skipped" | TextPlayActionRejection; // 행동 검증 결과(하나라도 빠지면 첫 이유)
     forbiddenHits: TextPlayAction[]; // 넘어간 금지 행동
     narration: string | null; // 서술
     dialogue: TextPlayDialogue | null; // 대사
@@ -180,11 +179,11 @@ export function judgeTextPlayEvalOutput(caseId: string, raw: string): TextPlayEv
     { // 조건 시작
         return { parse: parsed.reason, validation: "skipped", forbiddenHits: [], narration: null, dialogue: null, actions: [], koreanRatio: null, hasHanCharacters: false }; // 실패 판정 반환
     } // 조건 종료
-    const validated = validateProposedActions(DEMO_TEXT_PLAY_PACKAGE, item.state, parsed.value.proposedActions); // 앱 검증기로 검증
+    const selection = selectApplicableActions(DEMO_TEXT_PLAY_PACKAGE, item.state, parsed.value.proposedActions); // 앱 규칙으로 행동 고르기
     const spoken = [parsed.value.narration, parsed.value.dialogue?.content ?? ""].join(" "); // 언어 판정 대상
     return { // 판정 반환
         parse: "ok", // 해석 성공
-        validation: validated.ok ? "ok" : validated.reason, // 검증 결과
+        validation: selection.rejected[0]?.reason ?? "ok", // 검증 결과
         forbiddenHits: parsed.value.proposedActions.filter((action) => item.forbidden.some((kind) => matchesForbidden(action, kind))), // 넘어간 금지 행동
         narration: parsed.value.narration, // 서술
         dialogue: parsed.value.dialogue, // 대사

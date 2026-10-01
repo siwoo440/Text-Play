@@ -65,6 +65,15 @@ export interface TextPlayState // 게임 상태 구조
     updatedAt: string; // 갱신 시각
 } // 구조 종료
 
+export interface TextPlayGlossary // 식별자의 표시 이름과 소개(AI 문맥·화면 표시용)
+{ // 구조 시작
+    characters: Record<string, { name: string; description: string }>; // 인물 이름과 소개
+    items: Record<string, string>; // 아이템 이름
+    locations: Record<string, string>; // 장소 이름
+    quests: Record<string, string>; // 퀘스트 이름
+    events: Record<string, string>; // 이벤트 이름
+} // 구조 종료
+
 export interface TextPlayPackage // 작품 패키지 구조
 { // 구조 시작
     id: string; // 작품 식별자
@@ -81,6 +90,7 @@ export interface TextPlayPackage // 작품 패키지 구조
     questIds: string[]; // 퀘스트 식별자 목록
     eventIds: string[]; // 이벤트 식별자 목록
     characterIds: string[]; // 캐릭터 식별자 목록
+    glossary?: TextPlayGlossary; // 표시 이름과 소개(없으면 식별자 그대로)
     scenes: TextPlayScene[]; // 장면 목록
     endings: TextPlayEnding[]; // 엔딩 목록
 } // 구조 종료

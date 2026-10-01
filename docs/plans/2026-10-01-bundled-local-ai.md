@@ -16,7 +16,7 @@
 | 구분 | 모델 | 크기(Q4_K_M 기준) | 라이선스 | 권장 사양 | 받는 시점 |
 | --- | --- | --- | --- | --- | --- |
 | 가벼움(기본) | Mi:dm 2.0 Mini 2.3B (KT, Llama 구조, 한국어·영어) | 약 1.5GB | MIT | 그래픽 메모리 4GB 이상 또는 RAM 8GB 이상, CPU만으로도 동작 | **설치할 때 자동** |
-| 표준 | Qwen3.5-4B (소형은 생각 출력 기본 꺼짐) | 약 3GB | Apache 2.0 | 그래픽 메모리 6~8GB | 다운로드 버튼 |
+| 표준 | Qwen3.5-4B (기본이 생각 모드라 요청마다 `enable_thinking: false`) | 약 3GB | Apache 2.0 | 그래픽 메모리 6~8GB | 다운로드 버튼 |
 | 고성능 | Qwen3.5-9B | 약 5.5GB | Apache 2.0 | 그래픽 메모리 10GB 이상 | 다운로드 버튼 |
 
 - 예비 후보: Qwen3.5-2B(가벼움 대체), Gemma 4 E4B(표준 대체). 작업 0의 실측 결과로 최종 확정한다.
@@ -80,8 +80,12 @@ Text-Play 화면(WebView, 외부 연결 차단 유지)
 | `src-tauri/resources/model-catalog.json` (새 파일) | 모델별 식별자·표시 이름·파일·주소·SHA-256·크기·라이선스·권장 사양·생성 설정 |
 | `src-tauri/Tauri.toml`, `capabilities/` (수정) | 실행 엔진 리소스, NSIS 설치 훅, 새 명령 권한 |
 | `src-tauri/windows/hooks.nsh` (새 파일) | 설치 후 가벼운 모델 준비 실행, 제거 시 모델 삭제 질문 |
-| `scripts/fetch-llama-runtime.mjs` (새 파일) | 고정 버전 llama.cpp Windows Vulkan·CPU 압축 파일 받기·SHA-256 검사·필요 파일만 배치(저장소에는 넣지 않음) |
-| `scripts/evaluate-local-models.mjs` (새 파일) | Text-Play 문맥으로 모델별 JSON 성공률·속도·응답 수집 |
+| `scripts/fetch-llama-runtime.mjs` (작업 0에서 만듦) | 고정 버전 llama.cpp Windows Vulkan·CPU 압축 파일 받기·SHA-256 검사·풀기(저장소에는 넣지 않음). 작업 4에서 Tauri 리소스 위치로 배치 |
+| `scripts/build-local-models.mjs` (작업 0에서 만듦) | 공식 가중치 받기·변환·양자화·SHA-256 기록(우리 모델 파일을 똑같이 다시 만드는 기준) |
+| `scripts/evaluate-local-models.mjs` (작업 0에서 만듦) | Text-Play 문맥으로 모델별 JSON 성공률·행동 통과율·속도·메모리·응답 수집 |
+| `scripts/local-ai/*`, `scripts/lib/local-ai-files.mjs`, `scripts/lib/local-model-eval.mjs` (작업 0에서 만듦) | 고정 버전 목록, 평가 문맥 30개와 판정, 이어받기 다운로드·해시, 측정 요약·보고서 |
+| `src/features/text-play/ai/response-json-schema.ts` (작업 0에서 만듦) | 작품별 응답 JSON 스키마(식별자 목록·정수 범위·길이 상한) |
+| `src/lib/adapters/structured-messages.ts` (작업 0에서 만듦) | 구조화 응답 메시지(올라마·내장 로컬 AI·측정 공통) |
 | `src/lib/adapters/bundled-llm-adapter.ts` (새 파일) | 내장 로컬 AI 구조화 스트리밍 어댑터 |
 | `src/desktop/tauri-local-runtime-client.ts` (새 파일) | 모델·실행 엔진 Tauri 호출 |
 | `src/desktop/ai-models/AiModelsScreen.tsx` (새 파일) | `AI 모델` 화면(모델 카드 3개, 적합도, 다운로드·사용·삭제, 라이선스) |
@@ -105,6 +109,53 @@ Text-Play 화면(WebView, 외부 연결 차단 유지)
   - 가벼움: CPU만(8코어)으로 한 턴 20초 이하, 그래픽 메모리 6GB에서 8초 이하
   - 미달하면 가벼움 기본 모델을 Qwen3.5-2B로 바꾼다.
 - 결과를 이 문서와 `model-catalog.json`에 반영한다(파일 주소·SHA-256·생성 설정 확정, Mi:dm 문맥 길이 확인).
+
+#### 작업 0 준비 상태 (2026-10-01)
+
+측정 도구와 고정 버전은 준비했고, 실행 엔진·공식 가중치 다운로드가 작업 세션의 자동 권한 검사에서 막혀 실제 측정 전에서 멈춰 있다.
+
+**고정 버전**
+
+- llama.cpp 안정판 `v0.5.0` = 빌드 `b11146` = 커밋 `7fe450e19305b828c199d602c23a8337aaa1f03b`
+  - `llama-b11146-bin-win-vulkan-x64.zip` 30.6MB, SHA-256 `55a378aa095b466979d85075234f66d7655c7a7483222af0c006c0e55b4d7bd6`
+  - `llama-b11146-bin-win-cpu-x64.zip` 17.7MB, SHA-256 `14cf1303ca9ac3abd94816850532f9f9a69ac66fbaca3776fc6f9061c2fac1d1`
+
+| 모델 | 공식 저장소 @ 리비전 | 원본 크기 | 구조 | 최대 문맥 | 생성 설정 |
+| --- | --- | --- | --- | --- | --- |
+| Mi:dm 2.0 Mini | `K-intelligence/Midm-2.0-Mini-Instruct` @ `383eb22` | 4.3GB | Llama 48층 | 32,768 | 공식 값: 온도 0.8, top-p 0.75, top-k 20 |
+| Qwen3.5-2B(가벼움 대체) | `Qwen/Qwen3.5-2B` @ `15852e8` | 4.26GB | 선형·전체 주의 혼합, 이미지 입력 포함(글자 부분만 변환) | 262,144 | 공식 비생각 값: 온도 0.7, top-p 0.8, top-k 20, presence 1.5 |
+| Qwen3.5-4B | `Qwen/Qwen3.5-4B` @ `851bf6e` | 8.7GB | 위와 같음 | 262,144 | 위와 같음 |
+| Qwen3.5-9B | `Qwen/Qwen3.5-9B` @ `c202236` | 18GB | 위와 같음 | 262,144 | 위와 같음 |
+
+- Mi:dm과 Qwen3.5 모두 공식 GGUF가 없다(커뮤니티 변환본만 있음). 계획대로 공식 가중치를 직접 변환한다.
+- Qwen3.5는 기본이 생각 모드다. 요청마다 `chat_template_kwargs: { enable_thinking: false }`를 넣는다.
+- 가벼움 대체 후보 Qwen3.5-2B도 처음부터 함께 재서 비교한다.
+
+**만든 도구**
+
+| 명령 | 내용 |
+| --- | --- |
+| `pnpm local-ai:runtime` (`scripts/fetch-llama-runtime.mjs`) | 고정 빌드를 받아 크기·SHA-256 검사 → `.local-ai/runtime/b11146/{vulkan,cpu}`에 풀기 |
+| `pnpm local-ai:models` (`scripts/build-local-models.mjs`) | 공식 가중치를 리비전 고정으로 받기(큰 파일 SHA-256, 작은 파일 git 해시 검사) → 변환기(고정 커밋 소스와 파이썬 환경) 준비 → BF16 GGUF 변환 → 양자화 → `.local-ai/models/manifest.json`에 크기·SHA-256 기록 → 원본·중간 파일 삭제. 모델을 하나씩 끝내 디스크 최대 사용을 약 42GB(9B 기준)로 제한 |
+| `pnpm local-ai:eval` (`scripts/evaluate-local-models.mjs`) | 모델 × 실행 방식(`vulkan`, `vulkan:<장치>`, `cpu`, `cpu:<스레드>`)마다 `llama-server`를 127.0.0.1 무작위 포트와 일회용 키로 띄워 평가 문맥 30개를 보내고 `.local-ai/eval/<시각>/results.json`·`report.md`로 저장. `--server-url`로 이미 떠 있는 OpenAI 호환 서버도 측정 |
+
+- 평가 문맥(`scripts/local-ai/text-play-eval.ts`): 샘플 작품의 실제 상태 7개(숲 입구 시작·부상, 회랑·신뢰, 서재 조사 후·바로 들어감·흔들림)에 탐색·대화·아이템·이동·위험·회복·거래·감정·진행·형식 흔들기·짧은/긴/영어 입력·규칙 위반 4개를 섞었다.
+- 요청은 앱과 같은 문맥(`buildTextPlayContext`)·메시지(`src/lib/adapters/structured-messages.ts`)와 작품 응답 JSON 스키마(`src/features/text-play/ai/response-json-schema.ts`)를 쓰고, 판정은 앱 해석기·행동 검증기로 한다. 스키마는 작품의 아이템·장소·인물·퀘스트·이벤트 식별자 목록, 정수 변화량(능력치 ±20, 관계 ±10, 수량 1~3), 서술 300자·대사 150자·행동 4개 상한을 강제한다. 작업 1 어댑터도 같은 스키마 함수를 쓴다.
+- 측정 항목 추가: 규칙 위반 차단(골드·체력·정신력 증가, 퀘스트 완료·이벤트를 막아야 하는 입력), 한국어 비율(한글 80% 이상, 한자 섞임 없음), 길이 잘림, 실행 엔진 시작 시간과 첫 응답(셰이더 준비) 시간, 그래픽·주 메모리.
+
+**측정 PC와 6GB 기준 추정**
+
+- Ryzen 7 9800X3D(8코어 16스레드), RTX 5070 Ti 16GB와 내장 Radeon, RAM 32GB, C 드라이브 여유 약 107GB
+- 그래픽 6GB 기준은 직접 잴 수 없어 다음으로 보완한다: 내장 그래픽(`vulkan:<내장 장치>`)으로 약한 그래픽 하한, `cpu:4`로 4코어 노트북 하한, 메모리 대역폭 비율로 6GB급 그래픽(예: RTX 3050 6GB) 생성 속도 추정
+
+**이어서 실행할 명령** (다운로드 약 35GB, 파이썬 변환 도구 약 1GB 포함)
+
+```powershell
+pnpm local-ai:runtime
+pnpm local-ai:models
+pnpm local-ai:eval
+pnpm local-ai:eval --models midm-2.0-mini:Q4_K_M,qwen3.5-2b:Q4_K_M --backends cpu:4
+```
 
 ### 작업 1: 실행 엔진 내장 (2~3일)
 

@@ -15,5 +15,6 @@ export default defineConfig( // 설정 내보내기
         "coverage/**", // 검사 결과 제외
         "playwright-report/**", // 종단 보고서 제외
         "test-results/**", // 종단 결과 제외
+        ".local-ai/**", // 내장 로컬 AI 작업 폴더 제외
     ]), // 제외 목록 종료
 ]); // 설정 목록 종료

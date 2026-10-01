@@ -163,6 +163,9 @@
 | `src/features/text-play/data/demo-package.ts` | 샘플 작품 장면·선택지·엔딩 |
 | `src/lib/adapters/mock-llm-adapter.ts` | 임시 인공지능 응답 |
 | `scripts/rebuild-local-exe.ps1` | `pnpm exe:rebuild` 본체 |
+| `scripts/local-ai/local-ai-pins.mjs` | 내장 로컬 AI 고정 버전(llama.cpp 빌드·SHA-256, 공식 모델 리비전·생성 설정) |
+| `scripts/local-ai/text-play-eval.ts` | 내장 로컬 AI 평가 문맥 30개와 응답 판정 |
+| `src/features/text-play/ai/response-json-schema.ts` | 작품별 AI 응답 JSON 스키마(내장 로컬 AI 형식 강제) |
 
 ---
 ## 검증 명령
@@ -176,6 +179,7 @@
 - 데스크톱 자산 검사: `pnpm desktop:verify-assets`
 - 데스크톱 통합 테스트: `pnpm test:e2e:desktop` (포트 1420을 쓰므로 `pnpm desktop:dev`를 먼저 종료, 1420 서버가 이미 떠 있으면 `node node_modules/@playwright/test/cli.js test --config playwright.desktop.config.ts`)
 - ChatBot 새 기능 확인과 가져오기: `pnpm chatbot:status`, `pnpm chatbot:sync` (ChatBot 저장소가 Text-Play 옆 `../ChatBot`에 있어야 함)
+- 내장 로컬 AI 측정 준비와 측정: `pnpm local-ai:runtime`, `pnpm local-ai:models`, `pnpm local-ai:eval` (작업 폴더 `.local-ai/`는 Git 제외, 계획 문서의 `작업 0 준비 상태` 참고)
 - Rust 검사: `pnpm tauri:check`
 - Windows 설치 파일 빌드: `pnpm tauri:build`
 
@@ -212,11 +216,12 @@
 - 같은 이름의 공용 이미지는 웹 화면 보호를 위해 덮어쓰지 않고 경고만 냅니다(줄바꿈 차이는 무시).
 - exe에 ChatBot 프롤로그 이미지(약 18MB)가 들어가 실행 파일이 약 44MB입니다.
 - Vite 개발 서버가 같은 파일의 연속 수정을 놓쳐 예전 코드를 보낼 때가 있습니다. 데스크톱 통합 테스트가 이상하게 실패하면 1420 서버를 다시 띄우고 확인합니다.
+- 내장 로컬 AI의 실행 엔진·모델 가중치 다운로드는 외부 실행 파일·데이터를 들여오는 작업이라 Claude 작업 세션의 자동 권한 검사에서 막힐 수 있습니다. 막히면 사용자가 `pnpm local-ai:*` 명령을 직접 실행하거나 허용한 뒤 이어서 진행합니다.
 
 ---
 ## 이어서 진행할 작업
 
-0. 내장 로컬 인공지능: 설치 때 가벼운 모델(Mi:dm 2.0 Mini) 자동 준비, 표준·고성능(Qwen3.5-4B·9B)은 `AI 모델` 화면 다운로드 버튼. 계획 `docs/plans/2026-10-01-bundled-local-ai.md`의 작업 0(실측)부터 진행하고, 끝의 결정 필요 항목 4개를 먼저 확인
+0. 내장 로컬 인공지능: 설치 때 가벼운 모델(Mi:dm 2.0 Mini) 자동 준비, 표준·고성능(Qwen3.5-4B·9B)은 `AI 모델` 화면 다운로드 버튼. 계획 `docs/plans/2026-10-01-bundled-local-ai.md` 참고. 작업 0은 측정 도구·고정 버전까지 준비했고(같은 문서 `작업 0 준비 상태`), 다음은 `pnpm local-ai:runtime` → `pnpm local-ai:models`(다운로드 약 35GB) → `pnpm local-ai:eval`로 실측한 뒤 결과를 계획 문서에 반영. 끝의 결정 필요 항목 4개도 확인
 1. exe에서 ChatBot 기능 직접 확인: JSON 내보내기·백업 파일 저장, 링크 복사, `window.confirm` 확인 창이 WebView2에서 동작하는지
 2. exe 메인 화면 아래쪽(인기 랭킹, 전체 작품, 작품 상세 창) 직접 확인과 세부 디자인 조정
 3. 게임 플레이 화면을 메인과 같은 밝은 다채색 디자인으로 변경

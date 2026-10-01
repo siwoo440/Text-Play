@@ -720,3 +720,55 @@ Windows 실행 파일(exe)이 최신 ChatBot(Mate Verse) 기능을 똑같이 제
 
 - exe(WebView2)에서 JSON 내보내기 파일 저장, 링크 복사, `window.confirm` 확인 창 직접 확인
 - 웹 ChatBot과 exe 기록의 자동 동기화는 서버나 공유 파일이 필요해 결정 대기(현재는 JSON 가져오기)
+
+---
+## 2026-10-01 — 내장 로컬 AI 작업 0 준비(측정 도구·고정 버전)
+
+---
+### 목표
+
+내장 로컬 AI 후보(가벼움 Mi:dm 2.0 Mini, 가벼움 대체 Qwen3.5-2B, 표준 Qwen3.5-4B, 고성능 Qwen3.5-9B)를 Text-Play 문맥으로 실측할 수 있게 실행 엔진과 모델 버전을 고정하고, 받기·변환·측정 도구를 만듭니다. 계획은 `docs/plans/2026-10-01-bundled-local-ai.md`입니다.
+
+---
+### 변경 파일
+
+- `src/features/text-play/ai/response-json-schema.ts`(새 파일): 작품별 응답 JSON 스키마
+- `src/lib/adapters/structured-messages.ts`(새 파일), `src/lib/adapters/ollama-llm-adapter.ts`: 구조화 응답 메시지 생성을 공통 함수로 분리
+- `scripts/local-ai/local-ai-pins.mjs`, `scripts/local-ai/text-play-eval.ts`, `scripts/lib/local-ai-files.mjs`, `scripts/lib/local-model-eval.mjs`(+ 타입 선언 `.d.mts`)
+- `scripts/fetch-llama-runtime.mjs`, `scripts/build-local-models.mjs`, `scripts/evaluate-local-models.mjs`, `package.json`(`local-ai:runtime`·`local-ai:models`·`local-ai:eval`)
+- `.gitignore`(`.local-ai/`), `tsconfig.json`·`eslint.config.mjs`(작업 폴더 검사 제외)
+- 테스트: `tests/unit/text-play-response-json-schema.test.ts`, `structured-messages.test.ts`, `text-play-eval.test.ts`, `local-ai-pins.test.ts`, `local-ai-files.test.ts`, `local-model-eval.test.ts`, `local-ai-scripts.test.ts`
+- 문서: 계획(`작업 0 준비 상태`), README, 인수인계, 구조
+
+---
+### 확인한 사실
+
+- llama.cpp 안정판 `v0.5.0`은 빌드 `b11146`과 같은 커밋(`7fe450e`)이라 이 빌드로 고정하고 Windows Vulkan·CPU 압축 파일 SHA-256을 기록
+- Mi:dm 2.0 Mini와 Qwen3.5 모두 공식 GGUF가 없음(커뮤니티 변환본만 있음) → 공식 가중치를 직접 변환
+- Qwen3.5는 기본이 생각 모드이고 선형·전체 주의 혼합 구조이며 이미지 입력을 포함 → 요청마다 `enable_thinking: false`, 글자 부분만 변환
+- Mi:dm 2.0 Mini는 Llama 구조 48층, 최대 문맥 32,768, 공식 생성 설정(온도 0.8, top-p 0.75, top-k 20)
+- 작업 컴퓨터: Ryzen 7 9800X3D(8코어), RTX 5070 Ti 16GB와 내장 Radeon, RAM 32GB, 올라마 없음
+
+---
+### 사용자 기능
+
+- 아직 사용자 화면 변화는 없음(측정 준비 단계)
+- `pnpm local-ai:runtime`: 고정 실행 엔진 받기·검사·풀기
+- `pnpm local-ai:models`: 공식 가중치 받기(해시 검사) → 변환 → 양자화 → 크기·SHA-256 목록 기록 → 원본 삭제
+- `pnpm local-ai:eval`: 모델·실행 방식별 실행 엔진을 로컬 전용 주소와 일회용 키로 띄워 평가 문맥 30개 측정, `results.json`·`report.md` 저장(문맥별로 모델 응답을 나란히 비교)
+
+---
+### 검증 결과
+
+- 새 테스트 41개는 구현 전 실패(모듈 없음)를 확인한 뒤 구현해 통과
+- 가짜 OpenAI 호환 서버로 측정 실행기 전체 흐름 확인: 앱과 같은 메시지, JSON 스키마 강제, Qwen 생성 설정과 생각 끄기, 결과·보고서 저장
+- 받다 만 파일 이어받기, 서버가 이어받기를 무시할 때 처음부터 받기, SHA-256 불일치 시 파일 삭제를 시험 서버로 확인
+- `--dry-run`으로 실행 엔진·모델 만들기 계획 출력 확인
+- 테스트 파일 102개, 테스트 592개 통과, 타입 검사와 코드 검사 통과
+
+---
+### 남은 작업
+
+- 실행 엔진과 공식 가중치 다운로드가 작업 세션의 자동 권한 검사에서 막혀 실측은 아직 못 함. 사용자가 직접 실행하거나 허용한 뒤 `pnpm local-ai:runtime` → `pnpm local-ai:models` → `pnpm local-ai:eval`
+- 실측 결과로 가벼움 모델 확정(Mi:dm Q4·Q5 대 Qwen3.5-2B), `model-catalog.json` 작성, 계획 문서 갱신
+- 그래픽 6GB 기준은 내장 그래픽·`cpu:4` 측정과 메모리 대역폭 비율로 추정

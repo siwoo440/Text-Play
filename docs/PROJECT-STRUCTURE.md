@@ -82,7 +82,7 @@ Text-Play 전용 기능이 들어 있는 경로입니다.
 | --- | --- |
 | `core` | 게임 상태, 조건, 액션, 장면 전환과 엔딩 판정 |
 | `data` | 공식 샘플 게임의 선언형 데이터 |
-| `ai` | LLM 컨텍스트, 응답 해석과 액션 검증 |
+| `ai` | LLM 컨텍스트, 응답 해석과 액션 검증, 작품별 응답 JSON 스키마(내장 로컬 AI 형식 강제) |
 | `storage` | 자동 저장과 수동 저장 슬롯 |
 | `catalog` | 메인 화면 작품 목록(실제 샘플 1개와 Mock 작품), 장르 판정과 검색 필터 |
 | `session` | 화면·엔진·LLM·저장소 연결 |
@@ -92,7 +92,7 @@ Text-Play 전용 기능이 들어 있는 경로입니다.
 
 ### `src/lib/adapters`
 
-LLM과 이미지 생성 기능을 앱에서 사용할 수 있는 공통 인터페이스로 감쌉니다. `create-llm-adapter.ts`가 Mock 모드와 서버 모드를 선택하고, `http-llm-adapter.ts`가 Character Chat과 Text-Play의 요청을 같은 `/api/llm` 경로로 보냅니다. 실제 비밀키는 포함하지 않습니다.
+LLM과 이미지 생성 기능을 앱에서 사용할 수 있는 공통 인터페이스로 감쌉니다. `create-llm-adapter.ts`가 Mock 모드와 서버 모드를 선택하고, `http-llm-adapter.ts`가 Character Chat과 Text-Play의 요청을 같은 `/api/llm` 경로로 보냅니다. `structured-messages.ts`는 Text-Play 구조화 응답 메시지를 만들어 올라마 연결과 내장 로컬 AI 측정이 함께 씁니다. 실제 비밀키는 포함하지 않습니다.
 
 ### `src/lib/server`
 
@@ -103,6 +103,10 @@ LLM과 이미지 생성 기능을 앱에서 사용할 수 있는 공통 인터�
 브라우저 저장소에 접근하는 코드입니다. 기존 캐릭터와 설정 데이터는 현재 localStorage를 사용합니다. Text-Play 세이브는 별도 IndexedDB 저장소를 사용하도록 설계했습니다.
 
 `src/features/text-play/storage/browser-save-repository.ts`는 브라우저의 IndexedDB 저장소를 선택하고, IndexedDB를 사용할 수 없는 환경에서는 메모리 저장소로 대체합니다.
+
+### `scripts`
+
+빌드·검사·ChatBot 동기화 명령의 본체입니다. 내장 로컬 AI 작업 0 도구는 `scripts/local-ai`(고정 버전 목록, 평가 문맥 30개와 응답 판정), `scripts/lib`(이어받기 다운로드·해시, 측정 요약·보고서)와 `fetch-llama-runtime.mjs`·`build-local-models.mjs`·`evaluate-local-models.mjs`(`pnpm local-ai:runtime`·`local-ai:models`·`local-ai:eval`)입니다. 받은 실행 엔진·모델과 측정 결과는 Git에서 제외한 `.local-ai/`에 둡니다.
 
 ### `tests`
 

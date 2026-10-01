@@ -21,7 +21,10 @@
     "tauri:build": "tauri build --bundles nsis",
     "exe:rebuild": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/rebuild-local-exe.ps1",
     "chatbot:status": "node scripts/chatbot-status.mjs ../ChatBot",
-    "chatbot:sync": "node scripts/sync-chatbot.mjs ../ChatBot"
+    "chatbot:sync": "node scripts/sync-chatbot.mjs ../ChatBot",
+    "local-ai:runtime": "node scripts/fetch-llama-runtime.mjs",
+    "local-ai:models": "node scripts/build-local-models.mjs",
+    "local-ai:eval": "node scripts/evaluate-local-models.mjs"
   },
   "keywords": [],
   "type": "module",

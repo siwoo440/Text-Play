@@ -68,6 +68,17 @@ pnpm build
 ```
 
 ---
+## 내장 로컬 AI 측정(준비 중)
+
+```powershell
+pnpm local-ai:runtime
+pnpm local-ai:models
+pnpm local-ai:eval
+```
+
+llama.cpp 고정 빌드와 공식 모델 가중치(약 35GB)를 받아 GGUF로 변환하고, Text-Play 평가 문맥 30개로 형식·행동·속도·메모리를 측정합니다. 받은 파일과 결과는 Git에서 제외한 `.local-ai/`에 저장합니다. 자세한 내용은 [`docs/plans/2026-10-01-bundled-local-ai.md`](docs/plans/2026-10-01-bundled-local-ai.md)를 봅니다.
+
+---
 ## Windows Mock 시험판
 
 Windows 10·11 x64에서 실행하는 Mock 전용 미서명 시험판입니다. 실제 AI 서버, 로그인, 크레딧과 클라우드 저장은 포함하지 않습니다.

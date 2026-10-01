@@ -8,6 +8,7 @@ import { useTextPlayPlatform } from "@/features/text-play/platform/text-play-pla
 import { createBrowserTextPlaySaveRepository } from "@/features/text-play/storage/browser-save-repository"; // 브라우저 저장소 생성기
 import type { TextPlaySaveRepository } from "@/features/text-play/storage/save-repository"; // 저장소 계약
 import { TextPlayDialog } from "@/features/text-play/ui/TextPlayDialog"; // 공통 대화상자
+import { formatTextPlaySaveSummary } from "@/features/text-play/ui/text-play-save-summary"; // 저장 요약 생성기
 import styles from "@/features/text-play/ui/TextPlayHome.module.css"; // 메인 스타일
 
 export interface TextPlayHomeProps // 메인 속성
@@ -17,19 +18,6 @@ export interface TextPlayHomeProps // 메인 속성
 } // 구조 종료
 
 const PAGE_SIZE = 12; // 한 번에 보여 줄 작품 수
-
-function formatPlayTime(totalSeconds: number): string // 플레이 시간 표시
-{ // 함수 시작
-    const minutes = Math.floor(totalSeconds / 60); // 전체 분 계산
-    const seconds = totalSeconds % 60; // 남은 초 계산
-    return `${minutes}분 ${seconds}초`; // 시간 문구 반환
-} // 함수 종료
-
-function formatResumeSummary(slot: TextPlaySaveSlot): string // 이어하기 요약 생성
-{ // 함수 시작
-    const scene = DEMO_TEXT_PLAY_PACKAGE.scenes.find((candidate) => candidate.id === slot.state.sceneId); // 저장 장면 조회
-    return `${scene?.title ?? slot.summary} · ${formatPlayTime(slot.state.playTimeSeconds)}`; // 장면 제목 요약 반환
-} // 함수 종료
 
 function scrollToSection(id: string) // 구역 이동
 { // 함수 시작
@@ -103,7 +91,7 @@ export function TextPlayHome({ repository, showHeader = false }: TextPlayHomePro
     const ranking = defaultView ? TEXT_PLAY_WORKS.slice(0, 10) : []; // 랭킹 작품
     const browsable = defaultView ? TEXT_PLAY_WORKS.slice(10) : filtered; // 탐색 대상
     const visibleWorks = browsable.slice(0, visibleCount); // 현재 표시 작품
-    const resumeSummary = resumeSlot === null ? null : formatResumeSummary(resumeSlot); // 이어하기 요약
+    const resumeSummary = resumeSlot === null ? null : formatTextPlaySaveSummary(resumeSlot); // 이어하기 요약
     const updateQuery = (value: string) => // 검색어 변경
     { // 함수 시작
         setQuery(value); // 검색어 저장

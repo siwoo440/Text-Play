@@ -45,19 +45,34 @@
 - 커밋 메시지는 한국어로 `기능:`·`수정:`·`문서:` 머리말을 붙이고, 본문에 이전 버전과 비교한 변경점을 `~추가`, `~수정`, `~변경`, `~삭제` 형태로 적습니다.
 - 커밋 메시지에 `Co-Authored-By: Claude …` 같은 공동 작업자 줄을 넣지 않습니다.
 - 기능·구조가 바뀌면 `docs/DEVELOPMENT-LOG.md`, `docs/PROJECT-STRUCTURE.md`, `README.md`, 이 문서를 함께 갱신합니다.
+- **exe는 ChatBot 기능을 계속 똑같이 따라갑니다.** 작업을 시작할 때 `pnpm chatbot:status`로 ChatBot(`../ChatBot`)의 새 커밋을 확인하고, 있으면 `pnpm chatbot:sync` → `pnpm test:run`·타입 검사·코드 검사·데스크톱 통합 테스트 → `pnpm exe:rebuild` 확인 → 커밋 순서로 반영합니다. `pnpm exe:rebuild`도 빌드 전에 새 커밋 여부를 알려 줍니다.
 
 ---
 ## 현재 구현 상태
 
-### 실행 파일 메인 화면 (`src/features/text-play/ui/TextPlayHome.tsx`)
+### 실행 파일 전체 구성 (`src/desktop`)
+
+- exe는 **최신 ChatBot 전체 기능 + Text-Play**를 하나의 프로그램으로 제공합니다. 웹 화면(`src/app`)은 예전 챗봇 코드를 그대로 둡니다.
+- ChatBot 기능: 메인(검색·장르·오늘의 추천·랭킹), 탐색(태그), 캐릭터 상세·만들기·수정, 대화(버전 분기·다시 생성·내보내기), 보관함, 설정 5쪽(프로필·토큰·화면·알림·개인정보), 고객 지원, 19+ 성인 인증
+- ChatBot 소스는 `src/chatbot`에 ChatBot 커밋 그대로 복사합니다(`pnpm chatbot:sync`, 현재 기준 `0bb7d5c` `왼쪽 대화방 창 편의 기능과 진행한 턴 수 표시 추가`, 기록은 `src/chatbot/SOURCE.md`). 직접 고치지 않고 ChatBot에서 고쳐 커밋한 뒤 다시 동기화합니다. ChatBot 앱 상태 버전이 오르면 exe에 저장된 ChatBot 데이터도 ChatBot 변환 규칙으로 자동 갱신됩니다(예: 8 → 9).
+- 디자인: ChatBot과 같은 밝은 다채색·장르색을 쓰되, 웹 상단 헤더 대신 **왼쪽 사이드바(320px)**와 **상단 바**를 둡니다. 사이드바 오른쪽에 ChatBot 헤더의 여러 색 띠를 세로로 둡니다.
+  - 사이드바 위→아래: 로고와 주황 `Text-Play` 표시 → 주요 메뉴(메인·탐색·내 작품·Text-Play) → **ChatBot 대화방**(ChatBot 왼쪽 창 목록 그대로: 검색·정렬·고정·묶음·턴 수·더보기 메뉴, 아래에 `ChatBot 기록 가져오기`) → **Text-Play 대화방**(Text-Play 저장 기록, 누르면 그 슬롯에서 이어하기, `＋ Text-Play 작품 고르기`) → 프로그램 메뉴(설정·고객 지원)
+  - ChatBot 대화방 목록과 사용자 패널의 안쪽 모양은 ChatBot `AppShell.module.css`의 `.grid` 스타일을 그대로 쓰고, 서랍 위치·폭·그림자만 `DesktopShell.module.css`에서 덮어씁니다. ChatBot이 목록을 바꾸면 동기화만으로 모양까지 따라옵니다.
+  - 창 높이 760px 이하에서는 영역을 나눠 자르지 않고 사이드바 전체가 스크롤됩니다.
+  - 상단 바: **‹ › 화살표는 사이드바 메뉴 순서(메인 → 탐색 → 내 작품 → Text-Play → 설정 → 고객 지원)로 이전·다음 메뉴 이동**(처음·끝에서 비활성, 브라우저 기록 이동 아님), 현재 화면 제목, 19+, 토큰 잔액, 사용자 패널 팝업. 메뉴에 없는 화면은 소속 메뉴 기준으로 이동하고 사이드바에 소속 메뉴를 표시합니다(상세·대화 → 메인, 캐릭터 만들기·수정 → 내 작품, 설정 세부 → 설정).
+- ChatBot 기록 가져오기: 웹 ChatBot(브라우저)과 exe는 저장소가 따로라 자동으로 합쳐지지 않습니다. 웹 ChatBot의 `설정 → 개인정보 및 보안 → JSON 내보내기` 파일을 exe의 `ChatBot 기록 가져오기`(데이터 관리)에서 가져오면 그 시점 기록으로 바뀝니다(바꾸기 전 자동 백업).
+- 경로는 해시 주소(`#/explore?tag=힐링`)로, 새로고침과 창 기록 뒤로 가기가 유지됩니다. Text-Play 홈은 `#/text-play`, 플레이는 `#/text-play/play?mode=new|resume[&slot=manual-N]`이며 플레이 화면은 사이드바 없이 전체 창으로 엽니다.
+- 대화 화면·보관함·편집기는 ChatBot 원본도 아직 어두운 디자인(ChatBot 디자인 3~5단계 예정)이라 그대로 어둡게 보입니다.
+
+### Text-Play 메인 화면 (`src/features/text-play/ui/TextPlayHome.tsx`)
 
 - ChatBot 최신 디자인(밝은 다채색)과 같은 구성: 흰 헤더와 하단 여러 색 띠, 여러 색 원형 그라데이션 바탕, 큰 제목과 검색창, 장르색 칩, 오늘의 작품, 인기 랭킹 TOP 10, 전체 작품과 `작품 더 보기`
 - Text-Play 대표색은 주황(`#c2410c`), 장르색은 ChatBot과 같은 값(힐링 초록, 판타지 보라, 현대 주황, 로맨스 분홍, 미스터리 남색, SF 청록)
 - 작품 목록(`src/features/text-play/catalog/text-play-catalog.ts`): 실제 플레이 가능한 `달빛 숲의 기록` 1개와 캐릭터 일러스트 기반 Mock 작품 50개(`준비 중` 표시)
 - 작품 카드를 누르면 밝은 상세 창, 준비 중 작품은 플레이 버튼 비활성
 - 이어하기 요약은 장면 제목으로 표시(예: `이어하기 · 폐허 회랑 · 2분 5초`)
-- exe에서는 메인이 스크롤바 없이 안쪽 스크롤, 헤더는 상단 고정
-- 웹(`/text-play`)에서는 Mate Verse 앱 헤더가 있으므로 자체 헤더를 숨김(`showHeader` 속성)
+- exe에서는 사이드바 틀 안에 자체 헤더 없이 표시하고 창 스크롤바는 숨김
+- 웹(`/text-play`)에서도 Mate Verse 앱 헤더가 있으므로 자체 헤더를 숨김(`showHeader` 속성)
 
 ### 게임 플레이 화면 (`src/features/text-play/ui/TextPlayScreen.tsx`)
 
@@ -126,8 +141,17 @@
 
 | 경로 | 역할 |
 | --- | --- |
-| `src/desktop/DesktopApp.tsx` | exe 화면 전환(메인 ↔ 플레이) |
-| `src/desktop/desktop.css` | exe 창 크기 맞춤, 스크롤 제어 |
+| `src/desktop/DesktopApp.tsx` | exe 공급자 조립(경로·ChatBot 상태·Text-Play) |
+| `src/desktop/DesktopRoutes.tsx` | 경로별 화면 출력, 화면 오류 경계, 문서 제목 |
+| `src/desktop/router/desktop-routes.ts` | 해시 주소 해석·경로표·화면 제목 |
+| `src/desktop/router/desktop-areas.ts` | 사이드바 메뉴 순서와 화면 소속 메뉴(상단 바 화살표 기준) |
+| `src/desktop/shell/DesktopShell.tsx` | 왼쪽 사이드바·상단 바·사용자 패널 팝업 |
+| `src/desktop/shell/TextPlayRoomPanel.tsx` | 사이드바 Text-Play 대화방(저장 기록) |
+| `src/desktop/next-compat/*` | ChatBot 사본용 Next 링크·이미지·경로 도구 |
+| `src/chatbot/SOURCE.md` | 가져온 ChatBot 커밋 기록 |
+| `scripts/sync-chatbot.mjs` | ChatBot 커밋에서 소스·테스트·자산 가져오기(`pnpm chatbot:sync`) |
+| `scripts/chatbot-status.mjs` | ChatBot 새 커밋 확인(`pnpm chatbot:status`, `--check`는 새 커밋이 있으면 실패 코드) |
+| `src/desktop/desktop.css` | exe 창 스크롤바 숨김, 플레이 화면 전체 창 맞춤 |
 | `src/features/text-play/ui/TextPlayHome.tsx` | 메인 화면 |
 | `src/features/text-play/catalog/text-play-catalog.ts` | 작품 목록·장르·검색 |
 | `src/features/text-play/ui/TextPlayScreen.tsx` | 게임 플레이 화면 |
@@ -146,7 +170,8 @@
 - 웹 통합 테스트: `pnpm test:e2e` (운영 빌드 후 `127.0.0.1:3100`에서 실행하므로 `pnpm dev`가 켜져 있어도 동작)
 - 데스크톱 화면 빌드: `pnpm desktop:build`
 - 데스크톱 자산 검사: `pnpm desktop:verify-assets`
-- 데스크톱 통합 테스트: `pnpm test:e2e:desktop` (포트 1420을 쓰므로 `pnpm desktop:dev`를 먼저 종료)
+- 데스크톱 통합 테스트: `pnpm test:e2e:desktop` (포트 1420을 쓰므로 `pnpm desktop:dev`를 먼저 종료, 1420 서버가 이미 떠 있으면 `node node_modules/@playwright/test/cli.js test --config playwright.desktop.config.ts`)
+- ChatBot 새 기능 확인과 가져오기: `pnpm chatbot:status`, `pnpm chatbot:sync` (ChatBot 저장소가 Text-Play 옆 `../ChatBot`에 있어야 함)
 - Rust 검사: `pnpm tauri:check`
 - Windows 설치 파일 빌드: `pnpm tauri:build`
 
@@ -178,21 +203,28 @@
 - 실제 챗봇 서버 주소, 모델, 인증 방식과 크레딧 정책은 아직 확정되지 않았습니다.
 - Windows 설치 파일은 코드 서명이 없어 SmartScreen 경고가 표시될 수 있습니다.
 - 버전 번호가 아직 `0.1.0-preview.1`이라 설치 파일만으로는 빌드를 구분할 수 없습니다.
+- `src/chatbot`과 `tests/chatbot`은 동기화할 때마다 지우고 다시 만듭니다. 이 폴더를 직접 고치면 다음 동기화에서 사라집니다.
+- 동기화는 ChatBot의 **커밋**(기본 `origin/main`)에서만 가져오고 작업 폴더의 커밋하지 않은 수정은 가져오지 않습니다. 다른 세션이 ChatBot을 고치는 중이면 `pnpm chatbot:status`가 알려 줍니다.
+- 같은 이름의 공용 이미지는 웹 화면 보호를 위해 덮어쓰지 않고 경고만 냅니다(줄바꿈 차이는 무시).
+- exe에 ChatBot 프롤로그 이미지(약 18MB)가 들어가 실행 파일이 약 44MB입니다.
+- Vite 개발 서버가 같은 파일의 연속 수정을 놓쳐 예전 코드를 보낼 때가 있습니다. 데스크톱 통합 테스트가 이상하게 실패하면 1420 서버를 다시 띄우고 확인합니다.
 
 ---
 ## 이어서 진행할 작업
 
-1. exe 메인 화면 아래쪽(인기 랭킹, 전체 작품, 작품 상세 창) 직접 확인과 세부 디자인 조정
-2. 게임 플레이 화면을 메인과 같은 밝은 다채색 디자인으로 변경
-3. 엔딩 화면 추가(엔딩 제목·요약, `처음부터`·`메인으로` 버튼)와 엔딩 뒤 직접 입력 막기
-4. 사용자에게 보이는 내부 식별자 수정: 장면 위 장소(`FOREST-GATE`), 대사 화자(`lyra`)
-5. 콘텐츠 보강: 장면별 추천 행동 데이터, 장면에 맞는 이미지, 임시 인공지능 응답 다양화, 장면 수 확대
-6. 문서 정리: 개발 기록 누락분(게임 화면 개편·턴 이동·올라마 연결) 보충, README·로드맵의 `수동 저장 3개` 표기와 `Mock 시험판` 설명 수정
-7. 빌드마다 버전 올리기와 GitHub Release 게시
-8. `.mateplay` 콘텐츠 패키지 규격과 설치 기능
-9. 외부 결정이 필요한 작업: 실제 챗봇 서버 API·인증·크레딧, MSI·자동 업데이트·Windows 코드 서명
+1. exe에서 ChatBot 기능 직접 확인: JSON 내보내기·백업 파일 저장, 링크 복사, `window.confirm` 확인 창이 WebView2에서 동작하는지
+2. exe 메인 화면 아래쪽(인기 랭킹, 전체 작품, 작품 상세 창) 직접 확인과 세부 디자인 조정
+3. 게임 플레이 화면을 메인과 같은 밝은 다채색 디자인으로 변경
+4. 엔딩 화면 추가(엔딩 제목·요약, `처음부터`·`메인으로` 버튼)와 엔딩 뒤 직접 입력 막기
+5. 사용자에게 보이는 내부 식별자 수정: 장면 위 장소(`FOREST-GATE`), 대사 화자(`lyra`)
+6. 콘텐츠 보강: 장면별 추천 행동 데이터, 장면에 맞는 이미지, 임시 인공지능 응답 다양화, 장면 수 확대
+7. 문서 정리: 개발 기록 누락분(게임 화면 개편·턴 이동·올라마 연결) 보충, README·로드맵의 `수동 저장 3개` 표기와 `Mock 시험판` 설명 수정
+8. 빌드마다 버전 올리기와 GitHub Release 게시
+9. `.mateplay` 콘텐츠 패키지 규격과 설치 기능
+10. 외부 결정이 필요한 작업: 웹 ChatBot과 exe 기록의 자동 동기화(서버나 공유 파일 필요), 실제 챗봇 서버 API·인증·크레딧, MSI·자동 업데이트·Windows 코드 서명
+11. ChatBot 기획안 참고: `docs/plans/2026-10-01-chatbot-feedback-work-plan.md`
 
 ---
 ## 새 챗봇 세션에 전달할 문장
 
-`https://github.com/siwoo440/Text-Play` 저장소의 `main` 최신 커밋을 받아 `docs/HANDOFF.md`를 먼저 읽고 이어서 작업해 주세요. 확인 기준은 Windows 실행 파일(exe)이며 `pnpm exe:rebuild`로 고친 내용을 exe에 반영해 확인합니다. 기존 변경을 되돌리지 말고, 현재 상태와 `이어서 진행할 작업`을 확인한 뒤 수정하세요. 모든 작업은 `main` 하나만 유지하고, 실패하는 테스트를 먼저 쓴 뒤 구현하며, 검증이 끝나면 커밋과 푸시까지 진행하세요. 답변과 문서는 한국어로 작성하고, 코드에는 Allman 스타일과 각 줄의 짧은 한글 주석 규칙을 적용하세요. 커밋 메시지는 한국어로 이전 버전 대비 변경점을 `~추가/~수정/~변경/~삭제`로 적고, Claude 공동 작업자 줄은 넣지 마세요.
+`https://github.com/siwoo440/Text-Play` 저장소의 `main` 최신 커밋을 받아 `docs/HANDOFF.md`를 먼저 읽고 이어서 작업해 주세요. 확인 기준은 Windows 실행 파일(exe)이며 `pnpm exe:rebuild`로 고친 내용을 exe에 반영해 확인합니다. 기존 변경을 되돌리지 말고, 현재 상태와 `이어서 진행할 작업`을 확인한 뒤 수정하세요. exe는 ChatBot 기능을 계속 똑같이 따라가야 하므로 작업 시작 때 `pnpm chatbot:status`로 ChatBot 새 커밋을 확인하고, 있으면 `pnpm chatbot:sync`로 가져와 검증한 뒤 반영하세요. 모든 작업은 `main` 하나만 유지하고, 실패하는 테스트를 먼저 쓴 뒤 구현하며, 검증이 끝나면 커밋과 푸시까지 진행하세요. 답변과 문서는 한국어로 작성하고, 코드에는 Allman 스타일과 각 줄의 짧은 한글 주석 규칙을 적용하세요. 커밋 메시지는 한국어로 이전 버전 대비 변경점을 `~추가/~수정/~변경/~삭제`로 적고, Claude 공동 작업자 줄은 넣지 마세요.

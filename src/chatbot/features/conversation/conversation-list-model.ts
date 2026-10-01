@@ -1,0 +1,195 @@
+import { canViewMatureContent, isMatureCharacter } from "@chatbot/features/adult/adult-access"; // 19세 콘텐츠 판정
+import { getConversationSummary, type ConversationSummary } from "@chatbot/features/conversation/conversation-versioning"; // 대화 요약 조회
+import type { AppState, Character, Conversation, ConversationSort } from "@chatbot/features/core/types"; // 도메인 타입
+
+export const CONVERSATION_PIN_LIMIT = 5; // 대화방 고정 최대 개수
+
+export const conversationSortOptions: ReadonlyArray<{ id: ConversationSort; label: string }> = // 정렬 선택지
+[ // 목록 시작
+    { id: "recent", label: "최근 대화순" }, // 최근순
+    { id: "relationship", label: "관계 높은 순" }, // 관계순
+    { id: "turns", label: "턴 많은 순" }, // 턴순
+    { id: "title", label: "이름순" }, // 이름순
+]; // 목록 종료
+
+export interface ConversationListItem // 대화방 목록 항목
+{ // 구조 시작
+    conversation: Conversation; // 대화방
+    character: Character; // 대화 캐릭터
+    summary: ConversationSummary; // 현재 버전 요약
+    lastActivityAt: string; // 마지막 활동 시각
+    turnCount: number; // 진행한 턴 수(현재 버전의 사용자 메시지 수)
+    locked: boolean; // 19+ 잠금 여부
+    pinned: boolean; // 고정 여부
+} // 구조 종료
+
+export interface ConversationListGroup // 대화방 묶음
+{ // 구조 시작
+    id: string; // 묶음 식별자
+    label: string; // 묶음 이름
+    items: ConversationListItem[]; // 묶음 항목
+} // 구조 종료
+
+const seoulDateParts = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Seoul", year: "numeric", month: "numeric", day: "numeric" }); // 서울 날짜 분해 도구
+const choseongList = ["ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"]; // 초성 목록
+const choseongSet = new Set(choseongList); // 초성 판정 집합
+const hangulBase = 0xac00; // 한글 음절 시작
+const hangulCount = 11172; // 한글 음절 수
+const syllablesPerInitial = 588; // 초성당 음절 수
+
+function getSeoulDate(date: Date): { year: number; month: number; day: number } // 서울 날짜 조회
+{ // 함수 시작
+    const parts = seoulDateParts.formatToParts(date); // 날짜 분해
+    const read = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value ?? 0); // 부분 값 조회
+    return { year: read("year"), month: read("month"), day: read("day") }; // 연월일 반환
+} // 함수 종료
+
+function toDayNumber(date: Date): number // 서울 기준 날짜 번호
+{ // 함수 시작
+    const { year, month, day } = getSeoulDate(date); // 서울 연월일
+    return Date.UTC(year, month - 1, day) / 86_400_000; // 날짜 번호 반환
+} // 함수 종료
+
+export function getCalendarDayDifference(iso: string, now: Date): number // 서울 기준 날짜 차이
+{ // 함수 시작
+    return toDayNumber(now) - toDayNumber(new Date(iso)); // 날짜 차이 반환
+} // 함수 종료
+
+export function formatConversationTime(iso: string, now: Date): string // 짧은 상대 시간 표시
+{ // 함수 시작
+    const time = new Date(iso); // 대상 시각
+    if (Number.isNaN(time.getTime())) // 잘못된 시각 판정
+    { // 조건 시작
+        return ""; // 빈 표시 반환
+    } // 조건 종료
+    const minutes = Math.floor((now.getTime() - time.getTime()) / 60_000); // 경과 분
+    if (minutes < 1) // 1분 미만 판정
+    { // 조건 시작
+        return "방금 전"; // 방금 표시
+    } // 조건 종료
+    if (minutes < 60) // 1시간 미만 판정
+    { // 조건 시작
+        return `${minutes}분 전`; // 분 표시
+    } // 조건 종료
+    const days = getCalendarDayDifference(iso, now); // 날짜 차이
+    if (days <= 0) // 같은 날 판정
+    { // 조건 시작
+        return `${Math.floor(minutes / 60)}시간 전`; // 시간 표시
+    } // 조건 종료
+    if (days === 1) // 어제 판정
+    { // 조건 시작
+        return "어제"; // 어제 표시
+    } // 조건 종료
+    if (days < 7) // 일주일 안 판정
+    { // 조건 시작
+        return `${days}일 전`; // 일 표시
+    } // 조건 종료
+    const target = getSeoulDate(time); // 대상 날짜
+    return target.year === getSeoulDate(now).year ? `${target.month}월 ${target.day}일` : `${target.year}. ${target.month}. ${target.day}.`; // 날짜 표시
+} // 함수 종료
+
+function getInitial(character: string): string // 음절 초성 조회
+{ // 함수 시작
+    const offset = character.charCodeAt(0) - hangulBase; // 음절 위치
+    return offset >= 0 && offset < hangulCount ? choseongList[Math.floor(offset / syllablesPerInitial)] : character; // 초성 반환
+} // 함수 종료
+
+function normalizeSearchText(text: string): string[] // 검색 문자열 정리
+{ // 함수 시작
+    return Array.from(text.normalize("NFC").toLowerCase().replace(/\s+/g, "")); // 공백 제거 문자 목록
+} // 함수 종료
+
+export function matchesKoreanText(text: string, query: string): boolean // 한글 초성 포함 검색
+{ // 함수 시작
+    const pattern = normalizeSearchText(query); // 검색어 문자
+    if (pattern.length === 0) // 빈 검색어 판정
+    { // 조건 시작
+        return true; // 전체 일치
+    } // 조건 종료
+    const target = normalizeSearchText(text); // 대상 문자
+    for (let start = 0; start + pattern.length <= target.length; start += 1) // 시작 위치 순회
+    { // 순회 시작
+        const matched = pattern.every((letter, index) => letter === target[start + index] || (choseongSet.has(letter) && getInitial(target[start + index]) === letter)); // 문자 또는 초성 일치
+        if (matched) // 일치 판정
+        { // 조건 시작
+            return true; // 일치 반환
+        } // 조건 종료
+    } // 순회 종료
+    return false; // 불일치 반환
+} // 함수 종료
+
+export function matchesConversationQuery(item: ConversationListItem, query: string): boolean // 대화방 검색 판정
+{ // 함수 시작
+    const fields = [item.conversation.title, item.character.name, ...(item.locked ? [] : [item.summary.lastMessage])]; // 검색 대상(잠금 시 메시지 제외)
+    return fields.some((field) => matchesKoreanText(field, query)); // 일치 여부 반환
+} // 함수 종료
+
+export function buildConversationListItems(state: AppState, now: Date): ConversationListItem[] // 진행 중인 대화방 항목 생성
+{ // 함수 시작
+    const showMature = canViewMatureContent(state, now); // 19세 콘텐츠 표시 여부
+    const pinned = new Set(state.pinnedConversationIds); // 고정 집합
+    const turnCounts = new Map<string, number>(); // 버전별 턴 수
+    for (const message of state.messages) // 메시지 순회
+    { // 순회 시작
+        if (message.role === "user") // 사용자 메시지 판정
+        { // 조건 시작
+            turnCounts.set(message.versionId, (turnCounts.get(message.versionId) ?? 0) + 1); // 턴 수 증가
+        } // 조건 종료
+    } // 순회 종료
+    return state.conversations.flatMap((conversation) => // 대화방 변환
+    { // 변환 시작
+        const character = state.characters.find((item) => item.id === conversation.characterId); // 캐릭터 조회
+        const summary = getConversationSummary(state, conversation.id); // 현재 버전 요약
+        if (conversation.archivedAt !== null || character === undefined || summary === null) // 보관·손상 판정
+        { // 조건 시작
+            return []; // 항목 제외
+        } // 조건 종료
+        const lastActivityAt = summary.updatedAt.localeCompare(conversation.updatedAt) > 0 ? summary.updatedAt : conversation.updatedAt; // 더 최근 시각
+        return [{ conversation, character, summary, lastActivityAt, turnCount: turnCounts.get(summary.versionId) ?? 0, locked: isMatureCharacter(character) && !showMature, pinned: pinned.has(conversation.id) }]; // 항목 반환
+    }); // 변환 종료
+} // 함수 종료
+
+function compareRecent(left: ConversationListItem, right: ConversationListItem): number // 최근순 비교
+{ // 함수 시작
+    return right.lastActivityAt.localeCompare(left.lastActivityAt) || left.conversation.id.localeCompare(right.conversation.id); // 최근 우선
+} // 함수 종료
+
+export function sortConversationItems(items: readonly ConversationListItem[], sort: ConversationSort): ConversationListItem[] // 대화방 정렬
+{ // 함수 시작
+    return [...items].sort((left, right) => // 복사 정렬
+    { // 비교 시작
+        if (sort === "relationship") // 관계순 판정
+        { // 조건 시작
+            return right.summary.relationshipLevel - left.summary.relationshipLevel || compareRecent(left, right); // 관계 높은 순
+        } // 조건 종료
+        if (sort === "turns") // 턴순 판정
+        { // 조건 시작
+            return right.turnCount - left.turnCount || compareRecent(left, right); // 턴 많은 순
+        } // 조건 종료
+        if (sort === "title") // 이름순 판정
+        { // 조건 시작
+            return left.conversation.title.localeCompare(right.conversation.title, "ko") || compareRecent(left, right); // 가나다순
+        } // 조건 종료
+        return compareRecent(left, right); // 최근순
+    }); // 비교 종료
+} // 함수 종료
+
+export function groupConversationItems(items: readonly ConversationListItem[], sort: ConversationSort, pinnedIds: readonly string[], now: Date): ConversationListGroup[] // 대화방 묶음 생성
+{ // 함수 시작
+    const pinOrder = new Map(pinnedIds.map((id, index) => [id, index])); // 고정 순서
+    const pinned = items.filter((item) => item.pinned).sort((left, right) => (pinOrder.get(left.conversation.id) ?? 0) - (pinOrder.get(right.conversation.id) ?? 0)); // 고정 항목
+    const rest = sortConversationItems(items.filter((item) => !item.pinned), sort); // 나머지 정렬
+    const groups: ConversationListGroup[] = pinned.length === 0 ? [] : [{ id: "pinned", label: "고정됨", items: pinned }]; // 고정 묶음
+    if (sort !== "recent") // 최근순 외 판정
+    { // 조건 시작
+        return rest.length === 0 ? groups : [...groups, { id: "all", label: "전체 대화", items: rest }]; // 단일 묶음 반환
+    } // 조건 종료
+    const buckets: ConversationListGroup[] = [{ id: "today", label: "오늘", items: [] }, { id: "yesterday", label: "어제", items: [] }, { id: "week", label: "최근 7일", items: [] }, { id: "older", label: "이전", items: [] }]; // 날짜 묶음
+    for (const item of rest) // 항목 순회
+    { // 순회 시작
+        const days = getCalendarDayDifference(item.lastActivityAt, now); // 날짜 차이
+        const bucket = days <= 0 ? buckets[0] : days === 1 ? buckets[1] : days < 7 ? buckets[2] : buckets[3]; // 묶음 선택
+        bucket.items.push(item); // 묶음 추가
+    } // 순회 종료
+    return [...groups, ...buckets.filter((bucket) => bucket.items.length > 0)]; // 빈 묶음 제외 반환
+} // 함수 종료

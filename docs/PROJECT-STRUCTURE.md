@@ -26,12 +26,41 @@
 
 게임 상태의 최종 결정권은 LLM이 아니라 게임 엔진이 가집니다.
 
+웹(Next.js)과 Windows 실행 파일(exe)은 화면 구성이 다릅니다.
+
+| 실행 형태 | 진입점 | 들어 있는 화면 |
+| --- | --- | --- |
+| 웹 | `src/app` | 예전 Mate Verse 챗봇 화면(`src/features/*`)과 Text-Play |
+| exe | `src/desktop/main.tsx` | 최신 ChatBot 전체 기능(`src/chatbot`)과 Text-Play, 왼쪽 사이드바 틀 |
+
 ---
 ## 주요 폴더
 
 ### `src/app`
 
-URL별 화면을 정의합니다. 기존 홈, 보관함, 캐릭터 상세, 채팅과 설정 화면 외에 `src/app/text-play`의 게임 홈과 샘플 플레이 경로가 들어 있습니다.
+웹의 URL별 화면을 정의합니다. 기존 홈, 보관함, 캐릭터 상세, 채팅과 설정 화면 외에 `src/app/text-play`의 게임 홈과 샘플 플레이 경로가 들어 있습니다. exe는 이 폴더를 쓰지 않습니다.
+
+### `src/chatbot`
+
+[siwoo440/ChatBot](https://github.com/siwoo440/ChatBot) 커밋에서 가져온 소스 사본입니다. `scripts/sync-chatbot.mjs`(`pnpm chatbot:sync`)가 만들며, 가져온 커밋은 `src/chatbot/SOURCE.md`에 적혀 있습니다. `scripts/chatbot-status.mjs`(`pnpm chatbot:status`)는 ChatBot에 가져오지 않은 새 커밋이 있는지 알려 줍니다. 가져오면서 `@/` 별칭을 `@chatbot/`으로, `next/link`·`next/image`·`next/navigation`·`Route` 타입을 `src/desktop/next-compat`으로 바꿉니다. 직접 고치지 말고 ChatBot에서 고쳐 커밋한 뒤 다시 동기화합니다. 함께 가져온 ChatBot 테스트는 `tests/chatbot`에 있습니다.
+
+### `src/desktop`
+
+Windows 실행 파일 화면입니다.
+
+| 경로 | 역할 |
+| --- | --- |
+| `DesktopApp.tsx` | 경로·ChatBot 상태·Text-Play 플랫폼·설정 공급자 조립 |
+| `DesktopRoutes.tsx` | 경로별 화면 출력, 화면 오류 경계, 문서 제목 |
+| `router/desktop-routes.ts` | 해시 주소(`#/explore?tag=…`) 해석, 경로표, ChatBot 주소 이동 규칙, 화면 제목, Text-Play 슬롯 이어하기 주소 |
+| `router/desktop-areas.ts` | 사이드바 메뉴 순서(메인·탐색·내 작품·Text-Play·설정·고객 지원)와 화면 소속 메뉴, 이전·다음 메뉴 계산 |
+| `router/DesktopRouter.tsx` | 해시 기반 경로 공급자와 이동 동작 |
+| `next-compat/*` | ChatBot 사본이 쓰는 Next 링크·이미지·경로 도구의 데스크톱 구현 |
+| `shell/DesktopShell.tsx` | 왼쪽 사이드바(주요 메뉴, ChatBot 대화방, Text-Play 대화방, 프로그램 메뉴)와 상단 바(이전·다음 메뉴 화살표, 19+, 토큰, 사용자 패널) |
+| `shell/TextPlayRoomPanel.tsx` | 사이드바 Text-Play 대화방: Text-Play 저장 슬롯 목록과 슬롯별 이어하기 |
+| `shell/DesktopShell.module.css` | 사이드바 디자인. ChatBot 대화방·사용자 패널은 ChatBot `.grid` 스타일을 그대로 쓰고 서랍 배치만 덮어씀 |
+| `DesktopPlatformProvider.tsx` | Text-Play 화면 이동·창 해상도·장면 이미지·올라마 연결 |
+| `desktop.css` | 창 스크롤바 숨김, 플레이 화면 전체 창 맞춤 |
 
 ### `src/components/app-shell`
 
@@ -100,7 +129,7 @@ LLM과 이미지 생성 기능을 앱에서 사용할 수 있는 공통 인터�
 - 실제 LLM 서버 주소·모델·인증·응답 계약 연결
 - 실제 계정과 크레딧 정책 연동
 - `.mateplay` 설치·검증 기능
-- Tauri Windows 셸
 - 자동 업데이트와 코드 서명
+- 웹 화면의 최신 ChatBot 코드 반영(웹은 예전 챗봇 코드 유지)
 
 없는 기능은 완료된 것처럼 표시하지 않고 개발 기록의 미완료 항목으로 관리합니다.

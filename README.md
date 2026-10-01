@@ -72,6 +72,15 @@ pnpm build
 
 Windows 10·11 x64에서 실행하는 Mock 전용 미서명 시험판입니다. 실제 AI 서버, 로그인, 크레딧과 클라우드 저장은 포함하지 않습니다.
 
+실행 파일은 최신 ChatBot(Mate Verse) 전체 기능과 Text-Play를 왼쪽 사이드바 하나에서 함께 제공합니다. 사이드바에는 ChatBot 대화방과 Text-Play 대화방(저장 기록)이 따로 나뉘어 있습니다.
+
+ChatBot 기능은 `src/chatbot`의 소스 사본을 쓰며, ChatBot이 바뀌면 계속 똑같이 따라갑니다. ChatBot 저장소를 Text-Play 옆 `../ChatBot`에 두고 다음 명령으로 새 커밋을 확인하고 가져옵니다. 가져오는 기준은 ChatBot 저장소의 `origin/main` 커밋이고, 작업 폴더의 커밋하지 않은 수정은 가져오지 않습니다. `pnpm exe:rebuild`도 빌드 전에 새 커밋 여부를 알려 줍니다.
+
+```powershell
+pnpm chatbot:status
+pnpm chatbot:sync
+```
+
 저장소 루트에서 다음 명령을 실행하면 전체 검증 후 NSIS 설치 EXE와 SHA-256 파일을 `artifacts/`에 만듭니다.
 
 ```powershell

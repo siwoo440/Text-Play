@@ -1,6 +1,6 @@
 import { StrictMode } from "react"; // 엄격 모드
 import { createRoot } from "react-dom/client"; // 리액트 마운트 도구
-import "@/app/globals.css"; // 공용 전역 스타일
+import "@chatbot/app/globals.css"; // ChatBot 전역 스타일(밝은 색 변수·장르색)
 import { DesktopApp } from "@/desktop/DesktopApp"; // 데스크톱 앱
 import "@/desktop/desktop.css"; // 데스크톱 보정 스타일
 

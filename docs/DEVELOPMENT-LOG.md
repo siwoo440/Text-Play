@@ -673,3 +673,50 @@ Character Chat과 Text-Play가 같은 서버 경계를 사용하고 실제 비�
 - 1600×900과 960×640 화면 캡처로 추천 답안 접힘·펼침 상태 확인
 - `pnpm exe:rebuild`(Rust 컴파일 약 35초)로 실행 파일 교체와 실행 확인
 
+---
+## 2026-10-01 — exe에 ChatBot 전체 기능 이식과 사이드바 데스크톱 화면
+
+---
+### 목표
+
+Windows 실행 파일(exe)이 최신 ChatBot(Mate Verse) 기능을 똑같이 제공하고, 실행 프로그램답게 비슷하지만 다른 디자인(왼쪽 사이드바)으로 Text-Play와 함께 쓰이게 합니다. ChatBot이 바뀌면 계속 똑같이 따라갈 수 있게 합니다. 웹 화면(`src/app`)은 바꾸지 않습니다.
+
+---
+### 변경 파일
+
+- `src/chatbot/**`, `tests/chatbot/**`: ChatBot `0bb7d5c` 소스·테스트 사본(동기화 스크립트가 생성)
+- `public/images/characters/prologues/*`, `public/images/text-play/twilight-post-office.svg`: ChatBot에만 있던 공용 이미지
+- `scripts/sync-chatbot.mjs`, `scripts/chatbot-status.mjs`, `scripts/rebuild-local-exe.ps1`, `scripts/verify-desktop-assets.mjs`, `package.json`
+- `src/desktop/DesktopApp.tsx`, `DesktopRoutes.tsx`, `DesktopPlatformProvider.tsx`, `main.tsx`, `desktop.css`
+- `src/desktop/router/*`, `src/desktop/next-compat/*`, `src/desktop/shell/*`
+- `src/features/text-play/ui/text-play-save-summary.ts`, `TextPlayHome.tsx`
+- `tsconfig.json`, `vite.desktop.config.ts`, `vitest.config.mts`
+- 삭제: `src/desktop/desktop-navigation.ts`, `tests/unit/desktop-navigation.test.ts`(해시 경로표로 대체)
+- 테스트: `tests/unit/desktop-routes.test.ts`, `desktop-areas.test.ts`, `chatbot-status.test.ts`, `tests/components/desktop-next-compat.test.tsx`, `tests/integration/desktop-app.test.tsx`, `tests/e2e/desktop-preview.spec.ts`
+
+---
+### 사용자 기능
+
+- exe에서 ChatBot 전체 기능 사용: 메인·탐색(태그)·캐릭터 상세·만들기·수정·대화(버전 분기·다시 생성)·보관함·설정 5쪽·고객 지원·19+ 성인 인증
+- 왼쪽 사이드바(320px): 로고와 주황 `Text-Play` 표시, 주요 메뉴, ChatBot 대화방, Text-Play 대화방, 설정·고객 지원. 오른쪽 경계에 여러 색 띠
+- 상단 바: 사이드바 메뉴 순서대로 이동하는 이전·다음 메뉴 화살표(처음·끝 비활성), 현재 화면 제목, 19+ 스위치, 토큰 잔액, ChatBot 사용자 패널 팝업
+- 메뉴에 없는 화면(상세·대화·만들기 등)은 소속 메뉴를 사이드바에 표시하고 그 기준으로 화살표 이동
+- ChatBot 대화방: ChatBot 왼쪽 창 목록 그대로(검색·정렬·고정·날짜 묶음·턴 수·관계 막대·더보기 메뉴·보고 있는 대화 강조), 아래에 `ChatBot 기록 가져오기`(데이터 관리의 JSON 가져오기)
+- Text-Play 대화방: ChatBot 대화방 아래에 따로 나뉜 영역. Text-Play 자동·수동 저장 기록을 최신 순으로 보여 주고 누르면 그 슬롯에서 이어하기, 기록이 없으면 안내와 `＋ Text-Play 작품 고르기`. 플레이하고 돌아오면 기록 반영
+- 해시 주소로 새로고침·창 기록 유지, 화면 오류 경계(ChatBot 오류 화면), 창 제목에 현재 화면 이름
+- 창 높이 760px 이하에서는 사이드바 전체 스크롤
+- ChatBot 따라가기: `pnpm chatbot:status`(새 커밋 확인), `pnpm chatbot:sync`(커밋에서만 가져오기), `pnpm exe:rebuild`가 빌드 전에 새 커밋 안내
+
+---
+### 검증 결과
+
+- 새 테스트는 구현 전 실패를 확인한 뒤 구현(경로·메뉴 영역·Next 호환 모듈·데스크톱 앱·Text-Play 대화방·확인 명령). 사이드바 ChatBot 대화방 검색·강조 테스트는 ChatBot `0bb7d5c` 동기화만으로 첫 실행부터 통과
+- 테스트 파일 95개, 테스트 551개 통과(가져온 ChatBot 테스트 38개 파일 포함), 타입 검사와 코드 검사 통과
+- 데스크톱 통합 테스트 13개 통과: 사이드바 이동, 화살표 순서, 캐릭터 대화, Text-Play 대화방 기록·이어하기, ChatBot에서 내보낸 JSON을 새 환경에서 가져와 사이드바 반영, 기존 Text-Play 흐름
+- 데스크톱 빌드·자산 검사 통과, `pnpm exe:rebuild`로 실제 exe 화면 캡처 확인(앱 상태 버전 8 → 9 자동 변환 안내 표시)
+
+---
+### 남은 작업
+
+- exe(WebView2)에서 JSON 내보내기 파일 저장, 링크 복사, `window.confirm` 확인 창 직접 확인
+- 웹 ChatBot과 exe 기록의 자동 동기화는 서버나 공유 파일이 필요해 결정 대기(현재는 JSON 가져오기)

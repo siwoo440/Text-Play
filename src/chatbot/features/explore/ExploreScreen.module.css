@@ -1,0 +1,472 @@
+.page /* 탐색 화면 */
+{ /* 화면 시작 */
+    min-height: calc(100vh - 64px); /* 화면 높이 */
+    overflow-x: clip; /* 장식 가로 넘침 자르기 */
+    padding: clamp(28px, 4vw, 52px) clamp(16px, 4vw, 64px) 96px; /* 화면 여백 */
+    background: radial-gradient(circle at 6% 2%, rgb(125 211 252 / 40%), transparent 30%), radial-gradient(circle at 94% 6%, rgb(190 242 100 / 30%), transparent 28%), radial-gradient(circle at 80% 60%, rgb(253 186 116 / 24%), transparent 32%), radial-gradient(circle at 10% 70%, rgb(216 180 254 / 26%), transparent 30%), #f8fbff; /* 여러 색 배경 */
+    color: var(--mv-ink); /* 기본 글자 */
+    color-scheme: light; /* 밝은 입력 요소 */
+} /* 화면 종료 */
+
+.page > * /* 화면 구역 */
+{ /* 구역 시작 */
+    max-width: 1400px; /* 최대 너비 */
+    margin-right: auto; /* 가운데 정렬 */
+    margin-left: auto; /* 가운데 정렬 */
+} /* 구역 종료 */
+
+.hero /* 탐색 머리말 */
+{ /* 머리말 시작 */
+    display: grid; /* 세로 배치 */
+    justify-items: center; /* 가운데 정렬 */
+    padding: clamp(8px, 2vw, 20px) 0 clamp(28px, 4vw, 44px); /* 머리말 여백 */
+    text-align: center; /* 가운데 정렬 */
+} /* 머리말 종료 */
+
+.eyebrow /* 상단 표제 */
+{ /* 표제 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    padding: 6px 14px; /* 표제 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    background: linear-gradient(100deg, #e0f2fe, #ecfccb); /* 표제 배경 */
+    color: #075985; /* 표제 글자 */
+    font-size: .8rem; /* 표제 크기 */
+    font-weight: 850; /* 표제 굵기 */
+    letter-spacing: .08em; /* 표제 자간 */
+} /* 표제 종료 */
+
+.hero h1 /* 화면 제목 */
+{ /* 제목 시작 */
+    max-width: 820px; /* 제목 너비 */
+    margin: 16px 0 0; /* 제목 여백 */
+    font-size: clamp(1.9rem, 4.2vw, 3.6rem); /* 반응형 크기 */
+    line-height: 1.12; /* 줄 높이 */
+    letter-spacing: -.045em; /* 제목 자간 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 제목 종료 */
+
+.highlight /* 제목 강조 */
+{ /* 강조 시작 */
+    background: linear-gradient(100deg, #0369a1, #0d9488 45%, #65a30d); /* 강조 그라데이션 */
+    background-clip: text; /* 글자 배경 자르기 */
+    color: transparent; /* 글자 투명화 */
+} /* 강조 종료 */
+
+.lead /* 화면 설명 */
+{ /* 설명 시작 */
+    max-width: 620px; /* 설명 너비 */
+    margin: 14px 0 0; /* 설명 여백 */
+    color: var(--mv-muted); /* 설명 색상 */
+    line-height: 1.7; /* 설명 줄 높이 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 설명 종료 */
+
+.searchBox /* 태그 검색 */
+{ /* 검색 시작 */
+    position: relative; /* 기호 기준 */
+    width: min(100%, 640px); /* 검색 너비 */
+    margin-top: 26px; /* 상단 여백 */
+} /* 검색 종료 */
+
+.searchBox span /* 태그 기호 */
+{ /* 기호 시작 */
+    position: absolute; /* 입력 안 배치 */
+    top: 50%; /* 세로 중앙 */
+    left: 22px; /* 왼쪽 위치 */
+    color: #0369a1; /* 기호 색상 */
+    font-size: 1.3rem; /* 기호 크기 */
+    font-weight: 900; /* 기호 굵기 */
+    transform: translateY(-50%); /* 중앙 보정 */
+    pointer-events: none; /* 조작 통과 */
+} /* 기호 종료 */
+
+.searchBox input /* 검색 입력 */
+{ /* 입력 시작 */
+    width: 100%; /* 전체 너비 */
+    min-height: 58px; /* 입력 높이 */
+    padding: 0 22px 0 48px; /* 기호 공간 */
+    border: 2px solid transparent; /* 테두리 공간 */
+    border-radius: 999px; /* 둥근 모양 */
+    background: linear-gradient(#ffffff, #ffffff) padding-box, linear-gradient(100deg, #38bdf8, #2dd4bf, #a3e635, #fb923c) border-box; /* 여러 색 테두리 */
+    color: var(--mv-ink); /* 입력 글자 */
+    box-shadow: 0 14px 34px rgb(3 105 161 / 14%); /* 입력 그림자 */
+    font-size: 1.02rem; /* 입력 크기 */
+} /* 입력 종료 */
+
+.searchBox input::placeholder /* 검색 안내 */
+{ /* 안내 시작 */
+    color: #6b7a8c; /* 안내 색상 */
+} /* 안내 종료 */
+
+.suggestions /* 태그 제안 */
+{ /* 제안 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 허용 */
+    gap: 8px; /* 칩 간격 */
+    justify-content: center; /* 가운데 정렬 */
+    width: min(100%, 760px); /* 제안 너비 */
+    margin-top: 16px; /* 상단 여백 */
+} /* 제안 종료 */
+
+.suggestions p /* 제안 없음 */
+{ /* 안내 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    color: var(--mv-muted); /* 안내 색상 */
+} /* 안내 종료 */
+
+.row /* 탐색 줄 */
+{ /* 줄 시작 */
+    margin-top: clamp(24px, 3vw, 36px); /* 줄 간격 */
+    padding: clamp(20px, 3vw, 32px); /* 줄 여백 */
+    border: 1px solid var(--row-line, #e2e8f0); /* 줄 테두리 */
+    border-radius: 30px; /* 줄 모서리 */
+    background: var(--row-bg, rgb(255 255 255 / 88%)); /* 줄 배경 */
+    box-shadow: 0 18px 46px rgb(15 23 42 / 6%); /* 줄 그림자 */
+} /* 줄 종료 */
+
+.row[data-row="works"] /* 작품 줄 */
+{ /* 작품 줄 시작 */
+    --row-line: #e9d5ff; /* 작품 테두리 */
+    --row-bg: linear-gradient(135deg, rgb(250 245 255 / 94%), rgb(253 242 248 / 94%)); /* 작품 배경 */
+    --row-accent: #7e22ce; /* 작품 강조 */
+} /* 작품 줄 종료 */
+
+.row[data-row="creators"] /* 제작자 줄 */
+{ /* 제작자 줄 시작 */
+    --row-line: #99f6e4; /* 제작자 테두리 */
+    --row-bg: linear-gradient(135deg, rgb(240 253 250 / 94%), rgb(236 253 245 / 94%)); /* 제작자 배경 */
+    --row-accent: #0f766e; /* 제작자 강조 */
+} /* 제작자 줄 종료 */
+
+.row[data-row="tags"] /* 태그 줄 */
+{ /* 태그 줄 시작 */
+    --row-line: #fde68a; /* 태그 테두리 */
+    --row-bg: linear-gradient(135deg, rgb(255 251 235 / 94%), rgb(255 247 237 / 94%)); /* 태그 배경 */
+    --row-accent: #b45309; /* 태그 강조 */
+} /* 태그 줄 종료 */
+
+.results /* 태그 결과 */
+{ /* 결과 시작 */
+    --row-line: #7dd3fc; /* 결과 테두리 */
+    --row-bg: #ffffff; /* 결과 배경 */
+    --row-accent: #0369a1; /* 결과 강조 */
+    border-width: 2px; /* 강조 테두리 */
+    scroll-margin-top: 88px; /* 앵커 이동 시 헤더 공간 */
+} /* 결과 종료 */
+
+.results:focus-visible /* 결과 초점 */
+{ /* 초점 시작 */
+    outline: 3px solid var(--mv-focus); /* 초점 외곽선 */
+    outline-offset: 3px; /* 외곽선 간격 */
+} /* 초점 종료 */
+
+.rowHeading /* 줄 제목 */
+{ /* 줄 제목 시작 */
+    margin-bottom: 18px; /* 하단 여백 */
+} /* 줄 제목 종료 */
+
+.kicker /* 영문 표제 */
+{ /* 표제 시작 */
+    margin: 0 0 6px; /* 표제 여백 */
+    color: var(--row-accent, #0369a1); /* 표제 색상 */
+    font-size: .74rem; /* 표제 크기 */
+    font-weight: 850; /* 표제 굵기 */
+    letter-spacing: .14em; /* 표제 자간 */
+} /* 표제 종료 */
+
+.rowHeading h2, /* 줄 제목 문구 */
+.resultsHeading h2 /* 결과 제목 문구 */
+{ /* 제목 문구 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    color: var(--mv-ink); /* 제목 색상 */
+    font-size: clamp(1.4rem, 2.6vw, 1.9rem); /* 제목 크기 */
+    letter-spacing: -.03em; /* 제목 자간 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 제목 문구 종료 */
+
+.rowLead /* 줄 설명 */
+{ /* 설명 시작 */
+    margin: 8px 0 0; /* 설명 여백 */
+    color: var(--mv-muted); /* 설명 색상 */
+    line-height: 1.6; /* 설명 줄 높이 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 설명 종료 */
+
+.resultsHeading /* 결과 제목 행 */
+{ /* 제목 행 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 허용 */
+    gap: 12px; /* 요소 간격 */
+    align-items: end; /* 하단 정렬 */
+    justify-content: space-between; /* 양끝 정렬 */
+    margin-bottom: 18px; /* 하단 여백 */
+} /* 제목 행 종료 */
+
+.clearButton, /* 해제 버튼 */
+.moreTags /* 태그 더 보기 */
+{ /* 보조 버튼 시작 */
+    min-height: 42px; /* 버튼 높이 */
+    padding: 0 18px; /* 버튼 여백 */
+    border: 1px solid var(--row-line, #cbd5e1); /* 버튼 테두리 */
+    border-radius: 999px; /* 알약 모양 */
+    background: #ffffff; /* 버튼 배경 */
+    color: var(--row-accent, #0369a1); /* 버튼 글자 */
+    cursor: pointer; /* 선택 커서 */
+    font-weight: 800; /* 버튼 굵기 */
+} /* 보조 버튼 종료 */
+
+.moreTags /* 태그 더 보기 */
+{ /* 더 보기 시작 */
+    display: block; /* 블록 배치 */
+    margin: 20px auto 0; /* 가운데 정렬 */
+} /* 더 보기 종료 */
+
+.resultGrid /* 결과 목록 */
+{ /* 목록 시작 */
+    display: grid; /* 격자 배치 */
+    grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); /* 반응형 열 */
+    gap: 18px; /* 카드 간격 */
+} /* 목록 종료 */
+
+.empty /* 결과 없음 */
+{ /* 안내 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    padding: 24px; /* 안내 여백 */
+    border: 2px dashed #bae6fd; /* 점선 테두리 */
+    border-radius: 20px; /* 안내 모서리 */
+    color: var(--mv-muted); /* 안내 글자 */
+    text-align: center; /* 가운데 정렬 */
+} /* 안내 종료 */
+
+.rail /* 가로 목록 */
+{ /* 목록 시작 */
+    display: grid; /* 그리드 배치 */
+    grid-auto-columns: minmax(200px, 220px); /* 항목 너비 */
+    grid-auto-flow: column; /* 가로 흐름 */
+    gap: 16px; /* 항목 간격 */
+    overflow-x: auto; /* 가로 스크롤 */
+    padding: 4px 4px 14px; /* 목록 여백 */
+    scroll-snap-type: x proximity; /* 스크롤 맞춤 */
+    scrollbar-color: color-mix(in srgb, var(--row-accent, #64748b) 45%, white) transparent; /* 스크롤 막대 색 */
+} /* 목록 종료 */
+
+.row[data-row="creators"] .rail /* 제작자 목록 */
+{ /* 제작자 목록 시작 */
+    grid-auto-columns: minmax(260px, 280px); /* 제작자 카드 너비 */
+} /* 제작자 목록 종료 */
+
+.railItem, /* 목록 항목 */
+.creatorCard /* 제작자 카드 */
+{ /* 항목 시작 */
+    scroll-snap-align: start; /* 항목 맞춤 */
+} /* 항목 종료 */
+
+.creatorCard /* 제작자 카드 */
+{ /* 카드 시작 */
+    display: grid; /* 세로 배치 */
+    align-content: start; /* 위쪽 정렬 */
+    gap: 14px; /* 요소 간격 */
+    padding: 18px; /* 카드 여백 */
+    border: 1px solid color-mix(in srgb, var(--genre) 22%, white); /* 카드 테두리 */
+    border-top: 5px solid var(--genre); /* 장르 색 띠 */
+    border-radius: 22px; /* 카드 모서리 */
+    background: #ffffff; /* 카드 배경 */
+    box-shadow: 0 10px 26px rgb(15 23 42 / 7%); /* 카드 그림자 */
+} /* 카드 종료 */
+
+.creatorHead /* 제작자 머리말 */
+{ /* 머리말 시작 */
+    display: grid; /* 가로 배치 */
+    grid-template-columns: 52px minmax(0, 1fr); /* 아바타와 정보 */
+    gap: 12px; /* 요소 간격 */
+    align-items: center; /* 세로 중앙 */
+} /* 머리말 종료 */
+
+.avatar /* 이름 첫 글자 */
+{ /* 아바타 시작 */
+    display: grid; /* 중앙 배치 */
+    place-items: center; /* 가운데 정렬 */
+    width: 52px; /* 아바타 너비 */
+    height: 52px; /* 아바타 높이 */
+    border-radius: 18px; /* 아바타 모서리 */
+    background: linear-gradient(135deg, var(--genre), color-mix(in srgb, var(--genre) 55%, #f472b6)); /* 아바타 배경 */
+    color: #ffffff; /* 아바타 글자 */
+    font-size: 1.3rem; /* 아바타 크기 */
+    font-weight: 900; /* 아바타 굵기 */
+} /* 아바타 종료 */
+
+.creatorHead h3 /* 제작자 이름 */
+{ /* 이름 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    overflow: hidden; /* 넘침 숨김 */
+    color: var(--genre-strong); /* 이름 색상 */
+    font-size: 1.06rem; /* 이름 크기 */
+    text-overflow: ellipsis; /* 말줄임 */
+    white-space: nowrap; /* 한 줄 표시 */
+} /* 이름 종료 */
+
+.creatorHead p /* 제작자 지표 */
+{ /* 지표 시작 */
+    margin: 4px 0 0; /* 지표 여백 */
+    color: var(--mv-muted); /* 지표 색상 */
+    font-size: .82rem; /* 지표 크기 */
+} /* 지표 종료 */
+
+.creatorWorks /* 대표 작품 */
+{ /* 작품 시작 */
+    display: grid; /* 격자 배치 */
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* 세 칸 */
+    gap: 6px; /* 썸네일 간격 */
+} /* 작품 종료 */
+
+.creatorWorks a /* 작품 썸네일 링크 */
+{ /* 링크 시작 */
+    display: block; /* 블록 배치 */
+    overflow: hidden; /* 모서리 자르기 */
+    border-radius: 12px; /* 썸네일 모서리 */
+    aspect-ratio: 3 / 4; /* 썸네일 비율 */
+    background: var(--genre-soft); /* 빈 칸 배경 */
+} /* 링크 종료 */
+
+.creatorWorks img /* 작품 썸네일 */
+{ /* 썸네일 시작 */
+    display: block; /* 줄 간격 제거 */
+    width: 100%; /* 전체 너비 */
+    height: 100%; /* 전체 높이 */
+    object-fit: cover; /* 영역 채우기 */
+    transition: transform 160ms ease; /* 확대 전환 */
+} /* 썸네일 종료 */
+
+.creatorWorks a:hover img /* 썸네일 올림 */
+{ /* 올림 시작 */
+    transform: scale(1.06); /* 살짝 확대 */
+} /* 올림 종료 */
+
+.creatorTags /* 제작자 태그 */
+{ /* 태그 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 허용 */
+    gap: 6px; /* 칩 간격 */
+} /* 태그 종료 */
+
+.followButton /* 팔로우 버튼 */
+{ /* 버튼 시작 */
+    min-height: 42px; /* 버튼 높이 */
+    border: 1px solid var(--genre); /* 버튼 테두리 */
+    border-radius: 14px; /* 버튼 모서리 */
+    background: #ffffff; /* 버튼 배경 */
+    color: var(--genre-strong); /* 버튼 글자 */
+    cursor: pointer; /* 선택 커서 */
+    font-weight: 800; /* 버튼 굵기 */
+    transition: background 150ms ease, color 150ms ease; /* 버튼 전환 */
+} /* 버튼 종료 */
+
+.followButton[aria-pressed="true"] /* 팔로잉 버튼 */
+{ /* 팔로잉 시작 */
+    background: var(--genre); /* 채움 배경 */
+    color: #ffffff; /* 흰 글자 */
+} /* 팔로잉 종료 */
+
+.tagCloud /* 태그 목록 */
+{ /* 목록 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 허용 */
+    gap: 10px; /* 칩 간격 */
+} /* 목록 종료 */
+
+.tagChip /* 태그 칩 */
+{ /* 칩 시작 */
+    display: inline-flex; /* 가로 배치 */
+    gap: 6px; /* 요소 간격 */
+    align-items: center; /* 세로 중앙 */
+    min-height: 38px; /* 칩 높이 */
+    padding: 0 14px; /* 칩 여백 */
+    border: 1px solid color-mix(in srgb, var(--genre, #475569) 30%, white); /* 칩 테두리 */
+    border-radius: 999px; /* 알약 모양 */
+    background: var(--genre-soft, #eef2f7); /* 칩 배경 */
+    color: var(--genre-strong, #334155); /* 칩 글자 */
+    cursor: pointer; /* 선택 커서 */
+    font-weight: 750; /* 칩 굵기 */
+    transition: background 150ms ease, color 150ms ease, transform 150ms ease; /* 칩 전환 */
+} /* 칩 종료 */
+
+.tagChip small /* 작품 수 */
+{ /* 개수 시작 */
+    padding: 1px 7px; /* 개수 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    background: rgb(255 255 255 / 75%); /* 개수 배경 */
+    font-size: .74rem; /* 개수 크기 */
+    font-weight: 800; /* 개수 굵기 */
+} /* 개수 종료 */
+
+.tagChip:hover /* 칩 올림 */
+{ /* 올림 시작 */
+    transform: translateY(-1px); /* 위쪽 이동 */
+} /* 올림 종료 */
+
+.tagChip[aria-pressed="true"] /* 선택 칩 */
+{ /* 선택 시작 */
+    border-color: var(--genre, #475569); /* 선택 테두리 */
+    background: var(--genre, #475569); /* 선택 배경 */
+    color: #ffffff; /* 선택 글자 */
+} /* 선택 종료 */
+
+.tagChip[aria-pressed="true"] small /* 선택 개수 */
+{ /* 선택 개수 시작 */
+    background: rgb(255 255 255 / 24%); /* 개수 배경 */
+} /* 선택 개수 종료 */
+
+.tagChip[data-hue="0"] { --genre: #b45309; --genre-soft: #fef3c7; --genre-strong: #78350f; } /* 호박색 태그 */
+.tagChip[data-hue="1"] { --genre: #0f766e; --genre-soft: #ccfbf1; --genre-strong: #134e4a; } /* 청록 태그 */
+.tagChip[data-hue="2"] { --genre: #a21caf; --genre-soft: #fae8ff; --genre-strong: #701a75; } /* 자홍 태그 */
+.tagChip[data-hue="3"] { --genre: #1d4ed8; --genre-soft: #dbeafe; --genre-strong: #1e3a8a; } /* 파랑 태그 */
+.tagChip[data-hue="4"] { --genre: #4d7c0f; --genre-soft: #ecfccb; --genre-strong: #365314; } /* 연두 태그 */
+.tagChip[data-hue="5"] { --genre: #b91c1c; --genre-soft: #fee2e2; --genre-strong: #7f1d1d; } /* 빨강 태그 */
+.tagChip[data-hue="6"] { --genre: #0369a1; --genre-soft: #e0f2fe; --genre-strong: #0c4a6e; } /* 하늘 태그 */
+.tagChip[data-hue="7"] { --genre: #6d28d9; --genre-soft: #ede9fe; --genre-strong: #4c1d95; } /* 보라 태그 */
+
+.tagChip:focus-visible, /* 칩 초점 */
+.clearButton:focus-visible, /* 해제 초점 */
+.moreTags:focus-visible, /* 더 보기 초점 */
+.followButton:focus-visible, /* 팔로우 초점 */
+.creatorWorks a:focus-visible, /* 썸네일 초점 */
+.searchBox input:focus-visible /* 검색 초점 */
+{ /* 초점 시작 */
+    outline: 3px solid var(--mv-focus); /* 초점 외곽선 */
+    outline-offset: 3px; /* 외곽선 간격 */
+} /* 초점 종료 */
+
+@media (max-width: 760px) /* 모바일 */
+{ /* 모바일 시작 */
+    .row /* 모바일 줄 */
+    { /* 줄 시작 */
+        padding: 18px 12px; /* 줄 여백 */
+        border-radius: 24px; /* 줄 모서리 */
+    } /* 줄 종료 */
+
+    .rail /* 모바일 가로 목록 */
+    { /* 목록 시작 */
+        grid-auto-columns: minmax(170px, 72vw); /* 항목 너비 */
+    } /* 목록 종료 */
+
+    .row[data-row="creators"] .rail /* 모바일 제작자 목록 */
+    { /* 제작자 목록 시작 */
+        grid-auto-columns: minmax(240px, 82vw); /* 제작자 카드 너비 */
+    } /* 제작자 목록 종료 */
+
+    .resultGrid /* 모바일 결과 */
+    { /* 결과 시작 */
+        grid-template-columns: repeat(2, minmax(0, 1fr)); /* 두 열 */
+        gap: 12px; /* 카드 간격 */
+    } /* 결과 종료 */
+} /* 모바일 종료 */
+
+@media (prefers-reduced-motion: reduce) /* 동작 축소 환경 */
+{ /* 동작 축소 시작 */
+    .tagChip, /* 태그 칩 */
+    .followButton, /* 팔로우 버튼 */
+    .creatorWorks img /* 썸네일 */
+    { /* 전환 대상 시작 */
+        transition: none; /* 전환 제거 */
+    } /* 전환 대상 종료 */
+} /* 동작 축소 종료 */

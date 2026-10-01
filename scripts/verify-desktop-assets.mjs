@@ -9,6 +9,10 @@ const requiredAssets = // 필수 장면 자산
     "images/scenes/dawn-letter.svg", // 새벽 편지 이미지
     "images/scenes/rainy-classroom.svg", // 비 오는 교실 이미지
     "images/scenes/fallback-scene.svg", // 기본 장면 이미지
+    "images/brand/mate-verse-logo-v3.png", // ChatBot 사이드바 로고
+    "images/characters/harin.webp", // ChatBot 캐릭터 이미지
+    "images/characters/prologues/harin-prologue-v1.png", // ChatBot 프롤로그 이미지
+    "images/text-play/moonlit-forest-cover.svg", // Text-Play 작품 표지
 ]; // 목록 종료
 const forbiddenStrings = ["MATEVERSE_LLM_API_TOKEN", "/api/llm"]; // 금지 문자열 목록
 

@@ -2,18 +2,25 @@ html, /* 문서 루트 */
 body, /* 문서 본문 */
 #root /* 앱 루트 */
 { /* 화면 시작 */
-    height: 100%; /* 창 높이 고정 */
+    min-height: 100%; /* 창 높이 이상 */
 } /* 화면 종료 */
 
-html, /* 문서 루트 */
+html /* 문서 루트 */
+{ /* 루트 시작 */
+    scrollbar-width: none; /* 창 스크롤바 숨김(스크롤은 유지) */
+} /* 루트 종료 */
+
+html::-webkit-scrollbar /* 창 스크롤바 */
+{ /* 스크롤바 시작 */
+    display: none; /* 스크롤바 숨김 */
+} /* 스크롤바 종료 */
+
 body /* 문서 본문 */
 { /* 본문 시작 */
     margin: 0; /* 기본 여백 제거 */
-    overflow: hidden; /* 창 스크롤바 제거 */
 } /* 본문 종료 */
 
-[data-text-play-root], /* 게임 실행 화면 */
-[data-text-play-home] /* 게임 메인 화면 */
+[data-text-play-root] /* 게임 실행 화면(사이드바 없이 전체 창) */
 { /* 화면 시작 */
     box-sizing: border-box; /* 여백 포함 크기 */
     height: 100dvh; /* 창 높이 맞춤 */
@@ -21,16 +28,11 @@ body /* 문서 본문 */
     overflow: hidden; /* 창 밖 넘침 차단 */
 } /* 화면 종료 */
 
-[data-text-play-home] /* 게임 메인 화면 */
+[data-text-play-home] /* 게임 메인 화면(사이드바 틀 안) */
 { /* 화면 시작 */
-    overflow-y: auto; /* 메인 안쪽 스크롤 */
-    scrollbar-width: none; /* 스크롤바 숨김 */
+    box-sizing: border-box; /* 여백 포함 크기 */
+    min-height: calc(100vh - 64px); /* 상단 바 아래 창 높이 */
 } /* 화면 종료 */
-
-[data-text-play-home]::-webkit-scrollbar /* 메인 스크롤바 */
-{ /* 스크롤바 시작 */
-    display: none; /* 스크롤바 숨김 */
-} /* 스크롤바 종료 */
 
 .desktop-scene-image /* 데스크톱 장면 이미지 */
 { /* 이미지 시작 */

@@ -1,0 +1,115 @@
+:root /* 전역 루트 */
+{ /* 루트 시작 */
+    color-scheme: dark; /* 어두운 테마 */
+    font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; /* 시스템 글꼴 */
+    background: #0d0f14; /* 기본 배경 */
+    color: #f7f7fb; /* 기본 글자 */
+    --mv-ink: #1f1a2e; /* 밝은 화면 기본 글자 */
+    --mv-muted: #5f5873; /* 밝은 화면 보조 글자 */
+    --mv-line: #e9e3f3; /* 밝은 화면 경계선 */
+    --mv-surface: #ffffff; /* 밝은 화면 카드 */
+    --mv-canvas: #fbf9ff; /* 밝은 화면 바탕 */
+    --mv-focus: #1d4ed8; /* 초점 외곽선 */
+    --page-home: #7c3aed; /* 메인 메뉴 대표색 */
+    --page-explore: #0369a1; /* 탐색 대표색 */
+    --page-ranking: #be185d; /* 랭킹 대표색 */
+    --page-create: #15803d; /* 만들기 대표색 */
+    --page-library: #0f766e; /* 보관함 대표색 */
+    --page-settings: #1d4ed8; /* 설정 대표색 */
+    --page-textplay: #c2410c; /* Text-Play 대표색 */
+} /* 루트 종료 */
+
+[data-genre] /* 장르 색 공통 */
+{ /* 장르 시작 */
+    --genre: #475569; /* 장르 채움 */
+    --genre-soft: #eef2f7; /* 장르 연한 배경 */
+    --genre-strong: #334155; /* 장르 진한 글자 */
+    --genre-glow: rgb(71 85 105 / 18%); /* 장르 그림자 */
+} /* 장르 종료 */
+
+[data-genre="all"] /* 전체 장르 */
+{ /* 전체 시작 */
+    --genre: #1f1a2e; /* 전체 채움 */
+    --genre-soft: #f1edf8; /* 전체 연한 배경 */
+    --genre-strong: #1f1a2e; /* 전체 진한 글자 */
+    --genre-glow: rgb(31 26 46 / 16%); /* 전체 그림자 */
+} /* 전체 종료 */
+
+[data-genre="healing"] /* 힐링 장르 */
+{ /* 힐링 시작 */
+    --genre: #15803d; /* 힐링 채움 */
+    --genre-soft: #dcfce7; /* 힐링 연한 배경 */
+    --genre-strong: #14532d; /* 힐링 진한 글자 */
+    --genre-glow: rgb(21 128 61 / 20%); /* 힐링 그림자 */
+} /* 힐링 종료 */
+
+[data-genre="fantasy"] /* 판타지 장르 */
+{ /* 판타지 시작 */
+    --genre: #7c3aed; /* 판타지 채움 */
+    --genre-soft: #ede9fe; /* 판타지 연한 배경 */
+    --genre-strong: #4c1d95; /* 판타지 진한 글자 */
+    --genre-glow: rgb(124 58 237 / 20%); /* 판타지 그림자 */
+} /* 판타지 종료 */
+
+[data-genre="modern"] /* 현대 장르 */
+{ /* 현대 시작 */
+    --genre: #c2410c; /* 현대 채움 */
+    --genre-soft: #ffedd5; /* 현대 연한 배경 */
+    --genre-strong: #7c2d12; /* 현대 진한 글자 */
+    --genre-glow: rgb(194 65 12 / 20%); /* 현대 그림자 */
+} /* 현대 종료 */
+
+[data-genre="romance"] /* 로맨스 장르 */
+{ /* 로맨스 시작 */
+    --genre: #be185d; /* 로맨스 채움 */
+    --genre-soft: #fce7f3; /* 로맨스 연한 배경 */
+    --genre-strong: #831843; /* 로맨스 진한 글자 */
+    --genre-glow: rgb(190 24 93 / 20%); /* 로맨스 그림자 */
+} /* 로맨스 종료 */
+
+[data-genre="mystery"] /* 미스터리 장르 */
+{ /* 미스터리 시작 */
+    --genre: #4338ca; /* 미스터리 채움 */
+    --genre-soft: #e0e7ff; /* 미스터리 연한 배경 */
+    --genre-strong: #312e81; /* 미스터리 진한 글자 */
+    --genre-glow: rgb(67 56 202 / 20%); /* 미스터리 그림자 */
+} /* 미스터리 종료 */
+
+[data-genre="sf"] /* SF 장르 */
+{ /* SF 시작 */
+    --genre: #0e7490; /* SF 채움 */
+    --genre-soft: #cffafe; /* SF 연한 배경 */
+    --genre-strong: #164e63; /* SF 진한 글자 */
+    --genre-glow: rgb(14 116 144 / 20%); /* SF 그림자 */
+} /* SF 종료 */
+
+* /* 전체 요소 */
+{ /* 요소 시작 */
+    box-sizing: border-box; /* 크기 계산 */
+} /* 요소 종료 */
+
+html, /* 문서 요소 */
+body /* 본문 요소 */
+{ /* 본문 시작 */
+    min-height: 100%; /* 최소 높이 */
+    margin: 0; /* 기본 여백 제거 */
+    background: #0d0f14; /* 본문 배경 */
+} /* 본문 종료 */
+
+button, /* 버튼 요소 */
+input, /* 입력 요소 */
+textarea, /* 장문 요소 */
+select /* 선택 요소 */
+{ /* 입력 시작 */
+    font: inherit; /* 글꼴 상속 */
+} /* 입력 종료 */
+
+.sr-only /* 화면 숨김 */
+{ /* 숨김 시작 */
+    position: absolute; /* 배치 제외 */
+    width: 1px; /* 최소 너비 */
+    height: 1px; /* 최소 높이 */
+    overflow: hidden; /* 넘침 숨김 */
+    clip: rect(0, 0, 0, 0); /* 화면 자르기 */
+    white-space: nowrap; /* 줄바꿈 방지 */
+} /* 숨김 종료 */

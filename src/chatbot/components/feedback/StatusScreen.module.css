@@ -1,0 +1,121 @@
+.page /* 상태 화면 */
+{ /* 화면 시작 */
+    display: grid; /* 중앙 배치 */
+    place-items: center; /* 가운데 정렬 */
+    min-height: calc(100vh - 64px); /* 화면 높이 */
+    padding: clamp(28px, 6vw, 72px) 16px 96px; /* 반응형 여백 */
+    background: radial-gradient(circle at 50% 18%, rgb(101 68 255 / 14%), transparent 42%), #0b0e18; /* 화면 배경 */
+    color: #f4f6fd; /* 기본 글자 */
+} /* 화면 종료 */
+
+.panel /* 안내 카드 */
+{ /* 카드 시작 */
+    width: min(100%, 560px); /* 카드 너비 */
+    padding: clamp(28px, 6vw, 48px); /* 카드 여백 */
+    border: 1px solid #2d3653; /* 카드 테두리 */
+    border-radius: 24px; /* 카드 모서리 */
+    background: linear-gradient(150deg, rgb(20 25 42 / 96%), rgb(13 17 30 / 96%)); /* 카드 배경 */
+    box-shadow: 0 24px 70px rgb(0 0 0 / 30%); /* 카드 그림자 */
+    text-align: center; /* 중앙 정렬 */
+} /* 카드 종료 */
+
+.symbol /* 상태 기호 */
+{ /* 기호 시작 */
+    display: inline-grid; /* 중앙 배치 */
+    place-items: center; /* 가운데 정렬 */
+    width: 56px; /* 기호 너비 */
+    height: 56px; /* 기호 높이 */
+    margin-bottom: 18px; /* 하단 여백 */
+    border: 1px solid #6c56d6; /* 기호 테두리 */
+    border-radius: 50%; /* 원형 기호 */
+    background: #221b45; /* 기호 배경 */
+    color: #d6caff; /* 기호 색상 */
+    font-size: 1.5rem; /* 기호 크기 */
+    font-weight: 900; /* 기호 굵기 */
+} /* 기호 종료 */
+
+.panel[data-tone="error"] .symbol /* 오류 기호 */
+{ /* 오류 기호 시작 */
+    border-color: #d66678; /* 오류 테두리 */
+    background: #4a1b27; /* 오류 배경 */
+    color: #ffd2da; /* 오류 색상 */
+} /* 오류 기호 종료 */
+
+.panel[data-tone="restricted"] .symbol /* 제한 기호 */
+{ /* 제한 기호 시작 */
+    border-color: #c38a3c; /* 제한 테두리 */
+    background: #3b2814; /* 제한 배경 */
+    color: #ffd29b; /* 제한 색상 */
+} /* 제한 기호 종료 */
+
+.label /* 상단 표제 */
+{ /* 표제 시작 */
+    margin: 0 0 10px; /* 표제 여백 */
+    color: #9f8bff; /* 표제 색상 */
+    font-size: .76rem; /* 표제 크기 */
+    font-weight: 850; /* 표제 굵기 */
+    letter-spacing: .14em; /* 표제 자간 */
+} /* 표제 종료 */
+
+.panel h1 /* 화면 제목 */
+{ /* 제목 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    font-size: clamp(1.5rem, 4vw, 2rem); /* 제목 크기 */
+    letter-spacing: -.02em; /* 제목 자간 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 제목 종료 */
+
+.description /* 안내 문구 */
+{ /* 안내 시작 */
+    margin: 14px 0 0; /* 안내 여백 */
+    color: #b5bdd3; /* 안내 색상 */
+    line-height: 1.7; /* 안내 줄 높이 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 안내 종료 */
+
+.actions /* 동작 영역 */
+{ /* 동작 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 허용 */
+    gap: 10px; /* 동작 간격 */
+    justify-content: center; /* 중앙 정렬 */
+    margin-top: 26px; /* 상단 여백 */
+} /* 동작 종료 */
+
+.actions a, /* 동작 링크 */
+.actions button /* 동작 버튼 */
+{ /* 동작 요소 시작 */
+    display: inline-flex; /* 중앙 배치 */
+    align-items: center; /* 세로 중앙 */
+    justify-content: center; /* 가로 중앙 */
+    min-height: 46px; /* 동작 높이 */
+    padding: 0 18px; /* 동작 여백 */
+    border: 1px solid #39445f; /* 동작 테두리 */
+    border-radius: 14px; /* 동작 모서리 */
+    background: #171d2b; /* 동작 배경 */
+    color: #f4f6fd; /* 동작 글자 */
+    cursor: pointer; /* 선택 커서 */
+    font: inherit; /* 글꼴 상속 */
+    font-weight: 800; /* 동작 굵기 */
+    text-decoration: none; /* 밑줄 제거 */
+} /* 동작 요소 종료 */
+
+.actions > :first-child /* 주요 동작 */
+{ /* 주요 동작 시작 */
+    border-color: #744eff; /* 주요 테두리 */
+    background: linear-gradient(100deg, #5932df, #7949ff); /* 주요 배경 */
+    box-shadow: 0 12px 28px rgb(91 49 219 / 26%); /* 주요 그림자 */
+} /* 주요 동작 종료 */
+
+.actions a:hover, /* 링크 올림 */
+.actions button:hover /* 버튼 올림 */
+{ /* 올림 시작 */
+    filter: brightness(1.1); /* 밝기 강조 */
+} /* 올림 종료 */
+
+.actions a:focus-visible, /* 링크 초점 */
+.actions button:focus-visible /* 버튼 초점 */
+{ /* 초점 시작 */
+    outline: 3px solid #63e0e4; /* 초점 외곽선 */
+    outline-offset: 3px; /* 외곽선 간격 */
+} /* 초점 종료 */

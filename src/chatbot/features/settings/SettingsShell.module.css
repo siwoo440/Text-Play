@@ -1,0 +1,230 @@
+.shell /* 설정 틀 */
+{ /* 틀 시작 */
+    --tone: #6d28d9; /* 묶음 강조색 */
+    --tone-soft: #f3edff; /* 묶음 연한 배경 */
+    --tone-strong: #4c1d95; /* 묶음 진한 글자 */
+    display: grid; /* 두 열 배치 */
+    grid-template-columns: 270px minmax(0, 1fr); /* 메뉴와 본문 */
+    gap: clamp(20px, 3vw, 40px); /* 열 간격 */
+    align-items: start; /* 위쪽 정렬 */
+    min-height: calc(100vh - 64px); /* 화면 높이 */
+    overflow-x: clip; /* 가로 넘침 자르기 */
+    padding: clamp(24px, 4vw, 48px) clamp(16px, 4vw, 56px) 96px; /* 화면 여백 */
+    color: var(--mv-ink); /* 기본 글자 */
+    color-scheme: light; /* 밝은 입력 요소 */
+    background: radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--tone) 16%, transparent), transparent 36%), radial-gradient(circle at 100% 0%, rgb(186 230 253 / 30%), transparent 30%), var(--mv-canvas); /* 화면 배경 */
+} /* 틀 종료 */
+
+.shell[data-tone="preferences"], /* 설정 묶음 */
+.navGroup[data-tone="preferences"] /* 설정 메뉴 묶음 */
+{ /* 설정 색 시작 */
+    --tone: #1d4ed8; /* 파랑 강조 */
+    --tone-soft: #e0ecff; /* 파랑 배경 */
+    --tone-strong: #1e3a8a; /* 파랑 글자 */
+} /* 설정 색 종료 */
+
+.shell[data-tone="support"], /* 지원 묶음 */
+.navGroup[data-tone="support"] /* 지원 메뉴 묶음 */
+{ /* 지원 색 시작 */
+    --tone: #047857; /* 초록 강조 */
+    --tone-soft: #dcfce7; /* 초록 배경 */
+    --tone-strong: #065f46; /* 초록 글자 */
+} /* 지원 색 종료 */
+
+.navGroup[data-tone="account"] /* 계정 메뉴 묶음 */
+{ /* 계정 색 시작 */
+    --tone: #6d28d9; /* 보라 강조 */
+    --tone-soft: #f3edff; /* 보라 배경 */
+    --tone-strong: #4c1d95; /* 보라 글자 */
+} /* 계정 색 종료 */
+
+.nav /* 설정 메뉴 */
+{ /* 메뉴 시작 */
+    position: sticky; /* 스크롤 고정 */
+    top: 84px; /* 헤더 아래 위치 */
+    display: grid; /* 세로 배치 */
+    gap: 12px; /* 묶음 간격 */
+} /* 메뉴 종료 */
+
+.navTitle /* 메뉴 표제 */
+{ /* 표제 시작 */
+    margin: 0 4px; /* 표제 여백 */
+    color: var(--mv-muted); /* 표제 색상 */
+    font-size: .72rem; /* 표제 크기 */
+    font-weight: 850; /* 표제 굵기 */
+    letter-spacing: .16em; /* 표제 자간 */
+} /* 표제 종료 */
+
+.navGroup /* 메뉴 묶음 */
+{ /* 묶음 시작 */
+    overflow: hidden; /* 모서리 자르기 */
+    border: 1px solid var(--mv-line); /* 묶음 경계 */
+    border-radius: 18px; /* 묶음 모서리 */
+    background: #ffffff; /* 묶음 배경 */
+} /* 묶음 종료 */
+
+.navGroup h2 /* 묶음 이름 */
+{ /* 이름 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    padding: 10px 14px; /* 이름 여백 */
+    border-bottom: 1px solid var(--mv-line); /* 이름 구분선 */
+    color: var(--tone-strong); /* 이름 색상 */
+    font-size: .74rem; /* 이름 크기 */
+    font-weight: 850; /* 이름 굵기 */
+    letter-spacing: .08em; /* 이름 자간 */
+    background: var(--tone-soft); /* 이름 배경 */
+} /* 이름 종료 */
+
+.navGroup ul /* 항목 목록 */
+{ /* 목록 시작 */
+    display: grid; /* 세로 배치 */
+    margin: 0; /* 기본 여백 제거 */
+    padding: 6px; /* 목록 여백 */
+    list-style: none; /* 기호 제거 */
+} /* 목록 종료 */
+
+.navGroup a /* 메뉴 링크 */
+{ /* 링크 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 2px; /* 문구 간격 */
+    padding: 10px 12px; /* 링크 여백 */
+    border-radius: 12px; /* 링크 모서리 */
+    color: var(--mv-ink); /* 링크 글자 */
+    text-decoration: none; /* 밑줄 제거 */
+    transition: background 150ms ease; /* 링크 전환 */
+} /* 링크 종료 */
+
+.navGroup a strong /* 메뉴 이름 */
+{ /* 이름 시작 */
+    font-size: .92rem; /* 이름 크기 */
+} /* 이름 종료 */
+
+.navGroup a small /* 메뉴 설명 */
+{ /* 설명 시작 */
+    color: var(--mv-muted); /* 설명 색상 */
+    font-size: .76rem; /* 설명 크기 */
+} /* 설명 종료 */
+
+.navGroup a:hover /* 메뉴 올림 */
+{ /* 올림 시작 */
+    background: var(--tone-soft); /* 연한 배경 */
+} /* 올림 종료 */
+
+.navGroup a[aria-current="page"] /* 현재 메뉴 */
+{ /* 현재 시작 */
+    color: #ffffff; /* 흰 글자 */
+    background: var(--tone); /* 묶음 배경 */
+} /* 현재 종료 */
+
+.navGroup a[aria-current="page"] small /* 현재 메뉴 설명 */
+{ /* 현재 설명 시작 */
+    color: rgb(255 255 255 / 86%); /* 설명 색상 */
+} /* 현재 설명 종료 */
+
+.navGroup a:focus-visible /* 메뉴 초점 */
+{ /* 초점 시작 */
+    outline: 3px solid var(--mv-focus); /* 초점 외곽선 */
+    outline-offset: 2px; /* 외곽선 간격 */
+} /* 초점 종료 */
+
+.main /* 설정 본문 */
+{ /* 본문 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 20px; /* 구역 간격 */
+    min-width: 0; /* 축소 허용 */
+    max-width: 920px; /* 본문 너비 */
+} /* 본문 종료 */
+
+.pageHeader /* 페이지 머리말 */
+{ /* 머리말 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 8px; /* 요소 간격 */
+    padding: 4px 4px 8px; /* 머리말 여백 */
+} /* 머리말 종료 */
+
+.kicker /* 영문 표제 */
+{ /* 표제 시작 */
+    justify-self: start; /* 내용 너비 */
+    margin: 0; /* 기본 여백 제거 */
+    padding: 5px 12px; /* 표제 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    color: var(--tone-strong); /* 표제 색상 */
+    font-size: .74rem; /* 표제 크기 */
+    font-weight: 850; /* 표제 굵기 */
+    letter-spacing: .14em; /* 표제 자간 */
+    background: var(--tone-soft); /* 표제 배경 */
+} /* 표제 종료 */
+
+.pageHeader h1 /* 페이지 제목 */
+{ /* 제목 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    font-size: clamp(1.9rem, 4vw, 2.8rem); /* 제목 크기 */
+    letter-spacing: -.04em; /* 제목 자간 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 제목 종료 */
+
+.lead /* 페이지 설명 */
+{ /* 설명 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    color: var(--mv-muted); /* 설명 색상 */
+    line-height: 1.7; /* 설명 줄 높이 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 설명 종료 */
+
+@media (max-width: 900px) /* 좁은 화면 */
+{ /* 좁은 화면 시작 */
+    .shell /* 좁은 화면 틀 */
+    { /* 틀 시작 */
+        grid-template-columns: minmax(0, 1fr); /* 한 열 배치 */
+        padding-top: 20px; /* 위쪽 여백 */
+    } /* 틀 종료 */
+
+    .nav /* 좁은 화면 메뉴 */
+    { /* 메뉴 시작 */
+        position: relative; /* 현재 메뉴 위치 기준 */
+        top: auto; /* 고정 위치 해제 */
+        display: flex; /* 가로 배치 */
+        gap: 8px; /* 묶음 간격 */
+        overflow-x: auto; /* 가로 스크롤 */
+        padding-bottom: 6px; /* 스크롤 여백 */
+    } /* 메뉴 종료 */
+
+    .navTitle, /* 좁은 화면 메뉴 표제 */
+    .navGroup h2, /* 좁은 화면 묶음 이름 */
+    .navGroup a small /* 좁은 화면 메뉴 설명 */
+    { /* 숨김 시작 */
+        display: none; /* 숨김 */
+    } /* 숨김 종료 */
+
+    .navGroup /* 좁은 화면 묶음 */
+    { /* 묶음 시작 */
+        flex: none; /* 크기 고정 */
+        border-color: color-mix(in srgb, var(--tone) 30%, white); /* 묶음 경계 */
+    } /* 묶음 종료 */
+
+    .navGroup ul /* 좁은 화면 목록 */
+    { /* 목록 시작 */
+        display: flex; /* 가로 배치 */
+        gap: 2px; /* 항목 간격 */
+        padding: 4px; /* 목록 여백 */
+    } /* 목록 종료 */
+
+    .navGroup a /* 좁은 화면 링크 */
+    { /* 링크 시작 */
+        padding: 8px 12px; /* 링크 여백 */
+        white-space: nowrap; /* 한 줄 표시 */
+    } /* 링크 종료 */
+
+    .navGroup a strong /* 좁은 화면 메뉴 이름 */
+    { /* 이름 시작 */
+        font-size: .86rem; /* 이름 크기 */
+    } /* 이름 종료 */
+} /* 좁은 화면 종료 */
+
+@media (prefers-reduced-motion: reduce) /* 동작 축소 환경 */
+{ /* 동작 축소 시작 */
+    .navGroup a /* 메뉴 링크 */
+    { /* 전환 대상 시작 */
+        transition: none; /* 전환 제거 */
+    } /* 전환 대상 종료 */
+} /* 동작 축소 종료 */

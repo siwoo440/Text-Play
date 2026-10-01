@@ -17,6 +17,7 @@ export default defineConfig( // 설정 내보내기
             "tests/unit/**/*.test.{ts,tsx}", // 단위 테스트 수집
             "tests/components/**/*.test.{ts,tsx}", // 컴포넌트 테스트 수집
             "tests/integration/**/*.test.{ts,tsx}", // 통합 테스트 수집
+            "tests/chatbot/**/*.test.{ts,tsx}", // ChatBot 사본 테스트 수집
         ], // 수집 목록 종료
         css: true, // 스타일 처리
         testTimeout: 15_000, // 전체 병렬 실행 부하 대비 시간 제한

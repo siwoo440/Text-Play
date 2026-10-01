@@ -15,6 +15,14 @@ if ($null -eq (Get-Command cargo -ErrorAction SilentlyContinue)) # Cargo 경로 
     $env:Path = "$cargoDirectoryPath;$env:Path" # 현재 빌드 경로 보완
 } # 조건 종료
 
+$chatbotRepositoryPath = Join-Path $repositoryRootPath "..\ChatBot" # 옆 폴더 ChatBot 저장소 경로
+if (Test-Path -LiteralPath (Join-Path $chatbotRepositoryPath ".git")) # ChatBot 저장소 확인
+{ # 조건 시작
+    Write-Host "[local-exe] ChatBot 새 기능 확인" # 확인 안내
+    & node scripts/chatbot-status.mjs $chatbotRepositoryPath # ChatBot 새 커밋 안내(실패해도 빌드 계속)
+    $global:LASTEXITCODE = 0 # 확인 결과와 빌드 결과 분리
+} # 조건 종료
+
 $runningApps = Get-Process -Name "mate-text-play-preview" -ErrorAction SilentlyContinue # 실행 중인 앱 조회
 if ($null -ne $runningApps) # 실행 중 확인
 { # 조건 시작

@@ -19,7 +19,9 @@
     "tauri:dev": "tauri dev",
     "tauri:check": "cargo check --manifest-path src-tauri/Cargo.toml",
     "tauri:build": "tauri build --bundles nsis",
-    "exe:rebuild": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/rebuild-local-exe.ps1"
+    "exe:rebuild": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/rebuild-local-exe.ps1",
+    "chatbot:status": "node scripts/chatbot-status.mjs ../ChatBot",
+    "chatbot:sync": "node scripts/sync-chatbot.mjs ../ChatBot"
   },
   "keywords": [],
   "type": "module",

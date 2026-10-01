@@ -12,6 +12,7 @@ export default defineConfig( // 데스크톱 Vite 설정
     { // 객체 시작
         alias: // 경로 별칭
         { // 객체 시작
+            "@chatbot": resolve(process.cwd(), "src/chatbot"), // ChatBot 사본 별칭
             "@": resolve(process.cwd(), "src"), // 소스 루트 별칭
         }, // 객체 종료
     }, // 경로 해석 종료

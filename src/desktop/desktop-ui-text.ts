@@ -9,13 +9,13 @@ export const DESKTOP_UI_TEXT = defineText( // 데스크톱 틀 글자
         routeTitles: // 화면 제목
         { // 제목 시작
             home: "메인", explore: "탐색", character: "캐릭터 상세", "character-new": "캐릭터 만들기", "character-edit": "캐릭터 수정", // 캐릭터 화면
-            chat: "대화", library: "내 작품", support: "고객 지원", "ai-models": "AI 모델", // 기본 화면
+            chat: "대화", library: "내 작품", images: "이미지 스튜디오", support: "고객 지원", "ai-models": "AI 모델", // 기본 화면
             "story-home": "스토리 모드", "story-new": "새 스토리 만들기", story: "스토리 상세", "story-chat": "스토리 대화", "story-edit": "스토리 수정", // 스토리 화면
             "text-play-home": "Text-Play", "text-play-play": "Text-Play 플레이", redirect: "이동 중", "not-found": "페이지를 찾을 수 없음", // 기타 화면
         } satisfies Record<RouteTitleKind, string>, // 제목 종료
         settingsTitle: (section: string) => `설정 · ${section}`, // 설정 제목
         settingsSections: { profile: "프로필 관리", tokens: "토큰 이용 내역", display: "화면 레이아웃", notifications: "알림과 선제 메시지", privacy: "개인정보 및 보안" } satisfies Record<DesktopSettingsSection, string>, // 설정 화면
-        areas: { home: "메인", explore: "탐색", library: "내 작품", "text-play": "Text-Play", settings: "설정", "ai-models": "AI 모델", support: "고객 지원" } satisfies Record<DesktopAreaId, string>, // 사이드바 메뉴
+        areas: { home: "메인", explore: "탐색", library: "내 작품", images: "이미지", "text-play": "Text-Play", settings: "설정", "ai-models": "AI 모델", support: "고객 지원" } satisfies Record<DesktopAreaId, string>, // 사이드바 메뉴
         shell: // 데스크톱 틀
         { // 틀 시작
             sidebar: "Mate Verse 사이드바", // 사이드바
@@ -45,13 +45,13 @@ export const DESKTOP_UI_TEXT = defineText( // 데스크톱 틀 글자
         routeTitles: // 화면 제목
         { // 제목 시작
             home: "Home", explore: "Explore", character: "Character", "character-new": "Create character", "character-edit": "Edit character", // 캐릭터 화면
-            chat: "Chat", library: "My works", support: "Support", "ai-models": "AI models", // 기본 화면
+            chat: "Chat", library: "My works", images: "Image studio", support: "Support", "ai-models": "AI models", // 기본 화면
             "story-home": "Story mode", "story-new": "Create story", story: "Story", "story-chat": "Story chat", "story-edit": "Edit story", // 스토리 화면
             "text-play-home": "Text-Play", "text-play-play": "Text-Play play", redirect: "Moving", "not-found": "Page not found", // 기타 화면
         }, // 제목 종료
         settingsTitle: (section: string) => `Settings · ${section}`, // 설정 제목
         settingsSections: { profile: "Profile", tokens: "Token history", display: "Screen layout", notifications: "Notifications and proactive messages", privacy: "Privacy and security" }, // 설정 화면
-        areas: { home: "Home", explore: "Explore", library: "My works", "text-play": "Text-Play", settings: "Settings", "ai-models": "AI models", support: "Support" }, // 사이드바 메뉴
+        areas: { home: "Home", explore: "Explore", library: "My works", images: "Images", "text-play": "Text-Play", settings: "Settings", "ai-models": "AI models", support: "Support" }, // 사이드바 메뉴
         shell: // 데스크톱 틀
         { // 틀 시작
             sidebar: "Mate Verse sidebar", // 사이드바

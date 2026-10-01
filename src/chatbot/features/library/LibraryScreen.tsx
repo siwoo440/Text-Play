@@ -12,6 +12,7 @@ import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 상태
 import type { Character, Conversation, Story } from "@chatbot/features/core/types"; // 도메인 타입
 import { createSessionHref, getStoryCastEntries, isMatureStory, summarizeStoryContent } from "@chatbot/features/story/story-model"; // 스토리 주소·판정·미리보기·등장인물
 import { downloadJsonFile } from "@chatbot/features/settings/data-download"; // 파일 다운로드
+import { getGenreKey } from "@chatbot/lib/theme/genre-theme"; // 장르 색 조회
 import styles from "@chatbot/features/library/LibraryScreen.module.css"; // 보관함 스타일
 
 type LibraryTab = "created" | "drafts" | "stories" | "bookmarks" | "conversations"; // 보관함 탭
@@ -63,10 +64,10 @@ export function LibraryScreen() // 보관함 화면
     const isLocked = (character: Character) => isMatureCharacter(character) && !showMature; // 19세 잠금 판정
     const isStoryLocked = (story: Story) => isMatureStory(story) && !showMature; // 19세 스토리 잠금 판정
     return ( // 보관함 반환
-        <main className={styles.page}> {/* 보관함 본문 */}
+        <main className={styles.page} data-surface="light"> {/* 보관함 본문 */}
             <header className={styles.header}> {/* 상단 영역 */}
-                <div><span>MY ARCHIVE</span><h1>내 작품과 보관함</h1><p>직접 만든 캐릭터와 이어 가는 이야기를 한곳에서 관리합니다.</p></div> {/* 제목 영역 */}
-                <Link href={"/characters/new" as Route}>＋ 새 캐릭터 만들기</Link> {/* 제작 링크 */}
+                <div><span className={styles.eyebrow}>MY ARCHIVE</span><h1>내 작품과 <span className={styles.titleHighlight}>보관함</span></h1><p>직접 만든 캐릭터와 이어 가는 이야기를 한곳에서 관리합니다.</p></div> {/* 제목 영역 */}
+                <div className={styles.headerActions}><Link href={"/images" as Route} className={styles.secondaryLink}>이미지 스튜디오</Link><Link href={"/characters/new" as Route}>＋ 새 캐릭터 만들기</Link></div> {/* 이미지·제작 링크 */}
             </header> {/* 상단 종료 */}
             <div className={styles.tabs} role="tablist" aria-label="보관함 분류"> {/* 탭 목록 */}
                 {tabs.map((tab) => <button key={tab.id} type="button" role="tab" aria-label={tab.label} aria-selected={activeTab === tab.id} onClick={() => setActiveTab(tab.id)}>{tab.label}<small>{tab.id === "created" ? created.length : tab.id === "drafts" ? drafts.length : tab.id === "stories" ? myStories.length : tab.id === "bookmarks" ? bookmarks.length : state.conversations.length}</small></button>)} {/* 탭 항목 */}
@@ -97,7 +98,7 @@ function CharacterGrid({ characters, tab, isLocked, onDelete, onToggleBookmark, 
     return ( // 목록 반환
         <div className={styles.grid}> {/* 카드 격자 */}
             {characters.map((character) => ( // 캐릭터 순회
-                <article key={character.id} className={styles.card} data-locked={isLocked(character) ? "true" : undefined}> {/* 캐릭터 카드 */}
+                <article key={character.id} className={styles.card} data-genre={getGenreKey(character.tags)} data-locked={isLocked(character) ? "true" : undefined}> {/* 캐릭터 카드 */}
                     <Image src={character.coverImage} alt={character.name} width={320} height={420} /> {/* 대표 이미지 */}
                     {isLocked(character) ? <span className={styles.lockBadge}>19+ 잠금</span> : null} {/* 잠금 표시 */}
                     <div className={styles.cardBody}> {/* 카드 본문 */}
@@ -148,7 +149,7 @@ function StoryGrid({ stories, isStoryLocked }: { stories: Story[]; isStoryLocked
                     const names = getStoryCastEntries(state, story.cast).map((entry) => entry.member.displayName).join(" · "); // 등장인물 이름
                     const action = story.publicationStatus === "draft" ? "공개 전환" : "임시 전환"; // 전환 문구
                     return ( // 카드 반환
-                        <article key={story.id} className={styles.card} data-kind="story" data-locked={locked ? "true" : undefined}> {/* 스토리 카드 */}
+                        <article key={story.id} className={styles.card} data-kind="story" data-genre={getGenreKey(story.tags)} data-locked={locked ? "true" : undefined}> {/* 스토리 카드 */}
                             <Image src={story.coverImage} alt={`${story.title} 표지`} width={320} height={420} /> {/* 표지 */}
                             {locked ? <span className={styles.lockBadge}>19+ 잠금</span> : null} {/* 잠금 표시 */}
                             <div className={styles.cardBody}> {/* 카드 본문 */}
@@ -292,7 +293,7 @@ function ConversationSection({ isLocked, isStoryLocked, stories, title, conversa
                     const subtitle = story === undefined ? `${character.name} · ${summary.relationshipStage} · ${summary.emotion}` : `스토리 · 등장인물 ${conversation.storyCast.length}명 · ${summary.emotion}`; // 카드 부제
                     const preview = story === undefined ? summary.lastMessage : summarizeStoryContent(summary.lastMessage, conversation.storyCast); // 최근 메시지 미리보기
                     const recentTime = new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Seoul" }).format(new Date(summary.updatedAt)); // 최근 시각 표시
-                    return <article key={conversation.id} className={styles.conversationCard} data-mode={conversation.mode} data-locked={locked ? "true" : undefined}><Link href={createSessionHref(conversation) as Route} onClick={() => onSelect(conversation)}><Image src={story?.coverImage ?? character.coverImage} alt="" width={88} height={88} /><span><strong>{conversation.title}</strong><small>{subtitle}</small><small className={styles.conversationMeta}>시작: {presetName} · 최근 {recentTime}</small><p>{locked ? "19+ 잠금 · 19+를 켜면 대화를 볼 수 있습니다." : preview}</p></span></Link>{editing ? <div className={styles.renameRow}><label>대화 이름<input value={renameDraft} maxLength={60} onChange={(event) => onRenameDraft(event.target.value)} /></label><button type="button" onClick={onSaveRename}>이름 저장</button><button type="button" onClick={onCancelRename}>취소</button></div> : null}<div className={styles.conversationActions}><button type="button" aria-label={`${conversation.title} 이름 변경`} onClick={() => onStartRename(conversation)}>이름 변경</button>{conversation.archivedAt === null ? <button type="button" aria-label={`${conversation.title} 보관`} onClick={() => onArchive(conversation)}>보관</button> : <button type="button" aria-label={`${conversation.title} 복구`} onClick={() => onRestore(conversation)}>복구</button>}<button type="button" aria-label={`${conversation.title} 내보내기`} onClick={() => onExport(conversation)}>내보내기</button><button type="button" aria-label={`${conversation.title} 삭제`} onClick={() => onDelete(conversation)}>삭제</button></div></article>; // 대화 카드 반환
+                    return <article key={conversation.id} className={styles.conversationCard} data-mode={conversation.mode} data-genre={getGenreKey(story?.tags ?? character.tags)} data-locked={locked ? "true" : undefined}><Link href={createSessionHref(conversation) as Route} onClick={() => onSelect(conversation)}><Image src={story?.coverImage ?? character.coverImage} alt="" width={88} height={88} /><span><strong>{conversation.title}</strong><small>{subtitle}</small><small className={styles.conversationMeta}>시작: {presetName} · 최근 {recentTime}</small><p>{locked ? "19+ 잠금 · 19+를 켜면 대화를 볼 수 있습니다." : preview}</p></span></Link>{editing ? <div className={styles.renameRow}><label>대화 이름<input value={renameDraft} maxLength={60} onChange={(event) => onRenameDraft(event.target.value)} /></label><button type="button" onClick={onSaveRename}>이름 저장</button><button type="button" onClick={onCancelRename}>취소</button></div> : null}<div className={styles.conversationActions}><button type="button" aria-label={`${conversation.title} 이름 변경`} onClick={() => onStartRename(conversation)}>이름 변경</button>{conversation.archivedAt === null ? <button type="button" aria-label={`${conversation.title} 보관`} onClick={() => onArchive(conversation)}>보관</button> : <button type="button" aria-label={`${conversation.title} 복구`} onClick={() => onRestore(conversation)}>복구</button>}<button type="button" aria-label={`${conversation.title} 내보내기`} onClick={() => onExport(conversation)}>내보내기</button><button type="button" aria-label={`${conversation.title} 삭제`} onClick={() => onDelete(conversation)}>삭제</button></div></article>; // 대화 카드 반환
                 })} {/* 순회 종료 */}
             </div> {/* 격자 종료 */}
         </section> // 그룹 종료

@@ -17,7 +17,7 @@ const symbols: Record<StatusTone, string> = { "not-found": "?", error: "!", rest
 export function StatusScreen({ tone, label, title, description, children }: StatusScreenProps) // 공통 상태 화면
 { // 함수 시작
     return ( // 화면 반환
-        <main className={styles.page}> {/* 상태 화면 */}
+        <main className={styles.page} data-surface="light"> {/* 상태 화면 */}
             <section className={styles.panel} data-tone={tone} aria-labelledby="status-screen-title" role={tone === "error" ? "alert" : undefined}> {/* 안내 카드 */}
                 <span className={styles.symbol} aria-hidden="true">{symbols[tone]}</span> {/* 상태 기호 */}
                 <p className={styles.label}>{label}</p> {/* 상단 표제 */}

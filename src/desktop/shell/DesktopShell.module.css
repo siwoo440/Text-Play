@@ -613,3 +613,15 @@
         transition: none; /* 전환 제거 */
     } /* 링크 종료 */
 } /* 미디어 종료 */
+
+.navigationLink[data-accent="images"] /* 이미지 스튜디오 대표색(ChatBot 머리 메뉴와 같음) */
+{ /* 이미지 시작 */
+    --accent: #4338ca; /* 이미지 채움 */
+    --accent-soft: #e0e7ff; /* 이미지 연한 배경 */
+} /* 이미지 종료 */
+
+.topbarActions .bellHost /* 상단 바 알림함 자리(ChatBot 셸의 화면 높이·바탕 끄기) */
+{ /* 자리 시작 */
+    min-height: 0; /* 셸 최소 높이 해제 */
+    background: transparent; /* 셸 바탕 해제 */
+} /* 자리 종료 */

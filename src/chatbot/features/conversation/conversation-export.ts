@@ -1,4 +1,5 @@
 import { CHAT_VERSION_LIMIT, isConversationVersionGraphValid } from "@chatbot/features/conversation/conversation-versioning"; // 버전 도메인 검증
+import { createDefaultConversationSettings } from "@chatbot/features/core/defaults"; // 대화방 기본 설정
 import type { AppState, Conversation, ConversationVersion, Message } from "@chatbot/features/core/types"; // 대화 타입
 import { isAppState } from "@chatbot/lib/repositories/local-storage-gateway"; // 앱 상태 검증
 
@@ -196,20 +197,23 @@ function createImportedConversationId(state: AppState, sourceId: string): string
     return candidate; // 고유 식별자 반환
 } // 함수 종료
 
-function normalizeConversationMode(conversation: Conversation): Conversation // 대화 종류 기본값 채우기(이전 파일 호환)
+function normalizeConversationMode(conversation: Conversation, state: AppState): Conversation // 대화 종류·설정 기본값 채우기(이전 파일 호환)
 { // 함수 시작
     const record = conversation as Partial<Conversation>; // 선택 필드 접근
+    const base = record.settings === undefined ? createDefaultConversationSettings() : { ...createDefaultConversationSettings(), ...record.settings }; // 대화 설정(없으면 기본)
+    const settings = { ...base, personaId: base.personaId !== null && state.personas.some((persona) => persona.id === base.personaId) ? base.personaId : null }; // 없는 대화 프로필은 기본으로
+    const common = { settings, folderId: null }; // 폴더는 브라우저마다 다르므로 비움
     if (record.mode === "story") // 스토리 대화 판정
     { // 조건 시작
-        return { ...conversation, storyId: record.storyId ?? null, storyCast: record.storyCast ?? [] }; // 스토리 필드 유지
+        return { ...conversation, ...common, storyId: record.storyId ?? null, storyCast: record.storyCast ?? [] }; // 스토리 필드 유지
     } // 조건 종료
-    return { ...conversation, mode: "character", storyId: null, storyCast: [] }; // 캐릭터 대화로 정리
+    return { ...conversation, ...common, mode: "character", storyId: null, storyCast: [] }; // 캐릭터 대화로 정리
 } // 함수 종료
 
 export function mergeConversationExport(state: AppState, rawImport: ConversationExport): AppState // 대화 파일 병합
 { // 함수 시작
     validateConversationExport(rawImport); // 병합 전 검증
-    const imported = { ...rawImport, conversation: normalizeConversationMode(rawImport.conversation) }; // 대화 종류 정리
+    const imported = { ...rawImport, conversation: normalizeConversationMode(rawImport.conversation, state) }; // 대화 종류 정리
     if (imported.conversation.mode === "story" && !state.stories.some((story) => story.id === imported.conversation.storyId)) // 스토리 부재 판정
     { // 조건 시작
         throw new Error("이 대화의 스토리가 이 브라우저에 없어 가져올 수 없습니다."); // 스토리 부재 오류

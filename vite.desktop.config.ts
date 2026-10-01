@@ -8,6 +8,10 @@ export default defineConfig( // 데스크톱 Vite 설정
     base: "./", // 상대 자산 기준
     publicDir: resolve(process.cwd(), "public"), // 공용 자산 폴더
     plugins: [react()], // 리액트 변환 활성화
+    define: // ChatBot 코드가 읽는 Next 공개 환경 값(Vite에는 process가 없어 빌드 때 글자로 바꿔 넣음)
+    { // 객체 시작
+        "process.env.NEXT_PUBLIC_SERVICE_REGION": JSON.stringify(process.env.NEXT_PUBLIC_SERVICE_REGION ?? "kr"), // 서비스 지역(없으면 한국 서버 규칙)
+    }, // 환경 값 종료
     resolve: // 경로 해석 설정
     { // 객체 시작
         alias: // 경로 별칭

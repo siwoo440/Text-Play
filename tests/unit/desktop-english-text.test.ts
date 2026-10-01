@@ -14,6 +14,7 @@ describe("데스크톱 영어 글자", () => // 영어 글자 묶음
         expect(getDesktopRouteTitle({ kind: "chat", characterId: "rian", conversationId: undefined, versionId: undefined }, "en")).toBe("Chat"); // 대화 제목
         expect(getDesktopRouteTitle({ kind: "settings", section: "privacy" }, "en")).toBe("Settings · Privacy and security"); // 설정 제목
         expect(getDesktopRouteTitle({ kind: "ai-models" }, "en")).toBe("AI models"); // AI 모델 제목
+        expect(getDesktopRouteTitle({ kind: "images" }, "en")).toBe("Image studio"); // 이미지 스튜디오 제목
         expect(getDesktopRouteTitle({ kind: "ai-models" })).toBe("AI 모델"); // 기본은 한국어
     }); // 테스트 종료
 

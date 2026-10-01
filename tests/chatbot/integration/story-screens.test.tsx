@@ -47,7 +47,11 @@ describe("스토리 모드 화면", () => // 화면 묶음
         renderWithApp(<StoryHome />, state); // 스토리 홈 렌더
         expect(within(screen.getByRole("navigation", { name: "대화 모드" })).getByRole("link", { name: /스토리 모드/ })).toHaveAttribute("aria-current", "page"); // 현재 모드 확인
         const cards = screen.getAllByRole("article"); // 스토리 카드
-        expect(cards.map((card) => within(card).getByRole("heading").textContent)).toEqual(["비 그친 밤의 기록관", "마감 10분 전, 비 오는 카페"]); // 19+ 숨김 확인
+        const titles = cards.map((card) => within(card).getByRole("heading").textContent); // 카드 제목
+        expect(titles.slice(0, 2)).toEqual(["비 그친 밤의 기록관", "괴물 호텔의 열세 번째 손님"]); // 인기순 확인
+        expect(titles).toHaveLength(8); // 19세 3개 제외 확인
+        expect(titles).not.toContain("별빛 구조 신호"); // 19+ 지정 스토리 숨김 확인
+        expect(titles).not.toContain("네온 골목 실종 사건"); // 19세 예시 숨김 확인
         expect(cards[0]).toHaveTextContent("리안 · 세라 · 노아"); // 등장인물 확인
         expect(cards[0]).toHaveTextContent("등장인물 3명"); // 인물 수 확인
         expect(within(cards[0]).getByRole("link", { name: /비 그친 밤의 기록관/ })).toHaveAttribute("href", "/stories/story-moonlit-archive"); // 상세 주소 확인

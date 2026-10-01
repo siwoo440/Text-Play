@@ -16,7 +16,7 @@ export function StoryHome() // 스토리 모드 홈
     const stories = getDiscoverableStories(state.stories, showMature).sort((left, right) => right.popularity - left.popularity || left.title.localeCompare(right.title, "ko")); // 공개 스토리(인기순)
     const myStories = state.stories.filter((story) => story.creatorId === state.profile.id); // 내가 만든 스토리
     return ( // 화면 반환
-        <main className={styles.page} data-surface="light"> {/* 스토리 홈 */}
+        <main className={`${styles.page} ${styles.homePage}`} data-surface="light"> {/* 스토리 홈 */}
             <ModeSwitch /> {/* 모드 전환 */}
             <header className={styles.hero}> {/* 머리말 */}
                 <div> {/* 머리말 문구 */}
@@ -24,7 +24,7 @@ export function StoryHome() // 스토리 모드 홈
                     <h1>여러 인물과 함께 만드는 <span className={styles.titleHighlight}>하나의 이야기</span></h1> {/* 제목 */}
                     <p className={styles.lead}>등장인물 여럿이 함께하는 스토리도, 한 명과 펼치는 상황극도 있어요. 내 역할을 맡아 장면을 이어 가 보세요.</p> {/* 설명 */}
                 </div> {/* 문구 종료 */}
-                <Link href={"/stories/new" as Route} className={styles.createLink}>＋ 새 스토리 만들기</Link> {/* 만들기 */}
+                <div className={styles.heroAside}><Link href={"/stories/new" as Route} className={styles.createLink}>＋ 새 스토리 만들기</Link></div> {/* 만들기(메인의 검색창 자리) */}
             </header> {/* 머리말 종료 */}
             <section className={styles.section} aria-labelledby="story-list-title"> {/* 공개 스토리 */}
                 <h2 id="story-list-title" className={styles.sectionTitle}>지금 시작할 수 있는 스토리</h2> {/* 구역 제목 */}

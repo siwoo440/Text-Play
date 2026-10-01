@@ -196,6 +196,11 @@ test("왼쪽 사이드바로 ChatBot 화면과 Text-Play를 외부 요청 없이
     await expect(page.getByRole("heading", { level: 1, name: /새로운 세계/u })).toBeVisible(); // 새로고침 후 화면 유지 확인
     await navigation.getByRole("link", { name: "내 작품" }).click(); // 보관함 이동
     await expect(page.getByRole("heading", { level: 1, name: "내 작품과 보관함" })).toBeVisible(); // 보관함 확인
+    await navigation.getByRole("link", { name: "이미지" }).click(); // 이미지 스튜디오 이동
+    await expect(page.getByRole("heading", { level: 1, name: "이미지 스튜디오" })).toBeVisible(); // 이미지 스튜디오 확인
+    const bell = page.getByRole("banner").getByRole("button", { name: /^알림함/u }); // 상단 바 알림함(ChatBot 머리 메뉴와 같음)
+    await expect(bell).toBeVisible(); // 알림함 표시 확인
+    expect((await bell.boundingBox())?.width).toBe(44); // ChatBot 종 버튼 크기 그대로 적용 확인
     await programMenu.getByRole("link", { name: "설정" }).click(); // 설정 이동
     await expect(page.getByRole("heading", { level: 1, name: "프로필 관리" })).toBeVisible(); // 설정 확인
     await programMenu.getByRole("link", { name: "고객 지원" }).click(); // 지원 이동
@@ -216,6 +221,7 @@ test("상단 바 오른쪽 화살표로 메인부터 고객 지원까지 사이�
     [ // 목록 시작
         { button: "다음 메뉴: 탐색", heading: /새로운 세계/u }, // 탐색
         { button: "다음 메뉴: 내 작품", heading: /내 작품과 보관함/u }, // 내 작품
+        { button: "다음 메뉴: 이미지", heading: /이미지 스튜디오/u }, // 이미지 스튜디오
         { button: "다음 메뉴: Text-Play", heading: /어떤 이야기/u }, // Text-Play
         { button: "다음 메뉴: 설정", heading: /프로필 관리/u }, // 설정
         { button: "다음 메뉴: AI 모델", heading: /AI 모델/u }, // AI 모델

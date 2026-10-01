@@ -2,7 +2,7 @@
 { /* 화면 시작 */
     min-height: calc(100vh - 64px); /* 화면 높이 */
     overflow-x: clip; /* 장식 가로 넘침 자르기 */
-    padding: clamp(24px, 4vw, 48px) clamp(16px, 4vw, 64px) 96px; /* 화면 여백 */
+    padding: clamp(28px, 4vw, 52px) clamp(16px, 4vw, 64px) 96px; /* 화면 여백(캐릭터 모드 메인과 같게) */
     background: radial-gradient(circle at 6% 0%, rgb(240 171 252 / 36%), transparent 30%), radial-gradient(circle at 94% 6%, rgb(196 181 253 / 40%), transparent 28%), radial-gradient(circle at 60% 60%, rgb(254 215 170 / 26%), transparent 34%), var(--mv-canvas); /* 여러 색 배경 */
     color: var(--mv-ink); /* 기본 글자 */
     color-scheme: light; /* 밝은 입력 요소 */
@@ -13,6 +13,11 @@
     max-width: 1280px; /* 최대 너비 */
     margin-right: auto; /* 가운데 정렬 */
     margin-left: auto; /* 가운데 정렬 */
+} /* 구역 종료 */
+
+.homePage > * /* 스토리 홈 구역(캐릭터 모드 메인과 같은 너비) */
+{ /* 구역 시작 */
+    max-width: 1400px; /* 최대 너비 */
 } /* 구역 종료 */
 
 .modeBar /* 모드 전환 바깥 틀(페이지 내용 너비를 따름) */
@@ -89,15 +94,21 @@
     outline-offset: 2px; /* 외곽선 간격 */
 } /* 초점 종료 */
 
-.hero /* 머리말 */
+.hero /* 머리말(캐릭터 모드 메인 머리말과 같은 배치) */
 { /* 머리말 시작 */
     display: flex; /* 가로 배치 */
-    flex-wrap: wrap; /* 줄바꿈 */
-    gap: 20px 32px; /* 요소 간격 */
+    gap: 32px; /* 요소 간격 */
     align-items: end; /* 아래 정렬 */
     justify-content: space-between; /* 양끝 배치 */
-    margin-bottom: 28px; /* 아래 간격 */
+    margin-bottom: 22px; /* 아래 간격 */
 } /* 머리말 종료 */
+
+.heroAside /* 머리말 오른쪽(메인의 검색창 자리와 같은 너비) */
+{ /* 오른쪽 시작 */
+    display: flex; /* 가로 배치 */
+    flex: 0 1 420px; /* 검색창과 같은 너비 */
+    justify-content: flex-end; /* 오른쪽 정렬 */
+} /* 오른쪽 종료 */
 
 .eyebrow /* 표제 */
 { /* 표제 시작 */
@@ -106,12 +117,26 @@
     border-radius: 999px; /* 알약 모양 */
     background: linear-gradient(100deg, #fae8ff, #ede9fe); /* 연한 배경 */
     color: #86198f; /* 진한 자홍 */
-    font-size: .8rem; /* 글자 크기 */
+    font-size: .82rem; /* 글자 크기 */
     font-weight: 800; /* 글자 굵기 */
-    letter-spacing: .02em; /* 자간 */
 } /* 표제 종료 */
 
-.hero h1, /* 목록 제목 */
+.hero h1 /* 목록 제목(캐릭터 모드 메인과 같은 크기) */
+{ /* 제목 시작 */
+    max-width: 760px; /* 제목 너비 */
+    margin: 14px 0 0; /* 여백 */
+    font-size: clamp(2rem, 4.6vw, 4rem); /* 반응형 크기 */
+    line-height: 1.1; /* 행간 */
+    letter-spacing: -.045em; /* 자간 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 제목 종료 */
+
+.hero .lead /* 목록 설명(캐릭터 모드 메인과 같은 너비) */
+{ /* 설명 시작 */
+    max-width: 560px; /* 설명 너비 */
+    margin-top: 14px; /* 위 여백 */
+} /* 설명 종료 */
+
 .detailCopy h1 /* 상세 제목 */
 { /* 제목 시작 */
     max-width: 760px; /* 제목 너비 */
@@ -216,6 +241,7 @@
 
 .cardMedia img /* 카드 그림 */
 { /* 그림 시작 */
+    object-position: center 22%; /* 인물 표지는 얼굴 쪽 */
     width: 100%; /* 너비 채움 */
     height: 100%; /* 높이 채움 */
     object-fit: cover; /* 비율 유지 */
@@ -361,6 +387,7 @@
 
 .detailMedia img /* 상세 그림 */
 { /* 그림 시작 */
+    object-position: center 22%; /* 인물 표지는 얼굴 쪽 */
     display: block; /* 블록 */
     width: 100%; /* 너비 채움 */
     height: auto; /* 비율 유지 */
@@ -602,6 +629,20 @@
     object-fit: cover; /* 비율 유지 */
     object-position: center 20%; /* 얼굴 쪽 */
 } /* 그림 종료 */
+
+@media (max-width: 760px) /* 모바일(캐릭터 모드 메인과 같은 머리말 배치) */
+{ /* 미디어 시작 */
+    .hero /* 머리말 */
+    { /* 머리말 시작 */
+        display: grid; /* 세로 배치 */
+        gap: 20px; /* 요소 간격 */
+    } /* 머리말 종료 */
+
+    .heroAside /* 머리말 오른쪽 */
+    { /* 오른쪽 시작 */
+        justify-content: flex-start; /* 왼쪽 정렬 */
+    } /* 오른쪽 종료 */
+} /* 미디어 종료 */
 
 @media (max-width: 860px) /* 좁은 화면 */
 { /* 미디어 시작 */

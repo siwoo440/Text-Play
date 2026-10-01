@@ -97,7 +97,7 @@ describe("설정 페이지", () => // 페이지 묶음
         renderWithApp(<TokenSettings />); // 토큰 화면 렌더링
         expect(within(screen.getByRole("region", { name: "토큰 요약" })).getByText("1,240")).toBeInTheDocument(); // 잔액 확인
         const table = screen.getByRole("table"); // 비용 표 조회
-        expect(within(table).getAllByRole("row")).toHaveLength(6); // 머리와 비용 다섯 줄 확인
+        expect(within(table).getAllByRole("row")).toHaveLength(7); // 머리와 비용 여섯 줄 확인
         expect(within(table).getByText("1 토큰")).toBeInTheDocument(); // 일반 대화 비용 확인
         expect(screen.getByRole("button", { name: "충전 준비 중" })).toBeDisabled(); // 충전 비활성 확인
     }); // 테스트 종료
@@ -114,6 +114,6 @@ describe("설정 페이지", () => // 페이지 묶음
     { // 테스트 시작
         renderWithApp(<SupportScreen />); // 고객 지원 렌더링
         expect(screen.getAllByRole("group").length).toBeGreaterThanOrEqual(6); // 질문 개수 확인
-        expect(screen.getByText("데이터 버전").nextElementSibling).toHaveTextContent("10"); // 데이터 버전 확인
+        expect(screen.getByText("데이터 버전").nextElementSibling).toHaveTextContent("12"); // 데이터 버전 확인
     }); // 테스트 종료
 }); // 묶음 종료

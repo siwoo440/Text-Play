@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"; // 테스트 도구
-import { buildConversationListItems, CONVERSATION_PIN_LIMIT, formatConversationTime, groupConversationItems, matchesConversationQuery, matchesKoreanText, sortConversationItems } from "@chatbot/features/conversation/conversation-list-model"; // 대화 목록 계산
+import { buildConversationListItems, CONVERSATION_PIN_LIMIT, filterConversationItems, formatConversationStatus, formatConversationTime, groupConversationItems, matchesConversationQuery, matchesKoreanText, sortConversationItems } from "@chatbot/features/conversation/conversation-list-model"; // 대화 목록 계산
 import { createInitialState } from "@chatbot/features/core/initial-state"; // 초기 상태
 import type { AppState, Message } from "@chatbot/features/core/types"; // 상태 타입
 
@@ -121,6 +121,45 @@ describe("왼쪽 대화방 목록 계산", () => // 목록 계산 묶음
         expect(matchesConversationQuery(sera, "우산")).toBe(false); // 메시지 검색 차단
         expect(matchesConversationQuery(sera, "세라")).toBe(true); // 이름 검색 허용
         expect(matchesConversationQuery({ ...sera, locked: false }, "우산")).toBe(true); // 잠금 해제 시 검색
+    }); // 검증 종료
+
+    it("전체·캐릭터·스토리 탭으로 대화 종류를 거른다", () => // 종류 탭 검증
+    { // 검증 시작
+        const state = createInitialState(); // 초기 상태
+        const items = buildConversationListItems(state, now); // 목록 생성
+        const story = { ...items[0], conversation: { ...items[0].conversation, id: "story-conversation", mode: "story" as const } }; // 스토리 대화 흉내
+        const mixed = [...items, story]; // 섞인 목록
+        expect(filterConversationItems(mixed, "all")).toHaveLength(mixed.length); // 전체
+        expect(filterConversationItems(mixed, "story").map((item) => item.conversation.id)).toEqual(["story-conversation"]); // 스토리만
+        expect(filterConversationItems(mixed, "character")).toHaveLength(items.length); // 캐릭터만
+    }); // 검증 종료
+
+    it("폴더에 넣은 대화는 고정 다음에 폴더 묶음으로 보이고 빈 폴더도 보여 줄 수 있다", () => // 폴더 묶음 검증
+    { // 검증 시작
+        let state = createInitialState(); // 초기 상태
+        state = withActivity(state, "conversation-rian", "2026-09-30T16:00:00.000Z"); // 오늘
+        state = { ...state, conversationFolders: [{ id: "folder-a", name: "즐겨 하는 대화", createdAt: "2026-09-30T00:00:00.000Z" }, { id: "folder-b", name: "빈 폴더", createdAt: "2026-09-30T00:00:00.000Z" }], conversations: state.conversations.map((conversation) => conversation.id === "conversation-sera" || conversation.id === "conversation-noah" ? { ...conversation, folderId: "folder-a" } : conversation), pinnedConversationIds: ["conversation-noah"] }; // 폴더·고정 지정
+        const items = buildConversationListItems(state, now); // 목록 생성
+        const groups = groupConversationItems(items, "recent", state.pinnedConversationIds, now, state.conversationFolders, true); // 묶음 생성
+        expect(groups.map((group) => [group.label, group.folderId ?? null, group.items.map((item) => item.conversation.id)])).toEqual([["고정됨", null, ["conversation-noah"]], ["즐겨 하는 대화", "folder-a", ["conversation-sera"]], ["빈 폴더", "folder-b", []], ["오늘", null, ["conversation-rian"]]]); // 고정 우선·폴더·날짜 순서
+        const searching = groupConversationItems(items, "recent", state.pinnedConversationIds, now, state.conversationFolders, false); // 검색 중
+        expect(searching.some((group) => group.folderId === "folder-b")).toBe(false); // 빈 폴더 숨김
+    }); // 검증 종료
+
+    it("카드에는 현재 버전의 마지막 상태창 장소·시간을 짧게 보여 준다", () => // 상태 줄 검증
+    { // 검증 시작
+        const state = createInitialState(); // 초기 상태
+        const reply = state.messages.find((message) => message.conversationId === "conversation-rian" && message.role === "assistant"); // 리안 응답
+        if (reply === undefined) // 응답 부재
+        { // 조건 시작
+            throw new Error("리안 응답이 필요합니다."); // 준비 오류
+        } // 조건 종료
+        state.messages = state.messages.map((message) => message.id === reply.id ? { ...message, status: { turn: 3, location: "새벽 도서관", time: "목요일 20:18", tip: null, affection: [], thoughts: [], custom: [] } } : message); // 상태 부착
+        const rian = buildConversationListItems(state, now).find((item) => item.conversation.id === "conversation-rian"); // 리안 항목
+        expect(rian?.latestStatus?.turn).toBe(3); // 마지막 상태
+        expect(formatConversationStatus(rian?.latestStatus ?? null)).toBe("새벽 도서관 · 목요일 20:18"); // 짧은 표시
+        expect(formatConversationStatus(null)).toBe(""); // 없음
+        expect(formatConversationStatus({ turn: 1, location: null, time: null, tip: null, affection: [], thoughts: [], custom: [] })).toBe(""); // 장소·시간 끔
     }); // 검증 종료
 
     it("대화방 고정은 최대 5개다", () => // 고정 한도 검증

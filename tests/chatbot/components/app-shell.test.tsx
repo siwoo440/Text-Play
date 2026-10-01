@@ -68,7 +68,7 @@ describe("앱 셸 패널", () => // 패널 묶음
         renderWithApp(<AppShell><main>본문</main></AppShell>); // 화면 렌더
         const navigation = screen.getByRole("navigation", { name: "주요 메뉴" }); // 주요 메뉴 조회
         const links = within(navigation).getAllByRole("link"); // 헤더 링크 목록
-        expect(links.map((link) => link.textContent)).toEqual(["메뉴", "탐색", "내 작품", "Text-Play 다운로드"]); // 메뉴 순서 확인
+        expect(links.map((link) => link.textContent)).toEqual(["메뉴", "탐색", "내 작품", "이미지", "Text-Play 다운로드"]); // 메뉴 순서 확인
         expect(within(navigation).getByRole("link", { name: "메뉴" })).toHaveAttribute("href", "/"); // 메인 경로 확인
         expect(within(navigation).getByRole("link", { name: "탐색" })).toHaveAttribute("href", "/explore"); // 탐색 경로 확인
         for (const link of links) // 링크 순회

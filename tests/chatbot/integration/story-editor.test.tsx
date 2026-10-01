@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest"; // 테스트 도구
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 상태 훅
 import { createInitialState } from "@chatbot/features/core/initial-state"; // 초기 상태
 import type { Story } from "@chatbot/features/core/types"; // 스토리 타입
+import { createGeneratedImage } from "@chatbot/features/images/image-model"; // 생성 이미지 만들기
 import { StoryEditor } from "@chatbot/features/story/StoryEditor"; // 스토리 편집기
 import { renderWithApp } from "@chatbot/test/render-with-app"; // 앱 렌더
 
@@ -125,5 +126,15 @@ describe("스토리 편집기", { timeout: 20_000 }, () => // 편집기 묶음(�
         unmount(); // 정리
         renderWithApp(<StoryEditor storyId="story-moonlit-archive" />); // 남의 스토리
         expect(screen.getByRole("heading", { name: "이 스토리를 수정할 권한이 없습니다." })).toBeVisible(); // 권한 안내
+    }); // 검증 종료
+
+    it("이미지 스튜디오에서 넘어온 이미지를 표지로 고르고 내 이미지도 표지 선택지에 보인다", () => // 내 이미지 표지 검증
+    { // 검증 시작
+        const state = createInitialState(); // 초기 상태
+        const plain = createGeneratedImage({ prompt: "옥상 공연 무대", style: "illustration", aspect: "landscape", referenceCharacterId: null, contentRating: "all" }, "kr", "2026-10-01T00:00:00.000Z", "image-plain"); // 일반 이미지
+        state.images = [plain]; // 갤러리 준비
+        renderWithApp(<StoryEditor initialImageId="image-plain" />, state); // 넘어온 이미지로 시작
+        expect(screen.getByRole("radio", { name: /^옥상 공연 무대 표지/ })).toBeChecked(); // 표지 선택 확인
+        expect(within(screen.getByTestId("story-preview")).getByRole("img", { name: "제목 없는 스토리 표지" })).toHaveAttribute("src", plain.src); // 미리보기 반영
     }); // 검증 종료
 }); // 묶음 종료

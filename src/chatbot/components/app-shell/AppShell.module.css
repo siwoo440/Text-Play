@@ -1,7 +1,7 @@
 .shell /* 전체 셸 */
 { /* 셸 시작 */
     min-height: 100vh; /* 최소 높이 */
-    background: #090b10; /* 미전환 화면 기본 배경 */
+    background: var(--mv-canvas); /* 밝은 기본 바탕 */
 } /* 셸 종료 */
 
 .shell:has([data-surface="light"]) /* 밝은 화면을 연 셸 */
@@ -38,6 +38,12 @@
     --accent: var(--page-library); /* 보관함 채움 */
     --accent-soft: #e1f5f2; /* 보관함 연한 배경 */
 } /* 보관함 종료 */
+
+.shell :global([data-accent="images"]) /* 이미지 스튜디오 강조색 */
+{ /* 이미지 시작 */
+    --accent: #4338ca; /* 이미지 채움 */
+    --accent-soft: #e0e7ff; /* 이미지 연한 배경 */
+} /* 이미지 종료 */
 
 .shell :global([data-accent="textplay"]) /* Text-Play 강조색 */
 { /* Text-Play 시작 */
@@ -131,13 +137,13 @@
     top: 0; /* 상단 위치 */
     z-index: 30; /* 표시 순서 */
     display: grid; /* 그리드 배치 */
-    grid-template-columns: auto auto 1fr auto auto; /* 헤더 열 */
+    grid-template-columns: auto auto 1fr auto auto auto; /* 헤더 열(알림함 포함) */
     gap: 18px; /* 요소 간격 */
     align-items: center; /* 세로 정렬 */
     min-height: 64px; /* 헤더 높이 */
     padding: 0 20px; /* 내부 여백 */
-    border-bottom: 1px solid var(--mv-line); /* 하단 선 */
-    background: rgb(255 255 255 / 97%); /* 헤더 배경 */
+    border-bottom: 1px solid #dcdae3; /* 하단 선 */
+    background: rgb(236 235 240 / 97%); /* 헤더 배경(연한 회색) */
     color: var(--mv-ink); /* 헤더 글자 */
     backdrop-filter: blur(16px); /* 배경 흐림 */
 } /* 헤더 종료 */
@@ -178,6 +184,7 @@
     background: var(--mv-surface); /* 버튼 배경 */
     font-weight: 750; /* 굵은 글자 */
     text-decoration: none; /* 밑줄 제거 */
+    white-space: nowrap; /* 메뉴 이름 줄바꿈 방지 */
     transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease; /* 메뉴 전환 */
 } /* 메뉴 버튼 종료 */
 
@@ -232,6 +239,214 @@
     place-items: center; /* 중앙 정렬 */
     transition: border-color 160ms ease, background 160ms ease, transform 160ms ease; /* 버튼 전환 */
 } /* 버튼 종료 */
+
+.shell :global(.app-notifications) /* 알림함 */
+{ /* 알림함 시작 */
+    position: relative; /* 목록 기준 */
+} /* 알림함 종료 */
+
+.shell :global(.app-notifications > button) /* 종 버튼 */
+{ /* 종 시작 */
+    position: relative; /* 배지 기준 */
+    display: grid; /* 중앙 배치 */
+    width: 44px; /* 너비 */
+    height: 44px; /* 높이 */
+    padding: 0; /* 여백 제거 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 14px; /* 모서리 */
+    background: var(--mv-surface); /* 배경 */
+    cursor: pointer; /* 커서 */
+    place-items: center; /* 중앙 */
+} /* 종 종료 */
+
+.shell :global(.app-notifications > button:hover), /* 종 올림 */
+.shell :global(.app-notifications > button[aria-expanded="true"]) /* 종 열림 */
+{ /* 강조 시작 */
+    border-color: #a78bfa; /* 보라 테두리 */
+    background: #ede9fe; /* 보라 배경 */
+    color: #5b21b6; /* 보라 아이콘 */
+} /* 강조 종료 */
+
+.shell :global(.app-notifications > button:focus-visible) /* 종 초점 */
+{ /* 초점 시작 */
+    outline: 3px solid var(--mv-focus); /* 초점 외곽선 */
+    outline-offset: 2px; /* 간격 */
+} /* 초점 종료 */
+
+.shell :global(.app-notifications > button svg) /* 종 아이콘 */
+{ /* 아이콘 시작 */
+    width: 22px; /* 너비 */
+    height: 22px; /* 높이 */
+    fill: none; /* 채움 제거 */
+    stroke: currentColor; /* 선 색 */
+    stroke-linecap: round; /* 둥근 끝 */
+    stroke-linejoin: round; /* 둥근 연결 */
+    stroke-width: 1.8; /* 두께 */
+} /* 아이콘 종료 */
+
+.shell :global(.app-notifications-badge) /* 안 읽은 수 */
+{ /* 배지 시작 */
+    position: absolute; /* 모서리 배치 */
+    top: -5px; /* 위 */
+    right: -5px; /* 오른쪽 */
+    display: grid; /* 중앙 */
+    min-width: 19px; /* 너비 */
+    height: 19px; /* 높이 */
+    padding: 0 5px; /* 여백 */
+    border: 2px solid #ecebf0; /* 헤더색 테두리 */
+    border-radius: 999px; /* 알약 */
+    background: #e11d48; /* 빨강 */
+    color: #ffffff; /* 흰 글자 */
+    font-size: .64rem; /* 크기 */
+    font-weight: 900; /* 굵기 */
+    line-height: 1; /* 행간 */
+    place-items: center; /* 중앙 */
+} /* 배지 종료 */
+
+.shell :global(.app-notifications-popover) /* 알림 목록 */
+{ /* 목록 시작 */
+    position: absolute; /* 띄우기 */
+    top: calc(100% + 10px); /* 버튼 아래 */
+    right: 0; /* 오른쪽 맞춤 */
+    z-index: 40; /* 위 */
+    display: grid; /* 세로 */
+    width: min(340px, calc(100vw - 24px)); /* 너비 */
+    max-height: min(480px, calc(100vh - 96px)); /* 높이 */
+    overflow: hidden; /* 넘침 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 16px; /* 모서리 */
+    background: #ffffff; /* 배경 */
+    box-shadow: 0 22px 48px rgb(31 26 46 / 18%); /* 그림자 */
+    grid-template-rows: auto minmax(0, 1fr); /* 머리·목록 */
+} /* 목록 종료 */
+
+.shell :global(.app-notifications-head) /* 목록 머리 */
+{ /* 머리 시작 */
+    display: flex; /* 가로 */
+    align-items: center; /* 세로 중앙 */
+    gap: 6px; /* 간격 */
+    padding: 12px 14px; /* 여백 */
+    border-bottom: 1px solid var(--mv-line); /* 구분선 */
+} /* 머리 종료 */
+
+.shell :global(.app-notifications-head strong) /* 머리 제목 */
+{ /* 제목 시작 */
+    flex: 1; /* 남은 공간 */
+    font-size: .95rem; /* 크기 */
+} /* 제목 종료 */
+
+.shell :global(.app-notifications-head button) /* 머리 버튼 */
+{ /* 버튼 시작 */
+    min-height: 28px; /* 높이 */
+    padding: 0 10px; /* 여백 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 999px; /* 알약 */
+    background: #ffffff; /* 배경 */
+    font: inherit; /* 글꼴 */
+    font-size: .74rem; /* 크기 */
+    font-weight: 700; /* 굵기 */
+    cursor: pointer; /* 커서 */
+} /* 버튼 종료 */
+
+.shell :global(.app-notifications-head button:disabled) /* 비활성 */
+{ /* 비활성 시작 */
+    opacity: .45; /* 흐리게 */
+    cursor: default; /* 기본 */
+} /* 비활성 종료 */
+
+.shell :global(.app-notifications-popover ul) /* 알림 목록 */
+{ /* 목록 시작 */
+    display: grid; /* 세로 */
+    margin: 0; /* 여백 제거 */
+    padding: 6px; /* 여백 */
+    overflow-y: auto; /* 스크롤 */
+    list-style: none; /* 점 제거 */
+} /* 목록 종료 */
+
+.shell :global(.app-notifications-popover li > a), /* 알림 링크 */
+.shell :global(.app-notifications-popover li > div) /* 알림 글 */
+{ /* 알림 시작 */
+    display: grid; /* 격자 */
+    grid-template-columns: auto minmax(0, 1fr); /* 종류·내용 */
+    gap: 2px 8px; /* 간격 */
+    padding: 10px; /* 여백 */
+    border-radius: 12px; /* 모서리 */
+    color: var(--mv-ink); /* 글자 */
+    text-decoration: none; /* 밑줄 제거 */
+} /* 알림 종료 */
+
+.shell :global(.app-notifications-popover li > a:hover), /* 링크 올림 */
+.shell :global(.app-notifications-popover li > a:focus-visible) /* 링크 초점 */
+{ /* 강조 시작 */
+    background: #f5f3ff; /* 연보라 */
+} /* 강조 종료 */
+
+.shell :global(.app-notifications-popover li[data-unread="true"] > *) /* 안 읽은 알림 */
+{ /* 안 읽음 시작 */
+    background: #faf5ff; /* 강조 배경 */
+} /* 안 읽음 종료 */
+
+.shell :global(.app-notifications-popover li strong), /* 알림 제목 */
+.shell :global(.app-notifications-popover li small), /* 알림 내용 */
+.shell :global(.app-notifications-popover li time) /* 알림 시각 */
+{ /* 내용 시작 */
+    grid-column: 2; /* 둘째 열 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 내용 종료 */
+
+.shell :global(.app-notifications-popover li strong) /* 알림 제목 */
+{ /* 제목 시작 */
+    font-size: .86rem; /* 크기 */
+} /* 제목 종료 */
+
+.shell :global(.app-notifications-popover li small) /* 알림 내용 */
+{ /* 내용 시작 */
+    overflow: hidden; /* 넘침 */
+    color: var(--mv-muted); /* 회색 */
+    font-size: .76rem; /* 크기 */
+    text-overflow: ellipsis; /* 말줄임 */
+    white-space: nowrap; /* 한 줄 */
+} /* 내용 종료 */
+
+.shell :global(.app-notifications-popover li time) /* 알림 시각 */
+{ /* 시각 시작 */
+    color: #8a85a0; /* 회색 */
+    font-size: .7rem; /* 크기 */
+} /* 시각 종료 */
+
+.shell :global(.app-notifications-kind) /* 알림 종류 */
+{ /* 종류 시작 */
+    grid-row: 1 / span 3; /* 세로 전체 */
+    align-self: start; /* 위 */
+    padding: 2px 8px; /* 여백 */
+    border-radius: 999px; /* 알약 */
+    background: #ede9fe; /* 보라 */
+    color: #5b21b6; /* 보라 글자 */
+    font-size: .68rem; /* 크기 */
+    font-weight: 800; /* 굵기 */
+} /* 종류 종료 */
+
+.shell :global(.app-notifications-kind[data-kind="image"]) /* 이미지 알림 */
+{ /* 이미지 시작 */
+    background: #ffedd5; /* 주황 */
+    color: #c2410c; /* 주황 글자 */
+} /* 이미지 종료 */
+
+.shell :global(.app-notifications-kind[data-kind="memory"]) /* 메모리 알림 */
+{ /* 메모리 시작 */
+    background: #dcfce7; /* 초록 */
+    color: #15803d; /* 초록 글자 */
+} /* 메모리 종료 */
+
+.shell :global(.app-notifications-empty) /* 빈 알림 */
+{ /* 빈 시작 */
+    margin: 0; /* 여백 제거 */
+    padding: 28px 18px; /* 여백 */
+    color: var(--mv-muted); /* 회색 */
+    font-size: .84rem; /* 크기 */
+    text-align: center; /* 가운데 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 빈 종료 */
 
 .shell :global(.app-header > button:hover) /* 버튼 올림 */
 { /* 올림 시작 */
@@ -987,6 +1202,224 @@
     font-weight: 700; /* 안내 굵기 */
 } /* 안내 종료 */
 
+.grid :global(.conversation-tools) /* 탭·폴더 도구 */
+{ /* 도구 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 */
+    align-items: center; /* 세로 중앙 */
+    justify-content: space-between; /* 양끝 */
+    gap: 6px; /* 간격 */
+} /* 도구 종료 */
+
+.grid :global(.conversation-filter), /* 종류 탭 */
+.grid :global(.conversation-folder-tools) /* 폴더 도구 */
+{ /* 묶음 시작 */
+    display: flex; /* 가로 배치 */
+    gap: 4px; /* 간격 */
+} /* 묶음 종료 */
+
+.grid :global(.conversation-filter button), /* 종류 탭 버튼 */
+.grid :global(.conversation-folder-tools button) /* 폴더 도구 버튼 */
+{ /* 버튼 시작 */
+    display: inline-flex; /* 가로 배치 */
+    align-items: center; /* 세로 중앙 */
+    gap: 4px; /* 간격 */
+    min-height: 30px; /* 높이 */
+    padding: 0 10px; /* 여백 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 999px; /* 알약 */
+    background: #ffffff; /* 배경 */
+    color: #4b4760; /* 글자 */
+    font: inherit; /* 글꼴 상속 */
+    font-size: .76rem; /* 크기 */
+    font-weight: 800; /* 굵기 */
+    cursor: pointer; /* 커서 */
+} /* 버튼 종료 */
+
+.grid :global(.conversation-filter button small) /* 탭 개수 */
+{ /* 개수 시작 */
+    color: #8a85a0; /* 회색 */
+    font-size: .7rem; /* 크기 */
+} /* 개수 종료 */
+
+.grid :global(.conversation-filter button[aria-pressed="true"]) /* 고른 탭 */
+{ /* 고름 시작 */
+    border-color: #1f1a2e; /* 진한 테두리 */
+    background: #1f1a2e; /* 진한 배경 */
+    color: #ffffff; /* 흰 글자 */
+} /* 고름 종료 */
+
+.grid :global(.conversation-filter button[aria-pressed="true"] small) /* 고른 탭 개수 */
+{ /* 개수 시작 */
+    color: rgb(255 255 255 / 70%); /* 흐린 흰색 */
+} /* 개수 종료 */
+
+.grid :global(.conversation-folder-tools button:hover), /* 폴더 도구 올림 */
+.grid :global(.conversation-filter button:hover:not([aria-pressed="true"])) /* 탭 올림 */
+{ /* 올림 시작 */
+    border-color: #c4b5fd; /* 보라 테두리 */
+    color: #5b21b6; /* 보라 글자 */
+} /* 올림 종료 */
+
+.grid :global(.conversation-folder-form) /* 폴더 이름 입력 */
+{ /* 입력 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 6px; /* 간격 */
+    padding: 10px; /* 여백 */
+    border: 1px solid #ddd6fe; /* 테두리 */
+    border-radius: 12px; /* 모서리 */
+    background: #faf8ff; /* 배경 */
+} /* 입력 종료 */
+
+.grid :global(.conversation-folder-form input) /* 이름 칸 */
+{ /* 칸 시작 */
+    min-height: 36px; /* 높이 */
+    padding: 0 10px; /* 여백 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 8px; /* 모서리 */
+    background: #ffffff; /* 배경 */
+    font: inherit; /* 글꼴 */
+} /* 칸 종료 */
+
+.grid :global(.conversation-folder-form div) /* 입력 동작 */
+{ /* 동작 시작 */
+    display: flex; /* 가로 */
+    justify-content: flex-end; /* 오른쪽 */
+    gap: 6px; /* 간격 */
+} /* 동작 종료 */
+
+.grid :global(.conversation-folder-form button), /* 입력 버튼 */
+.grid :global(.conversation-folder-head > button) /* 폴더 관리 버튼 */
+{ /* 버튼 시작 */
+    min-height: 28px; /* 높이 */
+    padding: 0 10px; /* 여백 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 8px; /* 모서리 */
+    background: #ffffff; /* 배경 */
+    color: #4b4760; /* 글자 */
+    font: inherit; /* 글꼴 */
+    font-size: .74rem; /* 크기 */
+    font-weight: 700; /* 굵기 */
+    cursor: pointer; /* 커서 */
+} /* 버튼 종료 */
+
+.grid :global(.conversation-folder-form button[type="submit"]) /* 만들기·저장 */
+{ /* 저장 시작 */
+    border-color: #6d28d9; /* 보라 테두리 */
+    background: #6d28d9; /* 보라 채움 */
+    color: #ffffff; /* 흰 글자 */
+} /* 저장 종료 */
+
+.grid :global(.conversation-folder-head) /* 폴더 제목 줄 */
+{ /* 제목 줄 시작 */
+    display: flex; /* 가로 */
+    align-items: center; /* 세로 중앙 */
+    gap: 4px; /* 간격 */
+} /* 제목 줄 종료 */
+
+.grid :global(.conversation-folder-head > button) /* 폴더 관리 버튼 */
+{ /* 관리 시작 */
+    min-height: 24px; /* 낮게 */
+    padding: 0 7px; /* 여백 */
+    border-color: transparent; /* 테두리 숨김 */
+    background: transparent; /* 투명 */
+    color: #8a85a0; /* 회색 */
+    font-size: .7rem; /* 크기 */
+} /* 관리 종료 */
+
+.grid :global(.conversation-folder-head > button:hover) /* 관리 올림 */
+{ /* 올림 시작 */
+    border-color: var(--mv-line); /* 테두리 */
+    background: #ffffff; /* 배경 */
+    color: #5b21b6; /* 보라 */
+} /* 올림 종료 */
+
+.grid :global(.conversation-group-title[data-group="folder"]) /* 폴더 제목 */
+{ /* 폴더 제목 시작 */
+    flex: 1; /* 남은 공간 */
+    min-width: 0; /* 줄임 허용 */
+    margin: 0; /* 여백 제거 */
+} /* 폴더 제목 종료 */
+
+.grid :global(.conversation-group-title[data-group="folder"] button) /* 폴더 접기 버튼 */
+{ /* 접기 시작 */
+    display: flex; /* 가로 */
+    align-items: center; /* 세로 중앙 */
+    gap: 5px; /* 간격 */
+    width: 100%; /* 너비 */
+    min-height: 28px; /* 높이 */
+    padding: 0 4px; /* 여백 */
+    border: 0; /* 테두리 제거 */
+    border-radius: 8px; /* 모서리 */
+    background: transparent; /* 투명 */
+    color: #5b21b6; /* 보라 글자 */
+    font: inherit; /* 글꼴 */
+    font-size: .76rem; /* 크기 */
+    font-weight: 800; /* 굵기 */
+    text-align: left; /* 왼쪽 */
+    cursor: pointer; /* 커서 */
+} /* 접기 종료 */
+
+.grid :global(.conversation-group-title[data-group="folder"] button::after) /* 접기 화살표 */
+{ /* 화살표 시작 */
+    margin-left: auto; /* 오른쪽 */
+    color: #8a85a0; /* 회색 */
+    content: "▾"; /* 펼침 */
+} /* 화살표 종료 */
+
+.grid :global(.conversation-group-title[data-group="folder"] button[aria-expanded="false"]::after) /* 접힌 화살표 */
+{ /* 접힘 시작 */
+    content: "▸"; /* 접힘 */
+} /* 접힘 종료 */
+
+.grid :global(.conversation-group-title[data-group="folder"] small) /* 폴더 개수 */
+{ /* 개수 시작 */
+    padding: 0 6px; /* 여백 */
+    border-radius: 999px; /* 알약 */
+    background: #ede9fe; /* 연보라 */
+    color: #5b21b6; /* 보라 */
+    font-size: .68rem; /* 크기 */
+} /* 개수 종료 */
+
+.grid :global(.conversation-group[data-folder="true"]) /* 폴더 묶음 */
+{ /* 폴더 시작 */
+    padding: 6px; /* 여백 */
+    border: 1px dashed #ddd6fe; /* 점선 */
+    border-radius: 14px; /* 모서리 */
+} /* 폴더 종료 */
+
+.grid :global(.conversation-folder-empty) /* 빈 폴더 */
+{ /* 빈 시작 */
+    margin: 0; /* 여백 제거 */
+    padding: 6px 8px; /* 여백 */
+    color: #8a85a0; /* 회색 */
+    font-size: .74rem; /* 크기 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 빈 종료 */
+
+.grid :global(.conversation-card-status) /* 마지막 상태창 줄 */
+{ /* 상태 시작 */
+    display: flex; /* 가로 */
+    align-items: center; /* 세로 중앙 */
+    gap: 4px; /* 간격 */
+    overflow: hidden; /* 넘침 숨김 */
+    color: #92400e; /* 갈색 */
+    font-size: .7rem; /* 크기 */
+    font-weight: 700; /* 굵기 */
+    text-overflow: ellipsis; /* 말줄임 */
+    white-space: nowrap; /* 한 줄 */
+} /* 상태 종료 */
+
+.grid :global(.conversation-card-status svg) /* 장소 아이콘 */
+{ /* 아이콘 시작 */
+    flex: none; /* 크기 유지 */
+} /* 아이콘 종료 */
+
+.grid :global(.conversation-menu .conversation-menu-back) /* 뒤로 */
+{ /* 뒤로 시작 */
+    color: #8a85a0; /* 회색 */
+} /* 뒤로 종료 */
+
 .grid :global(.conversation-library) /* 보관함 링크 */
 { /* 보관함 시작 */
     display: flex; /* 가로 배치 */
@@ -1352,26 +1785,37 @@
 
     .shell :global(.app-brand) /* 태블릿 브랜드 */
     { /* 브랜드 시작 */
-        width: 132px; /* 브랜드 너비 */
+        width: 108px; /* 브랜드 너비(알림함 자리 확보) */
     } /* 브랜드 종료 */
 
     .shell :global(.app-header nav) /* 태블릿 메뉴 */
     { /* 메뉴 시작 */
-        gap: 6px; /* 링크 간격 */
+        gap: 4px; /* 링크 간격 */
     } /* 메뉴 종료 */
 
     .shell :global(.app-navigation-link) /* 태블릿 메뉴 버튼 */
     { /* 메뉴 버튼 시작 */
-        padding: 0 10px; /* 내부 여백 */
+        gap: 5px; /* 점 간격 */
+        padding: 0 7px; /* 내부 여백 */
         font-size: .85rem; /* 글자 크기 */
     } /* 메뉴 버튼 종료 */
+
+    .shell :global(.app-navigation-extra) /* 태블릿에서 줄이는 글자 */
+    { /* 줄임 시작 */
+        position: absolute; /* 배치 제외(읽기 프로그램에는 남김) */
+        width: 1px; /* 최소 너비 */
+        height: 1px; /* 최소 높이 */
+        overflow: hidden; /* 넘침 숨김 */
+        clip-path: inset(50%); /* 시각 숨김 */
+        white-space: nowrap; /* 줄바꿈 방지 */
+    } /* 줄임 종료 */
 } /* 태블릿 종료 */
 
 @media (max-width: 760px) /* 모바일 */
 { /* 미디어 시작 */
     .shell :global(.app-header) /* 모바일 헤더 */
     { /* 헤더 시작 */
-        grid-template-columns: auto minmax(0, 1fr) auto auto; /* 네 열 배치 */
+        grid-template-columns: auto minmax(0, 1fr) auto auto auto; /* 다섯 열 배치(알림함 포함) */
         gap: 8px; /* 요소 간격 */
         padding: 0 12px; /* 내부 여백 */
     } /* 헤더 종료 */
@@ -1409,6 +1853,15 @@
     { /* 메뉴 시작 */
         display: none; /* 모바일 숨김 */
     } /* 메뉴 종료 */
+
+    .shell :global(.app-notifications-popover) /* 모바일 알림 목록 */
+    { /* 목록 시작 */
+        position: fixed; /* 화면 기준 */
+        top: 70px; /* 헤더 아래 */
+        right: 12px; /* 오른쪽 여백 */
+        left: 12px; /* 왼쪽 여백 */
+        width: auto; /* 너비 자동 */
+    } /* 목록 종료 */
 
     .shell :global(.mobile-bottom-navigation) /* 모바일 메뉴 */
     { /* 메뉴 시작 */

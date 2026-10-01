@@ -1,9 +1,9 @@
 :root /* 전역 루트 */
 { /* 루트 시작 */
-    color-scheme: dark; /* 어두운 테마 */
+    color-scheme: light; /* 밝은 테마 */
     font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; /* 시스템 글꼴 */
-    background: #0d0f14; /* 기본 배경 */
-    color: #f7f7fb; /* 기본 글자 */
+    background: #fbf9ff; /* 기본 배경 */
+    color: #1f1a2e; /* 기본 글자 */
     --mv-ink: #1f1a2e; /* 밝은 화면 기본 글자 */
     --mv-muted: #5f5873; /* 밝은 화면 보조 글자 */
     --mv-line: #e9e3f3; /* 밝은 화면 경계선 */
@@ -93,7 +93,7 @@ body /* 본문 요소 */
 { /* 본문 시작 */
     min-height: 100%; /* 최소 높이 */
     margin: 0; /* 기본 여백 제거 */
-    background: #0d0f14; /* 본문 배경 */
+    background: var(--mv-canvas); /* 본문 배경 */
 } /* 본문 종료 */
 
 button, /* 버튼 요소 */

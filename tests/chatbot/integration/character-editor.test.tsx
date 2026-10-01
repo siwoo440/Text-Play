@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest"; // 테스트 도구
 import { CharacterEditor } from "@chatbot/features/character/CharacterEditor"; // 편집기 대상
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 상태
 import { createInitialState } from "@chatbot/features/core/initial-state"; // 초기 상태
+import { createGeneratedImage } from "@chatbot/features/images/image-model"; // 생성 이미지 만들기
 import { renderWithApp } from "@chatbot/test/render-with-app"; // 앱 렌더
 
 function CharacterStateProbe() // 상태 확인기
@@ -68,5 +69,26 @@ describe("캐릭터 편집기", () => // 편집기 묶음
         await user.click(screen.getByRole("link", { name: "보관함 보기" })); // 내부 이동 시도
         expect(confirm).toHaveBeenCalledWith("저장하지 않은 변경 사항이 있습니다. 페이지를 이동하시겠습니까?"); // 확인 호출 검증
         confirm.mockRestore(); // 확인 복원
+    }); // 검증 종료
+
+    it("이미지 스튜디오에서 고른 이미지를 대표 이미지로 쓰고 등급이 더 높은 이미지는 저장을 막는다", async () => // 내 이미지 대표 이미지 검증
+    { // 검증 시작
+        const user = userEvent.setup(); // 사용자 생성
+        const state = createInitialState(); // 초기 상태
+        const plain = createGeneratedImage({ prompt: "밤 기차 창가", style: "anime", aspect: "portrait", referenceCharacterId: null, contentRating: "all" }, "kr", "2026-10-01T00:00:00.000Z", "image-plain"); // 일반 이미지
+        const teen = createGeneratedImage({ prompt: "비 오는 승강장", style: "cinematic", aspect: "portrait", referenceCharacterId: null, contentRating: "teen" }, "kr", "2026-10-01T00:01:00.000Z", "image-teen"); // 15세 이미지
+        state.images = [teen, plain]; // 갤러리 준비
+        renderWithApp(<><CharacterEditor initialImageId="image-teen" /><CharacterStateProbe /></>, state); // 15세 이미지로 시작
+        expect(screen.getByRole("radio", { name: "비 오는 승강장" })).toBeChecked(); // 넘어온 이미지 선택
+        expect(within(screen.getByTestId("character-preview")).getByRole("img")).toHaveAttribute("src", teen.src); // 미리보기 반영
+        await user.type(screen.getByLabelText("캐릭터 이름"), "밤 기차의 루미"); // 이름
+        await user.type(screen.getByLabelText("한 줄 소개"), "자정 열차의 안내자"); // 소개
+        await user.type(screen.getByLabelText("성격"), "차분함"); // 성격
+        await user.type(screen.getByLabelText("첫 인사"), "어디까지 가?"); // 인사
+        await user.click(screen.getByRole("button", { name: "임시 저장" })); // 전체 이용가로 저장 시도
+        expect(screen.getByText("15세 이용가 이미지를 쓰려면 이용 등급을 15세 이용가 이상으로 정해 주세요.")).toBeVisible(); // 등급 오류
+        await user.click(screen.getByRole("radio", { name: "밤 기차 창가" })); // 일반 이미지로 변경
+        await user.click(screen.getByRole("button", { name: "임시 저장" })); // 다시 저장
+        expect(screen.getByLabelText("저장 캐릭터")).toHaveTextContent("밤 기차의 루미:draft"); // 저장 확인
     }); // 검증 종료
 }); // 묶음 종료

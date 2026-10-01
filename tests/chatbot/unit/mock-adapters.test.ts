@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"; // 테스트 도구
 import { MockImageAdapter } from "@chatbot/lib/adapters/mock-image-adapter"; // 이미지 어댑터
-import { MockLLMAdapter } from "@chatbot/lib/adapters/mock-llm-adapter"; // 대화 어댑터
+import { decorateReply, MockLLMAdapter } from "@chatbot/lib/adapters/mock-llm-adapter"; // 대화 어댑터
 import type { LLMInput } from "@chatbot/lib/adapters/llm-adapter"; // 대화 입력
 import { mockCharacters, mockConversations, mockConversationVersions } from "@chatbot/mocks/fixtures"; // Mock 데이터
 
@@ -28,6 +28,18 @@ describe("Mock 어댑터", () => // 어댑터 묶음
         const second = await collect(adapter.streamReply(makeInput("안녕"))); // 둘째 응답
         expect(second).toBe(first); // 동일성 확인
         expect(first.length).toBeGreaterThan(0); // 응답 존재
+    }); // 검증 종료
+
+    it("대화방 설정의 문체·답변 길이·사칭 방지·대화 프로필을 Mock 응답에 반영하고 기본 설정이면 그대로 둔다", () => // 설정 반영 검증
+    { // 검증 시작
+        const options = { tier: "basic" as const, length: 1 as const, thinking: "off" as const, writingStyle: "default" as const, preventImpersonation: true, persona: null, userNote: "", memories: [], playGuide: "" }; // 기본 설정
+        expect(decorateReply("안녕.", options, 1, false)).toBe("안녕."); // 기본은 그대로
+        expect(decorateReply("안녕.", { ...options, writingStyle: "romance" }, 1, false)).toBe("*시선이 잠시 네게 머문다.* 안녕."); // 문체
+        expect(decorateReply("안녕.", { ...options, length: 3 }, 1, false).split(" ").length).toBeGreaterThan(5); // 긴 답변
+        expect(decorateReply("안녕.", { ...options, preventImpersonation: false }, 2, false)).toContain("*당신은"); // 사칭 방지 끔
+        expect(decorateReply("안녕.", { ...options, preventImpersonation: true }, 2, false)).not.toContain("*당신은"); // 사칭 방지 켬
+        expect(decorateReply("안녕.", { ...options, persona: { name: "시우", description: "" } }, 3, false)).toBe("시우, 안녕."); // 이름 부르기
+        expect(decorateReply("[리안] 안녕.", { ...options, length: 1.5 }, 1, true).split("\n")).toHaveLength(2); // 스토리 내레이션 추가
     }); // 검증 종료
 
     it("중단 신호를 받으면 대기 중인 응답을 종료한다", async () => // 중단 신호 검증

@@ -6,6 +6,7 @@ import type { ChatProgress } from "@chatbot/features/chat/chat-controller"; // �
 import { ChatController } from "@chatbot/features/chat/chat-controller"; // 채팅 제어기
 import { CHAT_MESSAGE_MAX_LENGTH, CHAT_VERSION_LIMIT, createVersionFork } from "@chatbot/features/conversation/conversation-versioning"; // 버전 도메인 함수
 import { createInitialState } from "@chatbot/features/core/initial-state"; // 초기 상태 생성
+import { createGeneratedImage } from "@chatbot/features/images/image-model"; // 생성 이미지 만들기
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 상태 훅
 import type { LLMAdapter, LLMInput, SummaryInput } from "@chatbot/lib/adapters/llm-adapter"; // 대화 어댑터 타입
 import { MockImageAdapter } from "@chatbot/lib/adapters/mock-image-adapter"; // 이미지 어댑터
@@ -652,6 +653,22 @@ describe("채팅 흐름", () => // 채팅 묶음
         await user.click(within(targetItem).getByRole("button", { name: "복사" })); // 실패 복사 실행
         expect(await within(targetItem).findByRole("alert")).toHaveTextContent("메시지를 복사하지 못했습니다."); // 실패 안내 확인
         expect(screen.getByText("오늘 기록할 이야기가 많아.")).toBeVisible(); // 메시지 유지 확인
+    }); // 검증 종료
+
+    it("내 이미지를 고르면 토큰 없이 현재 장면을 바꾸고 작품 등급보다 높은 이미지는 보이지 않는다", async () => // 내 이미지 장면 검증
+    { // 검증 시작
+        const user = userEvent.setup(); // 사용자 도구 생성
+        const state = createInitialState(); // 초기 상태
+        const plain = createGeneratedImage({ prompt: "새벽 도서관 창가", style: "anime", aspect: "landscape", referenceCharacterId: "rian", contentRating: "all" }, "kr", "2026-10-01T00:00:00.000Z", "image-plain"); // 일반 이미지
+        const teen = createGeneratedImage({ prompt: "비 오는 교실의 긴장", style: "cinematic", aspect: "landscape", referenceCharacterId: null, contentRating: "teen" }, "kr", "2026-10-01T00:01:00.000Z", "image-teen"); // 15세 이미지
+        state.images = [teen, plain]; // 갤러리 준비
+        renderWithApp(<><ChatScreen characterId="rian" llm={new MockLLMAdapter({ delayMs: 0 })} images={new MockImageAdapter()} /><VersionStateProbe /></>, state); // 리안(전체 이용가) 대화
+        const panel = screen.getByRole("region", { name: "내 이미지로 장면 바꾸기" }); // 내 이미지 패널
+        expect(within(panel).queryByRole("button", { name: "비 오는 교실의 긴장 장면으로" })).toBeNull(); // 15세 이미지 제외
+        await user.click(within(panel).getByRole("button", { name: "새벽 도서관 창가 장면으로" })); // 장면 바꾸기
+        expect(screen.getByRole("img", { name: "새벽 도서관의 리안의 현재 장면" })).toHaveAttribute("src", plain.src); // 장면 반영
+        expect(screen.getByLabelText("리안 버전 상태")).toHaveTextContent(`:${state.wallet.balance}`); // 토큰 차감 없음
+        expect(screen.getByText("내 이미지로 장면을 바꿨습니다.")).toBeVisible(); // 안내 확인
     }); // 검증 종료
 
     it("채팅 화면에 AI가 만든 허구의 대화라는 안내를 항상 보여 준다", () => // AI 고지 검증

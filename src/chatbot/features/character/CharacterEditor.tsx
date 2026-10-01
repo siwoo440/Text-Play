@@ -5,12 +5,15 @@ import Image from "@/desktop/next-compat/image"; // 최적화 이미지
 import type { Route } from "@/desktop/next-compat/route"; // 경로 타입
 import { useMemo, useState } from "react"; // 리액트 도구
 import { StatusScreen } from "@chatbot/components/feedback/StatusScreen"; // 공통 상태 화면
-import { isAdultVerified } from "@chatbot/features/adult/adult-access"; // 성인 인증 판정
+import { canViewMatureContent, contentRatingLabels, isAdultVerified } from "@chatbot/features/adult/adult-access"; // 성인 인증 판정·등급 문구
 import { CharacterPreview } from "@chatbot/features/character/CharacterPreview"; // 미리보기
 import { normalizeCharacterDraft, validateCharacterDraft, type CharacterValidationResult } from "@chatbot/features/character/character-validation"; // 초안 검증
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 상태
 import { useUnsavedChangesGuard } from "@chatbot/features/core/useUnsavedChangesGuard"; // 이탈 경고
+import { createDefaultStatusTemplate } from "@chatbot/features/core/defaults"; // 기본 상태창
+import { WorkExtrasFields } from "@chatbot/features/character/WorkExtrasFields"; // 플레이 가이드·상태창·업데이트 입력
 import type { Character, CharacterDraft, PublicationStatus } from "@chatbot/features/core/types"; // 캐릭터 타입
+import { canUseImageForRating, findImageBySource, isGeneratedImageSource } from "@chatbot/features/images/image-model"; // 내 이미지 도구
 import styles from "@chatbot/features/character/CharacterEditor.module.css"; // 편집기 스타일
 
 const imageOptions = ["rian", "harin", "sera", "kyle", "noah", "miel", "yuna"].map((id) => `/images/characters/${id}.webp`); // 이미지 목록
@@ -30,6 +33,9 @@ function createEmptyDraft(): CharacterDraft // 빈 초안 생성
         coverImage: imageOptions[0], // 기본 이미지
         visibility: "private", // 기본 공개 범위
         contentRating: "all", // 기본 이용 등급
+        playGuide: "", // 플레이 가이드
+        statusTemplate: createDefaultStatusTemplate(true), // 상태창 형식
+        updates: [], // 업데이트 기록
     }); // 초안 종료
 } // 함수 종료
 
@@ -48,20 +54,26 @@ function toDraft(character: Character): CharacterDraft // 캐릭터 초안 변�
         coverImage: character.coverImage, // 이미지 복사
         visibility: character.visibility, // 공개 범위 복사
         contentRating: character.contentRating, // 이용 등급 복사
+        playGuide: character.playGuide, // 플레이 가이드 복사
+        statusTemplate: structuredClone(character.statusTemplate), // 상태창 형식 복사
+        updates: structuredClone(character.updates), // 업데이트 기록 복사
     }); // 초안 종료
 } // 함수 종료
 
-export function CharacterEditor({ characterId }: { characterId?: string }) // 캐릭터 편집기
+export function CharacterEditor({ characterId, initialImageId }: { characterId?: string; initialImageId?: string }) // 캐릭터 편집기(이미지 스튜디오에서 고른 이미지로 시작 가능)
 { // 함수 시작
     const { state, dispatch } = useAppStore(); // 앱 상태
     const existing = characterId === undefined ? undefined : state.characters.find((character) => character.id === characterId); // 기존 캐릭터
-    const initialDraft = useMemo(() => existing === undefined ? createEmptyDraft() : toDraft(existing), [existing]); // 초기 초안
+    const startImage = initialImageId === undefined ? undefined : state.images.find((image) => image.id === initialImageId && (image.contentRating !== "mature" || canViewMatureContent(state, new Date()))); // 스튜디오에서 넘어온 이미지
+    const initialDraft = useMemo(() => existing === undefined ? { ...createEmptyDraft(), ...(startImage === undefined ? {} : { coverImage: startImage.src }) } : toDraft(existing), [existing, startImage]); // 초기 초안
     const [draft, setDraft] = useState<CharacterDraft>(initialDraft); // 편집 초안
     const [result, setResult] = useState<CharacterValidationResult>({ valid: true, errors: {} }); // 검증 결과
     const [notice, setNotice] = useState(""); // 저장 안내
     const [savedId] = useState(() => existing?.id ?? `character-${Date.now()}`); // 저장 식별자
     const [dirty, setDirty] = useState(false); // 변경 표시
     const adultVerified = isAdultVerified(state.profile, new Date()); // 성인 인증 상태
+    const showMature = canViewMatureContent(state, new Date()); // 19+ 표시 여부
+    const myImages = [...state.images.filter((image) => image.contentRating !== "mature" || showMature), ...(isGeneratedImageSource(draft.coverImage) && !state.images.some((image) => image.src === draft.coverImage) ? [{ id: "current", src: draft.coverImage, prompt: "현재 대표 이미지" }] : [])]; // 고를 수 있는 내 이미지(지운 이미지는 현재 값만 유지)
     useUnsavedChangesGuard(dirty); // 저장하지 않은 변경 이탈 경고
     if (characterId !== undefined && existing === undefined) // 수정 대상 부재 판정
     { // 조건 시작
@@ -96,6 +108,14 @@ export function CharacterEditor({ characterId }: { characterId?: string }) // �
             setNotice("입력 내용을 확인해 주세요."); // 오류 안내
             return; // 저장 중단
         } // 조건 종료
+        const coverSource = findImageBySource(state.images, normalized.coverImage); // 대표 이미지가 내 이미지인지
+        if (validation.valid && coverSource !== undefined && !canUseImageForRating(coverSource.contentRating, normalized.contentRating)) // 이미지 등급 판정
+        { // 조건 시작
+            const label = contentRatingLabels[coverSource.contentRating]; // 이미지 등급 이름
+            setResult({ valid: false, errors: { coverImage: `${label} 이미지를 쓰려면 이용 등급을 ${label} 이상으로 정해 주세요.` } }); // 등급 오류
+            setNotice("입력 내용을 확인해 주세요."); // 오류 안내
+            return; // 저장 중단
+        } // 조건 종료
         if (!validation.valid) // 오류 판정
         { // 조건 시작
             setNotice("입력 내용을 확인해 주세요."); // 오류 안내
@@ -120,7 +140,7 @@ export function CharacterEditor({ characterId }: { characterId?: string }) // �
     }; // 함수 종료
     const error = (key: keyof CharacterDraft) => result.errors[key] === undefined ? null : <span role="alert" className={styles.error}>{result.errors[key]}</span>; // 오류 표시
     return ( // 편집기 반환
-        <main className={styles.page}> {/* 편집기 본문 */}
+        <main className={styles.page} data-surface="light"> {/* 편집기 본문 */}
             <header className={styles.header}> {/* 편집기 헤더 */}
                 <div><span>CHARACTER STUDIO</span><h1>{existing === undefined ? "새 캐릭터 만들기" : `${existing.name} 수정`}</h1><p>입력과 동시에 캐릭터 카드와 첫 대화를 확인할 수 있습니다.</p></div> {/* 제목 영역 */}
                 <Link href={"/library" as Route}>보관함 보기</Link> {/* 보관함 링크 */}
@@ -143,9 +163,11 @@ export function CharacterEditor({ characterId }: { characterId?: string }) // �
                     {error("prompt")} {/* 프롬프트 오류 */}
                     <label>태그<input value={draft.tags.join(", ")} onChange={(event) => update("tags", event.target.value.split(","))} placeholder="힐링, 판타지, 여행" /></label> {/* 태그 입력 */}
                     {error("tags")} {/* 태그 오류 */}
+                    <WorkExtrasFields value={draft} errors={result.errors} onChange={(patch) => { setDraft((current) => ({ ...current, ...patch })); setDirty(true); setNotice(""); }} /> {/* 플레이 가이드·상태창·업데이트 */}
                     <fieldset className={styles.images}> {/* 이미지 선택 */}
                         <legend>대표 이미지</legend> {/* 이미지 제목 */}
                         {imageOptions.map((path) => <label key={path} data-selected={draft.coverImage === path}><input type="radio" name="cover-image" value={path} checked={draft.coverImage === path} onChange={() => update("coverImage", path)} /><ImageOption path={path} /></label>)} {/* 이미지 목록 */}
+                        {myImages.map((image) => <label key={image.src} data-selected={draft.coverImage === image.src} data-kind="mine"><input type="radio" name="cover-image" value={image.id} checked={draft.coverImage === image.src} onChange={() => update("coverImage", image.src)} /><span><Image src={image.src} alt="" width={120} height={160} unoptimized /><small>{image.prompt}</small></span></label>)} {/* 내 이미지 */}
                     </fieldset> {/* 이미지 종료 */}
                     {error("coverImage")} {/* 이미지 오류 */}
                     <label>공개 범위<select value={draft.visibility} onChange={(event) => update("visibility", event.target.value as CharacterDraft["visibility"])}><option value="private">비공개</option><option value="unlisted">링크 공개</option><option value="public">전체 공개</option></select></label> {/* 공개 범위 */}

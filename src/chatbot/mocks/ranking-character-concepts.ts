@@ -1,4 +1,5 @@
 import type { Character, ContentRating } from "@chatbot/features/core/types"; // 캐릭터 타입
+import { withWorkDefaults } from "@chatbot/features/core/defaults"; // 기본값 도우미
 
 export interface RankingCharacterConcept // 랭킹 콘셉트 구조
 { // 구조 시작
@@ -120,7 +121,7 @@ export const generatedRankingCharacters: Character[] = rankingCharacterConcepts.
     const rankText = String(rank).padStart(3, "0"); // 랭킹 문자열
     const generatedImage = `/images/characters/rank-${rankText}.webp`; // 생성 이미지 경로
     const coverImage = rank <= 50 ? generatedImage : placeholderImages[index % placeholderImages.length]; // 현재 대표 이미지
-    return ( // 캐릭터 반환
+    return withWorkDefaults( // 캐릭터 반환(기본 필드 채움)
     { // 캐릭터 시작
         id: `rank-${rankText}`, // 캐릭터 식별자
         creatorId: "creator-ranking-lab", // 제작자 식별자

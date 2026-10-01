@@ -3,24 +3,38 @@
     position: relative; /* 동작 기준 */
     max-width: 82%; /* 메시지 너비 */
     padding: 13px 15px; /* 내부 여백 */
-    border: 1px solid rgb(255 255 255 / 6%); /* 은은한 테두리 */
+    border: 1px solid var(--mv-line); /* 은은한 테두리 */
     border-radius: 18px 18px 18px 6px; /* 캐릭터 말풍선 */
-    background: linear-gradient(145deg, #1d2230, #151924); /* 말풍선 배경 */
-    box-shadow: 0 10px 24px rgb(0 0 0 / 16%); /* 말풍선 깊이 */
+    background: #f7f5fb; /* 캐릭터 말풍선 배경 */
+    color: var(--mv-ink); /* 본문 글자 */
 } /* 항목 종료 */
+
+.item > strong /* 작성자 */
+{ /* 작성자 시작 */
+    color: var(--genre-strong); /* 장르 진한 글자 */
+    font-size: .8rem; /* 작은 글자 */
+    font-weight: 800; /* 굵은 글자 */
+} /* 작성자 종료 */
 
 .item[data-role="user"] /* 사용자 메시지 */
 { /* 사용자 시작 */
     align-self: flex-end; /* 오른쪽 정렬 */
-    border-color: rgb(179 149 255 / 28%); /* 사용자 테두리 */
+    border-color: transparent; /* 테두리 숨김 */
     border-radius: 18px 18px 6px; /* 사용자 말풍선 */
-    background: linear-gradient(145deg, #7650d3, #5732a5); /* 사용자 배경 */
+    background: var(--genre); /* 장르 채움 */
+    box-shadow: 0 10px 22px var(--genre-glow); /* 장르 그림자 */
+    color: #ffffff; /* 흰 글자 */
 } /* 사용자 종료 */
+
+.item[data-role="user"] > strong /* 사용자 작성자 */
+{ /* 사용자 작성자 시작 */
+    color: rgb(255 255 255 / 88%); /* 흰 글자 */
+} /* 사용자 작성자 종료 */
 
 .item p /* 메시지 문장 */
 { /* 문장 시작 */
     margin: 6px 0 0; /* 문장 여백 */
-    line-height: 1.65; /* 읽기 간격 */
+    line-height: 1.7; /* 읽기 간격 */
     overflow-wrap: anywhere; /* 긴 문장 줄바꿈 */
 } /* 문장 종료 */
 
@@ -40,10 +54,10 @@
 { /* 내레이션 시작 */
     margin: 0; /* 기본 여백 제거 */
     padding: 8px 12px; /* 내부 여백 */
-    border-left: 3px solid #8f72dc; /* 보라 띠 */
+    border-left: 3px solid var(--genre); /* 장르 띠 */
     border-radius: 0 10px 10px 0; /* 오른쪽 모서리 */
-    background: rgb(255 255 255 / 4%); /* 은은한 배경 */
-    color: #cfd4e6; /* 차분한 글자 */
+    background: #ffffff; /* 흰 배경 */
+    color: #4a4360; /* 차분한 글자 */
     font-style: italic; /* 기울임 */
 } /* 내레이션 종료 */
 
@@ -58,7 +72,7 @@
 .speakerLine strong /* 인물 이름 */
 { /* 이름 시작 */
     display: block; /* 줄 분리 */
-    color: #d7c9ff; /* 보라 글자 */
+    color: var(--genre-strong); /* 장르 진한 글자 */
     font-size: .8rem; /* 작은 글자 */
 } /* 이름 종료 */
 
@@ -73,10 +87,11 @@
     width: 36px; /* 너비 */
     height: 36px; /* 높이 */
     overflow: hidden; /* 원형 자르기 */
-    border: 2px solid rgb(188 167 255 / 60%); /* 보라 테 */
+    border: 2px solid #ffffff; /* 흰 테 */
     border-radius: 50%; /* 원형 */
-    background: #241b39; /* 배경 */
-    color: #e4dbff; /* 글자 */
+    background: var(--genre-soft); /* 배경 */
+    box-shadow: 0 0 0 1.5px var(--genre); /* 장르 테 */
+    color: var(--genre-strong); /* 글자 */
     font-size: .8rem; /* 글자 크기 */
     font-weight: 800; /* 글자 굵기 */
     place-items: center; /* 가운데 정렬 */
@@ -95,7 +110,7 @@
     display: inline-flex; /* 가로 배치 */
     gap: 6px; /* 요소 간격 */
     align-items: center; /* 세로 중앙 */
-    color: #f0ebff; /* 밝은 글자 */
+    color: #ffffff; /* 흰 글자 */
     font-weight: 800; /* 굵은 글자 */
 } /* 진행 종료 */
 
@@ -104,7 +119,7 @@
     display: inline-block; /* 줄 안 배치 */
     padding: 0 8px; /* 내부 여백 */
     border-radius: 999px; /* 알약 모양 */
-    background: rgb(255 255 255 / 20%); /* 밝은 배경 */
+    background: rgb(255 255 255 / 24%); /* 밝은 배경 */
     font-weight: 800; /* 굵은 글자 */
 } /* 지목 종료 */
 
@@ -114,7 +129,6 @@
     flex-wrap: wrap; /* 좁은 화면 줄바꿈 */
     gap: 6px; /* 버튼 간격 */
     margin-top: 8px; /* 상단 간격 */
-    opacity: 0.78; /* 보조 강조 */
 } /* 동작 종료 */
 
 .actions button, /* 동작 버튼 */
@@ -122,12 +136,38 @@
 .versionDelete /* 버전 삭제 버튼 */
 { /* 버튼 시작 */
     min-height: 34px; /* 클릭 높이 */
-    padding: 5px 9px; /* 내부 여백 */
-    border: 1px solid rgb(211 195 255 / 28%); /* 버튼 테두리 */
+    padding: 5px 10px; /* 내부 여백 */
+    border: 1px solid var(--mv-line); /* 버튼 테두리 */
     border-radius: 10px; /* 버튼 모서리 */
-    background: rgb(13 15 23 / 48%); /* 버튼 배경 */
-    color: #eee9ff; /* 버튼 글자 */
+    background: #ffffff; /* 버튼 배경 */
+    color: var(--mv-muted); /* 버튼 글자 */
+    font-size: .82rem; /* 작은 글자 */
+    font-weight: 700; /* 굵은 글자 */
+    cursor: pointer; /* 클릭 커서 */
+    transition: background 150ms ease, color 150ms ease; /* 전환 */
 } /* 버튼 종료 */
+
+.actions button:hover:not(:disabled), /* 동작 버튼 올림 */
+.editForm button:hover:not(:disabled), /* 편집 버튼 올림 */
+.versionDelete:hover:not(:disabled) /* 버전 삭제 올림 */
+{ /* 올림 시작 */
+    border-color: color-mix(in srgb, var(--genre) 40%, white); /* 장르 테두리 */
+    background: var(--genre-soft); /* 장르 연한 배경 */
+    color: var(--genre-strong); /* 장르 진한 글자 */
+} /* 올림 종료 */
+
+.item[data-role="user"] .actions button /* 사용자 메시지 버튼 */
+{ /* 사용자 버튼 시작 */
+    border-color: rgb(255 255 255 / 38%); /* 반투명 테두리 */
+    background: rgb(255 255 255 / 16%); /* 반투명 배경 */
+    color: #ffffff; /* 흰 글자 */
+} /* 사용자 버튼 종료 */
+
+.item[data-role="user"] .actions button:hover:not(:disabled) /* 사용자 버튼 올림 */
+{ /* 올림 시작 */
+    background: rgb(255 255 255 / 28%); /* 진한 반투명 배경 */
+    color: #ffffff; /* 흰 글자 */
+} /* 올림 종료 */
 
 .switcher /* 버전 전환기 */
 { /* 전환기 시작 */
@@ -137,8 +177,14 @@
     gap: 2px; /* 요소 간격 */
     margin-top: 6px; /* 상단 간격 */
     font-size: 12px; /* 작은 글자 */
-    color: #ddd3ff; /* 전환 글자 */
+    font-weight: 700; /* 굵은 글자 */
+    color: var(--mv-muted); /* 전환 글자 */
 } /* 전환기 종료 */
+
+.item[data-role="user"] .switcher /* 사용자 버전 전환기 */
+{ /* 사용자 전환 시작 */
+    color: #ffffff; /* 흰 글자 */
+} /* 사용자 전환 종료 */
 
 .switcher > button:not(.versionDelete) /* 전환 버튼 */
 { /* 버튼 시작 */
@@ -149,13 +195,15 @@
     place-items: center; /* 내용 중앙 */
     border: 0; /* 기본 테두리 제거 */
     background: transparent; /* 투명 배경 */
-    color: #f5f1ff; /* 화살표 색상 */
+    color: inherit; /* 화살표 색상 */
     font-size: 20px; /* 화살표 크기 */
+    cursor: pointer; /* 클릭 커서 */
 } /* 버튼 종료 */
 
 .switcher > button:disabled /* 비활성 전환 */
 { /* 비활성 시작 */
-    opacity: 0.28; /* 비활성 투명도 */
+    opacity: 0.32; /* 비활성 투명도 */
+    cursor: default; /* 기본 커서 */
 } /* 비활성 종료 */
 
 .editForm textarea /* 수정 입력 */
@@ -164,10 +212,11 @@
     min-height: 88px; /* 입력 높이 */
     margin-top: 8px; /* 상단 간격 */
     padding: 10px; /* 내부 여백 */
-    border: 1px solid #c5b2ff; /* 입력 테두리 */
+    border: 1px solid #ffffff; /* 입력 테두리 */
     border-radius: 12px; /* 입력 모서리 */
-    background: #11141c; /* 입력 배경 */
-    color: #fff; /* 입력 글자 */
+    background: #ffffff; /* 입력 배경 */
+    color: var(--mv-ink); /* 입력 글자 */
+    line-height: 1.6; /* 행간 */
 } /* 입력 종료 */
 
 .editForm div /* 편집 동작 */
@@ -182,8 +231,9 @@
 { /* 안내 시작 */
     min-height: 1.2em; /* 안정 높이 */
     margin-top: 5px !important; /* 상단 간격 */
-    color: #f1eaff; /* 안내 색상 */
+    color: inherit; /* 말풍선 글자 상속 */
     font-size: 12px; /* 안내 크기 */
+    font-weight: 700; /* 굵은 글자 */
 } /* 안내 종료 */
 
 @media (max-width: 520px) /* 소형 화면 */
@@ -198,3 +248,71 @@
         flex-wrap: wrap; /* 모바일 줄바꿈 */
     } /* 전환기 종료 */
 } /* 미디어 종료 */
+
+.action /* 지문(*행동*) */
+{ /* 지문 시작 */
+    color: var(--mv-muted); /* 회색 글자 */
+    font-style: italic; /* 기울임 */
+} /* 지문 종료 */
+
+.item[data-role="user"] .action /* 사용자 지문 */
+{ /* 사용자 시작 */
+    color: rgb(255 255 255 / 82%); /* 흐린 흰 글자 */
+} /* 사용자 종료 */
+
+.sceneImage /* 대화 안 상황 이미지 */
+{ /* 이미지 시작 */
+    max-width: 320px; /* 너비 제한 */
+    margin: 10px 0 0; /* 위 여백 */
+    overflow: hidden; /* 모서리 자르기 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 14px; /* 모서리 */
+} /* 이미지 종료 */
+
+.sceneImage img /* 상황 이미지 그림 */
+{ /* 그림 시작 */
+    display: block; /* 블록 */
+    width: 100%; /* 너비 */
+    height: auto; /* 비율 유지 */
+} /* 그림 종료 */
+
+.sceneImage figcaption /* 상황 이미지 설명 */
+{ /* 설명 시작 */
+    padding: 6px 10px; /* 여백 */
+    color: var(--mv-muted); /* 회색 */
+    font-size: .76rem; /* 크기 */
+} /* 설명 종료 */
+
+:global([data-chat-theme="dark"]) .item /* 다크 말풍선 */
+{ /* 다크 시작 */
+    border-color: #2f2a3d; /* 테두리 */
+    background: #221e2e; /* 배경 */
+} /* 다크 종료 */
+
+:global([data-chat-theme="dark"]) .item[data-role="user"] /* 다크 사용자 말풍선 */
+{ /* 다크 시작 */
+    background: var(--genre); /* 장르 채움 */
+} /* 다크 종료 */
+
+:global([data-chat-theme="dark"]) .storyBody .narration /* 다크 내레이션 */
+{ /* 다크 시작 */
+    background: #1a1724; /* 배경 */
+    color: #d9d4e8; /* 글자 */
+} /* 다크 종료 */
+
+:global([data-chat-theme="dark"]) .actions button, /* 다크 동작 버튼 */
+:global([data-chat-theme="dark"]) .editForm button, /* 다크 편집 버튼 */
+:global([data-chat-theme="dark"]) .versionDelete, /* 다크 버전 삭제 */
+:global([data-chat-theme="dark"]) .editForm textarea /* 다크 수정 입력 */
+{ /* 다크 시작 */
+    border-color: #3a3550; /* 테두리 */
+    background: #1a1724; /* 배경 */
+    color: #c9c3da; /* 글자 */
+} /* 다크 종료 */
+
+:global([data-chat-theme="dark"]) .item[data-role="user"] .actions button /* 다크 사용자 버튼 */
+{ /* 다크 시작 */
+    border-color: rgb(255 255 255 / 30%); /* 반투명 테두리 */
+    background: rgb(255 255 255 / 16%); /* 반투명 배경 */
+    color: #ffffff; /* 흰 글자 */
+} /* 다크 종료 */

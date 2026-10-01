@@ -199,7 +199,7 @@ describe("왼쪽 대화방 창", () => // 대화방 창 묶음
         expect(confirm).toHaveTextContent("메시지 3개"); // 메시지 수 안내 확인
         expect(within(confirm).getByRole("button", { name: "취소" })).toHaveFocus(); // 안전 초점 확인
         await user.click(within(confirm).getByRole("button", { name: "대화 삭제 확인" })); // 삭제 확인
-        expect(repository.createBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 10 }), "conversation-delete"); // 백업 확인
+        expect(repository.createBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 12 }), "conversation-delete"); // 백업 확인
         expect(cardTitles(panel)).not.toContain("새벽 도서관의 리안"); // 삭제 확인
         expect(within(panel).getByRole("status")).toHaveTextContent("‘새벽 도서관의 리안’ 대화를 삭제했습니다."); // 삭제 안내 확인
         expect(within(panel).getByRole("button", { name: "안내 닫기" })).toHaveFocus(); // 사라진 카드 대신 초점 확인

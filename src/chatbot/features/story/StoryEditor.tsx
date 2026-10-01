@@ -10,19 +10,28 @@ import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 상태
 import type { Character, ContentRating, PublicationStatus, Story, StoryCastMember } from "@chatbot/features/core/types"; // 도메인 타입
 import { useUnsavedChangesGuard } from "@chatbot/features/core/useUnsavedChangesGuard"; // 이탈 경고
 import { matchesKoreanText } from "@chatbot/features/conversation/conversation-list-model"; // 초성 포함 검색
+import { canUseImageForRating, findImageBySource } from "@chatbot/features/images/image-model"; // 내 이미지 도구
 import { STORY_CAST_LIMIT } from "@chatbot/features/story/story-model"; // 등장인물 최대 수
-import { createEmptyStoryDraft, createStoryCastMember, getCastRequiredRating, getStoryCandidates, isRatingBelow, normalizeStoryDraft, storyCoverOptions, toStoryDraft, validateStoryDraft, type StoryDraft, type StoryValidationResult } from "@chatbot/features/story/story-validation"; // 초안 도구
+import { WorkExtrasFields } from "@chatbot/features/character/WorkExtrasFields"; // 플레이 가이드·상태창·업데이트 입력
+import { createEmptyStoryDraft, createStoryCastMember, getCastRequiredRating, getStoryCandidates, getStoryCoverChoices, isRatingBelow, normalizeStoryDraft, storyCoverOptions, toStoryDraft, validateStoryDraft, type StoryDraft, type StoryValidationResult } from "@chatbot/features/story/story-validation"; // 초안 도구
 import editorStyles from "@chatbot/features/character/CharacterEditor.module.css"; // 공통 편집기 스타일
 import styles from "@chatbot/features/story/StoryEditor.module.css"; // 스토리 편집기 스타일
 
 const ratingOptions: ContentRating[] = ["all", "teen", "mature"]; // 등급 선택지
-const coverNames: Record<string, string> = { "/images/scenes/moon-library.svg": "달빛 도서관", "/images/scenes/rainy-classroom.svg": "비 오는 교실", "/images/scenes/dawn-letter.svg": "새벽 편지" }; // 표지 이름
 
-export function StoryEditor({ storyId }: { storyId?: string }) // 스토리 편집기
+export function StoryEditor({ storyId, initialImageId }: { storyId?: string; initialImageId?: string }) // 스토리 편집기(이미지 스튜디오에서 고른 이미지로 시작 가능)
 { // 함수 시작
     const { state, dispatch } = useAppStore(); // 앱 상태
     const existing = storyId === undefined ? undefined : state.stories.find((story) => story.id === storyId); // 기존 스토리
-    const [draft, setDraft] = useState<StoryDraft>(() => existing === undefined ? createEmptyStoryDraft() : toStoryDraft(existing)); // 편집 초안
+    const [draft, setDraft] = useState<StoryDraft>(() => // 편집 초안
+    { // 초기값 시작
+        if (existing !== undefined) // 수정 판정
+        { // 조건 시작
+            return toStoryDraft(existing); // 기존 스토리
+        } // 조건 종료
+        const startImage = initialImageId === undefined ? undefined : state.images.find((image) => image.id === initialImageId && (image.contentRating !== "mature" || canViewMatureContent(state, new Date()))); // 넘어온 이미지
+        return startImage === undefined ? createEmptyStoryDraft() : { ...createEmptyStoryDraft(), coverImage: startImage.src }; // 새 초안
+    }); // 초기값 종료
     const [result, setResult] = useState<StoryValidationResult>({ valid: true, errors: {} }); // 검증 결과
     const [notice, setNotice] = useState(""); // 저장 안내
     const [ratingNotice, setRatingNotice] = useState(""); // 등급 자동 조정 안내
@@ -52,6 +61,7 @@ export function StoryEditor({ storyId }: { storyId?: string }) // 스토리 편�
     const castCharacters = draft.cast.flatMap((member) => state.characters.filter((character) => character.id === member.characterId && !candidates.includes(character))); // 이미 들어간 다른 캐릭터(수정 시)
     const choices = [...candidates, ...castCharacters].filter((character) => draft.cast.some((member) => member.characterId === character.id) || matchesKoreanText(`${character.name} ${character.tags.join(" ")}`, pickerQuery)); // 화면 후보(고른 인물은 항상 표시)
     const required = getCastRequiredRating(draft.cast, state.characters); // 등장인물 기준 최소 등급
+    const myImages = state.images.filter((image) => image.contentRating !== "mature" || canViewMatureContent(state, now)); // 표지로 고를 수 있는 내 이미지
     const full = draft.cast.length >= STORY_CAST_LIMIT; // 인원 가득 참 여부
     const saved = state.stories.some((story) => story.id === savedId); // 저장된 적 있는지
     const touch = () => // 변경 표시
@@ -72,7 +82,8 @@ export function StoryEditor({ storyId }: { storyId?: string }) // 스토리 편�
     { // 함수 시작
         const nextRequired = getCastRequiredRating(cast, state.characters); // 새 최소 등급
         const raise = isRatingBelow(draft.contentRating, nextRequired); // 등급 올림 필요 여부
-        setDraft((current) => ({ ...current, cast, contentRating: raise ? nextRequired : current.contentRating })); // 초안 갱신
+        const coverKept = getStoryCoverChoices(cast, state.characters, myImages).some((choice) => choice.path === draft.coverImage); // 표지 유지 가능 여부
+        setDraft((current) => ({ ...current, cast, contentRating: raise ? nextRequired : current.contentRating, coverImage: coverKept ? current.coverImage : storyCoverOptions[0] })); // 초안 갱신(빠진 인물 표지는 기본 표지로)
         setRatingNotice(raise ? `등장인물에 맞춰 이용 등급을 ${contentRatingLabels[nextRequired]}로 올렸어요.` : ""); // 조정 안내
         touch(); // 변경 표시
     }; // 함수 종료
@@ -114,6 +125,14 @@ export function StoryEditor({ storyId }: { storyId?: string }) // 스토리 편�
             setNotice("입력 내용을 확인해 주세요."); // 오류 안내
             return; // 저장 중단
         } // 조건 종료
+        const coverSource = findImageBySource(state.images, normalized.coverImage); // 표지가 내 이미지인지
+        if (validation.valid && coverSource !== undefined && !canUseImageForRating(coverSource.contentRating, normalized.contentRating)) // 표지 등급 판정
+        { // 조건 시작
+            const label = contentRatingLabels[coverSource.contentRating]; // 이미지 등급 이름
+            setResult({ valid: false, errors: { coverImage: `${label} 이미지를 쓰려면 이용 등급을 ${label} 이상으로 정해 주세요.` } }); // 등급 오류
+            setNotice("입력 내용을 확인해 주세요."); // 오류 안내
+            return; // 저장 중단
+        } // 조건 종료
         setResult(validation); // 검증 결과 반영
         if (!validation.valid) // 오류 판정
         { // 조건 시작
@@ -140,7 +159,7 @@ export function StoryEditor({ storyId }: { storyId?: string }) // 스토리 편�
     }; // 함수 종료
     const error = (key: keyof StoryDraft) => result.errors[key] === undefined ? null : <span role="alert" className={editorStyles.error}>{result.errors[key]}</span>; // 오류 표시
     return ( // 편집기 반환
-        <main className={editorStyles.page}> {/* 편집기 본문 */}
+        <main className={editorStyles.page} data-surface="light" data-tone="story"> {/* 편집기 본문 */}
             <header className={editorStyles.header}> {/* 편집기 머리말 */}
                 <div><span>STORY STUDIO</span><h1>{existing === undefined ? "새 스토리 만들기" : `${existing.title} 수정`}</h1><p>캐릭터 1~{STORY_CAST_LIMIT}명을 불러 모아 하나의 상황극을 만듭니다.</p></div> {/* 제목 영역 */}
                 <Link href={"/library" as Route}>보관함 보기</Link> {/* 보관함 링크 */}
@@ -206,9 +225,10 @@ export function StoryEditor({ storyId }: { storyId?: string }) // 스토리 편�
                     {error("userRole")} {/* 역할 오류 */}
                     <label>태그<input value={draft.tags.join(", ")} onChange={(event) => update("tags", event.target.value.split(","))} placeholder="미스터리, 학원, 판타지" /></label> {/* 태그 */}
                     {error("tags")} {/* 태그 오류 */}
+                    <WorkExtrasFields value={draft} errors={result.errors} onChange={(patch) => { setDraft((current) => ({ ...current, ...patch })); touch(); }} /> {/* 플레이 가이드·상태창·업데이트 */}
                     <fieldset className={`${editorStyles.images} ${styles.covers}`}> {/* 표지 고르기 */}
                         <legend>표지 이미지</legend> {/* 표지 제목 */}
-                        {storyCoverOptions.map((path) => <label key={path} data-selected={draft.coverImage === path}><input type="radio" name="story-cover" value={path} checked={draft.coverImage === path} onChange={() => update("coverImage", path)} /><span><Image src={path} alt={`${coverNames[path] ?? "장면"} 표지`} width={240} height={150} /><small>{coverNames[path] ?? "장면"}</small></span></label>)} {/* 표지 목록 */}
+                        {getStoryCoverChoices(draft.cast, state.characters, myImages).map((choice) => <label key={choice.path} data-selected={draft.coverImage === choice.path}><input type="radio" name="story-cover" value={choice.path} checked={draft.coverImage === choice.path} onChange={() => update("coverImage", choice.path)} /><span><Image src={choice.path} alt={`${choice.label} 표지`} width={240} height={150} unoptimized={choice.path.startsWith("data:")} /><small>{choice.label}</small></span></label>)} {/* 표지 목록(장면 + 등장인물) */}
                     </fieldset> {/* 표지 종료 */}
                     {error("coverImage")} {/* 표지 오류 */}
                     <label>공개 범위<select value={draft.visibility} onChange={(event) => update("visibility", event.target.value as StoryDraft["visibility"])}><option value="private">비공개</option><option value="unlisted">링크 공개</option><option value="public">전체 공개</option></select></label> {/* 공개 범위 */}

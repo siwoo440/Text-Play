@@ -15,10 +15,10 @@ function getStory(state: AppState, id: string): Story // 스토리 조회
 
 describe("스토리 모드 모델", () => // 스토리 모델 묶음
 { // 묶음 시작
-    it("기본 예시 스토리 3개를 여러 명·한 명 등장인물로 제공한다", () => // 예시 스토리 검증
+    it("기본 예시 스토리 11개를 1~4명 등장인물로 제공한다", () => // 예시 스토리 검증
     { // 검증 시작
         const state = createInitialState(); // 초기 상태
-        expect(state.stories.map((story) => story.cast.length)).toEqual([3, 2, 1]); // 등장인물 수 확인
+        expect(state.stories.map((story) => story.cast.length)).toEqual([3, 2, 1, 4, 3, 3, 4, 2, 1, 2, 3]); // 등장인물 수 확인
         expect(getStory(state, "story-moonlit-archive").cast.map((member) => member.displayName)).toEqual(["리안", "세라", "노아"]); // 이야기 속 이름 확인
     }); // 검증 종료
 
@@ -107,7 +107,7 @@ describe("스토리 모드 모델", () => // 스토리 모델 묶음
         const draft = { ...stories[1], id: "story-draft", publicationStatus: "draft" as const }; // 임시 저장 스토리
         const privateStory = { ...stories[2], id: "story-private", visibility: "private" as const }; // 비공개 스토리
         const all = [...stories, mature, draft, privateStory]; // 전체 목록
-        expect(getDiscoverableStories(all, false).map((story) => story.id)).toEqual(stories.map((story) => story.id)); // 19+ 끔 확인
+        expect(getDiscoverableStories(all, false).map((story) => story.id)).toEqual(stories.filter((story) => story.contentRating !== "mature").map((story) => story.id)); // 19+ 끔 확인
         expect(getDiscoverableStories(all, true).map((story) => story.id)).toContain("story-mature"); // 19+ 켬 확인
     }); // 검증 종료
 

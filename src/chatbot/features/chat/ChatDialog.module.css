@@ -1,0 +1,101 @@
+.backdrop /* 대화상자 배경 */
+{ /* 배경 시작 */
+    position: fixed; /* 화면 고정 */
+    z-index: 60; /* 위에 표시 */
+    inset: 0; /* 전체 */
+    display: grid; /* 가운데 배치 */
+    place-items: center; /* 가운데 */
+    padding: 16px; /* 여백 */
+    background: rgb(31 26 46 / 46%); /* 반투명 */
+    backdrop-filter: blur(3px); /* 뒤 흐림 */
+} /* 배경 종료 */
+
+.dialog /* 대화상자 */
+{ /* 대화상자 시작 */
+    display: flex; /* 세로 배치 */
+    flex-direction: column; /* 세로 방향 */
+    width: min(100%, 460px); /* 너비 */
+    max-height: min(88vh, 760px); /* 높이 제한 */
+    overflow: hidden; /* 넘침 숨김 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 22px; /* 모서리 */
+    background: #ffffff; /* 배경 */
+    box-shadow: 0 30px 80px rgb(31 26 46 / 26%); /* 그림자 */
+    color: var(--mv-ink); /* 글자 */
+    outline: none; /* 초점 외곽선 제거 */
+} /* 대화상자 종료 */
+
+.dialog[data-wide="true"] /* 넓은 대화상자 */
+{ /* 넓은 시작 */
+    width: min(100%, 620px); /* 넓은 너비 */
+} /* 넓은 종료 */
+
+.header /* 머리말 */
+{ /* 머리말 시작 */
+    display: flex; /* 가로 배치 */
+    align-items: center; /* 세로 중앙 */
+    justify-content: space-between; /* 양끝 */
+    gap: 12px; /* 간격 */
+    padding: 20px 22px 8px; /* 여백 */
+} /* 머리말 종료 */
+
+.header h2 /* 제목 */
+{ /* 제목 시작 */
+    margin: 0; /* 여백 제거 */
+    font-size: 1.15rem; /* 크기 */
+} /* 제목 종료 */
+
+.close /* 닫기 */
+{ /* 닫기 시작 */
+    display: grid; /* 가운데 */
+    place-items: center; /* 가운데 */
+    width: 36px; /* 너비 */
+    height: 36px; /* 높이 */
+    border: 0; /* 테두리 제거 */
+    border-radius: 10px; /* 모서리 */
+    background: transparent; /* 투명 */
+    color: var(--mv-muted); /* 글자 */
+    font-size: 1.4rem; /* 크기 */
+    cursor: pointer; /* 커서 */
+} /* 닫기 종료 */
+
+.close:hover /* 닫기 올림 */
+{ /* 올림 시작 */
+    background: #f3f1f7; /* 연한 배경 */
+} /* 올림 종료 */
+
+.description /* 설명 */
+{ /* 설명 시작 */
+    margin: 0; /* 여백 제거 */
+    padding: 0 22px 8px; /* 여백 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-size: .88rem; /* 크기 */
+    line-height: 1.55; /* 행간 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 설명 종료 */
+
+.body /* 내용 */
+{ /* 내용 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 12px; /* 간격 */
+    overflow-y: auto; /* 세로 스크롤 */
+    padding: 10px 22px 18px; /* 여백 */
+} /* 내용 종료 */
+
+.footer /* 아래 버튼 */
+{ /* 아래 시작 */
+    display: flex; /* 가로 배치 */
+    justify-content: flex-end; /* 오른쪽 */
+    gap: 8px; /* 간격 */
+    padding: 14px 22px 20px; /* 여백 */
+    border-top: 1px solid var(--mv-line); /* 구분선 */
+} /* 아래 종료 */
+
+.dialog button:focus-visible, /* 버튼 초점 */
+.dialog input:focus-visible, /* 입력 초점 */
+.dialog textarea:focus-visible, /* 장문 초점 */
+.dialog select:focus-visible /* 선택 초점 */
+{ /* 초점 시작 */
+    outline: 3px solid var(--mv-focus); /* 초점 외곽선 */
+    outline-offset: 2px; /* 간격 */
+} /* 초점 종료 */

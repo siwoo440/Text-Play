@@ -1,12 +1,17 @@
 "use client"; // 클라이언트 컴포넌트
 
 import Image from "@/desktop/next-compat/image"; // 최적화 이미지
-import { useState, type FormEvent } from "react"; // 리액트 상태
+import { useState, type FormEvent, type ReactNode } from "react"; // 리액트 상태
 import type { EditMessageResult } from "@chatbot/features/chat/chat-controller"; // 수정 결과 타입
 import { CHAT_MESSAGE_MAX_LENGTH, type MessageVersionGroup } from "@chatbot/features/conversation/conversation-versioning"; // 버전 도메인 타입
 import type { Message } from "@chatbot/features/core/types"; // 메시지 타입
 import { getMentionedCastMember, parseStoryMessage, STORY_CONTINUE_TEXT, type StoryCastEntry } from "@chatbot/features/story/story-model"; // 스토리 대사 나누기
 import styles from "@chatbot/features/chat/MessageList.module.css"; // 메시지 스타일
+
+export function renderEmphasis(text: string): ReactNode[] // *지문*을 기울임 글자로 바꾸기(별표는 숨김)
+{ // 함수 시작
+    return text.split(/(\*[^*\n]+\*)/g).filter((part) => part.length > 0).map((part, index) => /^\*[^*\n]+\*$/.test(part) ? <em key={index} className={styles.action}>{part.slice(1, -1)}</em> : part); // 조각 반환
+} // 함수 종료
 
 function StoryAssistantBody({ content, streaming, cast }: { content: string; streaming: boolean; cast: StoryCastEntry[] }) // 스토리 응답 본문(내레이션·인물별 대사)
 { // 함수 시작
@@ -22,13 +27,13 @@ function StoryAssistantBody({ content, streaming, cast }: { content: string; str
                 const tail = index === segments.length - 1 ? "" : undefined; // 마지막 조각(스트리밍 커서 위치)
                 if (segment.kind === "narration") // 내레이션 판정
                 { // 조건 시작
-                    return <p key={index} className={styles.narration} data-narration="" data-stream-tail={tail}>{segment.text}</p>; // 내레이션 반환
+                    return <p key={index} className={styles.narration} data-narration="" data-stream-tail={tail}>{renderEmphasis(segment.text)}</p>; // 내레이션 반환
                 } // 조건 종료
                 const character = cast.find((entry) => entry.member.characterId === segment.characterId)?.character; // 화자 캐릭터
                 return ( // 인물 대사 반환
                     <div key={index} className={styles.speakerLine} data-speaker={segment.characterId ?? undefined}> {/* 인물 대사 */}
                         <span className={styles.speakerAvatar} aria-hidden="true">{character === undefined ? segment.label.slice(0, 1) : <Image src={character.coverImage} alt="" width={72} height={72} />}</span> {/* 인물 얼굴 */}
-                        <div><strong>{segment.label}</strong><p data-stream-tail={tail}>{segment.text}</p></div> {/* 이름과 대사 */}
+                        <div><strong>{segment.label}</strong><p data-stream-tail={tail}>{renderEmphasis(segment.text)}</p></div> {/* 이름과 대사 */}
                     </div> // 인물 대사 종료
                 ); // 반환 종료
             })} {/* 순회 종료 */}
@@ -45,10 +50,10 @@ function StoryUserBody({ content, cast }: { content: string; cast: StoryCastEntr
     const member = getMentionedCastMember(content, cast.map((entry) => entry.member)); // 지목 인물
     if (member === null) // 지목 없음 판정
     { // 조건 시작
-        return <p>{content}</p>; // 일반 문장
+        return <p>{renderEmphasis(content)}</p>; // 일반 문장
     } // 조건 종료
     const mention = `@${member.displayName}`; // 지목 표시
-    return <p><span className={styles.mention}>{mention}</span> {content.trim().slice(mention.length).trim()}</p>; // 지목 문장 반환
+    return <p><span className={styles.mention}>{mention}</span> {renderEmphasis(content.trim().slice(mention.length).trim())}</p>; // 지목 문장 반환
 } // 함수 종료
 
 interface MessageItemProps // 메시지 항목 속성
@@ -64,6 +69,7 @@ interface MessageItemProps // 메시지 항목 속성
     onSelectVersion?(versionId: string, direction: "previous" | "next"): void; // 버전 선택 처리
     onDeleteVersion?(versionId: string): void; // 버전 삭제 처리
     storyCast?: StoryCastEntry[]; // 스토리 모드 등장인물(있으면 인물별로 나눠 표시)
+    showSceneImage?: boolean; // 응답 아래 상황 이미지 보기
 } // 구조 종료
 
 function editError(result: Exclude<EditMessageResult, { ok: true }>): string // 수정 오류 문구 생성
@@ -72,7 +78,7 @@ function editError(result: Exclude<EditMessageResult, { ok: true }>): string // 
     return messages[result.reason]; // 오류 문구 반환
 } // 함수 종료
 
-export function MessageItem({ message, streaming, busy, allowRegenerate, versionGroup, onRegenerate, onEdit, onDelete, onSelectVersion, onDeleteVersion, storyCast }: MessageItemProps) // 메시지 항목
+export function MessageItem({ message, streaming, busy, allowRegenerate, versionGroup, onRegenerate, onEdit, onDelete, onSelectVersion, onDeleteVersion, storyCast, showSceneImage = true }: MessageItemProps) // 메시지 항목
 { // 함수 시작
     const [editing, setEditing] = useState(false); // 편집 상태
     const [draft, setDraft] = useState(message.content); // 수정 초안
@@ -133,7 +139,8 @@ export function MessageItem({ message, streaming, busy, allowRegenerate, version
     return ( // 항목 반환
         <li className={styles.item} data-role={message.role} data-streaming={streaming ? "true" : undefined}> {/* 메시지 항목 */}
             <strong>{message.role === "user" ? "나" : storyCast === undefined ? "캐릭터" : "스토리"}</strong> {/* 메시지 작성자 */}
-            {editing ? <form className={styles.editForm} onSubmit={submit}><label><span className="sr-only">메시지 수정</span><textarea aria-label="메시지 수정" value={draft} maxLength={CHAT_MESSAGE_MAX_LENGTH} disabled={busy} onChange={(event) => setDraft(event.target.value)} /></label><div><button type="submit" disabled={busy}>수정 전송</button><button type="button" disabled={busy} onClick={() => setEditing(false)}>취소</button></div></form> : storyCast !== undefined && message.role === "assistant" ? <StoryAssistantBody content={message.content} streaming={streaming} cast={storyCast} /> : storyCast !== undefined && message.role === "user" ? <StoryUserBody content={message.content} cast={storyCast} /> : <p data-stream-tail="">{message.content.length === 0 && streaming ? "응답 작성 중…" : message.content}</p>} {/* 메시지 내용 */}
+            {editing ? <form className={styles.editForm} onSubmit={submit}><label><span className="sr-only">메시지 수정</span><textarea aria-label="메시지 수정" value={draft} maxLength={CHAT_MESSAGE_MAX_LENGTH} disabled={busy} onChange={(event) => setDraft(event.target.value)} /></label><div><button type="submit" disabled={busy}>수정 전송</button><button type="button" disabled={busy} onClick={() => setEditing(false)}>취소</button></div></form> : storyCast !== undefined && message.role === "assistant" ? <StoryAssistantBody content={message.content} streaming={streaming} cast={storyCast} /> : storyCast !== undefined && message.role === "user" ? <StoryUserBody content={message.content} cast={storyCast} /> : <p data-stream-tail="">{message.content.length === 0 && streaming ? "응답 작성 중…" : renderEmphasis(message.content)}</p>} {/* 메시지 내용 */}
+            {showSceneImage && message.role === "assistant" && typeof message.sceneImage === "string" && message.sceneImage.length > 0 ? <figure className={styles.sceneImage}><Image src={message.sceneImage} alt="이 장면의 상황 이미지" width={640} height={400} unoptimized={message.sceneImage.startsWith("data:")} /></figure> : null} {/* 상황 이미지 */}
             <div className={styles.actions}> {/* 메시지 동작 */}
                 <button type="button" disabled={busy} onClick={() => void copy()}>복사</button> {/* 복사 버튼 */}
                 {message.role === "user" && onEdit !== undefined ? <button type="button" disabled={busy} onClick={() => { setDraft(message.content); setEditing(true); setStatus(""); }}>수정</button> : null} {/* 수정 버튼 */}

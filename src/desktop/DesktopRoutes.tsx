@@ -11,6 +11,7 @@ import PrivacySettingsPage from "@chatbot/app/settings/privacy/page"; // ChatBot
 import ProfileSettingsPage from "@chatbot/app/settings/profile/page"; // ChatBot 프로필 페이지
 import TokenSettingsPage from "@chatbot/app/settings/tokens/page"; // ChatBot 토큰 페이지
 import SupportPage from "@chatbot/app/support/page"; // ChatBot 고객 지원 페이지
+import ImagesPage from "@chatbot/app/images/page"; // ChatBot 이미지 스튜디오 페이지
 import { CharacterDetail } from "@chatbot/features/character/CharacterDetail"; // ChatBot 캐릭터 상세
 import { CharacterEditor } from "@chatbot/features/character/CharacterEditor"; // ChatBot 캐릭터 편집기
 import { ChatScreen } from "@chatbot/features/chat/ChatScreen"; // ChatBot 대화 화면
@@ -97,6 +98,7 @@ function renderPage(match: DesktopRouteMatch, repository: TextPlaySaveRepository
             return <SettingsShell><SettingsPage /></SettingsShell>; // ChatBot 설정 레이아웃과 같은 틀
         } // 분기 내용 종료
         case "support": return <SupportPage />; // 고객 지원
+        case "images": return <ImagesPage />; // 이미지 스튜디오
         case "ai-models": return <AiModelsScreen client={modelStoreClient} />; // 내장 AI 모델
         case "story-home": return <StoryHome />; // 스토리 홈
         case "story-new": return <StoryEditor key="new" />; // 새 스토리

@@ -9,7 +9,7 @@
 - 저장소: [siwoo440/Text-Play](https://github.com/siwoo440/Text-Play)
 - 작업 브랜치: `main` 하나만 사용
 - 기준 소스 커밋: `2115f42e214409f4b37f2758bab8561f0807244c` (`기능: exe에 최신 ChatBot 전체 기능과 왼쪽 사이드바 데스크톱 화면 추가`)
-- 포함한 ChatBot 커밋: `09ede9b` (`src/chatbot/SOURCE.md`, 확인은 `pnpm chatbot:status`)
+- 포함한 ChatBot 커밋: `dd8fddb` (`src/chatbot/SOURCE.md`, 확인은 `pnpm chatbot:status`)
 - 현재 커밋 확인: `git rev-parse HEAD`
 - 원격 동기화 확인: `git status --short --branch`
 - 확인 기준 화면: **Windows 실행 파일(exe)**. 웹 화면은 보조로 확인합니다.
@@ -58,7 +58,7 @@
 
 - exe는 **최신 ChatBot 전체 기능 + Text-Play**를 하나의 프로그램으로 제공합니다. 웹 화면(`src/app`)은 예전 챗봇 코드를 그대로 둡니다.
 - ChatBot 기능: 메인(검색·장르·오늘의 추천·랭킹), 탐색(태그), 캐릭터 상세·만들기·수정, 대화(버전 분기·다시 생성·내보내기), 보관함, 설정 5쪽(프로필·토큰·화면·알림·개인정보), 고객 지원, 19+ 성인 인증
-- ChatBot 소스는 `src/chatbot`에 ChatBot 커밋 그대로 복사합니다(`pnpm chatbot:sync`, 현재 기준 `09ede9b` `스토리 모드와 안전·편의 보강 추가`, 기록은 `src/chatbot/SOURCE.md`). 직접 고치지 않고 ChatBot에서 고쳐 커밋한 뒤 다시 동기화합니다. ChatBot 앱 상태 버전이 오르면 exe에 저장된 ChatBot 데이터도 ChatBot 변환 규칙으로 자동 갱신됩니다(예: 9 → 10). ChatBot에 새 화면 주소가 생기면 `src/desktop/router/desktop-routes.ts`·`desktop-areas.ts`·`DesktopRoutes.tsx`에도 추가합니다(예: 스토리 모드 `/stories`).
+- ChatBot 소스는 `src/chatbot`에 ChatBot 커밋 그대로 복사합니다(`pnpm chatbot:sync`, 현재 기준 `dd8fddb` `크랙 참고 채팅방 기능 18종, 고정 INFO 상태창, 대화 폴더, 알림함 추가`, 기록은 `src/chatbot/SOURCE.md`). 직접 고치지 않고 ChatBot에서 고쳐 커밋한 뒤 다시 동기화합니다. ChatBot 앱 상태 버전이 오르면 exe에 저장된 ChatBot 데이터도 ChatBot 변환 규칙으로 자동 갱신됩니다(예: 9 → 10). ChatBot에 새 화면 주소가 생기면 `src/desktop/router/desktop-routes.ts`·`desktop-areas.ts`·`DesktopRoutes.tsx`에도 추가합니다(예: 스토리 모드 `/stories`, 이미지 스튜디오 `/images`). ChatBot 코드가 Next 공개 환경 값(`process.env.NEXT_PUBLIC_*`)을 새로 읽으면 Vite에는 `process`가 없어 화면이 깨지므로 `vite.desktop.config.ts`의 `define`에 같은 이름을 추가합니다(예: `NEXT_PUBLIC_SERVICE_REGION`, 기본 `kr`). ChatBot 머리 메뉴에 생긴 요소(예: 알림함)는 데스크톱 상단 바에도 둡니다. ChatBot 셸 안에서만 적용되는 스타일은 `AppShell.module.css`의 `.shell`로 감싸고 높이·바탕만 끕니다(`DesktopShell.module.css` `.bellHost`).
 - 디자인: ChatBot과 같은 밝은 다채색·장르색을 쓰되, 웹 상단 헤더 대신 **왼쪽 사이드바(320px)**와 **상단 바**를 둡니다. 사이드바 오른쪽에 ChatBot 헤더의 여러 색 띠를 세로로 둡니다.
   - 사이드바 위→아래: 로고와 주황 `Text-Play` 표시 → 주요 메뉴(메인·탐색·내 작품·Text-Play) → **ChatBot 대화방**(ChatBot 왼쪽 창 목록 그대로: 검색·정렬·고정·묶음·턴 수·더보기 메뉴, 아래에 `ChatBot 기록 가져오기`) → **Text-Play 대화방**(Text-Play 저장 기록, 누르면 그 슬롯에서 이어하기, `＋ Text-Play 작품 고르기`) → 프로그램 메뉴(설정·고객 지원)
   - ChatBot 대화방 목록과 사용자 패널의 안쪽 모양은 ChatBot `AppShell.module.css`의 `.grid` 스타일을 그대로 쓰고, 서랍 위치·폭·그림자만 `DesktopShell.module.css`에서 덮어씁니다. ChatBot이 목록을 바꾸면 동기화만으로 모양까지 따라옵니다.
@@ -225,7 +225,7 @@
 
 0. 내장 로컬 인공지능: 설치 때 가벼운 모델(Mi:dm 2.0 Mini) 자동 준비, 표준·고성능(Qwen3.5-4B·9B)은 `AI 모델` 화면 다운로드 버튼. 계획 `docs/plans/2026-10-01-bundled-local-ai.md` 참고. 사용자 지시로 **기반을 먼저 만들고 기능을 덧붙이는 순서**로 진행: 기반 1 `AI 연결 통로` 완료 → 기반 2 `엔진 관리자` 완료(`local_runtime.rs`) → 기반 3 `모델 보관함` 완료(`hardware.rs`·`model_store.rs`·`resources/model-catalog.json`, 받기 정보는 아직 비어 `준비 중`) → 기반 4 `AI 모델` 화면 완료(`src/desktop/ai-models`, 사이드바 `설정 · AI 모델 · 고객 지원`) — **기반 완성** → 가벼운 모델 Mi:dm 2.0 Mini를 받아 만들고 exe에 적용 완료(Q4_K_M 1.33GiB, 측정·SHA-256은 계획 문서 `가벼운 모델 … 적용`). 응답 품질 1차 완료(쉬운 말 문맥·이야기꾼 규칙·예시, AI 행동은 능력치·관계·아이템만, 잘못된 행동만 빼고 반영, 발화자는 등장인물만). 다음 덧붙이기: 응답 품질 2차(상태 잘못 읽기·예시 따라 쓰기) → 표준·고성능 모델 받기·측정 → 보관 위치(결정 1)와 받기 정보 → 설치 프로그램. 끝의 결정 필요 항목 4개도 확인
 0-1. 한국어·영어 나누기(계획 `docs/plans/2026-10-01-language-ko-en.md`, 범위는 앱 전체, 언어는 Text-Play 설정 창에서 고름): 1단계 언어 설정 완료 → 2단계 AI 답변 언어 완료(English를 고르면 다음 답변부터 영어) → 3단계 화면 글자 영어판 완료(Text-Play 화면·사이드바 메뉴·상단 바·AI 모델 화면, 사전 파일은 계획 문서 진행 기록) → 4단계 ChatBot 세션에 언어 기능 요청 보냄(요청 문장은 계획 문서 끝) → 커밋되면 `pnpm chatbot:sync` 후 `DesktopApp.tsx`에서 설정 언어를 ChatBot 쪽으로 넘기기. 메인 작품 50개 영어판 완료. 남은 한국어: ChatBot 화면, 엔진 실패 이유 문구
-0-2. ChatBot 대화 화면의 밝은 디자인은 ChatBot 작업 폴더에서 아직 커밋 전(2026-10-01). 커밋·푸시되면 `pnpm chatbot:sync`로 가져와 exe 대화 화면을 웹과 맞추기(사용자 결정)
+0-2. (완료 2026-10-01) ChatBot 대화 화면의 밝은 디자인: ChatBot `a337460`·`dd8fddb`를 동기화해 exe 대화 화면이 웹과 같아짐
 1. exe에서 ChatBot 기능 직접 확인: JSON 내보내기·백업 파일 저장, 링크 복사, `window.confirm` 확인 창이 WebView2에서 동작하는지
 2. exe 메인 화면 아래쪽(인기 랭킹, 전체 작품, 작품 상세 창) 직접 확인과 세부 디자인 조정
 3. 게임 플레이 화면을 메인과 같은 밝은 다채색 디자인으로 변경

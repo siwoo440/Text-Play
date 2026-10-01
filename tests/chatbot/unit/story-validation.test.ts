@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"; // 테스트 도구
 import { createInitialState } from "@chatbot/features/core/initial-state"; // 초기 상태
-import { createEmptyStoryDraft, createStoryCastMember, getStoryCandidates, normalizeStoryDraft, storyCoverOptions, toStoryDraft, validateStoryDraft, type StoryDraft } from "@chatbot/features/story/story-validation"; // 검증 대상
+import { createEmptyStoryDraft, createStoryCastMember, getStoryCandidates, getStoryCoverChoices, normalizeStoryDraft, storyCoverOptions, toStoryDraft, validateStoryDraft, type StoryDraft } from "@chatbot/features/story/story-validation"; // 검증 대상
 
 const state = createInitialState(); // 기본 상태
 const rian = state.characters.find((character) => character.id === "rian")!; // 리안
@@ -71,10 +71,19 @@ describe("스토리 입력 검증", () => // 검증 묶음
         expect(validateStoryDraft({ ...draft, contentRating: "teen" }, state.characters).valid).toBe(true); // 맞춘 등급 통과
     }); // 검증 종료
 
-    it("표지는 준비된 장면 이미지만 쓸 수 있다", () => // 표지 검증
+    it("표지는 준비된 장면 이미지나 프로젝트의 캐릭터 이미지만 쓸 수 있다", () => // 표지 검증
     { // 검증 시작
         expect(storyCoverOptions).toContain("/images/scenes/moon-library.svg"); // 표지 목록 확인
+        expect(validateStoryDraft({ ...validDraft(), coverImage: "/images/characters/rian.webp" }, state.characters).errors.coverImage).toBeUndefined(); // 캐릭터 이미지 허용
         expect(validateStoryDraft({ ...validDraft(), coverImage: "https://example.com/a.png" }, state.characters).errors.coverImage).toBe("준비된 표지 이미지를 골라 주세요."); // 외부 이미지 거부
+        expect(validateStoryDraft({ ...validDraft(), coverImage: "/images/characters/../secret.webp" }, state.characters).errors.coverImage).toBe("준비된 표지 이미지를 골라 주세요."); // 경로 이동 거부
+    }); // 검증 종료
+
+    it("표지 선택지는 장면 이미지 3종 뒤에 고른 등장인물의 이미지를 붙인다", () => // 표지 선택지 검증
+    { // 검증 시작
+        const choices = getStoryCoverChoices([createStoryCastMember(rian), createStoryCastMember(sera)], state.characters); // 선택지
+        expect(choices.map((choice) => choice.path)).toEqual([...storyCoverOptions, rian.coverImage, sera.coverImage]); // 순서 확인
+        expect(choices.at(-1)?.label).toBe("세라"); // 인물 표지 이름 확인
     }); // 검증 종료
 
     it("등장인물 후보는 공개 캐릭터와 내 캐릭터이고 19+는 볼 수 있을 때만 포함한다", () => // 후보 검증

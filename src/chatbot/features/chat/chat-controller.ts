@@ -1,9 +1,13 @@
 import { CHAT_MESSAGE_MAX_LENGTH, CHAT_VERSION_LIMIT, createVersionFork, getConversationVersion, getMessageVersionGroup, getVersionMessages, type VersionStateInput } from "@chatbot/features/conversation/conversation-versioning"; // 버전 도메인 함수
-import type { AppState, Character, Conversation, ConversationVersion, Message } from "@chatbot/features/core/types"; // 앱 타입
+import type { AppState, Character, Conversation, ConversationVersion, Message, StatusSnapshot } from "@chatbot/features/core/types"; // 앱 타입
 import type { ImageGenerationAdapter } from "@chatbot/lib/adapters/image-generation-adapter"; // 이미지 계약
 import type { LLMAdapter, LLMInput } from "@chatbot/lib/adapters/llm-adapter"; // 대화 계약
 import { evaluateStory } from "@chatbot/lib/story/story-engine"; // 스토리 판정
-import { trySpend } from "@chatbot/lib/story/token-policy"; // 토큰 정책
+import { trySpend, trySpendAmount } from "@chatbot/lib/story/token-policy"; // 토큰 정책
+import { buildChatContext, type ChatContext } from "@chatbot/features/chat/chat-context"; // 대화 맥락
+import { getMessageCost } from "@chatbot/features/chat/chat-tiers"; // 메시지 비용
+import { composeStatus } from "@chatbot/features/chat/status-model"; // 상태창 계산
+import { deriveDisplayName } from "@chatbot/features/story/story-model"; // 짧은 이름
 
 export type SendResult = { ok: true } | { ok: false; reason: "empty" | "too-long" | "busy" | "cancelled" | "insufficient-token" | "missing-conversation" | "missing-message" }; // 전송 결과
 export type EditMessageResult = { ok: true; versionId: string } | { ok: false; reason: "empty" | "unchanged" | "too-long" | "busy" | "cancelled" | "insufficient-token" | "missing-message" | "version-limit" | "storage-failed" }; // 수정 결과
@@ -61,11 +65,46 @@ export class ChatController // 채팅 제어기
     private sequence = 0; // 메시지 순서
     private activeAbortController: AbortController | null = null; // 활성 중단 제어기
     private lastAttempt: ChatAttempt | null = null; // 최근 요청 정보
+    private context: ChatContext; // 대화방 설정·프로필·메모리 맥락
 
     public constructor(private readonly options: ChatControllerOptions) // 생성자
     { // 생성자 시작
         this.state = structuredClone(options.state); // 상태 복사
+        this.context = buildChatContext(options.state, options.conversationId); // 시작 맥락
     } // 생성자 종료
+
+    public setContext(context: ChatContext): void // 요청 직전 최신 맥락 반영(오른쪽 패널 설정)
+    { // 함수 시작
+        this.context = structuredClone(context); // 맥락 교체
+    } // 함수 종료
+
+    private spendChat() // 대화 비용 차감 후보(등급·길이·생각·유저 노트 확장)
+    { // 함수 시작
+        return trySpendAmount(this.state.wallet, getMessageCost(this.context.settings), "chat"); // 차감 결과
+    } // 함수 종료
+
+    private composeTurnStatus(conversation: Conversation, character: Character, messages: Message[], relationshipLevel: number, emotion: string): StatusSnapshot | null // 이번 턴 상태창
+    { // 함수 시작
+        const story = conversation.mode === "story" ? this.state.stories.find((item) => item.id === conversation.storyId) : undefined; // 연결 스토리
+        const template = story?.statusTemplate ?? character.statusTemplate; // 상태창 형식
+        if (template === undefined || !template.enabled) // 상태창 끔 판정
+        { // 조건 시작
+            return null; // 상태창 없음
+        } // 조건 종료
+        const people = conversation.mode === "story" ? conversation.storyCast.map((member, index) => ({ name: member.displayName, offset: index === 0 ? 0 : ([...member.characterId].reduce((total, letter) => total + (letter.codePointAt(0) ?? 0), 0) % 17) - 8 })) : [{ name: deriveDisplayName(character.name), offset: 0 }]; // 인물
+        const previous = [...messages].reverse().find((message) => message.role === "assistant" && message.status !== undefined && message.status !== null)?.status ?? null; // 직전 상태창
+        const turn = messages.filter((message) => message.role === "user").length; // 턴 번호
+        return composeStatus({ template, people, previous, turn, relationshipLevel, emotion, tags: story?.tags ?? character.tags, startedAt: conversation.createdAt, seed: conversation.id }); // 상태창 반환
+    } // 함수 종료
+
+    private attachSceneToLatestReply(versionId: string, path: string): void // 현재 버전 마지막 응답에 상황 이미지 붙이기
+    { // 함수 시작
+        const latest = getVersionMessages(this.state, this.options.conversationId, versionId).filter((message) => message.role === "assistant").at(-1); // 마지막 응답
+        if (latest !== undefined) // 응답 존재 판정
+        { // 조건 시작
+            this.state = { ...this.state, messages: this.state.messages.map((message) => message.id === latest.id ? { ...message, sceneImage: path } : message) }; // 이미지 반영
+        } // 조건 종료
+    } // 함수 종료
 
     public snapshot(): AppState // 상태 스냅샷
     { // 함수 시작
@@ -91,12 +130,15 @@ export class ChatController // 채팅 제어기
 
     private createLLMInput(character: Character, conversation: Conversation, version: ConversationVersion, messages: Message[]): LLMInput // 응답 입력 생성
     { // 함수 시작
+        const settings = this.context.settings; // 대화방 설정
+        const tierOption = settings.tierOptions[settings.tier]; // 등급별 길이·생각
+        const options = { tier: settings.tier, length: tierOption.length, thinking: tierOption.thinking, writingStyle: settings.writingStyle, preventImpersonation: settings.preventImpersonation, persona: this.context.persona, userNote: settings.userNote, memories: this.context.memories, playGuide: this.context.playGuide }; // 응답 조건
         if (conversation.mode !== "story") // 캐릭터 모드 판정
         { // 조건 시작
-            return { character, conversation, version, messages }; // 캐릭터 입력 반환
+            return { character, conversation, version, messages, options }; // 캐릭터 입력 반환
         } // 조건 종료
         const story = this.state.stories.find((item) => item.id === conversation.storyId); // 연결 스토리
-        return { character, conversation, version, messages, story: { title: story?.title ?? conversation.title, synopsis: story?.synopsis ?? "", userRole: story?.userRole ?? "", cast: conversation.storyCast } }; // 스토리 입력 반환(등장인물은 시작 시점 묶음)
+        return { character, conversation, version, messages, options, story: { title: story?.title ?? conversation.title, synopsis: story?.synopsis ?? "", userRole: story?.userRole ?? "", cast: conversation.storyCast } }; // 스토리 입력 반환(등장인물은 시작 시점 묶음)
     } // 함수 종료
 
     private reportProgress(handler: ChatProgressHandler | undefined, phase: ChatProgressPhase, messageId: string): void // 진행 상태 전달
@@ -211,6 +253,7 @@ export class ChatController // 채팅 제어기
         let emotion = previousAssistant?.emotion ?? version.emotion; // 응답 감정
         let currentScene = version.currentScene; // 현재 장면
         let sceneEvent = previousAssistant?.sceneEvent ?? null; // 장면 사건
+        let sceneImage = previousAssistant?.sceneImage ?? null; // 응답에 붙은 상황 이미지
         if (applyStory) // 스토리 갱신 판정
         { // 조건 시작
             const userMessageCount = this.getMessages().filter((message) => message.role === "user").length; // 사용자 메시지 수
@@ -233,11 +276,13 @@ export class ChatController // 채팅 제어기
                     this.state = { ...this.state, wallet: imageSpending.wallet }; // 이미지 토큰 반영
                     currentScene = scene.path; // 장면 경로 반영
                     sceneEvent = story.sceneId; // 사건 기록
+                    sceneImage = scene.path; // 응답 아래 상황 이미지
                 } // 가능 종료
             } // 중요 사건 종료
         } // 조건 종료
         const createdAt = new Date().toISOString(); // 완료 시각
-        const assistantMessage: Message = { id: assistantMessageId, conversationId: conversation.id, versionId: version.id, sourceMessageId: null, role: "assistant", content: reply, emotion, sceneEvent, scenePath: currentScene, createdAt }; // 캐릭터 메시지
+        const status = this.composeTurnStatus(conversation, character, promptMessages, relationshipLevel, emotion); // 이번 턴 상태창
+        const assistantMessage: Message = { id: assistantMessageId, conversationId: conversation.id, versionId: version.id, sourceMessageId: null, role: "assistant", content: reply, emotion, sceneEvent, scenePath: currentScene, status, sceneImage, createdAt }; // 캐릭터 메시지
         const updatedVersion = { ...version, relationshipLevel, relationshipStage, emotion, currentScene, lastMessage: reply, updatedAt: createdAt }; // 버전 갱신
         this.state = { ...this.state, messages: this.state.messages.map((message) => message.id === assistantMessageId ? assistantMessage : message), conversationVersions: this.state.conversationVersions.map((item) => item.id === version.id ? updatedVersion : item) }; // 응답 상태 반영
         this.lastAttempt = { userMessageId: userMessage.id, assistantMessageId, status: "complete" }; // 완료 상태 기록
@@ -290,7 +335,7 @@ export class ChatController // 채팅 제어기
         { // 조건 시작
             return { ok: false, reason: "missing-message" }; // 연결 오류 반환
         } // 조건 종료
-        const spending = trySpend(this.state.wallet, "chat"); // 토큰 차감 후보 생성
+        const spending = this.spendChat(); // 토큰 차감 후보 생성
         if (!spending.ok) // 잔액 부족 판정
         { // 조건 시작
             return { ok: false, reason: "insufficient-token" }; // 부족 반환
@@ -332,7 +377,8 @@ export class ChatController // 채팅 제어기
             } // 조건 종료
             const userMessageCount = promptMessages.filter((message) => message.role === "user").length; // 사용자 메시지 수 계산
             const story = evaluateStory({ conversation, version: forkBaseVersion, userMessage: content, userMessageCount }); // 수정 스토리 판정
-            const fork = createVersionFork(originalState, { conversationId: conversation.id, baseVersionId: version.id, targetMessageId: target.id, content, assistantMessage: { id: assistantMessageId, role: "assistant", content: reply, emotion: story.emotion, sceneEvent: null, scenePath: forkBaseState.currentScene, createdAt: now }, versionState: { relationshipLevel: story.relationshipLevel, relationshipStage: story.relationshipStage, emotion: story.emotion, currentScene: forkBaseState.currentScene, lastMessage: reply }, now }); // 최종 분기 생성
+            const forkStatus = this.composeTurnStatus(conversation, character, promptMessages, story.relationshipLevel, story.emotion); // 수정 턴 상태창
+            const fork = createVersionFork(originalState, { conversationId: conversation.id, baseVersionId: version.id, targetMessageId: target.id, content, assistantMessage: { id: assistantMessageId, role: "assistant", content: reply, emotion: story.emotion, sceneEvent: null, scenePath: forkBaseState.currentScene, status: forkStatus, sceneImage: null, createdAt: now }, versionState: { relationshipLevel: story.relationshipLevel, relationshipStage: story.relationshipStage, emotion: story.emotion, currentScene: forkBaseState.currentScene, lastMessage: reply }, now }); // 최종 분기 생성
             this.state = { ...fork.state, wallet: spending.wallet }; // 원자적 수정 확정
             this.reportProgress(onProgress, "complete", assistantMessageId); // 완료 상태 전달
             return { ok: true, versionId: fork.version.id }; // 성공 결과 반환
@@ -383,7 +429,7 @@ export class ChatController // 채팅 제어기
         { // 조건 시작
             return { ok: false, reason: "missing-conversation" }; // 연결 오류 반환
         } // 조건 종료
-        const spending = trySpend(this.state.wallet, "chat"); // 토큰 차감 시도
+        const spending = this.spendChat(); // 토큰 차감 시도
         if (!spending.ok) // 잔액 부족 판정
         { // 조건 시작
             return { ok: false, reason: "insufficient-token" }; // 부족 반환
@@ -434,7 +480,7 @@ export class ChatController // 채팅 제어기
             return { ok: false, reason: "missing-message" }; // 메시지 오류
         } // 조건 종료
         const previousAssistant = conversationMessages.slice(userIndex + 1).find((message) => message.role === "assistant"); // 기존 응답 조회
-        const spending = trySpend(this.state.wallet, "chat"); // 토큰 차감 시도
+        const spending = this.spendChat(); // 토큰 차감 시도
         if (!spending.ok) // 잔액 부족 판정
         { // 조건 시작
             return { ok: false, reason: "insufficient-token" }; // 부족 반환
@@ -452,6 +498,24 @@ export class ChatController // 채팅 제어기
             this.activeAbortController = null; // 활성 제어기 해제
             this.busy = false; // 응답 잠금 해제
         } // 종료 끝
+    } // 함수 종료
+
+    public applySceneImage(path: string): SceneResult // 내 이미지로 장면 바꾸기(토큰 없음)
+    { // 함수 시작
+        if (this.busy) // 응답 중 판정
+        { // 조건 시작
+            return { ok: false, reason: "busy" }; // 응답 중 거절
+        } // 조건 종료
+        const conversation = this.state.conversations.find((item) => item.id === this.options.conversationId); // 대화 조회
+        const version = conversation === undefined ? null : getConversationVersion(this.state, conversation.id); // 현재 버전 조회
+        if (version === null) // 대화·버전 부재 판정
+        { // 조건 시작
+            return { ok: false, reason: "missing-conversation" }; // 대화 오류
+        } // 조건 종료
+        const updatedVersion = { ...version, currentScene: path, updatedAt: new Date().toISOString() }; // 장면 갱신
+        this.state = { ...this.state, conversationVersions: this.state.conversationVersions.map((item) => item.id === version.id ? updatedVersion : item) }; // 상태 반영
+        this.attachSceneToLatestReply(version.id, path); // 마지막 응답 아래 이미지
+        return { ok: true, path }; // 성공 반환
     } // 함수 종료
 
     public async generateManualScene(): Promise<SceneResult> // 수동 장면 생성
@@ -478,6 +542,7 @@ export class ChatController // 채팅 제어기
         const scene = await this.options.images.generateScene({ sceneId: "fallback" }); // 장면 생성
         const updatedVersion = { ...version, currentScene: scene.path, updatedAt: new Date().toISOString() }; // 버전 갱신
         this.state = { ...this.state, wallet: spending.wallet, conversationVersions: this.state.conversationVersions.map((item) => item.id === version.id ? updatedVersion : item) }; // 상태 반영
+        this.attachSceneToLatestReply(version.id, scene.path); // 마지막 응답 아래 이미지
         return { ok: true, path: scene.path }; // 성공 반환
     } // 함수 종료
 } // 클래스 종료

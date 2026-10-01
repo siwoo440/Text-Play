@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest"; // 테스트 도구
 import { createInitialState } from "@chatbot/features/core/initial-state"; // 초기 상태 함수
+import { getRequiredStoryRating } from "@chatbot/features/story/story-model"; // 스토리 최소 등급
+import { toStoryDraft, validateStoryDraft } from "@chatbot/features/story/story-validation"; // 스토리 검증
 
 describe("초기 앱 상태", () => // 초기 상태 묶음
 { // 묶음 시작
     it("스키마 버전과 Mock 공급자를 고정한다", () => // 기본값 검증
     { // 검증 시작
         const state = createInitialState(); // 초기 상태 생성
-        expect(state.schemaVersion).toBe(10); // 스키마 버전 확인
+        expect(state.schemaVersion).toBe(12); // 스키마 버전 확인
         expect(state.providerMode).toBe("mock"); // Mock 공급자 확인
         expect(state.settings.leftPanelOpen).toBe(true); // 왼쪽 패널 확인
         expect(state.settings.rightPanelOpen).toBe(false); // 오른쪽 패널 확인
@@ -21,8 +23,26 @@ describe("초기 앱 상태", () => // 초기 상태 묶음
         expect(state.localReports).toEqual([]); // 신고 목록 확인
         expect(state.pinnedConversationIds).toEqual([]); // 고정 대화 확인
         expect(state.settings.conversationSort).toBe("recent"); // 대화방 정렬 확인
-        expect(state.stories).toHaveLength(3); // 예시 스토리 확인
+        expect(state.stories).toHaveLength(11); // 예시 스토리 확인
         expect(state.conversations.every((conversation) => conversation.mode === "character")).toBe(true); // 기본 대화 종류 확인
+    }); // 검증 종료
+
+    it("예시 스토리는 모두 편집기 검증을 통과하고 등장인물 이름이 캐릭터 이름과 맞는다", () => // 예시 스토리 검증
+    { // 검증 시작
+        const state = createInitialState(); // 초기 상태 생성
+        expect(new Set(state.stories.map((story) => story.id)).size).toBe(state.stories.length); // 식별자 고유성 확인
+        for (const story of state.stories) // 스토리 순회
+        { // 순회 시작
+            expect(validateStoryDraft(toStoryDraft(story), state.characters), story.id).toEqual({ valid: true, errors: {} }); // 편집기 검증 통과(등급 하한 포함)
+            for (const member of story.cast) // 등장인물 순회
+            { // 인물 시작
+                const character = state.characters.find((item) => item.id === member.characterId); // 연결 캐릭터
+                expect(character?.name.endsWith(member.displayName), `${story.id}:${member.characterId}`).toBe(true); // 캐릭터 이름과 일치
+            } // 인물 종료
+        } // 순회 종료
+        expect(new Set(state.stories.map((story) => story.cast.length))).toEqual(new Set([1, 2, 3, 4])); // 1~4명 구성 모두 포함
+        expect(state.stories.filter((story) => story.contentRating === "mature").map((story) => story.id)).toEqual(["story-last-subway", "story-neon-alley"]); // 19세 예시
+        expect(getRequiredStoryRating(state.characters.filter((character) => character.id === "rank-020"))).toBe("mature"); // 19세 인물 기준 확인
     }); // 검증 종료
 
     it("랭킹 캐릭터의 식별자와 이름을 중복 없이 제공한다", () => // 랭킹 중복 방지

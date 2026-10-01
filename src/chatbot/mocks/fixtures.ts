@@ -1,4 +1,5 @@
 import type { Character, CharacterDraft, Conversation, ConversationVersion, Message, UserProfile } from "@chatbot/features/core/types"; // 도메인 타입
+import { createDefaultConversationSettings, createDefaultStatusTemplate, withWorkDefaults, type WorkExtras } from "@chatbot/features/core/defaults"; // 기본값 도우미
 import { generatedRankingCharacters } from "@chatbot/mocks/ranking-character-concepts"; // 랭킹 캐릭터
 
 export const mockProfile: UserProfile = // 사용자 기준값
@@ -11,7 +12,7 @@ export const mockProfile: UserProfile = // 사용자 기준값
     createdAt: "2026-09-01T09:00:00.000Z", // 가입 시각
 }; // 사용자 종료
 
-export const mockCharacters: Character[] = // 캐릭터 기준값
+const baseCharacters: Array<Omit<Character, keyof WorkExtras>> = // 캐릭터 기준값(추가 필드 전)
 [ // 캐릭터 목록 시작
     { // 리안 시작
         id: "rian", // 캐릭터 식별자
@@ -153,8 +154,9 @@ export const mockCharacters: Character[] = // 캐릭터 기준값
         createdAt: "2026-08-30T16:00:00.000Z", // 생성 시각
         updatedAt: "2026-09-15T18:00:00.000Z", // 수정 시각
     }, // 유나 종료
-    ...generatedRankingCharacters, // 임시 랭킹 캐릭터 추가
 ]; // 캐릭터 목록 종료
+
+export const mockCharacters: Character[] = [...baseCharacters.map(withWorkDefaults), ...generatedRankingCharacters]; // 기본 필드를 채운 캐릭터 + 임시 랭킹 캐릭터
 
 export const mockConversations: Conversation[] = // 대화방 기준값
 [ // 대화방 목록 시작
@@ -171,6 +173,8 @@ export const mockConversations: Conversation[] = // 대화방 기준값
         mode: "character", // 대화 종류
         storyId: null, // 연결 스토리
         storyCast: [], // 등장인물 묶음
+        settings: createDefaultConversationSettings(), // 대화방 설정
+        folderId: null, // 대화 폴더
     }, // 리안 대화 종료
     { // 세라 대화 시작
         id: "conversation-sera", // 대화방 식별자
@@ -185,6 +189,8 @@ export const mockConversations: Conversation[] = // 대화방 기준값
         mode: "character", // 대화 종류
         storyId: null, // 연결 스토리
         storyCast: [], // 등장인물 묶음
+        settings: createDefaultConversationSettings(), // 대화방 설정
+        folderId: null, // 대화 폴더
     }, // 세라 대화 종료
     { // 노아 대화 시작
         id: "conversation-noah", // 대화방 식별자
@@ -199,6 +205,8 @@ export const mockConversations: Conversation[] = // 대화방 기준값
         mode: "character", // 대화 종류
         storyId: null, // 연결 스토리
         storyCast: [], // 등장인물 묶음
+        settings: createDefaultConversationSettings(), // 대화방 설정
+        folderId: null, // 대화 폴더
     }, // 노아 대화 종료
 ]; // 대화방 목록 종료
 
@@ -232,4 +240,7 @@ export const validCharacterDraft: CharacterDraft = // 유효 초안 기준값
     coverImage: "/images/scenes/fallback-scene.svg", // 대표 이미지
     visibility: "private", // 공개 범위
     contentRating: "all", // 이용 등급
+    playGuide: "", // 플레이 가이드
+    statusTemplate: createDefaultStatusTemplate(true), // 상태창 형식
+    updates: [], // 업데이트 기록
 }; // 초안 종료

@@ -1,4 +1,5 @@
 import { characterDetailProfiles } from "@chatbot/features/character/character-detail-data"; // 상세 프로필 데이터
+import { createDefaultConversationSettings } from "@chatbot/features/core/defaults"; // 대화방 기본 설정
 import { rankingContentWarnings } from "@chatbot/mocks/ranking-character-concepts"; // 랭킹 캐릭터 주의 목록
 import type { AppState, Character, CharacterDetailProfile, CharacterReport, Conversation, ConversationVersion, Message, ReportReason } from "@chatbot/features/core/types"; // 도메인 타입
 
@@ -161,6 +162,8 @@ export function createConversationFromPreset(state: AppState, characterId: strin
         mode: "character", // 캐릭터 모드
         storyId: null, // 연결 스토리 없음
         storyCast: [], // 등장인물 묶음 없음
+        settings: createDefaultConversationSettings(), // 대화방 기본 설정
+        folderId: null, // 폴더 없음
     }; // 대화 종료
     const version: ConversationVersion = { id: versionId, conversationId, parentVersionId: null, forkRootVersionId: null, forkedFromMessageId: null, ordinal: 1, relationshipLevel: preset.relationshipLevel, relationshipStage: preset.relationshipStage, emotion: preset.emotion, currentScene: sceneImage, lastMessage: preset.greeting, createdAt: now, updatedAt: now }; // 최초 버전 생성
     const message: Message = { id: `${conversationId}-message-1`, conversationId, versionId, sourceMessageId: null, role: "assistant", content: preset.greeting, emotion: preset.emotion, sceneEvent: null, createdAt: now }; // 첫 메시지 생성

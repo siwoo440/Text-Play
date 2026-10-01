@@ -21,6 +21,7 @@ export type DesktopRouteMatch = // 화면 경로 결과
     | { kind: "library" } // 보관함
     | { kind: "settings"; section: DesktopSettingsSection } // 설정
     | { kind: "support" } // 고객 지원
+    | { kind: "images" } // 이미지 스튜디오
     | { kind: "ai-models" } // 내장 AI 모델
     | { kind: "story-home" } // 스토리 모드 홈
     | { kind: "story-new" } // 새 스토리 만들기
@@ -152,6 +153,10 @@ export function matchDesktopRoute(location: DesktopLocation): DesktopRouteMatch 
     if (first === "stories" && second !== undefined && segments[2] === "edit" && segments.length === 3) // 스토리 수정 확인
     { // 조건 시작
         return { kind: "story-edit", id: second }; // 스토리 수정 반환
+    } // 조건 종료
+    if (first === "images" && segments.length === 1) // 이미지 스튜디오 확인
+    { // 조건 시작
+        return { kind: "images" }; // 이미지 스튜디오 반환
     } // 조건 종료
     if (first === "ai-models" && segments.length === 1) // AI 모델 확인
     { // 조건 시작

@@ -1,7 +1,10 @@
 import { removeMessageFromVersion, removeVersionTree } from "@chatbot/features/conversation/conversation-versioning"; // 버전 변경 함수
-import { CONVERSATION_PIN_LIMIT } from "@chatbot/features/conversation/conversation-list-model"; // 고정 한도
+import { autoOrganizeConversations, CONVERSATION_PIN_LIMIT } from "@chatbot/features/conversation/conversation-list-model"; // 고정 한도·자동 정리
+import { DEFAULT_PERSONA_ID } from "@chatbot/features/core/defaults"; // 기본 대화 프로필
 import { isAdultVerified } from "@chatbot/features/adult/adult-access"; // 성인 인증 판정
-import type { AdultVerification, AppSettings, AppState, Character, CharacterReport, Conversation, ConversationVersion, Message, PublicationStatus, Story, UserProfile } from "@chatbot/features/core/types"; // 상태 타입
+import type { AdultVerification, AppNotification, AppSettings, AppState, Character, CharacterMemory, CharacterReport, Conversation, ConversationFolder, ConversationSettings, ConversationVersion, GeneratedImage, Message, Persona, PublicationStatus, Story, TokenWallet, UserProfile } from "@chatbot/features/core/types"; // 상태 타입
+
+export const NOTIFICATION_LIMIT = 30; // 알림 보관 최대 수
 import { trySpend, type TokenAction } from "@chatbot/lib/story/token-policy"; // 토큰 정책
 
 export type AppAction = // 앱 동작
@@ -19,6 +22,22 @@ export type AppAction = // 앱 동작
     | { type: "delete-character"; characterId: string } // 캐릭터 삭제
     | { type: "upsert-story"; story: Story } // 스토리 저장
     | { type: "delete-story"; storyId: string } // 스토리 삭제
+    | { type: "add-image"; image: GeneratedImage; wallet: TokenWallet } // 생성 이미지 추가(토큰 차감 함께)
+    | { type: "toggle-image-favorite"; imageId: string } // 이미지 즐겨찾기 전환
+    | { type: "delete-image"; imageId: string } // 이미지 삭제
+    | { type: "update-conversation-settings"; conversationId: string; settings: Partial<ConversationSettings> } // 대화방 설정 변경
+    | { type: "upsert-persona"; persona: Persona } // 대화 프로필 저장
+    | { type: "delete-persona"; personaId: string } // 대화 프로필 삭제
+    | { type: "upsert-memories"; memories: CharacterMemory[] } // 요약 메모리 저장
+    | { type: "delete-memory"; memoryId: string } // 요약 메모리 삭제
+    | { type: "add-notification"; notification: AppNotification } // 알림 추가
+    | { type: "mark-notifications-read" } // 알림 모두 읽음
+    | { type: "clear-notifications" } // 알림 비우기
+    | { type: "create-folder"; folder: ConversationFolder } // 폴더 만들기
+    | { type: "rename-folder"; folderId: string; name: string } // 폴더 이름 변경
+    | { type: "delete-folder"; folderId: string } // 폴더 삭제
+    | { type: "move-conversation-to-folder"; conversationId: string; folderId: string | null } // 대화 폴더 이동
+    | { type: "auto-organize-conversations"; now: string } // 같은 작품 대화 자동 정리
     | { type: "toggle-bookmark"; characterId: string } // 보관 전환
     | { type: "toggle-character-like"; characterId: string } // 좋아요 전환
     | { type: "toggle-creator-follow"; creatorId: string } // 제작자 팔로우 전환
@@ -119,6 +138,18 @@ export function appReducer(state: AppState, action: AppAction): AppState // 앱 
                 selectedConversationId: state.selectedConversationId !== null && conversationIds.includes(state.selectedConversationId) ? null : state.selectedConversationId, // 선택 대화 정리
             }); // 상태 종료
         } // 삭제 범위 종료
+        case "add-image": // 생성 이미지 추가
+        { // 추가 범위 시작
+            if (state.images.some((image) => image.id === action.image.id)) // 중복 판정
+            { // 조건 시작
+                return state; // 변경 없음
+            } // 조건 종료
+            return { ...state, images: [structuredClone(action.image), ...state.images], wallet: structuredClone(action.wallet) }; // 최근 순 추가와 지갑 반영
+        } // 추가 범위 종료
+        case "toggle-image-favorite": // 이미지 즐겨찾기 전환
+            return { ...state, images: state.images.map((image) => image.id === action.imageId ? { ...image, favorite: !image.favorite } : image) }; // 즐겨찾기 반영
+        case "delete-image": // 이미지 삭제(표지·장면에 쓴 사본은 그대로 남음)
+            return { ...state, images: state.images.filter((image) => image.id !== action.imageId) }; // 삭제 반영
         case "upsert-story": // 스토리 저장
         { // 저장 범위 시작
             const exists = state.stories.some((story) => story.id === action.story.id); // 기존 스토리 확인
@@ -231,8 +262,48 @@ export function appReducer(state: AppState, action: AppAction): AppState // 앱 
             return { ...state, conversations: state.conversations.map((conversation) => conversation.id === action.conversationId ? { ...conversation, archivedAt: action.archivedAt } : conversation), pinnedConversationIds: state.pinnedConversationIds.filter((id) => id !== action.conversationId) }; // 보관 상태 반환(고정 해제)
         case "restore-conversation": // 대화 복구
             return { ...state, conversations: state.conversations.map((conversation) => conversation.id === action.conversationId ? { ...conversation, archivedAt: null } : conversation) }; // 복구 상태 반환
+        case "update-conversation-settings": // 대화방 설정 변경
+            return { ...state, conversations: state.conversations.map((conversation) => conversation.id === action.conversationId ? { ...conversation, settings: { ...conversation.settings, ...structuredClone(action.settings) } } : conversation) }; // 부분 갱신
+        case "upsert-persona": // 대화 프로필 저장
+        { // 저장 범위 시작
+            const exists = state.personas.some((persona) => persona.id === action.persona.id); // 기존 여부
+            return { ...state, personas: exists ? state.personas.map((persona) => persona.id === action.persona.id ? structuredClone(action.persona) : persona) : [...state.personas, structuredClone(action.persona)] }; // 저장 반영
+        } // 저장 범위 종료
+        case "delete-persona": // 대화 프로필 삭제
+        { // 삭제 범위 시작
+            if (action.personaId === DEFAULT_PERSONA_ID || !state.personas.some((persona) => persona.id === action.personaId)) // 기본·없는 프로필 판정
+            { // 조건 시작
+                return state; // 변경 없음
+            } // 조건 종료
+            return { ...state, personas: state.personas.filter((persona) => persona.id !== action.personaId), conversations: state.conversations.map((conversation) => conversation.settings.personaId === action.personaId ? { ...conversation, settings: { ...conversation.settings, personaId: null } } : conversation) }; // 쓰던 대화는 기본으로
+        } // 삭제 범위 종료
+        case "upsert-memories": // 요약 메모리 저장
+        { // 저장 범위 시작
+            const incoming = new Map(action.memories.map((memory) => [memory.id, structuredClone(memory)])); // 새 기억
+            const kept = state.memories.map((memory) => incoming.get(memory.id) ?? memory); // 같은 식별자 교체
+            const added = action.memories.filter((memory) => !state.memories.some((item) => item.id === memory.id)).map((memory) => structuredClone(memory)); // 새로 추가
+            return { ...state, memories: [...kept, ...added] }; // 저장 반영
+        } // 저장 범위 종료
+        case "delete-memory": // 요약 메모리 삭제
+            return { ...state, memories: state.memories.filter((memory) => memory.id !== action.memoryId) }; // 삭제 반영
+        case "add-notification": // 알림 추가
+            return state.notifications.some((item) => item.id === action.notification.id) ? state : { ...state, notifications: [structuredClone(action.notification), ...state.notifications].slice(0, NOTIFICATION_LIMIT) }; // 최근 순 추가
+        case "mark-notifications-read": // 알림 모두 읽음
+            return { ...state, notifications: state.notifications.map((item) => item.read ? item : { ...item, read: true }) }; // 읽음 반영
+        case "clear-notifications": // 알림 비우기
+            return { ...state, notifications: [] }; // 비우기
+        case "create-folder": // 폴더 만들기
+            return state.conversationFolders.some((folder) => folder.id === action.folder.id) || action.folder.name.trim().length === 0 ? state : { ...state, conversationFolders: [...state.conversationFolders, { ...action.folder, name: action.folder.name.trim().slice(0, 30) }] }; // 폴더 추가
+        case "rename-folder": // 폴더 이름 변경
+            return action.name.trim().length === 0 ? state : { ...state, conversationFolders: state.conversationFolders.map((folder) => folder.id === action.folderId ? { ...folder, name: action.name.trim().slice(0, 30) } : folder) }; // 이름 반영
+        case "delete-folder": // 폴더 삭제(대화는 목록으로)
+            return { ...state, conversationFolders: state.conversationFolders.filter((folder) => folder.id !== action.folderId), conversations: state.conversations.map((conversation) => conversation.folderId === action.folderId ? { ...conversation, folderId: null } : conversation) }; // 삭제 반영
+        case "move-conversation-to-folder": // 대화 폴더 이동
+            return action.folderId !== null && !state.conversationFolders.some((folder) => folder.id === action.folderId) ? state : { ...state, conversations: state.conversations.map((conversation) => conversation.id === action.conversationId ? { ...conversation, folderId: action.folderId } : conversation) }; // 이동 반영
+        case "auto-organize-conversations": // 같은 작품 대화 자동 정리
+            return autoOrganizeConversations(state, action.now); // 정리 상태 반환
         case "delete-conversation": // 대화 삭제
-            return { ...state, conversations: state.conversations.filter((conversation) => conversation.id !== action.conversationId), conversationVersions: state.conversationVersions.filter((version) => version.conversationId !== action.conversationId), messages: state.messages.filter((message) => message.conversationId !== action.conversationId), pinnedConversationIds: state.pinnedConversationIds.filter((id) => id !== action.conversationId), selectedConversationId: state.selectedConversationId === action.conversationId ? null : state.selectedConversationId }; // 삭제 상태 반환
+            return { ...state, memories: state.memories.filter((memory) => memory.conversationId !== action.conversationId), conversations: state.conversations.filter((conversation) => conversation.id !== action.conversationId), conversationVersions: state.conversationVersions.filter((version) => version.conversationId !== action.conversationId), messages: state.messages.filter((message) => message.conversationId !== action.conversationId), pinnedConversationIds: state.pinnedConversationIds.filter((id) => id !== action.conversationId), selectedConversationId: state.selectedConversationId === action.conversationId ? null : state.selectedConversationId }; // 삭제 상태 반환
         case "toggle-conversation-pin": // 대화 고정 전환
         { // 고정 범위 시작
             if (state.pinnedConversationIds.includes(action.conversationId)) // 고정 해제 판정
@@ -256,7 +327,7 @@ export function appReducer(state: AppState, action: AppAction): AppState // 앱 
             { // 조건 시작
                 return state; // 되살리지 않음
             } // 조건 종료
-            const conversation = existing === undefined ? chatConversation : { ...chatConversation, title: existing.title, archivedAt: existing.archivedAt }; // 왼쪽 창의 이름·보관 유지
+            const conversation = existing === undefined ? chatConversation : { ...chatConversation, title: existing.title, archivedAt: existing.archivedAt, settings: existing.settings, folderId: existing.folderId }; // 왼쪽 창의 이름·보관·설정·폴더 유지
             const conversations = existing === undefined ? [...state.conversations, conversation] : state.conversations.map((item) => item.id === conversation.id ? conversation : item); // 대화 목록 생성
             const conversationVersions = [...state.conversationVersions.filter((version) => version.conversationId !== action.conversationId), ...chat.conversationVersions.filter((version) => version.conversationId === action.conversationId)]; // 채팅 대화 버전 교체
             const messages = [...state.messages.filter((message) => message.conversationId !== action.conversationId), ...chat.messages.filter((message) => message.conversationId === action.conversationId)]; // 채팅 대화 메시지 교체

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactElement, type ReactNode } from "react"; // 리액트 도구
 import chatbotShellStyles from "@chatbot/components/app-shell/AppShell.module.css"; // ChatBot 패널 안쪽 스타일
 import { ConversationPanel } from "@chatbot/components/app-shell/ConversationPanel"; // ChatBot 대화방 목록
+import { NotificationBell } from "@chatbot/components/app-shell/NotificationBell"; // ChatBot 알림함
 import { UserPanel } from "@chatbot/components/app-shell/UserPanel"; // ChatBot 사용자 패널
 import { AdultContentSwitch } from "@chatbot/features/adult/AdultContentSwitch"; // ChatBot 19+ 스위치
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // ChatBot 앱 저장소
@@ -35,6 +36,7 @@ const areaIcons: Record<DesktopAreaId, ReactNode> = // 메뉴 영역 아이콘
     home: <Icon><path d="M4 11.5 12 5l8 6.5V20h-5.5v-5h-5v5H4v-8.5Z" /></Icon>, // 메인 아이콘
     explore: <Icon><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></Icon>, // 탐색 아이콘
     library: <Icon><path d="M5 4.5h4v15H5zM10.5 4.5h4v15h-4zM16 5.2l3.6-.9 3 14.6-3.6.8z" /></Icon>, // 보관함 아이콘
+    images: <Icon><rect x="4" y="5" width="16" height="14" rx="2" /><circle cx="9" cy="10" r="1.6" /><path d="m5 17 5-5 3.5 3.5L16 13l3 3" /></Icon>, // 이미지 스튜디오 아이콘
     "text-play": <Icon><path d="M5 5h14v10H8l-3 3V5Z" /><path d="m10.5 8 3.5 2-3.5 2V8Z" /></Icon>, // Text-Play 아이콘
     settings: <Icon><circle cx="12" cy="12" r="3" /><path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2M6 6l1.6 1.6M16.4 16.4 18 18M6 18l1.6-1.6M16.4 7.6 18 6" /></Icon>, // 설정 아이콘
     "ai-models": <Icon><rect x="6.5" y="6.5" width="11" height="11" rx="2" /><path d="M9.5 3.5v3M14.5 3.5v3M9.5 17.5v3M14.5 17.5v3M3.5 9.5h3M3.5 14.5h3M17.5 9.5h3M17.5 14.5h3M10 10h4v4h-4z" /></Icon>, // AI 모델(칩) 아이콘
@@ -140,6 +142,7 @@ export function DesktopShell({ pathname, area, title, repository, children }: De
                     <p className={styles.title}>{title}</p> {/* 현재 화면 제목 */}
                     <div className={styles.topbarActions}> {/* 상단 동작 */}
                         <AdultContentSwitch /> {/* 19+ 스위치 */}
+                        <div className={`${chatbotShellStyles.shell} ${styles.bellHost}`}><NotificationBell onNavigate={() => setUserPanelOpen(false)} /></div> {/* ChatBot 알림함(종 스타일은 ChatBot 셸 규칙 그대로, 셸의 높이·바탕만 끔) */}
                         <Link href="/settings/tokens" className={styles.tokenChip} aria-label={text.tokens(state.wallet.balance.toLocaleString())}><span aria-hidden="true">◆</span>{state.wallet.balance.toLocaleString()}</Link> {/* 토큰 잔액 */}
                         <button ref={toggleRef} type="button" className={styles.profileButton} aria-label={text.userPanel} aria-expanded={userPanelOpen} aria-controls="user-panel" onClick={() => (userPanelOpen ? closeUserPanel(false) : setUserPanelOpen(true))}> {/* 사용자 패널 버튼 */}
                             <span className={styles.avatar} aria-hidden="true">{state.profile.nickname.slice(0, 1)}</span> {/* 프로필 글자 */}

@@ -1,5 +1,7 @@
 "use client"; // 클라이언트 컴포넌트
 
+import type { Route } from "@/desktop/next-compat/route"; // 경로 타입
+import Link from "@/desktop/next-compat/link"; // 내부 링크
 import { useMemo, useState } from "react"; // 리액트 상태
 import { canViewMatureContent, getDiscoverableCharacters } from "@chatbot/features/adult/adult-access"; // 19세 콘텐츠 필터
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 상태
@@ -7,6 +9,7 @@ import { CategoryFilter } from "@chatbot/features/discovery/CategoryFilter"; // 
 import { CharacterRail } from "@chatbot/features/discovery/CharacterRail"; // 캐릭터 레일
 import { FeaturedCharacter } from "@chatbot/features/discovery/FeaturedCharacter"; // 추천 캐릭터
 import { RankingRail } from "@chatbot/features/discovery/RankingRail"; // 랭킹 레일
+import { getInterestCharacters, getRecommendedCharacters } from "@chatbot/features/discovery/recommendation-model"; // 유저 추천·관심 목록
 import { ModeSwitch } from "@chatbot/features/story/ModeSwitch"; // 캐릭터·스토리 모드 전환
 import styles from "@chatbot/features/discovery/DiscoveryHome.module.css"; // 탐색 스타일
 
@@ -36,6 +39,10 @@ export function DiscoveryHome() // 탐색 홈
     const rankingCharacters = defaultView ? filtered.slice(0, 10) : []; // 상위 랭킹 목록
     const browsableCharacters = defaultView ? filtered.slice(10) : filtered; // 탐색 대상 목록
     const visibleCharacters = browsableCharacters.slice(0, visibleCount); // 현재 표시 목록
+    const recommendation = useMemo(() => getRecommendedCharacters(state, showMature, 8), [showMature, state]); // 유저 추천 캐릭터
+    const interests = useMemo(() => getInterestCharacters(state, showMature), [showMature, state]); // 관심 목록
+    const recommendationLead = recommendation.personalized ? `#${recommendation.basisTags.slice(0, 2).join(" #")} 취향을 바탕으로 골랐어요. 아직 대화하지 않은 캐릭터만 보여 드려요.` : "아직 취향 정보가 적어 인기 캐릭터로 골랐어요. 좋아요나 보관을 누르면 취향에 맞춰 바뀌어요."; // 추천 안내
+    const interestLead = interests.length === 0 ? undefined : `좋아요 ${interests.filter((entry) => entry.liked).length} · 보관 ${interests.filter((entry) => entry.bookmarked).length}`; // 관심 안내
     const updateQuery = (value: string) => // 검색어 변경 함수
     { // 함수 시작
         setQuery(value); // 검색어 저장
@@ -66,6 +73,8 @@ export function DiscoveryHome() // 탐색 홈
             <CharacterRail title="캐릭터 탐색 결과" characters={visibleCharacters} /> {/* 검색 결과 */}
             {visibleCharacters.length < browsableCharacters.length ? <button type="button" className={styles.loadMore} onClick={() => setVisibleCount((count) => count + pageSize)}>캐릭터 더 보기</button> : null} {/* 더 보기 */}
             {filtered.length === 0 ? <p className={styles.empty} role="status">조건에 맞는 캐릭터가 없습니다.</p> : null} {/* 빈 결과 */}
+            {defaultView ? <CharacterRail title="유저 추천 캐릭터" description={recommendationLead} characters={recommendation.characters} /> : null} {/* 유저 추천(기본 화면) */}
+            {defaultView ? <CharacterRail title="관심 목록" description={interestLead} characters={interests.map((entry) => entry.character)} empty={<div className={styles.railEmpty}><strong>아직 관심 캐릭터가 없어요.</strong><p>캐릭터 상세 화면에서 좋아요나 보관을 누르면 여기에 모여요.</p><Link href={"/explore" as Route}>캐릭터 탐색하기</Link></div>} /> : null} {/* 관심 목록(기본 화면) */}
         </main> // 본문 종료
     ); // 반환 종료
 } // 함수 종료

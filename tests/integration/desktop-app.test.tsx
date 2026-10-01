@@ -55,7 +55,7 @@ describe("데스크톱 앱 틀", () => // 데스크톱 틀 묶음
     { // 테스트 시작
         render(<DesktopApp createRepository={() => new MemoryTextPlaySaveRepository()} />); // 데스크톱 앱 렌더
         const navigation = await screen.findByRole("navigation", { name: "주요 메뉴" }); // 주요 메뉴 조회
-        expect(within(navigation).getAllByRole("link").map((link) => link.textContent)).toEqual(["메인", "탐색", "내 작품", "Text-Play"]); // 메뉴 순서 확인
+        expect(within(navigation).getAllByRole("link").map((link) => link.textContent)).toEqual(["메인", "탐색", "내 작품", "이미지", "Text-Play"]); // 메뉴 순서 확인
         expect(within(navigation).getByRole("link", { name: "메인" })).toHaveAttribute("aria-current", "page"); // 현재 메뉴 확인
         expect(await screen.findByRole("heading", { level: 1, name: /오늘,/u })).toBeInTheDocument(); // ChatBot 메인 확인
         expect(within(screen.getByRole("complementary", { name: "진행 중인 대화방" })).getByText("새벽 도서관의 리안")).toBeInTheDocument(); // 최근 대화 확인

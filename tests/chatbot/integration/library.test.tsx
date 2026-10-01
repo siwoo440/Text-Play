@@ -65,14 +65,14 @@ describe("로컬 보관함", () => // 보관함 묶음
         const { unmount } = renderWithApp(<LibraryScreen />, state, { load: () => state, save: () => undefined, createBackup: failingBackup }); // 실패 저장소 렌더
         await user.click(screen.getByRole("button", { name: "새벽 도서관의 리안 삭제" })); // 삭제 시작
         await user.click(screen.getByRole("button", { name: "삭제 확인" })); // 삭제 승인
-        expect(failingBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 10 }), "character-delete"); // 백업 시도 확인
+        expect(failingBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 12 }), "character-delete"); // 백업 시도 확인
         expect(screen.getByText("새벽 도서관의 리안")).toBeVisible(); // 캐릭터 유지 확인
         unmount(); // 화면 정리
         const backup = vi.fn(); // 성공 백업
         renderWithApp(<LibraryScreen />, state, { load: () => state, save: () => undefined, createBackup: backup }); // 성공 저장소 렌더
         await user.click(screen.getByRole("button", { name: "새벽 도서관의 리안 삭제" })); // 삭제 시작
         await user.click(screen.getByRole("button", { name: "삭제 확인" })); // 삭제 승인
-        expect(backup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 10 }), "character-delete"); // 백업 확인
+        expect(backup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 12 }), "character-delete"); // 백업 확인
         expect(screen.queryByText("새벽 도서관의 리안")).toBeNull(); // 카드 제거 확인
     }); // 검증 종료
 
@@ -95,7 +95,7 @@ describe("로컬 보관함", () => // 보관함 묶음
         await user.click(screen.getByRole("button", { name: "내 카페 이야기 삭제" })); // 삭제 시작
         expect(screen.getByRole("dialog", { name: "스토리 삭제" })).toHaveTextContent("이 스토리로 진행한 대화 1개도 함께 삭제됩니다."); // 삭제 안내
         await user.click(screen.getByRole("button", { name: "스토리 삭제 확인" })); // 삭제 승인
-        expect(failingBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 10 }), "story-delete"); // 백업 시도 확인
+        expect(failingBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 12 }), "story-delete"); // 백업 시도 확인
         expect(screen.getByRole("link", { name: "내 카페 이야기" })).toBeVisible(); // 실패 시 유지 확인
         unmount(); // 화면 정리
         const backup = vi.fn(); // 성공 백업
@@ -103,7 +103,7 @@ describe("로컬 보관함", () => // 보관함 묶음
         await user.click(screen.getByRole("tab", { name: "내 스토리" })); // 탭 이동
         await user.click(screen.getByRole("button", { name: "내 카페 이야기 삭제" })); // 삭제 시작
         await user.click(screen.getByRole("button", { name: "스토리 삭제 확인" })); // 삭제 승인
-        expect(backup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 10 }), "story-delete"); // 백업 확인
+        expect(backup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 12 }), "story-delete"); // 백업 확인
         expect(screen.queryByRole("link", { name: "내 카페 이야기" })).toBeNull(); // 삭제 확인
         expect(screen.getByLabelText("대화 개수")).toHaveTextContent(/^3:/); // 스토리 대화도 삭제 확인
         expect(screen.getByRole("link", { name: "＋ 새 스토리 만들기" })).toHaveAttribute("href", "/stories/new"); // 빈 화면 만들기 링크
@@ -160,7 +160,7 @@ describe("로컬 보관함", () => // 보관함 묶음
         await user.click(screen.getByRole("tab", { name: "진행 중인 대화" })); // 대화 탭 이동
         await user.click(screen.getByRole("button", { name: "새벽 도서관의 리안 삭제" })); // 삭제 시작
         await user.click(screen.getByRole("button", { name: "대화 삭제 확인" })); // 삭제 승인
-        expect(failingBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 10 }), "conversation-delete"); // 백업 시도 확인
+        expect(failingBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 12 }), "conversation-delete"); // 백업 시도 확인
         expect(screen.getByLabelText("대화 개수")).toHaveTextContent(`${state.conversations.length}:${state.messages.length}`); // 대화 유지 확인
     }); // 검증 종료
 

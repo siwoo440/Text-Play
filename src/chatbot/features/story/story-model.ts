@@ -1,4 +1,5 @@
 import { canViewMatureContent } from "@chatbot/features/adult/adult-access"; // 19세 콘텐츠 판정
+import { createDefaultConversationSettings } from "@chatbot/features/core/defaults"; // 대화방 기본 설정
 import { createConversationHref, createUniqueConversationId, type ConversationRouteSelection, type ConversationStartResult } from "@chatbot/features/character/character-detail-model"; // 대화 주소·생성 도구
 import type { AppState, Character, ContentRating, Conversation, ConversationVersion, Message, Story, StoryCastMember } from "@chatbot/features/core/types"; // 도메인 타입
 
@@ -161,6 +162,8 @@ export function createStoryConversation(state: AppState, storyId: string, now = 
         mode: "story", // 스토리 모드
         storyId: story.id, // 연결 스토리
         storyCast: structuredClone(story.cast), // 시작 시점 등장인물 복사
+        settings: createDefaultConversationSettings(), // 대화방 기본 설정
+        folderId: null, // 폴더 없음
     }; // 대화 종료
     const version: ConversationVersion = { id: versionId, conversationId, parentVersionId: null, forkRootVersionId: null, forkedFromMessageId: null, ordinal: 1, relationshipLevel: 0, relationshipStage: "첫 만남", emotion: "설렘", currentScene: story.coverImage, lastMessage: opening, createdAt: now, updatedAt: now }; // 최초 버전
     const message: Message = { id: `${conversationId}-message-1`, conversationId, versionId, sourceMessageId: null, role: "assistant", content: opening, emotion: "설렘", sceneEvent: null, createdAt: now }; // 시작 장면 메시지

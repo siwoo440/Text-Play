@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"; // 테스트 도구
 import { validateProposedActions } from "@/features/text-play/ai/action-validator"; // 액션 검증기
 import { buildTextPlayContext } from "@/features/text-play/ai/context-builder"; // 문맥 생성기
+import { createTextPlayResponseJsonSchema } from "@/features/text-play/ai/response-json-schema"; // 응답 JSON 스키마 생성기
 import { parseTextPlayResponse } from "@/features/text-play/ai/response-schema"; // 응답 파서
 import { createTextPlayState } from "@/features/text-play/core/engine"; // 상태 생성기
 import { DEMO_TEXT_PLAY_PACKAGE } from "@/features/text-play/data/demo-package"; // 샘플 패키지
@@ -40,5 +41,12 @@ describe("Text-Play AI 응답", () => // 응답 검증 묶음
         expect(decoded).toMatchObject({ sceneId: "forest-gate", stats: { hp: 100, sanity: 80, gold: 10 }, allowedCharacterIds: ["lyra"] }); // 필수 문맥 확인
         expect(decoded).not.toHaveProperty("log"); // 전체 기록 제외 확인
         expect(context.userInput).toBe("리라에게 말을 건다"); // 사용자 입력 확인
+    }); // 테스트 종료
+
+    it("형식을 강제할 수 있는 AI를 위해 작품 응답 JSON 스키마를 함께 담는다", () => // 스키마 동봉 검증
+    { // 테스트 시작
+        const state = createTextPlayState(DEMO_TEXT_PLAY_PACKAGE, "2026-09-25T00:00:00.000Z"); // 초기 상태 생성
+        const context = buildTextPlayContext(DEMO_TEXT_PLAY_PACKAGE, state, "주변을 본다"); // 구조화 문맥 생성
+        expect(context.jsonSchema).toEqual(createTextPlayResponseJsonSchema(DEMO_TEXT_PLAY_PACKAGE)); // 스키마 확인
     }); // 테스트 종료
 }); // 묶음 종료

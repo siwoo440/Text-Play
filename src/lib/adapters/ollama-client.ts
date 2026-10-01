@@ -1,3 +1,5 @@
+import type { LocalAIStreamEvent } from "@/lib/adapters/local-ai-stream"; // 로컬 AI 스트림 사건
+
 export interface OllamaModel // 설치 모델 구조
 { // 구조 시작
     name: string; // 모델 이름
@@ -25,11 +27,7 @@ export interface OllamaChatRequest // 대화 요청 구조
     format?: "json"; // 응답 형식
 } // 구조 종료
 
-export type OllamaStreamEvent = // 스트림 사건 종류
-    | { type: "chunk"; content: string } // 응답 조각
-    | { type: "done" } // 응답 완료
-    | { type: "error"; message: string } // 응답 오류
-    | { type: "cancelled" }; // 응답 중단
+export type OllamaStreamEvent = LocalAIStreamEvent; // 스트림 사건 종류(내장 AI와 공통)
 
 export interface OllamaClient // 올라마 통신 계약
 { // 구조 시작

@@ -122,8 +122,8 @@ export function TextPlaySettingsDialog({ open, onClose }: TextPlaySettingsDialog
                     <label className={styles.field}>창 해상도<select value={preferences.resolutionId} onChange={changeResolution}><option value="fit">화면 맞춤</option><option value="1280x720">1280×720</option><option value="1600x900">1600×900</option><option value="1920x1080">1920×1080</option></select></label> {/* 해상도 선택 */}
                 </section> {/* 해상도 설정 종료 */}
                 <section className={styles.section}> {/* AI 설정 */}
-                    <div className={styles.sectionTitle}><TextPlayIcon name="ai" /><div><h3>인공지능 공급자</h3><p>임시 응답이나 PC에 설치된 올라마 모델을 선택합니다.</p></div></div> {/* 영역 제목 */}
-                    <label className={styles.field}>사용할 챗봇<select value={preferences.aiProviderId} onChange={changeAIProvider}><option value="mock">임시 인공지능</option><option value="ollama" disabled={preferences.localModelId === null}>올라마 로컬 모델</option></select></label> {/* AI 선택 */}
+                    <div className={styles.sectionTitle}><TextPlayIcon name="ai" /><div><h3>인공지능 공급자</h3><p>임시 응답, 이 PC의 내장 AI, PC에 설치된 올라마 모델 중에서 선택합니다.</p></div></div> {/* 영역 제목 */}
+                    <label className={styles.field}>사용할 챗봇<select value={preferences.aiProviderId} onChange={changeAIProvider}><option value="mock">임시 인공지능</option><option value="bundled" disabled={platform.localAI === undefined}>내장 AI(이 PC)</option><option value="ollama" disabled={preferences.localModelId === null}>올라마 로컬 모델</option></select></label> {/* AI 선택 */}
                     {platform.localAI === undefined // 로컬 기능 확인
                         ? <p className={styles.status}>로컬 모델은 Windows 실행 프로그램에서 사용할 수 있습니다.</p> // 웹 제한 안내
                         : <> {/* 로컬 설정 묶음 */}

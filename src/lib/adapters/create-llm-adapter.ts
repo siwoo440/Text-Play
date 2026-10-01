@@ -2,7 +2,7 @@ import { HttpLLMAdapter } from "@/lib/adapters/http-llm-adapter"; // HTTP 어댑
 import type { LLMAdapter } from "@/lib/adapters/llm-adapter"; // LLM 계약
 import { MockLLMAdapter } from "@/lib/adapters/mock-llm-adapter"; // Mock 어댑터
 
-export type LLMMode = "mock" | "server" | "ollama"; // LLM 실행 모드
+export type LLMMode = "mock" | "server" | "ollama" | "bundled"; // LLM 실행 모드
 
 export interface LLMSelection // LLM 선택 결과
 { // 구조 시작

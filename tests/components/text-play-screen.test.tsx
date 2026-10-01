@@ -82,6 +82,7 @@ describe("Text-Play 플레이 화면", () => // 플레이 검증 묶음
         expect(screen.getByRole("region", { name: "추천 답안" })).toBeInTheDocument(); // 추천 답안 확인
         expect(screen.getByRole("combobox", { name: "AI 챗봇 선택" })).toHaveValue("mock"); // AI 선택 확인
         expect(screen.getByRole("option", { name: "올라마 모델 미선택" })).toBeDisabled(); // 로컬 AI 확인
+        expect(screen.getByRole("option", { name: "내장 AI(이 PC)" })).toBeDisabled(); // 웹에서 내장 AI 막힘 확인
         await user.click(screen.getByRole("button", { name: "메인으로 돌아가기: 달빛 숲의 기록" })); // 작품 제목 선택
         expect(navigate).toHaveBeenCalledWith("home"); // 홈 이동 확인
         await user.click(screen.getByRole("button", { name: "게임 설정 열기" })); // 설정 열기

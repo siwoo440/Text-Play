@@ -76,7 +76,7 @@ Text-Play 화면(WebView, 외부 연결 차단 유지)
 | `src-tauri/src/hardware.rs` (새 파일) | DXGI 그래픽 메모리, RAM, 남은 디스크 |
 | `src-tauri/src/model_store.rs` (새 파일) | 모델 목록 읽기, 상태, 다운로드(`.part` 이어받기 → SHA-256 → 이름 바꾸기), 진행률 Channel, 취소, 삭제, 허용 호스트(HTTPS) 검사 |
 | `src-tauri/src/local_runtime.rs` (새 파일) | 실행 명령줄, 포트·키 생성, 상태(꺼짐·시작 중·준비·오류), 준비 확인(`/health`), Vulkan 실패 시 CPU 재시작, 쉬는 시간 뒤 내리기, 앱 종료 시 정리 |
-| `src-tauri/src/local_ai.rs` (수정) | `stream_bundled_chat`: `/v1/chat/completions` 스트리밍 + JSON 스키마, 기존 올라마 명령 유지 |
+| `src-tauri/src/bundled_ai.rs` (기반 1에서 만듦) | `stream_bundled_chat`: `/v1/chat/completions` 스트리밍 + JSON 스키마, 연결 정보 없으면 미준비 오류. 기존 올라마 명령(`local_ai.rs`) 유지 |
 | `src-tauri/resources/model-catalog.json` (새 파일) | 모델별 식별자·표시 이름·파일·주소·SHA-256·크기·라이선스·권장 사양·생성 설정 |
 | `src-tauri/Tauri.toml`, `capabilities/` (수정) | 실행 엔진 리소스, NSIS 설치 훅, 새 명령 권한 |
 | `src-tauri/windows/hooks.nsh` (새 파일) | 설치 후 가벼운 모델 준비 실행, 제거 시 모델 삭제 질문 |
@@ -86,8 +86,9 @@ Text-Play 화면(WebView, 외부 연결 차단 유지)
 | `scripts/local-ai/*`, `scripts/lib/local-ai-files.mjs`, `scripts/lib/local-model-eval.mjs` (작업 0에서 만듦) | 고정 버전 목록, 평가 문맥 30개와 판정, 이어받기 다운로드·해시, 측정 요약·보고서 |
 | `src/features/text-play/ai/response-json-schema.ts` (작업 0에서 만듦) | 작품별 응답 JSON 스키마(식별자 목록·정수 범위·길이 상한) |
 | `src/lib/adapters/structured-messages.ts` (작업 0에서 만듦) | 구조화 응답 메시지(올라마·내장 로컬 AI·측정 공통) |
-| `src/lib/adapters/bundled-llm-adapter.ts` (새 파일) | 내장 로컬 AI 구조화 스트리밍 어댑터 |
-| `src/desktop/tauri-local-runtime-client.ts` (새 파일) | 모델·실행 엔진 Tauri 호출 |
+| `src/lib/adapters/bundled-llm-adapter.ts` (기반 1에서 만듦) | 내장 로컬 AI 구조화 스트리밍 어댑터 |
+| `src/desktop/tauri-bundled-client.ts`, `tauri-stream.ts` (기반 1에서 만듦) | 내장 AI 대화 Tauri 호출, 올라마와 공용 스트림 처리 |
+| `src/desktop/tauri-local-runtime-client.ts` (새 파일) | 모델·실행 엔진 관리 Tauri 호출 |
 | `src/desktop/ai-models/AiModelsScreen.tsx` (새 파일) | `AI 모델` 화면(모델 카드 3개, 적합도, 다운로드·사용·삭제, 라이선스) |
 | `src/desktop/router/*`, `shell/*` (수정) | `#/ai-models` 경로, 프로그램 메뉴 `설정 · AI 모델 · 고객 지원`(화살표 순서에 포함) |
 | `src/desktop/desktop-llm.ts`, `src/features/text-play/preferences/*` (수정) | 공급자 `bundled` 추가, 설정 형식 버전 3과 버전 2 이전 |
@@ -167,6 +168,16 @@ pnpm local-ai:eval --models midm-2.0-mini:Q4_K_M,qwen3.5-2b:Q4_K_M --backends cp
   - `stream_bundled_chat`: OpenAI 호환 스트리밍과 JSON 스키마, Channel로 화면에 전달
   - `bundled-llm-adapter.ts`, `desktop-llm.ts` 공급자 연결
 - 확인: exe에서 응답 생성, 작업 관리자에서 앱 종료 뒤 `llama-server`가 남지 않는지 확인
+
+#### 진행 상태 (2026-10-01): 기반 1 "AI 연결 통로" 완료
+
+기반을 먼저 만들고 기능을 덧붙이는 순서로 바꿔, 작업 1을 **연결 통로**(이번)와 **엔진 관리자**(`local_runtime.rs`, 다음)로 나눴다.
+
+- 앱: 공급자 `bundled`(화면 표시 `내장 AI(이 PC)`, Windows 실행 프로그램에서만 선택 가능, 모델 선택 불필요), `BundledLLMAdapter`(구조화 응답에 작품 JSON 스키마 동봉, 최대 640토큰), `createTauriBundledClient`(`stream_bundled_chat` 호출, 중단은 `cancel_local_chat` 공용), 오류 `local-ai-not-ready` → "내장 AI가 아직 준비되지 않았습니다. 다른 AI를 선택해 주세요."
+- 공통화: Tauri 스트림 처리(`src/desktop/tauri-stream.ts`), 스트림 사건 형식(`local-ai-stream.ts`), 캐릭터·요약 메시지(`chat-messages.ts`)를 올라마와 내장 AI가 함께 쓴다. `buildTextPlayContext`가 `jsonSchema`를 함께 담는다.
+- Rust: `src-tauri/src/bundled_ai.rs`의 `stream_bundled_chat`이 연결 정보(`BundledAIState`)가 있을 때만 `/v1/chat/completions`로 스트리밍하고(일회용 키, 생성 설정·템플릿 인자·JSON 스키마 반영, 응답 2MB·10분 제한), 없으면 `BUNDLED_NOT_READY`를 돌려준다. 엔진 관리자가 생기면 실행한 엔진의 주소·키·모델 설정을 이 상태에 넣는다.
+- 확인용 연결: 환경 변수 `MATE_TEXT_PLAY_BUNDLED_AI_URL`(127.0.0.1·localhost http 주소만 허용)과 가짜 서버 `node scripts/local-ai/fake-openai-server.mjs --port 8765`로 모델 없이 exe 전체 흐름을 확인할 수 있다.
+- exe 확인: 엔진 없음 → 미준비 안내 표시, 가짜 서버 연결 → 응답 서술·리라 대사 표시와 자동 저장.
 
 ### 작업 2: 모델 관리 (2~3일)
 

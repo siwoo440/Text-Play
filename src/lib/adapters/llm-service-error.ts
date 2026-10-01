@@ -1,4 +1,4 @@
-export type LLMServiceErrorCode = "authentication-required" | "insufficient-credit" | "rate-limited" | "unavailable" | "model-unavailable" | "invalid-response"; // 서비스 오류 종류
+export type LLMServiceErrorCode = "authentication-required" | "insufficient-credit" | "rate-limited" | "unavailable" | "model-unavailable" | "local-ai-not-ready" | "invalid-response"; // 서비스 오류 종류
 
 export class LLMServiceError extends Error // LLM 서비스 오류
 { // 클래스 시작

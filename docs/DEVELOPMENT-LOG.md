@@ -772,3 +772,40 @@ Windows 실행 파일(exe)이 최신 ChatBot(Mate Verse) 기능을 똑같이 제
 - 실행 엔진과 공식 가중치 다운로드가 작업 세션의 자동 권한 검사에서 막혀 실측은 아직 못 함. 사용자가 직접 실행하거나 허용한 뒤 `pnpm local-ai:runtime` → `pnpm local-ai:models` → `pnpm local-ai:eval`
 - 실측 결과로 가벼움 모델 확정(Mi:dm Q4·Q5 대 Qwen3.5-2B), `model-catalog.json` 작성, 계획 문서 갱신
 - 그래픽 6GB 기준은 내장 그래픽·`cpu:4` 측정과 메모리 대역폭 비율로 추정
+
+---
+## 2026-10-01 — 내장 AI 기반 1: AI 연결 통로
+
+---
+### 목표
+
+사용자 지시에 따라 기반을 먼저 만들고 기능을 덧붙이는 순서로 내장 로컬 AI를 진행합니다. 첫 기반으로 앱이 `내장 AI`를 하나의 AI 선택지로 알고, 답변 형식(JSON 스키마)을 함께 보내 Rust를 거쳐 이 PC의 실행 엔진과 대화하는 통로를 만듭니다. 실행 엔진을 켜고 끄는 일은 다음 기반(엔진 관리자)에서 합니다.
+
+---
+### 변경 파일
+
+- 새 파일: `src/lib/adapters/bundled-llm-adapter.ts`, `bundled-runtime-client.ts`, `chat-messages.ts`, `local-ai-stream.ts`, `src/desktop/tauri-bundled-client.ts`, `tauri-stream.ts`, `src-tauri/src/bundled_ai.rs`, `scripts/local-ai/fake-openai-server.mjs`(+ `.d.mts`)
+- 수정: `src/desktop/tauri-ollama-client.ts`(공용 스트림 처리 사용), `src/desktop/desktop-llm.ts`, `src/lib/adapters/ollama-llm-adapter.ts`·`ollama-client.ts`·`llm-adapter.ts`·`llm-service-error.ts`·`create-llm-adapter.ts`, `src/features/text-play/ai/context-builder.ts`, `preferences/text-play-preferences.ts`, `session/text-play-controller.ts`, `ui/TextPlayScreen.tsx`, `ui/TextPlaySettingsDialog.tsx`, `src-tauri/src/main.rs`·`local_ai.rs`
+- 테스트: `tests/unit/bundled-llm-adapter.test.ts`, `chat-messages.test.ts`, `fake-openai-server.test.ts`(새 파일), `desktop-llm.test.ts`, `text-play-preferences.test.ts`, `text-play-ai.test.ts`, `tests/integration/text-play-controller.test.ts`, `tests/components/text-play-screen.test.tsx`, `text-play-settings-dialog.test.tsx`, Rust `bundled_ai` 테스트 9개
+- 문서: 계획(`진행 상태: 기반 1`), 인수인계, 구조
+
+---
+### 사용자 기능
+
+- 플레이 화면 AI 선택과 게임 설정에 `내장 AI(이 PC)` 추가. Windows 실행 프로그램에서만 고를 수 있고 모델 선택은 필요 없음
+- 실행 엔진이 아직 없으면 "내장 AI가 아직 준비되지 않았습니다. 다른 AI를 선택해 주세요."와 `같은 입력 다시 시도` 표시
+- 확인용: `MATE_TEXT_PLAY_BUNDLED_AI_URL`(이 PC 주소만 허용)로 exe를 OpenAI 호환 서버에 연결할 수 있고, `node scripts/local-ai/fake-openai-server.mjs`가 모델 없이 Text-Play 형식 응답을 돌려줌
+
+---
+### 검증 결과
+
+- 새·수정 테스트는 구현 전 실패(모듈 없음, 선택지 없음, 오류 안내 불일치, Rust 컴파일 실패)를 확인한 뒤 구현해 통과
+- 테스트 파일 105개, 테스트 607개 통과, 타입 검사·코드 검사 통과, Rust 테스트 13개 통과·경고 없음
+- 데스크톱 통합 테스트 13개 통과
+- `pnpm exe:rebuild` 후 실제 exe에서 확인: 엔진 없음 → 미준비 안내, 가짜 서버 연결 → 서술·리라 대사 표시와 자동 저장(WebView2 원격 디버깅으로 조작·캡처)
+
+---
+### 남은 작업
+
+- 기반 2 엔진 관리자: llama-server 실행·`/health` 대기·종료(Job Object), 연결 정보 채우기, Vulkan 실패 시 CPU 재시작
+- 기반 3 모델 보관함, 기반 4 `AI 모델` 화면, 이후 모델 실측과 설치 프로그램

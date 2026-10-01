@@ -59,5 +59,15 @@ describe("Text-Play 설정 대화상자", () => // 설정 대화상자 묶음
         render(<TextPlayPlatformProvider value={platform}><TextPlayPreferencesProvider><TextPlaySettingsDialog open onClose={vi.fn()} /></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 설정 화면 렌더
         expect(screen.getByText("로컬 모델은 Windows 실행 프로그램에서 사용할 수 있습니다.")).toBeInTheDocument(); // 플랫폼 제한 안내 확인
         expect(screen.queryByRole("button", { name: "설치 모델 검색" })).not.toBeInTheDocument(); // 검색 버튼 부재 확인
+        expect(screen.getByRole("option", { name: "내장 AI(이 PC)" })).toBeDisabled(); // 웹에서 내장 AI 막힘 확인
+    }); // 테스트 종료
+
+    it("Windows 실행 프로그램에서는 모델 선택 없이 내장 AI를 고를 수 있다", async () => // 내장 AI 선택 검증
+    { // 테스트 시작
+        const user = userEvent.setup(); // 사용자 동작 생성
+        const platform: TextPlayPlatform = { applyWindowResolution: async () => undefined, navigate: vi.fn(), renderSceneImage: () => null, localAI: createLocalAIClient() }; // 데스크톱 테스트 플랫폼
+        render(<TextPlayPlatformProvider value={platform}><TextPlayPreferencesProvider><TextPlaySettingsDialog open onClose={vi.fn()} /></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 설정 화면 렌더
+        await user.selectOptions(screen.getByLabelText("사용할 챗봇"), "bundled"); // 내장 AI 선택
+        expect(loadTextPlayPreferences(window.localStorage)).toMatchObject({ aiProviderId: "bundled", localModelId: null }); // 내장 AI 저장 확인
     }); // 테스트 종료
 }); // 묶음 종료

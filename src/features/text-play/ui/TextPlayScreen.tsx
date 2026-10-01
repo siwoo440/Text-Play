@@ -5,6 +5,7 @@ import { getAvailableChoices } from "@/features/text-play/core/engine"; // 선�
 import { DEMO_TEXT_PLAY_PACKAGE } from "@/features/text-play/data/demo-package"; // 샘플 작품
 import { useTextPlayPlatform } from "@/features/text-play/platform/text-play-platform"; // 플랫폼 훅
 import { useTextPlayPreferences } from "@/features/text-play/preferences/TextPlayPreferencesProvider"; // 설정 훅
+import type { TextPlayAIProviderId } from "@/features/text-play/preferences/text-play-preferences"; // AI 공급자 식별자
 import { useTextPlaySession } from "@/features/text-play/session/TextPlayProvider"; // 세션 훅
 import { ChoiceList } from "@/features/text-play/ui/ChoiceList"; // 선택지 목록
 import { SaveManager, type SaveManagerMode } from "@/features/text-play/ui/SaveManager"; // 저장 관리자
@@ -78,8 +79,9 @@ export function TextPlayScreen() // Text-Play 플레이 화면
                     <label className={styles.aiSelect}> {/* AI 선택 */}
                         <TextPlayIcon name="ai" /> {/* AI 아이콘 */}
                         <span aria-label="AI 연결">{llmLabel}</span> {/* AI 상태 */}
-                        <select aria-label="AI 챗봇 선택" value={preferences.aiProviderId} onChange={(event) => event.target.value === "ollama" && preferences.localModelId === null ? setActiveDialog("settings") : updatePreferences({ aiProviderId: event.target.value as "mock" | "ollama" })}> {/* AI 목록 */}
+                        <select aria-label="AI 챗봇 선택" value={preferences.aiProviderId} onChange={(event) => event.target.value === "ollama" && preferences.localModelId === null ? setActiveDialog("settings") : updatePreferences({ aiProviderId: event.target.value as TextPlayAIProviderId })}> {/* AI 목록 */}
                             <option value="mock">임시 인공지능</option> {/* 임시 인공지능 */}
+                            <option value="bundled" disabled={platform.localAI === undefined}>내장 AI(이 PC)</option> {/* 내장 AI(Windows 실행 프로그램 전용) */}
                             <option value="ollama" disabled={platform.localAI === undefined || preferences.localModelId === null}>{preferences.localModelId === null ? "올라마 모델 미선택" : `올라마 · ${preferences.localModelId}`}</option> {/* 로컬 인공지능 */}
                         </select> {/* AI 목록 종료 */}
                     </label> {/* AI 선택 종료 */}

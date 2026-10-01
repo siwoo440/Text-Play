@@ -19,6 +19,7 @@ export interface StructuredLLMInput // 구조화 입력
     context: string; // 현재 문맥
     userInput: string; // 사용자 입력
     responseSchema: string; // 응답 스키마 설명
+    jsonSchema?: Record<string, unknown>; // 형식 강제용 JSON 스키마(내장 AI)
 } // 구조 종료
 
 export interface LLMAdapter // 대화 어댑터

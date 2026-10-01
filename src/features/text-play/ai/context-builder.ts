@@ -1,3 +1,4 @@
+import { createTextPlayResponseJsonSchema } from "@/features/text-play/ai/response-json-schema"; // 응답 JSON 스키마 생성기
 import type { TextPlayPackage, TextPlayState } from "@/features/text-play/core/types"; // 도메인 계약
 import type { StructuredLLMInput } from "@/lib/adapters/llm-adapter"; // 구조화 LLM 계약
 
@@ -24,5 +25,6 @@ export function buildTextPlayContext(packageData: TextPlayPackage, state: TextPl
         context: JSON.stringify(context), // 직렬화 문맥
         userInput, // 사용자 입력
         responseSchema: "{ narration: string, dialogue: { speaker: string, content: string } | null, proposedActions: TextPlayAction[] }", // 응답 스키마
+        jsonSchema: createTextPlayResponseJsonSchema(packageData), // 형식 강제 스키마
     }; // 입력 종료
 } // 함수 종료

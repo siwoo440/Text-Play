@@ -37,6 +37,13 @@ describe("Text-Play 환경 설정", () => // 환경 설정 묶음
         expect(loadTextPlayPreferences(window.localStorage)).toEqual(preferences); // 저장값 확인
     }); // 테스트 종료
 
+    it("모델 선택 없이 내장 AI를 저장하고 다시 불러온다", () => // 내장 AI 영속성 검증
+    { // 테스트 시작
+        const preferences = { schemaVersion: 2 as const, themeId: "dark-fantasy" as const, resolutionId: "fit" as const, aiProviderId: "bundled" as const, localModelId: null }; // 내장 AI 설정
+        saveTextPlayPreferences(window.localStorage, preferences); // 설정 저장
+        expect(loadTextPlayPreferences(window.localStorage)).toEqual(preferences); // 저장값 확인
+    }); // 테스트 종료
+
     it("버전 1 설정의 화면 선택을 보존하며 버전 2로 이전한다", () => // 이전 검증
     { // 테스트 시작
         window.localStorage.setItem(LEGACY_TEXT_PLAY_PREFERENCES_KEY, JSON.stringify({ schemaVersion: 1, themeId: "classic-novel", resolutionId: "1280x720", aiProviderId: "mock" })); // 예전 설정 저장

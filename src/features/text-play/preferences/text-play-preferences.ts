@@ -1,6 +1,6 @@
 export type TextPlayThemeId = "dark-fantasy" | "sci-fi" | "classic-novel"; // 테마 식별자
 export type TextPlayResolutionId = "fit" | "1280x720" | "1600x900" | "1920x1080"; // 해상도 식별자
-export type TextPlayAIProviderId = "mock" | "ollama"; // AI 공급자 식별자
+export type TextPlayAIProviderId = "mock" | "ollama" | "bundled"; // AI 공급자 식별자(bundled: 이 PC 내장 AI)
 
 export interface TextPlayPreferences // 게임 설정 구조
 { // 구조 시작
@@ -42,7 +42,7 @@ function isTextPlayPreferences(value: unknown): value is TextPlayPreferences // 
         && value.schemaVersion === 2 // 버전 확인
         && themeIds.includes(value.themeId as TextPlayThemeId) // 테마 확인
         && resolutionIds.includes(value.resolutionId as TextPlayResolutionId) // 해상도 확인
-        && (value.aiProviderId === "mock" || value.aiProviderId === "ollama") // AI 확인
+        && (value.aiProviderId === "mock" || value.aiProviderId === "ollama" || value.aiProviderId === "bundled") // AI 확인
         && isValidLocalModelId(value.localModelId) // 모델 확인
         && (value.aiProviderId !== "ollama" || value.localModelId !== null); // 올라마 모델 확인
 } // 함수 종료

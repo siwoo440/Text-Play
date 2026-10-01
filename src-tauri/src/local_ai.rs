@@ -39,8 +39,8 @@ pub struct RunningLocalModel // 실행 모델 구조
 #[serde(rename_all = "camelCase")] // 낙타식 필드 이름
 pub struct LocalChatMessage // 대화 메시지 구조
 { // 구조 시작
-    role: String, // 메시지 역할
-    content: String, // 메시지 내용
+    pub(crate) role: String, // 메시지 역할
+    pub(crate) content: String, // 메시지 내용
 } // 구조 종료
 
 #[derive(Deserialize)] // 입력 구조 변환
@@ -122,7 +122,7 @@ fn build_client() -> Result<Client, String> // HTTP 통신기 생성기
         .map_err(|_| "올라마 통신기를 만들지 못했습니다.".to_string()) // 생성 오류 변환
 } // 함수 종료
 
-fn validate_request_fields(request_id: &str, model: &str, messages: &[(&str, &str)]) -> Result<(), String> // 요청 값 검증기
+pub(crate) fn validate_request_fields(request_id: &str, model: &str, messages: &[(&str, &str)]) -> Result<(), String> // 요청 값 검증기
 { // 함수 시작
     if request_id.is_empty() || request_id.len() > 128 || !request_id.chars().all(|character| character.is_ascii_alphanumeric() || character == '-' || character == '_') // 식별자 확인
     { // 조건 시작
@@ -177,12 +177,12 @@ fn build_chat_body(request: &LocalChatRequest) -> serde_json::Value // 대화 �
     body // 요청 본문 반환
 } // 함수 종료
 
-fn is_cancelled(state: &LocalAIState, request_id: &str) -> bool // 중단 상태 확인기
+pub(crate) fn is_cancelled(state: &LocalAIState, request_id: &str) -> bool // 중단 상태 확인기
 { // 함수 시작
     state.cancelled_requests.lock().map(|requests| requests.contains(request_id)).unwrap_or(true) // 중단 여부 반환
 } // 함수 종료
 
-fn clear_cancelled(state: &LocalAIState, request_id: &str) // 중단 상태 정리기
+pub(crate) fn clear_cancelled(state: &LocalAIState, request_id: &str) // 중단 상태 정리기
 { // 함수 시작
     if let Ok(mut requests) = state.cancelled_requests.lock() // 잠금 성공 확인
     { // 조건 시작

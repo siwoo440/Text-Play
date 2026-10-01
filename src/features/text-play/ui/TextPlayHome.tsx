@@ -54,7 +54,7 @@ export function TextPlayHome({ repository }: TextPlayHomeProps) // Text-Play 홈
         }; // 정리 종료
     }, [activeRepository]); // 저장소 의존
     return ( // 홈 반환
-        <main className={styles.page}> {/* 홈 화면 */}
+        <main className={styles.page} data-text-play-home> {/* 홈 화면 */}
             <section className={styles.hero} aria-labelledby="text-play-title"> {/* 소개 영역 */}
                 <p className={styles.eyebrow}>MATE VERSE INTERACTIVE STORY</p> {/* 소개 표제 */}
                 <h1 id="text-play-title">Text-Play</h1> {/* 서비스 제목 */}

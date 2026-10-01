@@ -1,14 +1,17 @@
 .page /* 홈 화면 */
 { /* 화면 시작 */
+    display: flex; /* 세로 배치 */
+    flex-direction: column; /* 세로 방향 */
+    justify-content: center; /* 세로 중앙 */
     min-height: calc(100vh - 64px); /* 화면 높이 */
-    padding: 72px clamp(20px, 6vw, 96px); /* 화면 여백 */
+    padding: clamp(16px, 6vh, 72px) clamp(20px, 6vw, 96px); /* 창 크기 비례 여백 */
     background: radial-gradient(circle at 78% 12%, rgb(102 76 160 / 28%), transparent 38%), linear-gradient(145deg, #090b12, #151225 58%, #0b1119); /* 화면 배경 */
 } /* 화면 종료 */
 
 .hero /* 소개 영역 */
 { /* 소개 시작 */
     max-width: 780px; /* 소개 너비 */
-    margin: 0 auto 42px; /* 소개 여백 */
+    margin: 0 auto clamp(14px, 4.5vh, 42px); /* 창 높이 비례 소개 여백 */
     text-align: center; /* 가운데 정렬 */
 } /* 소개 종료 */
 
@@ -22,15 +25,15 @@
 
 .hero h1 /* 서비스 제목 */
 { /* 제목 시작 */
-    margin: 10px 0 14px; /* 제목 여백 */
-    font-size: clamp(3rem, 9vw, 6.4rem); /* 제목 크기 */
+    margin: clamp(4px, 1.2vh, 10px) 0 clamp(6px, 1.6vh, 14px); /* 창 높이 비례 제목 여백 */
+    font-size: clamp(2.4rem, min(9vw, 11vh), 6.4rem); /* 창 크기 비례 제목 크기 */
     line-height: .94; /* 제목 행간 */
 } /* 제목 종료 */
 
 .hero > p:last-child /* 서비스 설명 */
 { /* 설명 시작 */
     color: #bbc1d1; /* 설명 색상 */
-    font-size: clamp(1rem, 2vw, 1.25rem); /* 설명 크기 */
+    font-size: clamp(.95rem, min(2vw, 2.6vh), 1.25rem); /* 창 크기 비례 설명 크기 */
 } /* 설명 종료 */
 
 .storageWarning /* 저장 경고 */
@@ -61,10 +64,10 @@
 .art /* 작품 장식 */
 { /* 장식 시작 */
     display: grid; /* 중앙 배치 */
-    min-height: 330px; /* 장식 높이 */
+    min-height: clamp(150px, 36vh, 330px); /* 창 높이 비례 장식 높이 */
     background: radial-gradient(circle, rgb(229 221 255 / 90%) 0 12%, rgb(140 110 207 / 52%) 13% 28%, transparent 29%), linear-gradient(160deg, #31294c, #101928); /* 장식 배경 */
     color: #f4efff; /* 장식 색상 */
-    font-size: 4rem; /* 장식 크기 */
+    font-size: clamp(2.6rem, 7vh, 4rem); /* 창 높이 비례 장식 크기 */
     place-items: center; /* 중앙 정렬 */
 } /* 장식 종료 */
 
@@ -73,7 +76,7 @@
     display: flex; /* 세로 배치 */
     flex-direction: column; /* 세로 방향 */
     justify-content: center; /* 세로 중앙 */
-    padding: clamp(28px, 5vw, 64px); /* 정보 여백 */
+    padding: clamp(20px, min(5vw, 6vh), 64px); /* 창 크기 비례 정보 여백 */
 } /* 정보 종료 */
 
 .badge /* 작품 분류 */
@@ -86,7 +89,7 @@
 .copy h2 /* 작품 제목 */
 { /* 제목 시작 */
     margin: 6px 0 12px; /* 제목 여백 */
-    font-size: clamp(1.8rem, 4vw, 3rem); /* 제목 크기 */
+    font-size: clamp(1.6rem, min(4vw, 5.4vh), 3rem); /* 창 크기 비례 제목 크기 */
 } /* 제목 종료 */
 
 .copy > p:not(.badge) /* 작품 설명 */
@@ -112,7 +115,7 @@
     display: flex; /* 가로 배치 */
     flex-wrap: wrap; /* 줄바꿈 허용 */
     gap: 12px; /* 동작 간격 */
-    margin-top: 24px; /* 위쪽 여백 */
+    margin-top: clamp(12px, 3vh, 24px); /* 창 높이 비례 위쪽 여백 */
 } /* 동작 종료 */
 
 .primary, /* 기본 동작 */
@@ -150,7 +153,7 @@
 { /* 복귀 시작 */
     display: block; /* 블록 배치 */
     width: fit-content; /* 내용 너비 */
-    margin: 30px auto 0; /* 복귀 여백 */
+    margin: clamp(10px, 3.5vh, 30px) auto 0; /* 창 높이 비례 복귀 여백 */
     padding: 0; /* 기본 여백 제거 */
     border: 0; /* 기본 테두리 제거 */
     background: transparent; /* 투명 배경 */

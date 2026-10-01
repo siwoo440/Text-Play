@@ -111,3 +111,39 @@ test("1280×720에서 설정과 여섯 번째 슬롯 전체 흐름을 제공한�
     await page.getByRole("button", { name: "메인으로 돌아가기: 달빛 숲의 기록" }).click(); // 홈 복귀
     await expect(page.getByRole("button", { name: "새 게임" })).toBeVisible(); // 홈 화면 확인
 }); // 테스트 종료
+
+async function measureFit(page: Page): Promise<{ documentScrolls: boolean; contentOverflows: boolean }> // 창 맞춤 측정기
+{ // 함수 시작
+    return page.evaluate(() => // 화면 측정
+    { // 함수 시작
+        const main = document.querySelector("main"); // 화면 루트 조회
+        let bottom = 0; // 가장 아래 위치
+        main?.querySelectorAll("*").forEach((element) => // 하위 요소 순회
+        { // 순회 시작
+            const rectangle = element.getBoundingClientRect(); // 요소 위치
+            if (rectangle.height > 0) // 보이는 요소 확인
+            { // 조건 시작
+                bottom = Math.max(bottom, rectangle.bottom); // 아래 위치 갱신
+            } // 조건 종료
+        }); // 순회 종료
+        return { documentScrolls: document.documentElement.scrollHeight > window.innerHeight, contentOverflows: bottom > window.innerHeight + 1 }; // 측정 결과 반환
+    }); // 측정 종료
+} // 함수 종료
+
+test("최소 창 960×640에서 홈과 플레이 화면이 스크롤 없이 창 크기에 맞는다", async ({ page }) => // 창 맞춤 검증
+{ // 테스트 시작
+    await page.setViewportSize({ width: 960, height: 640 }); // 최소 창 크기
+    await page.goto("/"); // 데스크톱 홈 진입
+    await expect(page.getByRole("button", { name: "새 게임" })).toBeVisible(); // 홈 표시 확인
+    expect(await measureFit(page)).toEqual({ documentScrolls: false, contentOverflows: false }); // 홈 맞춤 확인
+    await page.getByRole("button", { name: "새 게임" }).click(); // 새 게임 시작
+    await page.getByRole("button", { name: "AI 추천 답안" }).click(); // 추천 펼치기
+    expect(await measureFit(page)).toEqual({ documentScrolls: false, contentOverflows: false }); // 플레이 맞춤 확인
+    const overflow = await page.locator("[data-recommendation-toggle]").evaluate((toggle) => // 추천 영역 넘침 측정
+    { // 함수 시작
+        const area = toggle.parentElement?.parentElement; // 추천 영역 조회
+        return area === null || area === undefined ? -1 : area.scrollHeight - area.clientHeight; // 넘침 높이 반환
+    }); // 측정 종료
+    expect(overflow).toBe(0); // 추천 영역 스크롤 부재 확인
+    await expect(page.getByRole("button", { name: "주변을 자세히 살핀다" })).toBeVisible(); // 세 번째 답안 표시 확인
+}); // 테스트 종료

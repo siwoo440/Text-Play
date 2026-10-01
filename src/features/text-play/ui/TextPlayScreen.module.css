@@ -489,7 +489,7 @@
 .recommendations /* 추천 영역 */
 { /* 영역 시작 */
     display: flex; /* 하단 정렬 준비 */
-    align-items: flex-end; /* 입력창 위 배치 */
+    flex-direction: column; /* 세로 방향 */
     min-height: 0; /* 축소 허용 */
     overflow: hidden auto; /* 선택지 스크롤 */
     padding: 16px 18px 8px; /* 영역 여백 */
@@ -500,6 +500,7 @@
     display: grid; /* 세로 배치 */
     gap: 12px; /* 내용 간격 */
     width: 100%; /* 전체 너비 */
+    margin-top: auto; /* 입력창 위 배치, 공간 부족 시 제목부터 표시 */
 } /* 선택지 종료 */
 
 .recommendations section[data-expanded] /* 추천 카드 */
@@ -950,6 +951,48 @@
         max-height: 52%; /* 상자 높이 */
         padding: 58px 54px 40px; /* 조작 포함 여백 */
     } /* 상자 종료 */
+} /* 미디어 종료 */
+
+@media (min-width: 960px) and (max-height: 760px) /* 낮은 창 */
+{ /* 미디어 시작 */
+    .recommendations /* 낮은 창 추천 영역 */
+    { /* 영역 시작 */
+        padding-top: 10px; /* 위쪽 여백 축소 */
+    } /* 영역 종료 */
+
+    .recommendations section[data-expanded] /* 낮은 창 추천 카드 */
+    { /* 카드 시작 */
+        gap: 8px; /* 카드 간격 축소 */
+    } /* 카드 종료 */
+
+    .recommendations ul /* 낮은 창 답안 목록 */
+    { /* 목록 시작 */
+        gap: 6px; /* 답안 간격 축소 */
+    } /* 목록 종료 */
+
+    .recommendations li button /* 낮은 창 답안 버튼 */
+    { /* 버튼 시작 */
+        min-height: 42px; /* 버튼 높이 축소 */
+        padding-top: 8px; /* 위쪽 여백 축소 */
+        padding-bottom: 8px; /* 아래쪽 여백 축소 */
+    } /* 버튼 종료 */
+
+    .inputPanel /* 낮은 창 입력 영역 */
+    { /* 영역 시작 */
+        gap: 6px; /* 내용 간격 축소 */
+        padding-bottom: 12px; /* 아래쪽 여백 축소 */
+    } /* 영역 종료 */
+
+    .inputPanel form /* 낮은 창 입력 카드 */
+    { /* 카드 시작 */
+        gap: 8px; /* 카드 간격 축소 */
+        padding: 10px 12px; /* 카드 여백 축소 */
+    } /* 카드 종료 */
+
+    .inputPanel textarea /* 낮은 창 자유 입력 */
+    { /* 입력 시작 */
+        min-height: 54px; /* 입력 높이 축소 */
+    } /* 입력 종료 */
 } /* 미디어 종료 */
 
 @media (prefers-reduced-motion: reduce) /* 동작 감소 */

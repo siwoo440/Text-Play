@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"; // 테스트 도구
 import { createInitialState } from "@chatbot/features/core/initial-state"; // 초기 상태
-import { createEmptyStoryDraft, createStoryCastMember, getStoryCandidates, getStoryCoverChoices, normalizeStoryDraft, storyCoverOptions, toStoryDraft, validateStoryDraft, type StoryDraft } from "@chatbot/features/story/story-validation"; // 검증 대상
+import { createEmptyStoryDraft, createStoryCastMember, getStoryCandidates, getStoryCoverChoices, keepStoryCover, normalizeStoryDraft, storyCoverOptions, toStoryDraft, validateStoryDraft, type StoryDraft } from "@chatbot/features/story/story-validation"; // 검증 대상
 
 const state = createInitialState(); // 기본 상태
 const rian = state.characters.find((character) => character.id === "rian")!; // 리안
@@ -85,6 +85,19 @@ describe("스토리 입력 검증", () => // 검증 묶음
         const choices = getStoryCoverChoices([createStoryCastMember(rian), createStoryCastMember(sera)], state.characters); // 선택지
         expect(choices.map((choice) => choice.path)).toEqual([...storyCoverOptions, rian.coverImage, sera.coverImage]); // 순서 확인
         expect(choices.at(-1)?.label).toBe("세라"); // 인물 표지 이름 확인
+    }); // 검증 종료
+
+    it("등장인물을 바꿀 때 표지는 빠진 인물의 그림이었을 때만 기본 표지로 돌아간다", () => // 표지 유지 검증
+    { // 검증 시작
+        const both = [createStoryCastMember(rian), createStoryCastMember(sera)]; // 두 사람
+        const onlyRian = [createStoryCastMember(rian)]; // 세라가 빠짐
+        const mine = "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%2F%3E"; // 내가 만든 그림(갤러리에서 지웠거나 지금은 가려진 것)
+        expect(keepStoryCover(sera.coverImage, both, onlyRian, state.characters)).toBe(storyCoverOptions[0]); // 빠진 인물의 그림이면 기본 표지로
+        expect(keepStoryCover(rian.coverImage, both, onlyRian, state.characters)).toBe(rian.coverImage); // 남은 인물의 그림은 그대로
+        expect(keepStoryCover(sera.coverImage, both, [...both].reverse(), state.characters)).toBe(sera.coverImage); // 순서만 바꾸면 그대로
+        expect(keepStoryCover(storyCoverOptions[2], both, onlyRian, state.characters)).toBe(storyCoverOptions[2]); // 장면 표지는 그대로
+        expect(keepStoryCover(mine, both, onlyRian, state.characters)).toBe(mine); // 내 그림은 선택지에 없어도 그대로
+        expect(keepStoryCover(mine, onlyRian, both, state.characters)).toBe(mine); // 인물을 더해도 그대로
     }); // 검증 종료
 
     it("등장인물 후보는 공개 캐릭터와 내 캐릭터이고 19+는 볼 수 있을 때만 포함한다", () => // 후보 검증

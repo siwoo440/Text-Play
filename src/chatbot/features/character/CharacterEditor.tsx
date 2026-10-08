@@ -187,6 +187,7 @@ export function CharacterEditor({ characterId, initialImageId, llm }: { characte
             return; // 저장 중단
         } // 조건 종료
         const now = new Date().toISOString(); // 현재 시각
+        const previous = state.characters.find((item) => item.id === savedId); // 이전 저장본(새로 만들다가 이 화면에서 이미 저장한 것 포함)
         const character: Character = // 저장 캐릭터
         { // 캐릭터 시작
             ...normalized, // 초안 적용
@@ -194,8 +195,8 @@ export function CharacterEditor({ characterId, initialImageId, llm }: { characte
             creatorId: state.profile.id, // 제작자 식별자
             creatorName: state.profile.nickname, // 제작자 이름
             publicationStatus, // 발행 상태
-            popularity: existing?.popularity ?? 0, // 인기도 유지
-            createdAt: existing?.createdAt ?? now, // 생성 시각 유지
+            popularity: previous?.popularity ?? 0, // 인기도 유지
+            createdAt: previous?.createdAt ?? now, // 생성 시각 유지(두 번째 저장부터는 처음 저장한 때)
             updatedAt: now, // 수정 시각 갱신
         }; // 캐릭터 종료
         dispatch({ type: "upsert-character", character }); // 캐릭터 저장

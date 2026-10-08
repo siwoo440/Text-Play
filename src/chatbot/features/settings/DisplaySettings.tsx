@@ -1,7 +1,8 @@
 "use client"; // 클라이언트 컴포넌트
 
 import { useState } from "react"; // 리액트 상태
-import { layoutChoices, recommendLayout, toLayoutChoice, type LayoutChoice } from "@chatbot/features/chat/layout-resolver"; // 레이아웃 선택지
+import { layoutChoices, toLayoutChoice, type LayoutChoice } from "@chatbot/features/chat/layout-resolver"; // 레이아웃 선택지
+import { useAutoLayout } from "@chatbot/features/chat/use-auto-layout"; // 자동 배치
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 상태
 import type { AppSettings, PlatformMode } from "@chatbot/features/core/types"; // 설정 타입
 import type { LanguageSetting } from "@chatbot/lib/i18n"; // 언어 설정
@@ -28,9 +29,7 @@ export function DisplaySettings() // 화면 레이아웃 화면
         dispatch({ type: "update-settings", settings }); // 설정 저장
         setStatus(t("저장했습니다.")); // 성공 상태 반영
     }; // 함수 종료
-    const width = typeof window === "undefined" ? 1440 : window.innerWidth; // 화면 너비
-    const height = typeof window === "undefined" ? 900 : window.innerHeight; // 화면 높이
-    const recommended = toLayoutChoice(recommendLayout({ width, height, platformMode: state.settings.platformMode, layoutId: null })); // 지금 화면에 맞는 배치
+    const recommended = toLayoutChoice(useAutoLayout(state.settings.platformMode)); // 지금 화면에 맞는 배치(창 크기를 바꾸면 바로 바뀜)
     const selected: LayoutChoice | "auto" = state.settings.layoutId === null ? "auto" : toLayoutChoice(state.settings.layoutId); // 고른 배치(예전 아홉 가지는 세 가지로 묶어 표시)
     const applied = layoutChoices.find((choice) => choice.id === (selected === "auto" ? recommended : selected)) ?? layoutChoices[0]; // 지금 적용되는 배치
     return ( // 화면 반환

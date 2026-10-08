@@ -123,6 +123,21 @@ describe("스토리 편집기", { timeout: 20_000 }, () => // 편집기 묶음(�
         expect(screen.getByLabelText("내 스토리")).toHaveTextContent(/^비 오는 밤의 카페\|draft\|all\|harin:하린:/); // 같은 스토리 수정 확인
     }); // 검증 종료
 
+    it("갤러리에서 지운 내 그림이 표지인 스토리는 등장인물을 바꿔도 표지가 그대로이고 선택지에도 남는다", async () => // 표지 유지 검증
+    { // 검증 시작
+        const user = userEvent.setup(); // 사용자 생성
+        const state = createInitialState(); // 초기 상태
+        const gone = createGeneratedImage({ prompt: "지운 그림", style: "illustration", aspect: "landscape", referenceCharacterId: null, contentRating: "all" }, "kr", "2026-10-01T00:00:00.000Z", "image-gone"); // 갤러리에서 지운 그림(상태에는 넣지 않음)
+        state.stories = [...state.stories, { ...createMyStory(), coverImage: gone.src }]; // 그 그림이 표지인 내 스토리
+        renderWithApp(<StoryEditor storyId="story-mine" />, state); // 수정 화면 렌더
+        const preview = within(screen.getByTestId("story-preview")); // 미리보기
+        expect(preview.getByRole("img", { name: "내 카페 이야기 표지" })).toHaveAttribute("src", gone.src); // 처음 표지
+        expect(screen.getByRole("radio", { name: /^지금 쓰는 그림 표지/ })).toBeChecked(); // 선택지에 지금 표지가 골라져 있음
+        await user.click(within(screen.getByRole("group", { name: "등장인물 고르기" })).getByRole("checkbox", { name: "새벽 도서관의 리안" })); // 등장인물 더하기
+        expect(preview.getByRole("img", { name: "내 카페 이야기 표지" })).toHaveAttribute("src", gone.src); // 표지 그대로
+        expect(screen.getByRole("radio", { name: /^지금 쓰는 그림 표지/ })).toBeChecked(); // 여전히 골라져 있음
+    }); // 검증 종료
+
     it("없는 스토리나 남의 스토리는 고칠 수 없다고 안내한다", () => // 권한 검증
     { // 검증 시작
         const { unmount } = renderWithApp(<StoryEditor storyId="missing" />); // 없는 스토리

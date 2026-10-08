@@ -55,6 +55,13 @@ export function getStoryCoverChoices(cast: readonly StoryCastMember[], character
     const mine = images.map((image) => ({ path: image.src, label: image.prompt })); // 내 이미지 표지
     return [...scenes, ...people, ...mine].filter((choice, index, list) => list.findIndex((item) => item.path === choice.path) === index); // 중복 제거
 } // 함수 종료
+
+export function keepStoryCover(cover: string, previous: readonly StoryCastMember[], next: readonly StoryCastMember[], characters: readonly Character[]): string // 등장인물을 바꾼 뒤의 표지(빠진 인물의 그림이었을 때만 기본 표지로)
+{ // 함수 시작
+    const peoplePaths = (cast: readonly StoryCastMember[]) => getStoryCoverChoices(cast, characters).map((choice) => choice.path).filter((path) => !storyCoverOptions.includes(path)); // 등장인물 그림 경로
+    return peoplePaths(previous).includes(cover) && !peoplePaths(next).includes(cover) ? storyCoverOptions[0] : cover; // 그 인물이 빠졌으면 기본 표지, 아니면 그대로(장면·내 그림은 건드리지 않음)
+} // 함수 종료
+
 const ratingOrder: Record<ContentRating, number> = { all: 0, teen: 1, mature: 2 }; // 등급 순서
 
 export function createEmptyStoryDraft(): StoryDraft // 빈 초안

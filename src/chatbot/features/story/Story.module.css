@@ -666,3 +666,85 @@
     display: flex; /* 가로 배치 */
     margin-top: 18px; /* 위쪽 여백(좌우는 화면 구역 규칙을 따름) */
 } /* 줄 종료 */
+
+.filterBar /* 정렬과 필터(캐릭터 모드 메인과 같은 모양) */
+{ /* 막대 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 좁으면 줄바꿈 */
+    align-items: center; /* 세로 중앙 */
+    gap: 10px 16px; /* 간격 */
+    margin-top: 12px; /* 검색 줄과 간격 */
+    margin-bottom: 14px; /* 목록과 간격 */
+    padding: 12px 16px; /* 안쪽 여백 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 18px; /* 모서리 */
+    background: light-dark(rgb(255 255 255 / 82%), rgb(28 25 38 / 82%)); /* 배경 */
+} /* 막대 종료 */
+
+.filterBar label /* 조건 이름 */
+{ /* 이름 시작 */
+    display: inline-flex; /* 가로 배치 */
+    align-items: center; /* 세로 중앙 */
+    gap: 8px; /* 간격 */
+    color: var(--mv-ink); /* 글자 */
+    font-size: .9rem; /* 크기 */
+    font-weight: 750; /* 굵기 */
+    white-space: nowrap; /* 한 줄 */
+} /* 이름 종료 */
+
+.filterBar select /* 정렬·등급·인원 선택 */
+{ /* 선택 시작 */
+    min-height: 42px; /* 높이 */
+    padding: 0 12px; /* 여백 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 12px; /* 모서리 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 배경 */
+    color: var(--mv-ink); /* 글자 */
+    font: inherit; /* 글꼴 상속 */
+    font-weight: 600; /* 굵기 */
+} /* 선택 종료 */
+
+.filterBar input[type="checkbox"] /* 조건 체크 */
+{ /* 체크 시작 */
+    width: 20px; /* 너비 */
+    height: 20px; /* 높이 */
+    margin: 0; /* 여백 제거 */
+    accent-color: light-dark(#7c3aed, #a273f2); /* 대표색 */
+} /* 체크 종료 */
+
+.filterBar .filterCheck /* 체크 조건 */
+{ /* 조건 시작 */
+    min-height: 42px; /* 누르기 쉬운 높이 */
+    cursor: pointer; /* 커서 */
+} /* 조건 종료 */
+
+.filterCount /* 찾은 스토리 수 */
+{ /* 수 시작 */
+    margin: 0 0 0 auto; /* 오른쪽으로 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-size: .88rem; /* 크기 */
+    font-weight: 750; /* 굵기 */
+    font-variant-numeric: tabular-nums; /* 숫자 폭 고정 */
+} /* 수 종료 */
+
+.filterReset /* 조건 지우기 */
+{ /* 버튼 시작 */
+    min-height: 42px; /* 높이 */
+    padding: 0 16px; /* 여백 */
+    border: 1px solid light-dark(#ddd6fe, #30275b); /* 테두리 */
+    border-radius: 999px; /* 알약 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 배경 */
+    color: light-dark(#6d28d9, #c4b5fd); /* 글자 */
+    font: inherit; /* 글꼴 상속 */
+    font-size: .88rem; /* 크기 */
+    font-weight: 800; /* 굵기 */
+    cursor: pointer; /* 커서 */
+} /* 버튼 종료 */
+
+.filterBar select:focus-visible, /* 선택 초점 */
+.filterBar input:focus-visible, /* 체크 초점 */
+.filterReset:focus-visible /* 지우기 초점 */
+{ /* 초점 시작 */
+    outline: 3px solid var(--mv-focus); /* 초점 외곽선 */
+    outline-offset: 2px; /* 간격 */
+} /* 초점 종료 */

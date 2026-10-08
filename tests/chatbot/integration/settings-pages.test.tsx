@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react"; // 화면 조회 도구
+import { act, render, screen, within } from "@testing-library/react"; // 화면 조회 도구
 import userEvent from "@testing-library/user-event"; // 사용자 동작 도구
 import { afterEach, describe, expect, it, vi } from "vitest"; // 테스트 도구
 import { UserPanel } from "@chatbot/components/app-shell/UserPanel"; // 오른쪽 사용자 패널
@@ -122,6 +122,20 @@ describe("설정 페이지", () => // 페이지 묶음
         expect(probe().layout).toBe("M1"); // 서랍형 저장
         await user.click(within(group).getByRole("radio", { name: /^자동/ })); // 다시 자동
         expect(probe().layout).toBeNull(); // 자동 저장
+    }); // 테스트 종료
+
+    it("자동 배치의 추천과 지금 적용은 창 크기를 바꾸면 바로 따라 바뀐다", () => // 추천 즉시 반영 검증
+    { // 테스트 시작
+        resize(1440, 900); // 일반 모니터
+        renderWithApp(<DisplaySettings />); // 화면 설정 렌더링
+        expect(screen.getByText(/^지금 적용:/)).toHaveTextContent("지금 적용: 옆 열 좁게 (자동)"); // 일반 모니터의 자동 배치
+        resize(390, 844); // 휴대폰 크기로 줄임
+        act(() => // 화면 갱신까지 기다림
+        { // 묶음 시작
+            window.dispatchEvent(new Event("resize")); // 크기 변화 알림
+        }); // 묶음 종료
+        expect(screen.getByText(/^지금 적용:/)).toHaveTextContent("지금 적용: 서랍형 (자동)"); // 바로 서랍형으로
+        expect(screen.getByRole("radio", { name: /서랍형 지금 화면에 추천/ })).toBeInTheDocument(); // 추천 표시도 따라 바뀜
     }); // 테스트 종료
 
     it("예전에 고른 레이아웃은 세 가지 가운데 속한 배치로 보여 주고, 좁은 화면에는 서랍형을 추천한다", () => // 예전 값과 추천 검증

@@ -17,11 +17,11 @@ import type { LLMAdapter } from "@chatbot/lib/adapters/llm-adapter"; // 대화 �
 import type { Character, ContentRating, PublicationStatus, Story, StoryCastMember } from "@chatbot/features/core/types"; // 도메인 타입
 import { useUnsavedChangesGuard } from "@chatbot/features/core/useUnsavedChangesGuard"; // 이탈 경고
 import { matchesKoreanText } from "@chatbot/features/conversation/conversation-list-model"; // 초성 포함 검색
-import { canUseImageForRating, findImageBySource } from "@chatbot/features/images/image-model"; // 내 이미지 도구
+import { canUseImageForRating, findImageBySource, isGeneratedImageSource } from "@chatbot/features/images/image-model"; // 내 이미지 도구
 import { createStoryConversation, STORY_CAST_LIMIT } from "@chatbot/features/story/story-model"; // 스토리 대화 시작·등장인물 최대 수
 import { WorkExtrasFields } from "@chatbot/features/character/WorkExtrasFields"; // 플레이 가이드·상태창·업데이트 입력
 import { WorkLoreFields } from "@chatbot/features/character/LoreEditor"; // 키워드 설정집·예시 대화 입력
-import { createEmptyStoryDraft, createStoryCastMember, getCastRequiredRating, getStoryCandidates, getStoryCoverChoices, isRatingBelow, normalizeStoryDraft, storyCoverOptions, toStoryDraft, validateStoryDraft, type StoryDraft, type StoryValidationResult } from "@chatbot/features/story/story-validation"; // 초안 도구
+import { createEmptyStoryDraft, createStoryCastMember, getCastRequiredRating, getStoryCandidates, getStoryCoverChoices, isRatingBelow, keepStoryCover, normalizeStoryDraft, toStoryDraft, validateStoryDraft, type StoryDraft, type StoryValidationResult } from "@chatbot/features/story/story-validation"; // 초안 도구
 import editorStyles from "@chatbot/features/character/CharacterEditor.module.css"; // 공통 편집기 스타일
 import styles from "@chatbot/features/story/StoryEditor.module.css"; // 스토리 편집기 스타일
 import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
@@ -83,7 +83,8 @@ export function StoryEditor({ storyId, initialImageId, llm }: { storyId?: string
     const castCharacters = draft.cast.flatMap((member) => state.characters.filter((character) => character.id === member.characterId && !candidates.includes(character))); // 이미 들어간 다른 캐릭터(수정 시)
     const choices = [...candidates, ...castCharacters].filter((character) => draft.cast.some((member) => member.characterId === character.id) || matchesKoreanText(`${character.name} ${character.tags.join(" ")}`, pickerQuery)); // 화면 후보(고른 인물은 항상 표시)
     const required = getCastRequiredRating(draft.cast, state.characters); // 등장인물 기준 최소 등급
-    const myImages = state.images.filter((image) => image.contentRating !== "mature" || canViewMatureContent(state, now)); // 표지로 고를 수 있는 내 이미지
+    const visibleImages = state.images.filter((image) => image.contentRating !== "mature" || canViewMatureContent(state, now)); // 표지로 고를 수 있는 내 이미지
+    const myImages = [...visibleImages, ...(isGeneratedImageSource(draft.coverImage) && !visibleImages.some((image) => image.src === draft.coverImage) ? [{ src: draft.coverImage, prompt: t("지금 쓰는 그림") }] : [])]; // 지금 표지가 갤러리에서 지웠거나 가려진 내 그림이면 선택지에 남겨 둠
     const full = draft.cast.length >= STORY_CAST_LIMIT; // 인원 가득 참 여부
     const saved = state.stories.some((story) => story.id === savedId); // 저장된 적 있는지
     const touch = () => // 변경 표시
@@ -104,8 +105,7 @@ export function StoryEditor({ storyId, initialImageId, llm }: { storyId?: string
     { // 함수 시작
         const nextRequired = getCastRequiredRating(cast, state.characters); // 새 최소 등급
         const raise = isRatingBelow(draft.contentRating, nextRequired); // 등급 올림 필요 여부
-        const coverKept = getStoryCoverChoices(cast, state.characters, myImages).some((choice) => choice.path === draft.coverImage); // 표지 유지 가능 여부
-        setDraft((current) => ({ ...current, cast, contentRating: raise ? nextRequired : current.contentRating, coverImage: coverKept ? current.coverImage : storyCoverOptions[0] })); // 초안 갱신(빠진 인물 표지는 기본 표지로)
+        setDraft((current) => ({ ...current, cast, contentRating: raise ? nextRequired : current.contentRating, coverImage: keepStoryCover(current.coverImage, current.cast, cast, state.characters) })); // 초안 갱신(빠진 인물의 그림이던 표지만 기본 표지로)
         setRatingNotice(raise ? t("등장인물에 맞춰 이용 등급을 {0}로 올렸어요.", [contentRatingLabels[nextRequired]]) : ""); // 조정 안내
         touch(); // 변경 표시
     }; // 함수 종료

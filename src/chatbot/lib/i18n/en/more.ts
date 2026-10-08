@@ -405,4 +405,13 @@ export const more: Record<string, string> = {
     "JSON 파일이 아니거나 내용이 깨져 있어요.": "It isn't a JSON file, or its contents are damaged.",
     "형식과 버전 관계를 확인해 주세요.": "Please check the format and how the versions are linked.",
     "대화 파일을 가져오지 못했습니다. {0}": "Couldn't import the chat file. {0}",
+    "지금 쓰는 그림": "Current image",
+    "인원": "Cast size",
+    "모든 인원": "Any size",
+    "한 명과": "One character",
+    "여럿이": "Several characters",
+    "처음 만나는 스토리만": "New to me only",
+    "찾은 스토리": "Stories found",
+    "스토리 {0}개": "{0} stories",
+    "조건에 맞는 스토리가 없어요. 조건을 바꾸거나 지워 보세요.": "No stories match these filters. Change or clear them.",
 };

@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react"; // 화면 도구
+import { act, screen } from "@testing-library/react"; // 화면 도구
 import userEvent from "@testing-library/user-event"; // 사용자 동작
 import { describe, expect, it, vi } from "vitest"; // 테스트 도구
 import { ChatScreen } from "@chatbot/features/chat/ChatScreen"; // 채팅 화면
@@ -17,8 +17,38 @@ function PanelProbe() // 설정 상태 표시
     return <output aria-label="패널 상태">{String(state.settings.chatPanelOpen)}</output>; // 펼침 저장 값
 } // 함수 종료
 
+function resizeWindow(width: number, height: number): void // 창 크기를 바꾸고 알리기
+{ // 함수 시작
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: width }); // 너비
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: height }); // 높이
+    act(() => // 화면 갱신까지 기다림
+    { // 묶음 시작
+        window.dispatchEvent(new Event("resize")); // 크기 변화 알림
+    }); // 묶음 종료
+} // 함수 종료
+
 describe("채팅 화면 배치와 채팅방 설정 패널", () => // 묶음
 { // 묶음 시작
+    it("자동 배치는 창 크기를 바꾸면 다시 열지 않아도 그 크기에 맞는 배치로 바뀐다", () => // 자동 배치 즉시 반영
+    { // 검증 시작
+        const original = { width: window.innerWidth, height: window.innerHeight }; // 원래 크기
+        try // 크기를 되돌리기 위한 묶음
+        { // 시도 시작
+            resizeWindow(1700, 900); // 넓은 모니터
+            const { container } = renderWithApp(<ChatScreen characterId="rian" />); // 자동 배치(기본값)로 렌더
+            const main = container.querySelector("main"); // 채팅 본문
+            expect(main).toHaveAttribute("data-layout", "D2"); // 넓은 화면 배치
+            resizeWindow(1300, 900); // 보통 모니터 너비로 줄임
+            expect(main).toHaveAttribute("data-layout", "D1"); // 바로 좁은 열 배치로
+            resizeWindow(1000, 700); // 태블릿 너비로 줄임
+            expect(main).toHaveAttribute("data-layout", "T1"); // 바로 태블릿 배치로
+        } // 시도 종료
+        finally // 뒷정리
+        { // 정리 시작
+            resizeWindow(original.width, original.height); // 크기 되돌림
+        } // 정리 종료
+    }); // 검증 종료
+
     it("화면 레이아웃 설정(오른쪽 패널 메뉴)에서 고른 배치를 채팅 화면에 적용한다", () => // 배치 적용
     { // 검증 시작
         const state = createInitialState(); // 초기 상태

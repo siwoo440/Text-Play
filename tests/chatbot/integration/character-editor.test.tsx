@@ -13,8 +13,40 @@ function CharacterStateProbe() // 상태 확인기
     return <output aria-label="저장 캐릭터">{state.characters.map((character) => `${character.id}:${character.name}:${character.publicationStatus}`).join("|")}</output>; // 상태 출력
 } // 함수 종료
 
+function CreatedProbe() // 새로 만든 캐릭터의 시각 확인기
+{ // 함수 시작
+    const { state } = useAppStore(); // 앱 상태 조회
+    return <output aria-label="만든 시각">{state.characters.filter((character) => character.id.startsWith("character-")).map((character) => `${character.createdAt}|${character.updatedAt}`).join(",")}</output>; // 만든 시각과 고친 시각
+} // 함수 종료
+
 describe("캐릭터 편집기", () => // 편집기 묶음
 { // 묶음 시작
+    it("새 캐릭터를 같은 화면에서 두 번 저장해도 만든 시각은 처음 저장한 때로 남는다", async () => // 만든 시각 유지 검증
+    { // 검증 시작
+        vi.useFakeTimers({ toFake: ["Date"] }); // 시각만 고정(입력 동작은 실제 시간으로)
+        vi.setSystemTime(new Date("2026-10-08T01:00:00.000Z")); // 처음 저장하는 시각
+        try // 시각을 되돌리기 위한 묶음
+        { // 시도 시작
+            const user = userEvent.setup(); // 사용자 생성
+            renderWithApp(<><CharacterEditor /><CreatedProbe /></>); // 편집기 렌더
+            await user.click(screen.getByRole("button", { name: "전체 펼쳐 보기" })); // 모든 단계를 한 화면에서 입력
+            await user.type(screen.getByLabelText("캐릭터 이름"), "밤 기차의 루미"); // 이름 입력
+            await user.type(screen.getByLabelText("한 줄 소개"), "자정 열차의 안내자"); // 소개 입력
+            await user.type(screen.getByLabelText("성격"), "차분하고 다정함"); // 성격 입력
+            await user.type(screen.getByLabelText("첫 인사"), "어디까지 가고 싶어?"); // 인사 입력
+            await user.click(screen.getByRole("button", { name: "임시 저장" })); // 첫 저장
+            expect(screen.getByLabelText("만든 시각")).toHaveTextContent("2026-10-08T01:00:00.000Z|2026-10-08T01:00:00.000Z"); // 처음에는 두 시각이 같음
+            vi.setSystemTime(new Date("2026-10-08T02:00:00.000Z")); // 한 시간 뒤
+            await user.type(screen.getByLabelText("성격"), ", 호기심 많음"); // 내용 고침
+            await user.click(screen.getByRole("button", { name: "임시 저장" })); // 두 번째 저장
+            expect(screen.getByLabelText("만든 시각")).toHaveTextContent("2026-10-08T01:00:00.000Z|2026-10-08T02:00:00.000Z"); // 만든 시각은 그대로, 고친 시각만 바뀜
+        } // 시도 종료
+        finally // 뒷정리
+        { // 정리 시작
+            vi.useRealTimers(); // 시각 되돌림
+        } // 정리 종료
+    }); // 검증 종료
+
     it("입력한 캐릭터를 임시 저장하고 미리보기에 반영한다", async () => // 제작 흐름 검증
     { // 검증 시작
         const user = userEvent.setup(); // 사용자 생성

@@ -32,7 +32,7 @@ import { getConversationVersion, getMessageVersionGroup, getVersionMessages, rem
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 저장소
 import { appReducer } from "@chatbot/features/core/app-reducer"; // 앱 리듀서
 import type { AppState, ConversationSettings, Message, WorkUpdate } from "@chatbot/features/core/types"; // 앱 타입
-import { recommendLayout } from "@chatbot/features/chat/layout-resolver"; // 레이아웃 추천
+import { subscribeResize, useAutoLayout } from "@chatbot/features/chat/use-auto-layout"; // 창 크기 구독·자동 배치
 import type { ImageGenerationAdapter } from "@chatbot/lib/adapters/image-generation-adapter"; // 이미지 계약
 import type { LLMAdapter } from "@chatbot/lib/adapters/llm-adapter"; // 대화 계약
 import { MockImageAdapter } from "@chatbot/lib/adapters/mock-image-adapter"; // Mock 이미지
@@ -145,6 +145,7 @@ function ChatConversationScreen({ characterId: requestedCharacterId, storyId, in
     const openDialog = useCallback((dialog: ChatDialogId) => setPanelRequest((current) => ({ dialog, seq: (current?.seq ?? 0) + 1 })), []); // 대화상자 열기
     const toggleStatusPanel = useCallback(() => dispatch({ type: "update-settings", settings: { statusPanelOpen: !latestGlobalState.current.settings.statusPanelOpen } }), [dispatch]); // 상태창 접기
     const narrow = useNarrowScreen(); // 모바일 너비
+    const autoLayout = useAutoLayout(state.settings.platformMode); // 지금 창 크기에 맞는 자동 배치(창 크기를 바꾸면 바로 바뀜)
     const [overlayOpen, setOverlayOpen] = useState(false); // 좁은 화면의 채팅방 설정 서랍(처음엔 닫힘)
     const panelToggleRef = useRef<HTMLButtonElement>(null); // 설정 열기 버튼
     const panelCloseRef = useRef<HTMLButtonElement>(null); // 설정 닫기 버튼
@@ -213,9 +214,7 @@ function ChatConversationScreen({ characterId: requestedCharacterId, storyId, in
             </StatusScreen> // 부재 안내 종료
         ); // 반환 종료
     } // 조건 종료
-    const width = typeof window === "undefined" ? 1440 : window.innerWidth; // 화면 너비
-    const height = typeof window === "undefined" ? 900 : window.innerHeight; // 화면 높이
-    const layout = state.settings.layoutId ?? recommendLayout({ width, height, platformMode: state.settings.platformMode, layoutId: null }); // 현재 레이아웃
+    const layout = state.settings.layoutId ?? autoLayout; // 현재 레이아웃(고른 것이 없으면 자동)
     const overlay = narrow || layout.startsWith("M"); // 모바일 배치는 서랍, 그 밖에는 접히는 열
     const panelOpen = overlay ? overlayOpen : state.settings.chatPanelOpen; // 채팅방 설정 열림
     const setPanelOpen = (open: boolean) => // 채팅방 설정 열고 닫기
@@ -620,12 +619,6 @@ function ChatShortcuts({ onRegenerate, onShortcuts, font }: { onRegenerate?: () 
         return () => window.removeEventListener("keydown", handleKey); // 해제
     }, [onRegenerate, onShortcuts]); // 의존
     return null; // 화면 표시 없음
-} // 함수 종료
-
-function subscribeResize(callback: () => void): () => void // 창 크기 변화 구독
-{ // 함수 시작
-    window.addEventListener("resize", callback); // 구독
-    return () => window.removeEventListener("resize", callback); // 해제
 } // 함수 종료
 
 function useNarrowScreen(): boolean // 모바일 너비(760px 이하) 판정

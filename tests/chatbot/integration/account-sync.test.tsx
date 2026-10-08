@@ -6,9 +6,10 @@ import { describeSyncStatus, useSyncStatus } from "@chatbot/features/account/syn
 import { AppProvider, useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 공급자
 import { createInitialState } from "@chatbot/features/core/initial-state"; // 초기 상태
 import type { AppState } from "@chatbot/features/core/types"; // 상태 타입
-import { writeAccountSession, type AccountSession } from "@chatbot/lib/account/account-session"; // 계정 세션
+import { readAccountSession, writeAccountSession, type AccountSession } from "@chatbot/lib/account/account-session"; // 계정 세션
 import { createScopedStorage } from "@chatbot/lib/account/scoped-storage"; // 계정별 저장 칸
-import { createPracticeSnapshotStore, type RemoteSnapshot } from "@chatbot/lib/account/snapshot-store"; // 연습용 서버
+import { createPracticeAuthAdapter } from "@chatbot/lib/account/practice-auth-adapter"; // 연습용 로그인
+import { createPracticeSnapshotStore, SignedOutError, type RemoteSnapshot, type SnapshotStore } from "@chatbot/lib/account/snapshot-store"; // 연습용 서버
 import { LocalStorageGateway } from "@chatbot/lib/repositories/local-storage-gateway"; // 로컬 저장소
 
 const session: AccountSession = { accountId: "practice-soha", name: "소하", email: null, provider: "practice", signedInAt: "2026-10-06T00:00:00.000Z" }; // 연습용 계정 세션
@@ -126,6 +127,28 @@ describe("계정 데이터를 서버와 맞추기", () => // 맞추기 묶음
         renderApp(); // 다시 열어도
         await waitFor(() => expect(screen.getByLabelText("저장 상태")).toHaveTextContent("saved")); // 맞춤 완료
         expect(screen.queryByRole("status", { name: "손님 데이터 가져오기" })).toBeNull(); // 다시 묻지 않음
+    }); // 검증 종료
+
+    it("로그인이 끝났으면 이 기기에는 저장된다고 알리고, 다시 로그인을 누르면 로그아웃한 뒤 로그인 화면으로 보낸다", async () => // 로그인 끝남 안내 검증
+    { // 검증 시작
+        const user = userEvent.setup(); // 사용자 도구
+        let pulls = 0; // 서버에 물은 횟수
+        const expired: SnapshotStore = { mode: "live", pull: async () => { pulls += 1; throw new SignedOutError(); }, push: async () => ({ ok: false, reason: "signed-out" }) }; // 로그인이 끝난 서버 연결
+        const visited: string[] = []; // 이동한 주소
+        new LocalStorageGateway(createScopedStorage(localStorage, session.accountId)).save(withBalance(500)); // 계정 데이터
+        render(<AppProvider><AccountSync store={expired} delayMs={20} auth={createPracticeAuthAdapter(localStorage)} navigate={(href) => visited.push(href)} /><Probe /></AppProvider>); // 앱 렌더
+        const notice = await screen.findByRole("status", { name: "로그인 안내" }); // 로그인이 끝났다는 안내
+        expect(notice).toHaveTextContent("로그인이 끝났어요"); // 제목
+        expect(notice).toHaveTextContent("이 기기에는 계속 저장돼요"); // 데이터는 안전하다는 설명
+        expect(screen.getByLabelText("저장 상태")).toHaveTextContent("signed-out|로그인이 끝났어요. 다시 로그인하면 서버에 이어서 저장해요."); // 사용자 패널에 보일 글
+        expect(screen.getByLabelText("잔액 확인")).toHaveTextContent("500"); // 계정 데이터는 그대로 보임
+        await user.click(screen.getByRole("button", { name: "설정 바꾸기" })); // 데이터 변경
+        await new Promise((resolve) => setTimeout(resolve, 80)); // 자동으로 맞출 시간이 지남
+        expect(pulls).toBe(1); // 다시 로그인할 때까지 서버에 다시 묻지 않음
+        await user.click(within(notice).getByRole("button", { name: "다시 로그인" })); // 다시 로그인
+        await waitFor(() => expect(visited).toEqual(["/login"])); // 로그인 화면으로
+        expect(readAccountSession(localStorage)).toBeNull(); // 이 기기에서는 로그아웃됨
+        expect(new LocalStorageGateway(createScopedStorage(localStorage, session.accountId)).load().state.wallet.balance).toBe(500); // 계정 데이터는 이 기기에 남아 있음
     }); // 검증 종료
 
     it("손님에게는 아무것도 하지 않는다", async () => // 손님 검증

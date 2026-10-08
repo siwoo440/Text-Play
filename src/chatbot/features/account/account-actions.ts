@@ -27,6 +27,17 @@ export async function completeSocialAndEnter(adapter: AuthAdapter, params: URLSe
     return result; // 결과 반환
 } // 함수 종료
 
+export async function completeEmailConfirmAndEnter(adapter: AuthAdapter, params: URLSearchParams, navigate: Navigate = reloadTo): Promise<AuthResult> // 가입 확인 메일의 링크로 돌아온 뒤 바로 로그인하고 메인으로 들어가기
+{ // 함수 시작
+    const result = await adapter.completeEmailConfirm(params); // 링크가 준 출입증으로 로그인
+    if (result.ok) // 성공
+    { // 조건 시작
+        writeAccountSession(window.localStorage, result.session); // 세션 저장
+        navigate("/"); // 그 계정의 데이터로 새로 열기
+    } // 조건 종료
+    return result; // 결과 반환(실패하면 화면이 이유를 보여 줌)
+} // 함수 종료
+
 export async function signInAndEnter(adapter: AuthAdapter, input: SignInInput, navigate: Navigate = reloadTo, mode: "sign-in" | "sign-up" = "sign-in"): Promise<AuthResult> // 로그인(또는 가입)하고 메인으로 들어가기
 { // 함수 시작
     const result = mode === "sign-up" ? await adapter.signUp(input) : await adapter.signIn(input); // 로그인 시도
@@ -49,7 +60,7 @@ export async function completeResetAndEnter(adapter: AuthAdapter, params: URLSea
     return result; // 결과 반환(실패하면 화면이 이유를 보여 줌)
 } // 함수 종료
 
-export async function signOutAndLeave(adapter: AuthAdapter, navigate: Navigate = reloadTo): Promise<void> // 로그아웃하고 손님 화면으로 돌아가기
+export async function signOutAndLeave(adapter: AuthAdapter, navigate: Navigate = reloadTo, href = "/"): Promise<void> // 로그아웃하고 손님 화면으로 돌아가기(다시 로그인할 때는 로그인 화면으로)
 { // 함수 시작
     const session = readAccountSession(window.localStorage); // 지금 세션
     if (session !== null) // 로그인해 있음
@@ -57,7 +68,7 @@ export async function signOutAndLeave(adapter: AuthAdapter, navigate: Navigate =
         await adapter.signOut(session).catch(() => undefined); // 서비스 쪽 정리(실패해도 이 기기에서는 로그아웃)
     } // 조건 종료
     writeAccountSession(window.localStorage, null); // 세션 지움
-    navigate("/"); // 손님 데이터로 새로 열기
+    navigate(href); // 손님 데이터로 새로 열기
 } // 함수 종료
 
 export async function clearDeviceDataAndLeave(adapter: AuthAdapter, navigate: Navigate = reloadTo): Promise<void> // 이 기기에 있는 계정 데이터를 지우고 로그아웃하기(서버 저장본은 그대로라 다시 로그인하면 받아 옴)

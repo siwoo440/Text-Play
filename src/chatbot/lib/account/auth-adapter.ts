@@ -12,6 +12,7 @@ export interface SignInInput // 로그인 입력
     name?: string; // 계정 이름(연습용)
     email?: string; // 이메일(실제 서비스)
     password?: string; // 비밀번호(실제 서비스)
+    redirectTo?: string; // 가입 확인 메일의 링크가 돌아올 주소(실제 서비스의 회원가입에서만 씀)
 } // 구조 종료
 
 export interface PracticeAccount // 연습용 계정
@@ -29,6 +30,8 @@ export interface AuthAdapter // 로그인 계약
     completeSocialSignIn(params: URLSearchParams): Promise<AuthResult>; // 간편 로그인 마무리(돌아온 주소의 값으로 로그인)
     signIn(input: SignInInput): Promise<AuthResult>; // 로그인
     signUp(input: SignInInput): Promise<AuthResult>; // 회원가입
+    canCompleteEmailConfirm(params: URLSearchParams): boolean; // 주소 뒤에 붙어 온 값이 가입 확인 메일의 링크가 준 것인지
+    completeEmailConfirm(params: URLSearchParams): Promise<AuthResult>; // 가입 확인 메일의 링크가 준 출입증으로 바로 로그인
     requestPasswordReset(email: string, redirectTo: string): Promise<PasswordResetRequestResult>; // 비밀번호를 다시 정하는 메일 보내기(메일의 링크는 redirectTo로 돌아옴. 연습용은 비밀번호가 없어 쓰지 않음)
     canCompletePasswordReset(params: URLSearchParams): boolean; // 메일의 링크가 주소 뒤에 붙여 준 값으로 비밀번호를 다시 정할 수 있는지
     completePasswordReset(params: URLSearchParams, password: string): Promise<AuthResult>; // 새 비밀번호를 정하고 그 계정으로 로그인

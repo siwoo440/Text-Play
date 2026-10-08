@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"; // 테스트 도구
 import { AccountSyncRunner, decideSync, hashText, readSyncMeta, SYNC_META_KEY, writeSyncMeta, type SyncLocal, type SyncMeta, type SyncStatus } from "@chatbot/lib/account/account-sync"; // 계정 맞추기
-import { createPracticeSnapshotStore, PRACTICE_SERVER_PREFIX, type RemoteSnapshot, type SnapshotStore } from "@chatbot/lib/account/snapshot-store"; // 서버 저장 계약
+import { createPracticeSnapshotStore, PRACTICE_SERVER_PREFIX, SignedOutError, type RemoteSnapshot, type SnapshotStore } from "@chatbot/lib/account/snapshot-store"; // 서버 저장 계약
 
 const remote = (revision: number, state: string): RemoteSnapshot => ({ revision, state, updatedAt: "2026-10-06T00:00:00.000Z", deviceId: "device-other" }); // 서버에 있는 저장본
 const meta = (revision: number | null, syncedText: string | null): SyncMeta => ({ revision, syncedHash: syncedText === null ? null : hashText(syncedText), syncedAt: null, deviceId: "device-me" }); // 이 기기의 맞춤 기록
@@ -166,5 +166,22 @@ describe("계정 데이터 맞추기", () => // 맞추기 묶음
         expect(phone.data).toBe("휴대폰"); // 이 기기 데이터 그대로
         const refusing: SnapshotStore = { mode: "practice", pull: async () => null, push: async () => ({ ok: false, reason: "unavailable" }) }; // 올리기를 받지 않는 서버
         expect((await phone.runner(refusing).sync()).phase).toBe("offline"); // 올리지 못함
+    }); // 검증 종료
+
+    it("로그인이 끝났으면 연결 실패와 구별해 알리고, 다시 로그인할 때까지 자동으로 맞추지 않게 표시한다", async () => // 로그인 끝남 검증
+    { // 검증 시작
+        const expired: SnapshotStore = { mode: "live", pull: async () => { throw new SignedOutError(); }, push: async () => ({ ok: false, reason: "signed-out" }) }; // 로그인이 끝난 서버 연결
+        const phone = new Device("휴대폰", "device-phone"); // 휴대폰
+        const runner = phone.runner(expired); // 맞추기 도구
+        expect(runner.needsLogin()).toBe(false); // 처음에는 아님
+        expect((await runner.sync()).phase).toBe("signed-out"); // 받다가 로그인이 끝난 것을 앎
+        expect(runner.needsLogin()).toBe(true); // 다시 로그인해야 함
+        expect(phone.data).toBe("휴대폰"); // 이 기기 데이터 그대로
+        const lateExpired: SnapshotStore = { mode: "live", pull: async () => null, push: async () => ({ ok: false, reason: "signed-out" }) }; // 올릴 때 로그인이 끝난 것을 아는 경우
+        const laptop = new Device("노트북", "device-laptop"); // 노트북
+        const second = laptop.runner(lateExpired); // 맞추기 도구
+        expect((await second.sync()).phase).toBe("signed-out"); // 올리다가 앎
+        expect(second.needsLogin()).toBe(true); // 다시 로그인해야 함
+        expect(readSyncMeta(laptop.storage).revision).toBeNull(); // 맞춘 것으로 기록하지 않음
     }); // 검증 종료
 }); // 묶음 종료

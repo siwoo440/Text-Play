@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"; // 테스트 도구
 import { readAccountServiceConfig } from "@chatbot/lib/account/account-config"; // 계정 서비스 설정
+import { SignedOutError } from "@chatbot/lib/account/snapshot-store"; // 로그인이 끝났다는 표시
 import { createSupabaseAuthAdapter, createSupabaseSnapshotStore, SUPABASE_TOKENS_KEY, SUPABASE_VERIFIER_KEY } from "@chatbot/lib/account/supabase-account"; // Supabase 연결
 
 const config = { mode: "supabase" as const, url: "https://demo.supabase.co", anonKey: "public-anon-key" }; // 시험용 설정(가짜 주소와 공개 키)
@@ -16,6 +17,7 @@ class FakeSupabase // 가짜 Supabase(로그인과 저장본 표만 흉내 냄)
     public refreshes = 0; // 출입증을 새로 받은 횟수
     public deleteReady = true; // 계정 지우기 함수를 데이터베이스에 만들어 두었는지
     public deleted = false; // 계정이 지워졌는지
+    public refreshStatus: number | null = null; // 출입증을 새로 받을 때 돌려줄 오류 상태(없으면 평소대로)
 
     private session(email: string, provider = "email", name?: string): Record<string, unknown> // 로그인 결과
     { // 함수 시작
@@ -38,7 +40,7 @@ class FakeSupabase // 가짜 Supabase(로그인과 저장본 표만 흉내 냄)
         { // 조건 시작
             return record?.password === "right-password-1" ? json(200, this.session(record.email)) : record?.email === "unconfirmed@example.com" ? json(400, { code: 400, error_code: "email_not_confirmed", msg: "Email not confirmed" }) : json(400, { code: 400, error_code: "invalid_credentials", msg: "Invalid login credentials" }); // 결과
         } // 조건 종료
-        if (url.endsWith("/auth/v1/signup")) // 회원가입
+        if (url.split("?")[0].endsWith("/auth/v1/signup")) // 회원가입(돌아올 주소가 붙어 올 수 있음)
         { // 조건 시작
             return record?.email === "taken@example.com" ? json(422, { code: 422, error_code: "user_already_exists", msg: "User already registered" }) : this.confirmEmail ? json(200, { id: userId, email: record?.email, confirmation_sent_at: "2026-10-06T00:00:00Z" }) : json(200, this.session(record?.email ?? "")); // 결과
         } // 조건 종료
@@ -49,12 +51,20 @@ class FakeSupabase // 가짜 Supabase(로그인과 저장본 표만 흉내 냄)
         if (url.endsWith("/auth/v1/token?grant_type=refresh_token")) // 출입증 새로 받기
         { // 조건 시작
             this.refreshes += 1; // 횟수
+            if (this.refreshStatus !== null) // 서버가 잠시 받지 못하는 경우
+            { // 조건 시작
+                return json(this.refreshStatus, { message: "temporarily unavailable" }); // 오류 응답
+            } // 조건 종료
             this.accessToken = `access-${this.refreshes + 1}`; // 새 출입증
             return record?.refresh_token === "refresh-1" ? json(200, this.session("soha@example.com")) : json(400, { error_code: "refresh_token_not_found" }); // 결과
         } // 조건 종료
         if (url.includes("/auth/v1/recover")) // 비밀번호를 다시 정하는 메일 보내기
         { // 조건 시작
             return record?.email === "limited@example.com" ? json(429, { code: 429, error_code: "over_email_send_rate_limit", msg: "email rate limit exceeded" }) : json(200, {}); // 한 주소만 너무 잦다고 거절(가입하지 않은 주소도 성공으로 답함)
+        } // 조건 종료
+        if (url.endsWith("/auth/v1/user") && (init.method ?? "GET") === "GET") // 출입증의 주인 확인(가입 확인 메일의 링크로 돌아왔을 때)
+        { // 조건 시작
+            return headers.authorization === "Bearer confirm-token" ? json(200, { id: userId, email: "new@example.com", app_metadata: { provider: "email" }, user_metadata: {} }) : json(401, { code: 401, error_code: "bad_jwt", msg: "invalid JWT" }); // 링크가 준 출입증일 때만 사용자 정보
         } // 조건 종료
         if (url.endsWith("/auth/v1/user") && init.method === "PUT") // 비밀번호 바꾸기
         { // 조건 시작
@@ -183,6 +193,26 @@ describe("Supabase 로그인", () => // 로그인 묶음
         expect(await adapter().signUp({ email: "taken@example.com", password: "right-password-1" })).toEqual({ ok: false, reason: "email-taken" }); // 이미 가입한 메일
     }); // 검증 종료
 
+    it("가입할 때 확인 메일의 링크가 돌아올 주소를 함께 보내고, 그 링크로 돌아오면 준 출입증으로 바로 로그인한다", async () => // 가입 확인 링크 검증
+    { // 검증 시작
+        server.confirmEmail = true; // 메일 확인 필요
+        expect(await adapter().signUp({ email: "new@example.com", password: "right-password-1", redirectTo: "http://localhost:3000/auth/callback" })).toEqual({ ok: false, reason: "confirm-email" }); // 메일 확인 안내
+        expect(new URL(server.calls.at(-1)?.url ?? "").searchParams.get("redirect_to")).toBe("http://localhost:3000/auth/callback"); // 돌아올 주소를 함께 보냄
+        expect(server.calls.at(-1)?.body).toEqual({ email: "new@example.com", password: "right-password-1" }); // 내용에는 이메일과 비밀번호만
+        const link = (values: Record<string, string>) => new URLSearchParams(values); // 메일의 링크가 주소 뒤에 붙여 준 값
+        expect(adapter().canCompleteEmailConfirm(link({ access_token: "confirm-token", refresh_token: "refresh-1", expires_in: "3600", token_type: "bearer", type: "signup" }))).toBe(true); // 가입 확인 링크
+        expect(adapter().canCompleteEmailConfirm(link({ access_token: "recovery-token", refresh_token: "refresh-1", type: "recovery" }))).toBe(false); // 비밀번호 재설정 링크는 아님
+        expect(adapter().canCompleteEmailConfirm(link({ code: "good-code" }))).toBe(false); // 간편 로그인에서 돌아온 값도 아님
+        expect(await adapter().completeEmailConfirm(link({ access_token: "confirm-token", refresh_token: "refresh-1", expires_in: "3600", token_type: "bearer", type: "signup" }))).toMatchObject({ ok: true, session: { accountId: userId, email: "new@example.com", provider: "email", name: "new" } }); // 바로 로그인
+        expect(server.calls.at(-1)).toMatchObject({ method: "GET", headers: { authorization: "Bearer confirm-token", apikey: "public-anon-key" } }); // 링크가 준 출입증으로 주인을 확인
+        expect(JSON.parse(localStorage.getItem(SUPABASE_TOKENS_KEY) ?? "{}")).toMatchObject({ accessToken: "confirm-token", refreshToken: "refresh-1", userId }); // 출입증 보관
+        localStorage.clear(); // 다시 처음부터
+        expect(await adapter().completeEmailConfirm(link({ access_token: "old-token", refresh_token: "refresh-1", type: "signup" }))).toEqual({ ok: false, reason: "link-expired" }); // 서버가 받지 않는 출입증
+        expect(await adapter().completeEmailConfirm(link({ error: "access_denied", error_code: "otp_expired", error_description: "Email link is invalid or has expired" }))).toEqual({ ok: false, reason: "link-expired" }); // 만료됐거나 이미 쓴 링크
+        expect(await adapter().completeEmailConfirm(link({ access_token: "recovery-token", refresh_token: "refresh-1", type: "recovery" }))).toEqual({ ok: false, reason: "link-expired" }); // 다른 종류의 링크
+        expect(localStorage.getItem(SUPABASE_TOKENS_KEY)).toBeNull(); // 실패하면 출입증을 보관하지 않음
+    }); // 검증 종료
+
     it("켜 둔 간편 로그인만 알려 주고, 시작할 때 확인 글을 탭에 남긴 뒤 서비스 주소로 보내고, 돌아오면 코드로 로그인을 마친다", async () => // 간편 로그인 검증
     { // 검증 시작
         expect(await adapter().socialProviders()).toEqual(["google"]); // 켠 서비스 가운데 지원하는 것만
@@ -303,8 +333,25 @@ describe("Supabase 저장본", () => // 저장본 묶음
         expect(await store().pull(userId)).toBeNull(); // 받기
         expect(server.refreshes).toBe(1); // 새로 받음
         expect(JSON.parse(localStorage.getItem(SUPABASE_TOKENS_KEY) ?? "{}").accessToken).toBe("access-2"); // 새 출입증 보관
-        localStorage.removeItem(SUPABASE_TOKENS_KEY); // 로그인하지 않음
-        await expect(store().pull(userId)).rejects.toThrow(); // 받지 못함(맞추기 도구가 연결 실패로 처리)
-        expect(await store().push(userId, "{}", null, "device-a")).toEqual({ ok: false, reason: "unavailable" }); // 올리지 못함
+        localStorage.removeItem(SUPABASE_TOKENS_KEY); // 출입증이 없음(로그인이 끝남)
+        await expect(store().pull(userId)).rejects.toBeInstanceOf(SignedOutError); // 받지 못함(다시 로그인해야 한다고 알림)
+        expect(await store().push(userId, "{}", null, "device-a")).toEqual({ ok: false, reason: "signed-out" }); // 올리지 못함(다시 로그인해야 함)
+    }); // 검증 종료
+
+    it("출입증을 새로 받는 일을 서버가 거절하면 로그인이 끝난 것으로 알리고, 서버가 잠시 받지 못하는 것과는 구별한다", async () => // 로그인 끝남 검증
+    { // 검증 시작
+        clock += 3590 * 1000; // 출입증이 10초 뒤 끝남
+        server.refreshStatus = 503; // 서버가 잠시 받지 못함
+        await expect(store().pull(userId)).rejects.not.toBeInstanceOf(SignedOutError); // 연결 실패로 봄(다시 로그인하라고 하지 않음)
+        expect(localStorage.getItem(SUPABASE_TOKENS_KEY)).not.toBeNull(); // 출입증은 그대로 둠(다음에 다시 시도)
+        expect(await store().push(userId, "{}", null, "device-a")).toEqual({ ok: false, reason: "unavailable" }); // 올리기도 연결 실패
+        server.refreshStatus = null; // 서버가 다시 받음
+        const tokens = JSON.parse(localStorage.getItem(SUPABASE_TOKENS_KEY) ?? "{}") as Record<string, unknown>; // 지금 출입증
+        localStorage.setItem(SUPABASE_TOKENS_KEY, JSON.stringify({ ...tokens, refreshToken: "refresh-revoked" })); // 다른 곳에서 로그아웃해 더는 쓸 수 없는 출입증
+        await expect(store().pull(userId)).rejects.toBeInstanceOf(SignedOutError); // 로그인이 끝남
+        expect(localStorage.getItem(SUPABASE_TOKENS_KEY)).toBeNull(); // 쓸 수 없는 출입증은 지움(계속 다시 묻지 않게)
+        const before = server.calls.length; // 지금까지의 요청 수
+        expect(await store().push(userId, "{}", null, "device-a")).toEqual({ ok: false, reason: "signed-out" }); // 올리기도 로그인이 끝났다고 알림
+        expect(server.calls.length).toBe(before); // 서버에 다시 묻지 않음
     }); // 검증 종료
 }); // 묶음 종료

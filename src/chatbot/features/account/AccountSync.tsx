@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"; // 리액트 도구
 import { DialogFrame } from "@chatbot/components/dialog/DialogFrame"; // 확인 대화상자 틀
+import { getAuthAdapter, signOutAndLeave, type Navigate } from "@chatbot/features/account/account-actions"; // 계정 동작(다시 로그인)
 import { setSyncStatus, useSyncStatus } from "@chatbot/features/account/sync-status"; // 맞추기 상태
 import { useAccountSession } from "@chatbot/features/account/use-account-session"; // 계정 세션
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 상태
 import styles from "@chatbot/features/account/AccountSync.module.css"; // 맞추기 화면 스타일
 import { AccountSyncRunner } from "@chatbot/lib/account/account-sync"; // 맞추기 도구
 import { getAccountServiceConfig } from "@chatbot/lib/account/account-config"; // 계정 서비스 설정
+import type { AuthAdapter } from "@chatbot/lib/account/auth-adapter"; // 로그인 계약
 import { getAppStorage } from "@chatbot/lib/account/scoped-storage"; // 로그인한 계정의 저장 칸
 import { createPracticeSnapshotStore, type SnapshotStore } from "@chatbot/lib/account/snapshot-store"; // 서버 저장 계약
 import { createSupabaseSnapshotStore } from "@chatbot/lib/account/supabase-account"; // 실제 서버 저장(Supabase)
@@ -36,7 +38,7 @@ function hasGuestData(): boolean // 이 브라우저에 손님으로 쓰던 데�
     } // 실패 종료
 } // 함수 종료
 
-export function AccountSync({ store, delayMs = SYNC_DELAY_MS }: { store?: SnapshotStore; delayMs?: number }) // 계정 데이터 맞추기(로그인했을 때만 동작: 서버에 올리고 받고, 겹치면 고르게 함)
+export function AccountSync({ store, delayMs = SYNC_DELAY_MS, auth, navigate }: { store?: SnapshotStore; delayMs?: number; auth?: AuthAdapter; navigate?: Navigate }) // 계정 데이터 맞추기(로그인했을 때만 동작: 서버에 올리고 받고, 겹치면 고르게 하고, 로그인이 끝나면 다시 로그인하게 함)
 { // 함수 시작
     const session = useAccountSession(); // 지금 로그인한 계정
     const { state, commitState, createBackup } = useAppStore(); // 앱 상태
@@ -47,6 +49,8 @@ export function AccountSync({ store, delayMs = SYNC_DELAY_MS }: { store?: Snapsh
     const again = useRef(false); // 맞추는 동안 또 바뀌어 한 번 더 맞춰야 함
     const [, setOfferTick] = useState(0); // 가져오기 물음의 상태가 바뀌었을 때 다시 그리기
     const [notice, setNotice] = useState(""); // 가져오기 결과 안내
+    const [loginNoticeClosed, setLoginNoticeClosed] = useState(false); // 로그인이 끝났다는 안내를 닫았는지
+    const [leaving, setLeaving] = useState(false); // 다시 로그인하러 가는 중
     const accountId = session?.accountId ?? null; // 계정 식별자
     useEffect(() => // 가장 최근 값 기억
     { // 효과 시작
@@ -55,9 +59,9 @@ export function AccountSync({ store, delayMs = SYNC_DELAY_MS }: { store?: Snapsh
     const run = useCallback(async (): Promise<void> => // 맞추기 실행(겹쳐 부르면 끝난 뒤 한 번 더)
     { // 함수 시작
         const active = runner.current; // 맞추기 도구
-        if (active === null || active.hasConflict()) // 로그인하지 않음·겹침을 아직 풀지 않음
+        if (active === null || active.hasConflict() || active.needsLogin()) // 로그인하지 않음·겹침을 아직 풀지 않음·로그인이 끝남
         { // 조건 시작
-            return; // 생략(겹쳤을 때는 사람이 고를 때까지 자동으로 맞추지 않음)
+            return; // 생략(겹쳤을 때는 사람이 고를 때까지, 로그인이 끝났을 때는 다시 로그인할 때까지 자동으로 맞추지 않음)
         } // 조건 종료
         if (busy.current) // 이미 맞추는 중
         { // 조건 시작
@@ -164,8 +168,20 @@ export function AccountSync({ store, delayMs = SYNC_DELAY_MS }: { store?: Snapsh
     { // 함수 시작
         void runner.current?.resolve(choice); // 고른 쪽으로 맞춤
     }; // 함수 종료
+    const loginAgain = () => // 다시 로그인하러 가기(이 기기에서는 로그아웃하고 로그인 화면으로. 계정 데이터는 이 기기에 남음)
+    { // 함수 시작
+        setLeaving(true); // 두 번 누르지 못하게
+        void signOutAndLeave(auth ?? getAuthAdapter(), navigate, "/login"); // 로그아웃한 뒤 로그인 화면으로
+    }; // 함수 종료
     return ( // 화면 반환
         <> {/* 맞추기 화면 요소 */}
+            {status.phase !== "signed-out" || loginNoticeClosed ? null : ( // 로그인이 끝났는지 판정
+                <aside className={styles.offer} role="status" aria-label={t("로그인 안내")}> {/* 로그인이 끝났다는 안내 */}
+                    <strong>{t("로그인이 끝났어요")}</strong> {/* 제목 */}
+                    <p>{t("바꾼 내용은 이 기기에는 계속 저장돼요. 다시 로그인하면 서버에도 이어서 저장하고 다른 기기에서도 볼 수 있어요.")}</p> {/* 설명 */}
+                    <div><button type="button" className={styles.primary} disabled={leaving} onClick={loginAgain}>{t("다시 로그인")}</button><button type="button" className={styles.secondary} onClick={() => setLoginNoticeClosed(true)}>{t("나중에")}</button></div> {/* 선택 */}
+                </aside> // 로그인 안내 종료
+            )} {/* 로그인 안내 판정 종료 */}
             {!offerPending ? null : ( // 가져오기 물음 판정
                 <aside className={styles.offer} role="status" aria-label={t("손님 데이터 가져오기")}> {/* 가져오기 물음 */}
                     <strong>{t("이 브라우저에서 쓰던 데이터를 가져올까요?")}</strong> {/* 제목 */}

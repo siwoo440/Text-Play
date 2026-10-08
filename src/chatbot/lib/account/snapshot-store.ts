@@ -10,12 +10,22 @@ export interface RemoteSnapshot // 서버에 있는 저장본
 export type PushResult = // 올리기 결과
     | { ok: true; revision: number; updatedAt: string } // 저장됨(새 번호)
     | { ok: false; reason: "conflict"; remote: RemoteSnapshot | null } // 내가 본 번호와 서버 번호가 다름(다른 기기가 먼저 저장)
+    | { ok: false; reason: "signed-out" } // 로그인이 끝남(다시 로그인해야 올릴 수 있음)
     | { ok: false; reason: "unavailable" }; // 서버에 닿지 못함·받지 않음
+
+export class SignedOutError extends Error // 로그인이 끝났다는 표시(출입증이 없거나 새로 받지 못함. 잠시 닿지 못한 것과 구별)
+{ // 클래스 시작
+    public constructor() // 생성자
+    { // 생성자 시작
+        super("signed out"); // 오류 글
+        this.name = "SignedOutError"; // 오류 이름
+    } // 생성자 종료
+} // 클래스 종료
 
 export interface SnapshotStore // 서버 저장 계약
 { // 구조 시작
     readonly mode: "practice" | "live"; // 연습용인지 실제 서비스인지
-    pull(accountId: string): Promise<RemoteSnapshot | null>; // 저장본 받기(없으면 null)
+    pull(accountId: string): Promise<RemoteSnapshot | null>; // 저장본 받기(없으면 null. 로그인이 끝났으면 SignedOutError를 던짐)
     push(accountId: string, state: string, expectedRevision: number | null, deviceId: string): Promise<PushResult>; // 저장본 올리기(내가 본 번호와 같을 때만 저장)
 } // 구조 종료
 

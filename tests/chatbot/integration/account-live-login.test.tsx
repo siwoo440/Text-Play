@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react"; // 화면 검�
 import userEvent from "@testing-library/user-event"; // 사용자 동작 도구
 import { beforeEach, describe, expect, it, vi } from "vitest"; // 테스트 도구
 import { AuthCallbackScreen } from "@chatbot/features/account/AuthCallbackScreen"; // 간편 로그인에서 돌아오는 화면
+import { AuthLinkForward, resolveAuthLinkTarget } from "@chatbot/features/account/AuthLinkForward"; // 메일의 링크가 다른 화면으로 돌아왔을 때 보내 주기
 import { LoginScreen } from "@chatbot/features/account/LoginScreen"; // 로그인 화면
 import { readAccountSession, readActiveSession, writeAccountSession, type AccountSession } from "@chatbot/lib/account/account-session"; // 계정 세션
 import type { AuthAdapter, AuthResult } from "@chatbot/lib/account/auth-adapter"; // 로그인 계약
@@ -11,7 +12,7 @@ const ok: AuthResult = { ok: true, session }; // 로그인 성공
 
 function liveAdapter(overrides: Partial<AuthAdapter> = {}): AuthAdapter // 실제 서비스 로그인 대역
 { // 함수 시작
-    return { mode: "live", listAccounts: () => [], socialProviders: async () => ["google"], startSocialSignIn: vi.fn(async () => undefined), completeSocialSignIn: vi.fn(async () => ok), signIn: vi.fn(async () => ok), signUp: vi.fn(async () => ok), signOut: vi.fn(async () => undefined), deleteAccount: vi.fn(async () => ({ ok: true as const })), requestPasswordReset: vi.fn(async () => ({ ok: true as const })), canCompletePasswordReset: () => false, completePasswordReset: vi.fn(async () => ok), ...overrides }; // 대역 반환
+    return { mode: "live", listAccounts: () => [], socialProviders: async () => ["google"], startSocialSignIn: vi.fn(async () => undefined), completeSocialSignIn: vi.fn(async () => ok), signIn: vi.fn(async () => ok), signUp: vi.fn(async () => ok), signOut: vi.fn(async () => undefined), deleteAccount: vi.fn(async () => ({ ok: true as const })), requestPasswordReset: vi.fn(async () => ({ ok: true as const })), canCompletePasswordReset: () => false, completePasswordReset: vi.fn(async () => ok), canCompleteEmailConfirm: () => false, completeEmailConfirm: vi.fn(async () => ok), ...overrides }; // 대역 반환
 } // 함수 종료
 
 describe("실제 서비스 로그인 화면", () => // 로그인 화면 묶음
@@ -52,7 +53,7 @@ describe("실제 서비스 로그인 화면", () => // 로그인 화면 묶음
         await user.type(screen.getByLabelText("비밀번호"), "right-password-1"); // 비밀번호
         await user.click(screen.getByRole("button", { name: "가입하기" })); // 가입
         expect(await screen.findByRole("alert")).toHaveTextContent("받은 메일의 확인 버튼을 누른 뒤 로그인해 주세요."); // 메일 확인 안내
-        expect(signUp).toHaveBeenCalledWith({ email: "new@example.com", password: "right-password-1" }); // 가입 요청
+        expect(signUp).toHaveBeenCalledWith({ email: "new@example.com", password: "right-password-1", redirectTo: `${window.location.origin}/auth/callback` }); // 가입 요청(확인 메일의 링크가 돌아올 주소와 함께)
         expect(signIn).not.toHaveBeenCalled(); // 로그인 요청은 하지 않음
         expect(navigate).not.toHaveBeenCalled(); // 이동하지 않음
     }); // 검증 종료
@@ -81,6 +82,47 @@ describe("실제 서비스 로그인 화면", () => // 로그인 화면 묶음
         expect(await screen.findByRole("alert")).toHaveTextContent("로그인을 끝내지 못했어요. 다시 시도해 주세요."); // 실패 안내
         expect(screen.getByRole("link", { name: "로그인 화면으로" })).toHaveAttribute("href", "/login"); // 다시 시도
         expect(navigate).toHaveBeenCalledTimes(1); // 실패하면 이동하지 않음
+    }); // 검증 종료
+
+    it("가입 확인 메일의 링크로 돌아오면 바로 로그인해 메인으로 보내고, 주소에 붙어 온 출입증은 지운다", async () => // 가입 확인 링크로 돌아온 화면 검증
+    { // 검증 시작
+        const navigate = vi.fn(); // 화면 이동 기록
+        const completeSocialSignIn = vi.fn<AuthAdapter["completeSocialSignIn"]>(async () => ({ ok: false, reason: "unavailable" })); // 간편 로그인 마무리(불리면 안 됨)
+        const completeEmailConfirm = vi.fn<AuthAdapter["completeEmailConfirm"]>(async (params) => params.get("access_token") === "confirm-token" ? ok : { ok: false, reason: "link-expired" }); // 링크가 준 출입증이 맞을 때만 성공
+        const canCompleteEmailConfirm = (params: URLSearchParams) => params.get("type") === "signup" || params.get("error") !== null; // 가입 확인 링크인지
+        window.history.replaceState(null, "", "/auth/callback#access_token=confirm-token&refresh_token=refresh-1&type=signup"); // 메일의 링크로 돌아온 주소
+        const { unmount } = render(<AuthCallbackScreen adapter={liveAdapter({ completeSocialSignIn, completeEmailConfirm, canCompleteEmailConfirm })} navigate={navigate} />); // 돌아온 화면
+        await waitFor(() => expect(navigate).toHaveBeenCalledWith("/")); // 메인으로 새로 엶
+        expect(completeEmailConfirm.mock.calls[0][0].get("refresh_token")).toBe("refresh-1"); // 주소 뒤의 값을 넘김
+        expect(completeSocialSignIn).not.toHaveBeenCalled(); // 간편 로그인으로 처리하지 않음
+        expect(readAccountSession(localStorage)).toEqual(session); // 세션 저장
+        expect(window.location.hash).toBe(""); // 출입증이 주소 칸과 방문 기록에 남지 않게 지움
+        unmount(); // 정리
+        writeAccountSession(localStorage, null); // 로그아웃
+        render(<AuthCallbackScreen adapter={liveAdapter({ completeSocialSignIn, completeEmailConfirm, canCompleteEmailConfirm })} navigate={navigate} hash="#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired" />); // 만료된 링크로 돌아온 화면
+        expect(await screen.findByRole("alert")).toHaveTextContent("링크가 만료됐거나 이미 사용됐어요. 가입 확인을 이미 마쳤다면 그대로 로그인해 주세요. 아니라면 로그인 화면에서 같은 이메일로 다시 가입하거나, 비밀번호 재설정 메일을 다시 받아 주세요."); // 무엇을 하면 되는지 안내
+        expect(screen.getByRole("link", { name: "로그인 화면으로" })).toHaveAttribute("href", "/login"); // 로그인 화면으로
+        expect(navigate).toHaveBeenCalledTimes(1); // 실패하면 이동하지 않음
+    }); // 검증 종료
+
+    it("메일의 링크가 다른 화면으로 돌아오면 가입 확인은 돌아오는 화면으로, 비밀번호 재설정은 재설정 화면으로 보낸다", () => // 다른 화면으로 돌아온 링크 검증
+    { // 검증 시작
+        expect(resolveAuthLinkTarget("/", "#access_token=a&refresh_token=b&type=signup")).toBe("/auth/callback"); // 가입 확인
+        expect(resolveAuthLinkTarget("/", "#access_token=a&refresh_token=b&type=recovery")).toBe("/auth/reset"); // 비밀번호 재설정
+        expect(resolveAuthLinkTarget("/stories", "#error=access_denied&error_code=otp_expired")).toBe("/auth/callback"); // 만료된 링크는 안내가 있는 화면으로
+        expect(resolveAuthLinkTarget("/", "")).toBeNull(); // 붙어 온 값이 없음
+        expect(resolveAuthLinkTarget("/", "#story-list-title")).toBeNull(); // 화면 안의 위치로 가는 주소는 건드리지 않음
+        expect(resolveAuthLinkTarget("/", "#access_token=a&refresh_token=b&type=magiclink")).toBeNull(); // 앱이 쓰지 않는 종류
+        expect(resolveAuthLinkTarget("/auth/callback", "#access_token=a&refresh_token=b&type=signup")).toBeNull(); // 이미 받는 화면이면 그대로
+        expect(resolveAuthLinkTarget("/auth/reset", "#access_token=a&refresh_token=b&type=recovery")).toBeNull(); // 이미 받는 화면이면 그대로
+        const visited: string[] = []; // 이동한 주소
+        window.history.replaceState(null, "", "/#access_token=a&refresh_token=b&type=recovery"); // 재설정 링크가 메인 화면으로 돌아온 경우
+        const { unmount } = render(<AuthLinkForward live navigate={(href) => visited.push(href)} />); // 실제 로그인 방식일 때
+        expect(visited).toEqual(["/auth/reset#access_token=a&refresh_token=b&type=recovery"]); // 붙어 온 값과 함께 재설정 화면으로
+        unmount(); // 정리
+        render(<AuthLinkForward live={false} navigate={(href) => visited.push(href)} />); // 연습용일 때
+        expect(visited).toHaveLength(1); // 아무 데도 보내지 않음
+        window.history.replaceState(null, "", "/"); // 주소 되돌림
     }); // 검증 종료
 
     it("연습용에서 실제 서비스로(또는 반대로) 바꾸면 예전 방식의 계정은 로그인하지 않은 것으로 본다", () => // 방식 전환 검증

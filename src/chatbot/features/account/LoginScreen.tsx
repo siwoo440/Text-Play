@@ -52,7 +52,7 @@ export function LoginScreen({ adapter, navigate }: { adapter?: AuthAdapter; navi
         }); // 처리 종료
         return () => { active = false; }; // 화면을 떠나면 반영하지 않음
     }, [auth]); // 처음 한 번
-    const enter = async (input: { name?: string; email?: string; password?: string }, mode: "sign-in" | "sign-up" = "sign-in") => // 로그인(또는 가입)
+    const enter = async (input: { name?: string; email?: string; password?: string; redirectTo?: string }, mode: "sign-in" | "sign-up" = "sign-in") => // 로그인(또는 가입)
     { // 함수 시작
         if (auth === null || busy) // 준비 전·처리 중
         { // 조건 시작
@@ -85,7 +85,7 @@ export function LoginScreen({ adapter, navigate }: { adapter?: AuthAdapter; navi
     const submit = (event: FormEvent<HTMLFormElement>) => // 양식 제출
     { // 함수 시작
         event.preventDefault(); // 기본 제출 차단
-        void (live ? enter({ email, password }, joining ? "sign-up" : "sign-in") : enter({ name })); // 방식에 맞게 로그인
+        void (live ? (joining ? enter({ email, password, redirectTo: `${window.location.origin}/auth/callback` }, "sign-up") : enter({ email, password })) : enter({ name })); // 방식에 맞게 로그인(가입할 때는 확인 메일의 링크가 돌아올 주소를 함께 보냄)
     }; // 함수 종료
     const social = (provider: SocialProvider) => // 간편 로그인 시작
     { // 함수 시작

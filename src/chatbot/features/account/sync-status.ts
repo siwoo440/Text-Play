@@ -35,5 +35,9 @@ export function describeSyncStatus(status: ShownSyncStatus): string // 상태를
     { // 조건 시작
         return status.mode === "practice" ? "연습용 서버에 저장됨(이 브라우저 안)" : "서버에 저장됨"; // 연습용은 이 브라우저 안이라는 것을 알림
     } // 조건 종료
+    if (status.phase === "signed-out") // 로그인이 끝남
+    { // 조건 시작
+        return "로그인이 끝났어요. 다시 로그인하면 서버에 이어서 저장해요."; // 다시 로그인 안내
+    } // 조건 종료
     return status.phase === "syncing" ? "저장하는 중…" : status.phase === "offline" ? "서버에 저장하지 못했어요. 이 기기에는 저장돼 있어요." : status.phase === "conflict" ? "다른 기기에서 바뀐 내용과 겹쳤어요." : ""; // 나머지 상태
 } // 함수 종료

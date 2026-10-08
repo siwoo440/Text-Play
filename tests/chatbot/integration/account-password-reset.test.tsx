@@ -14,7 +14,7 @@ const goodLink = "#access_token=recovery-token&refresh_token=refresh-1&expires_i
 
 function liveAdapter(overrides: Partial<AuthAdapter> = {}): AuthAdapter // 실제 서비스 로그인 대역
 { // 함수 시작
-    return { mode: "live", listAccounts: () => [], socialProviders: async () => [], startSocialSignIn: vi.fn(async () => undefined), completeSocialSignIn: vi.fn(async () => ok), signIn: vi.fn(async () => ok), signUp: vi.fn(async () => ok), signOut: vi.fn(async () => undefined), deleteAccount: vi.fn(async () => ({ ok: true as const })), requestPasswordReset: vi.fn(async () => ({ ok: true as const })), canCompletePasswordReset: (params) => params.get("type") === "recovery" && params.get("access_token") !== null, completePasswordReset: vi.fn(async () => ok), ...overrides }; // 대역 반환
+    return { mode: "live", listAccounts: () => [], socialProviders: async () => [], startSocialSignIn: vi.fn(async () => undefined), completeSocialSignIn: vi.fn(async () => ok), signIn: vi.fn(async () => ok), signUp: vi.fn(async () => ok), signOut: vi.fn(async () => undefined), deleteAccount: vi.fn(async () => ({ ok: true as const })), requestPasswordReset: vi.fn(async () => ({ ok: true as const })), canCompletePasswordReset: (params) => params.get("type") === "recovery" && params.get("access_token") !== null, completePasswordReset: vi.fn(async () => ok), canCompleteEmailConfirm: () => false, completeEmailConfirm: vi.fn(async () => ok), ...overrides }; // 대역 반환
 } // 함수 종료
 
 describe("비밀번호 다시 정하기", () => // 재설정 묶음

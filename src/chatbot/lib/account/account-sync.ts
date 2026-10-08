@@ -1,5 +1,5 @@
 // 계정 데이터 맞추기: 이 기기의 앱 데이터와 서버의 저장본을 견주어 올리거나 받는다. 양쪽이 따로 바뀌었으면 겹침을 알리고 사람이 고르게 한다.
-import type { RemoteSnapshot, SnapshotStore } from "@chatbot/lib/account/snapshot-store"; // 서버 저장 계약
+import { SignedOutError, type RemoteSnapshot, type SnapshotStore } from "@chatbot/lib/account/snapshot-store"; // 서버 저장 계약·로그인이 끝났다는 표시
 
 export interface SyncMeta // 이 기기의 맞춤 기록(계정마다 따로)
 { // 구조 시작
@@ -16,7 +16,7 @@ export interface SyncLocal // 이 기기 쪽 연결(앱이 채움)
     apply(state: string, protect: boolean): boolean; // 서버 저장본을 앱에 적용(검사 포함. protect면 이 기기 데이터를 먼저 백업. 쓸 수 없으면 false)
 } // 구조 종료
 
-export type SyncPhase = "idle" | "syncing" | "saved" | "offline" | "conflict"; // 맞추기 상태
+export type SyncPhase = "idle" | "syncing" | "saved" | "offline" | "conflict" | "signed-out"; // 맞추기 상태(signed-out: 로그인이 끝나 다시 로그인해야 함)
 export type SyncDecision = "upload" | "download" | "conflict" | "none"; // 할 일
 
 export interface SyncStatus // 화면에 알리는 상태
@@ -96,6 +96,7 @@ export function decideSync(meta: SyncMeta, remote: RemoteSnapshot | null, localH
 export class AccountSyncRunner // 맞추기 도구(계정 하나, 기기 하나)
 { // 클래스 시작
     private conflict: RemoteSnapshot | null = null; // 겹쳤을 때 본 서버 저장본
+    private signedOut = false; // 로그인이 끝난 것을 알았는지
 
     public constructor(private readonly store: SnapshotStore, private readonly accountId: string, private readonly local: SyncLocal, private readonly onStatus: (status: SyncStatus) => void = () => undefined, private readonly now: () => string = () => new Date().toISOString()) // 서버·계정·기기 연결·상태 알림·시각
     { // 생성자 시작
@@ -104,6 +105,17 @@ export class AccountSyncRunner // 맞추기 도구(계정 하나, 기기 하나)
     public hasConflict(): boolean // 풀지 않은 겹침이 있는지(있으면 사람이 고를 때까지 자동으로 맞추지 않음)
     { // 함수 시작
         return this.conflict !== null; // 겹침 여부
+    } // 함수 종료
+
+    public needsLogin(): boolean // 로그인이 끝났는지(끝났으면 다시 로그인할 때까지 자동으로 맞추지 않음)
+    { // 함수 시작
+        return this.signedOut; // 로그인 끝남 여부
+    } // 함수 종료
+
+    private expired(meta: SyncMeta): SyncStatus // 로그인이 끝났을 때의 상태(이 기기 데이터는 그대로 두고 다시 로그인하라고 알림)
+    { // 함수 시작
+        this.signedOut = true; // 기억
+        return this.report({ phase: "signed-out", syncedAt: meta.syncedAt }); // 로그인 끝남
     } // 함수 종료
 
     private failed(meta: SyncMeta): SyncStatus // 맞추지 못했을 때의 상태(겹침을 풀던 중이었으면 겹침을 그대로 알려 다시 고르게 함)
@@ -119,7 +131,11 @@ export class AccountSyncRunner // 맞추기 도구(계정 하나, 기기 하나)
 
     private async upload(json: string, expectedRevision: number | null, meta: SyncMeta): Promise<SyncStatus> // 이 기기 것을 올리기
     { // 함수 시작
-        const result = await this.store.push(this.accountId, json, expectedRevision, meta.deviceId).catch(() => ({ ok: false, reason: "unavailable" } as const)); // 올리기(닿지 못하면 실패로)
+        const result = await this.store.push(this.accountId, json, expectedRevision, meta.deviceId).catch((error: unknown) => ({ ok: false, reason: error instanceof SignedOutError ? "signed-out" : "unavailable" } as const)); // 올리기(닿지 못하면 실패로, 로그인이 끝났으면 그렇게)
+        if (!result.ok && result.reason === "signed-out") // 로그인이 끝남
+        { // 조건 시작
+            return this.expired(meta); // 다시 로그인하라고 알림
+        } // 조건 종료
         if (result.ok) // 저장됨
         { // 조건 시작
             const syncedAt = this.now(); // 맞춘 시각
@@ -156,9 +172,9 @@ export class AccountSyncRunner // 맞추기 도구(계정 하나, 기기 하나)
         { // 시도 시작
             remote = await this.store.pull(this.accountId); // 서버 저장본 읽기
         } // 시도 종료
-        catch // 서버에 닿지 못함
+        catch (error) // 서버에 닿지 못했거나 로그인이 끝남
         { // 실패 시작
-            return this.report({ phase: "offline", syncedAt: meta.syncedAt }); // 다음에 다시
+            return error instanceof SignedOutError ? this.expired(meta) : this.report({ phase: "offline", syncedAt: meta.syncedAt }); // 로그인이 끝났으면 그렇게 알리고, 아니면 다음에 다시
         } // 실패 종료
         const json = this.local.read(); // 지금 앱 데이터
         const decision = decideSync(meta, remote, hashText(json)); // 할 일

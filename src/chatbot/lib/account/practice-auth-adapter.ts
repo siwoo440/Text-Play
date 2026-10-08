@@ -52,6 +52,8 @@ export function createPracticeAuthAdapter(storage: Storage, now: () => string = 
         completeSocialSignIn: async () => ({ ok: false, reason: "unavailable" }), // 간편 로그인 없음
         signIn, // 로그인
         signUp: signIn, // 연습용은 가입과 로그인이 같음
+        canCompleteEmailConfirm: () => false, // 확인 메일이 없음
+        completeEmailConfirm: async () => ({ ok: false, reason: "unavailable" }), // 확인 메일이 없음
         requestPasswordReset: async () => ({ ok: false, reason: "unavailable" }), // 비밀번호가 없어 다시 정할 것도 없음
         canCompletePasswordReset: () => false, // 비밀번호가 없음
         completePasswordReset: async () => ({ ok: false, reason: "unavailable" }), // 비밀번호가 없음

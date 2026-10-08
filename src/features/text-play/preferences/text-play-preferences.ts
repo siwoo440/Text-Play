@@ -99,3 +99,16 @@ export function saveTextPlayPreferences(storage: Pick<Storage, "setItem">, prefe
 { // 함수 시작
     storage.setItem(TEXT_PLAY_PREFERENCES_KEY, JSON.stringify(preferences)); // 직렬화 저장
 } // 함수 종료
+
+export function hasStoredTextPlayLanguage(storage: Pick<Storage, "getItem">): boolean // 저장된 설정에 언어가 있는지(한 번도 저장한 적이 없으면 아직 고르지 않은 것)
+{ // 함수 시작
+    try // 안전 읽기 시작
+    { // 예외 처리 시작
+        const decoded: unknown = JSON.parse(storage.getItem(TEXT_PLAY_PREFERENCES_KEY) ?? "null"); // 저장값 해석
+        return isRecord(decoded) && APP_LANGUAGES.includes(decoded.language as AppLanguage); // 언어 값 확인
+    } // 예외 처리 종료
+    catch // 읽기 실패 처리
+    { // 오류 처리 시작
+        return false; // 고르지 않은 것으로 봄
+    } // 오류 처리 종료
+} // 함수 종료

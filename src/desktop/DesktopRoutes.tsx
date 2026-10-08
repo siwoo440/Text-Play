@@ -42,8 +42,13 @@ import type { OllamaClient } from "@/lib/adapters/ollama-client"; // 올라마 �
 interface DesktopRoutesProps // 경로 화면 속성
 { // 구조 시작
     repository: TextPlaySaveRepository; // Text-Play 저장소
-    localAIClient: OllamaClient; // 로컬 인공지능 통신기
     modelStoreClient: ModelStoreClient; // 내장 AI 모델 보관함 통신기
+} // 구조 종료
+
+interface DesktopPlayRouteProps // 플레이 화면 속성
+{ // 구조 시작
+    repository: TextPlaySaveRepository; // Text-Play 저장소
+    localAIClient: OllamaClient; // 로컬 인공지능 통신기
 } // 구조 종료
 
 interface ErrorBoundaryProps // 오류 경계 속성
@@ -122,12 +127,24 @@ function renderPage(match: DesktopRouteMatch, repository: TextPlaySaveRepository
     } // 분기 종료
 } // 함수 종료
 
-export function DesktopRoutes({ repository, localAIClient, modelStoreClient }: DesktopRoutesProps): ReactElement | null // 경로 화면
+export function DesktopPlayRoute({ repository, localAIClient }: DesktopPlayRouteProps): ReactElement | null // Text-Play 플레이 화면(ChatBot 앱 상태 밖에 둬서, ChatBot 화면 언어가 바뀌어 그 아래가 다시 그려져도 진행 중인 게임은 그대로)
+{ // 함수 시작
+    const location = useDesktopLocation(); // 현재 위치
+    const { preferences } = useTextPlayPreferences(); // Text-Play 설정
+    const llmSelection = useMemo(() => createDesktopLLMSelection(preferences, localAIClient), [localAIClient, preferences]); // 설정 기반 AI 생성
+    const match = matchDesktopRoute(location); // 경로 찾기
+    if (match.kind !== "text-play-play") // 플레이 화면 아님
+    { // 조건 시작
+        return null; // 출력 없음
+    } // 조건 종료
+    return <DesktopErrorBoundary key={location.search}><TextPlayProvider repository={repository} llm={llmSelection.adapter} llmLabel={llmSelection.label} resumeSlot={match.resumeSlot} language={preferences.language}><TextPlayScreen /></TextPlayProvider></DesktopErrorBoundary>; // 전체 창 플레이 화면
+} // 함수 종료
+
+export function DesktopRoutes({ repository, modelStoreClient }: DesktopRoutesProps): ReactElement | null // 경로 화면(플레이 화면 제외)
 { // 함수 시작
     const location = useDesktopLocation(); // 현재 위치
     const router = useDesktopRouterActions(); // 이동 동작
     const { preferences } = useTextPlayPreferences(); // Text-Play 설정
-    const llmSelection = useMemo(() => createDesktopLLMSelection(preferences, localAIClient), [localAIClient, preferences]); // 설정 기반 AI 생성
     const match = matchDesktopRoute(location); // 경로 찾기
     const title = getDesktopRouteTitle(match, preferences.language); // 화면 제목(고른 언어)
     const redirectTo = match.kind === "redirect" ? match.to : null; // 이동 대상
@@ -144,7 +161,7 @@ export function DesktopRoutes({ repository, localAIClient, modelStoreClient }: D
     }, [title]); // 제목 의존
     if (match.kind === "text-play-play") // 플레이 화면 확인
     { // 조건 시작
-        return <DesktopErrorBoundary key={location.search}><TextPlayProvider repository={repository} llm={llmSelection.adapter} llmLabel={llmSelection.label} resumeSlot={match.resumeSlot} language={preferences.language}><TextPlayScreen /></TextPlayProvider></DesktopErrorBoundary>; // 전체 창 플레이 화면
+        return null; // 플레이 화면은 DesktopPlayRoute가 출력
     } // 조건 종료
     return <DesktopShell pathname={location.pathname} area={getDesktopAreaId(match)} title={title} repository={repository}><DesktopErrorBoundary key={location.pathname}>{renderPage(match, repository, modelStoreClient)}</DesktopErrorBoundary></DesktopShell>; // 사이드바 틀 화면
 } // 함수 종료

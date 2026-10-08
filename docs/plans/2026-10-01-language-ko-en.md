@@ -48,10 +48,16 @@
   - 남은 한국어: ChatBot 화면(사이드바 대화방 목록·캐릭터·설정 화면 등, 4단계), 사용자가 정한 이름, 엔진(Rust)이 보내는 실패 이유 문구.
 - 4단계 진행: ChatBot 세션에 아래 요청을 보냄(2026-10-01, 사용자 결정). 기다리는 동안 메인 작품 50개 영어판 추가(`catalog/text-play-catalog-en.ts`: 기본 캐릭터 작품 7개는 문장 그대로, 콘셉트 작품 43개는 장소·인물·역할·핵심 물건으로 문장 생성, 태그는 공통 태그 사전). 검색은 한국어·영어 어느 쪽으로도 찾고 장르 필터는 한국어 태그 기준 그대로.
 
+- 4단계 완료(2026-10-08): ChatBot이 로드맵 8단계로 한국어/영어를 넣음(`settings.language`: 자동·한국어·영어, 사전 약 1,660개, AI 답변 언어 포함). ChatBot `03da2e4`를 동기화한 뒤 exe에서 두 언어 설정을 하나로 묶음.
+  - `src/desktop/DesktopLanguageBridge.tsx`: Text-Play 설정 창에서 바꾸면 ChatBot `settings.language`로, ChatBot `화면 레이아웃`에서 바꾸면 Text-Play 설정으로 옮김. 시작할 때 서로 다르면 ChatBot에서 직접 고른 값이 먼저, ChatBot이 자동이면 Text-Play에서 저장한 값이 먼저, 둘 다 고른 적이 없으면 ChatBot 자동 언어(브라우저 언어)를 따름(`hasStoredTextPlayLanguage`).
+  - ChatBot은 화면 언어가 바뀌면 `AppProvider` 아래 화면을 통째로 새로 그림. 그래서 Text-Play 플레이 화면은 `AppProvider` 밖(`DesktopPlayRoute`)으로 옮겨, 플레이 중 언어를 바꿔도 게임이 처음으로 돌아가지 않게 함(`DesktopApp.tsx`).
+  - 테스트: `tests/integration/desktop-language-bridge.test.tsx`(양방향, 저장된 선택으로 시작, 자동 언어).
+  - 남은 한국어: ChatBot 작품 내용(캐릭터 이름·소개·대사, 이미 나눈 대화: ChatBot 방침), 사용자가 정한 이름, 엔진(Rust)이 보내는 실패 이유 문구.
+
 ---
 ## ChatBot 쪽 요청(4단계)
 
-ChatBot 저장소 세션에 그대로 전달할 요청입니다.
+ChatBot 저장소 세션에 전달했던 요청입니다(기록용, 2026-10-08 완료: 실제 연결 방식은 위 `4단계 완료` 참고).
 
 > Text-Play exe가 한국어·영어를 나눴습니다(exe 설정 창에서 고르고, 값은 `ko`·`en`, 기본 `ko`). exe는 ChatBot 화면을 `src/chatbot`으로 그대로 가져다 쓰므로, ChatBot 쪽에 다음을 넣어 주세요.
 > 1. 앱 언어 값 `ko`·`en`(기본 `ko`)과 화면 글자 사전. 사이드바 대화방 목록(정렬·검색·새 캐릭터 만들기·보관함), 대화·스토리 화면, 캐릭터 상세·만들기, 탐색·내 작품, 설정·고객 지원, 사용자 패널, 19+ 스위치부터.

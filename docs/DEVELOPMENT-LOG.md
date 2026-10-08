@@ -1145,3 +1145,27 @@ Windows 실행 파일(exe)이 최신 ChatBot(Mate Verse) 기능을 똑같이 제
 - 어두운 테마에서 Text-Play 메인·AI 모델 화면은 아직 밝은 색 그대로(플레이 화면 디자인 작업에서 함께 맞춤)
 - exe의 ChatBot 대화는 연습용 AI만 사용(실제 AI 통로는 Next 서버가 필요). 내장 로컬 AI를 ChatBot 대화에 연결하는 일은 미정
 - 언어 연결: ChatBot `settings.language`와 Text-Play 설정 언어를 하나로 맞추기(다음 커밋)
+
+---
+## 2026-10-08 — 한국어·영어 나누기 4단계(ChatBot 화면 언어 연결)
+
+---
+### 변경 내용
+
+- 새 `src/desktop/DesktopLanguageBridge.tsx`: Text-Play 설정 언어와 ChatBot `settings.language`를 양방향으로 맞춤(어느 쪽에서 바꿔도 앱 전체 언어가 함께 바뀜)
+- `text-play-preferences.ts`: `hasStoredTextPlayLanguage`(언어를 고른 적이 있는지)
+- `DesktopApp.tsx`·`DesktopRoutes.tsx`: Text-Play 플레이 화면을 `DesktopPlayRoute`로 떼어 ChatBot `AppProvider` 밖에 둠. ChatBot은 화면 언어가 바뀌면 그 아래 화면을 새로 그리므로, 안에 두면 플레이 중 언어를 바꿀 때 게임이 처음으로 돌아감
+- 테스트: 새 `tests/integration/desktop-language-bridge.test.tsx` 4개
+
+---
+### 사용자 기능
+
+- Text-Play 설정 창이나 ChatBot `화면 레이아웃` 어느 곳에서 언어를 골라도 사이드바·ChatBot 화면·Text-Play 화면·AI 답변 언어가 함께 바뀜
+- 플레이 중 언어를 바꿔도 진행 중인 장면이 그대로 유지됨
+
+---
+### 검증 결과
+
+- 새 테스트는 구현 전 실패를 확인한 뒤 구현해 통과
+- 테스트 파일 189개, 테스트 1,198개 통과, 타입 검사·코드 검사 통과, 데스크톱 통합 테스트 13개 통과, `pnpm exe:rebuild` 성공
+- exe에서 플레이 중 English 선택 → 장면 유지(`Ruined Hall`), 대화 화면·사이드바 영어 확인, ChatBot 설정에서 한국어로 되돌리면 Text-Play 설정도 한국어

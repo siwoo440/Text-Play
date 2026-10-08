@@ -11,4 +11,11 @@ describe("Text-Play 턴 위치 스타일", () => // 턴 스타일 검증 묶음
         expect(turnDotsBlock).toContain("overflow-y: hidden"); // 세로 스크롤 차단 확인
         expect(turnDotsBlock).toContain("justify-content: safe center"); // 시작점 접근 확인
     }); // 테스트 종료
+
+    it("여러 줄로 입력한 행동은 기록에서도 줄을 나눠 보여 준다", () => // 줄바꿈 표시 검증
+    { // 테스트 시작
+        const source = readFileSync("src/features/text-play/ui/TextPlayScreen.module.css", "utf8"); // 스타일 원본 읽기
+        const entryBlock = source.match(/\.storyBox article p[^]*?\} \/\* 문구 종료 \*\//u)?.[0] ?? ""; // 기록 문구 블록 추출
+        expect(entryBlock).toContain("white-space: pre-line"); // 줄바꿈 유지 확인
+    }); // 테스트 종료
 }); // 묶음 종료

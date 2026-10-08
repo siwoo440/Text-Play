@@ -68,14 +68,17 @@
     backdrop-filter: blur(18px); /* 배경 흐림 */
 } /* 표시줄 종료 */
 
-.storyTitle /* 작품 제목 버튼 */
+.storyTitle /* 메인으로 돌아가는 작품 제목 버튼 */
 { /* 버튼 시작 */
-    display: grid; /* 세로 배치 */
-    gap: 3px; /* 제목 간격 */
+    display: flex; /* 화살표와 글자 가로 배치 */
+    gap: 10px; /* 화살표 간격 */
+    align-items: center; /* 세로 중앙 */
+    justify-self: start; /* 내용 너비만 차지 */
     min-width: 0; /* 축소 허용 */
-    padding: 7px 10px; /* 버튼 여백 */
+    max-width: 100%; /* 열 너비 제한 */
+    padding: 5px 12px 5px 6px; /* 버튼 여백 */
     border: 0; /* 기본 테두리 제거 */
-    border-radius: 10px; /* 버튼 모서리 */
+    border-radius: 12px; /* 버튼 모서리 */
     background: transparent; /* 투명 배경 */
     color: var(--main-text); /* 제목 색상 */
     cursor: pointer; /* 선택 커서 */
@@ -89,13 +92,45 @@
     outline: none; /* 기본 외곽선 제거 */
 } /* 제목 강조 종료 */
 
-.storyTitle span /* 작품 표제 */
-{ /* 표제 시작 */
-    color: var(--accent); /* 표제 색상 */
-    font-size: .62rem; /* 표제 크기 */
-    font-weight: 900; /* 표제 굵기 */
-    letter-spacing: .18em; /* 표제 자간 */
-} /* 표제 종료 */
+.backMark /* 돌아가기 화살표 */
+{ /* 화살표 시작 */
+    display: grid; /* 중앙 배치 */
+    flex: none; /* 크기 고정 */
+    place-items: center; /* 정중앙 배치 */
+    width: 32px; /* 화살표 칸 너비 */
+    height: 32px; /* 화살표 칸 높이 */
+    padding-bottom: 3px; /* 기호 세로 보정 */
+    border: 1px solid var(--panel-line); /* 칸 테두리 */
+    border-radius: 10px; /* 칸 모서리 */
+    background: light-dark(#ffffff, rgb(7 9 15 / 56%)); /* 칸 배경 */
+    color: var(--accent); /* 화살표 색상 */
+    font-size: 1.35rem; /* 화살표 크기 */
+    font-weight: 700; /* 화살표 굵기 */
+    line-height: 1; /* 기호 행간 */
+    transition: border-color .18s ease, transform .18s ease; /* 올림 전환 */
+} /* 화살표 종료 */
+
+.storyTitle:hover .backMark, /* 올림 화살표 */
+.storyTitle:focus-visible .backMark /* 초점 화살표 */
+{ /* 화살표 강조 시작 */
+    border-color: var(--accent); /* 강조 테두리 */
+    transform: translateX(-2px); /* 왼쪽으로 살짝 이동 */
+} /* 화살표 강조 종료 */
+
+.storyTitleText /* 제목 글자 묶음 */
+{ /* 묶음 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 2px; /* 글자 간격 */
+    min-width: 0; /* 축소 허용 */
+} /* 묶음 종료 */
+
+.storyTitle small /* 돌아가기 글자 */
+{ /* 글자 시작 */
+    color: var(--accent); /* 글자 색상 */
+    font-size: .68rem; /* 글자 크기 */
+    font-weight: 900; /* 글자 굵기 */
+    letter-spacing: .04em; /* 글자 자간 */
+} /* 글자 종료 */
 
 .storyTitle strong /* 작품 제목 */
 { /* 제목 시작 */
@@ -466,6 +501,7 @@
     font-size: clamp(.88rem, 1.2vw, 1.02rem); /* 문구 크기 */
     line-height: 1.7; /* 문구 행간 */
     text-shadow: 0 1px 8px light-dark(rgb(0 0 0 / 0%), rgb(0 0 0 / 70%)); /* 문구 그림자 */
+    white-space: pre-line; /* 여러 줄 입력의 줄바꿈 유지 */
 } /* 문구 종료 */
 
 .storyBox article strong /* 발화자 */
@@ -731,6 +767,126 @@
     font-size: .68rem; /* 버튼 크기 */
 } /* 버튼 종료 */
 
+.endingDock /* 엔딩 영역 */
+{ /* 영역 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 6px; /* 내용 간격 */
+    min-width: 0; /* 축소 허용 */
+} /* 영역 종료 */
+
+.endingPanel /* 엔딩 화면 */
+{ /* 엔딩 화면 시작 */
+    display: grid; /* 글과 동작 가로 배치 */
+    grid-template-columns: minmax(0, 1fr) auto; /* 글·동작 열 */
+    gap: 14px 24px; /* 내용 간격 */
+    align-items: center; /* 세로 중앙 */
+    padding: 16px 20px; /* 화면 여백 */
+    border: 1px solid var(--accent); /* 강조 테두리 */
+    border-radius: 18px; /* 화면 모서리 */
+    background: linear-gradient(120deg, var(--accent-soft), light-dark(#ffffff, rgb(7 9 15 / 56%)) 62%); /* 강조색에서 번지는 배경 */
+    box-shadow: 0 14px 34px var(--accent-soft); /* 은은한 강조 그림자 */
+    animation: endingRise .32s ease-out; /* 떠오르는 효과 */
+} /* 엔딩 화면 종료 */
+
+@keyframes endingRise /* 엔딩 떠오름 */
+{ /* 효과 시작 */
+    from /* 시작 상태 */
+    { /* 시작 */
+        opacity: 0; /* 투명 시작 */
+        transform: translateY(10px); /* 아래에서 시작 */
+    } /* 시작 종료 */
+    to /* 끝 상태 */
+    { /* 끝 */
+        opacity: 1; /* 불투명 종료 */
+        transform: none; /* 원래 위치 */
+    } /* 끝 종료 */
+} /* 효과 종료 */
+
+.endingText /* 엔딩 글 */
+{ /* 글 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 4px; /* 글 간격 */
+    min-width: 0; /* 축소 허용 */
+} /* 글 종료 */
+
+.endingText span /* 엔딩 표제 */
+{ /* 표제 시작 */
+    width: fit-content; /* 내용 너비 */
+    padding: 3px 10px; /* 표제 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    background: var(--accent-strong); /* 표제 배경 */
+    color: #fff; /* 표제 글자 */
+    font-size: .68rem; /* 표제 크기 */
+    font-weight: 900; /* 표제 굵기 */
+    letter-spacing: .08em; /* 표제 자간 */
+} /* 표제 종료 */
+
+.endingText h2 /* 엔딩 제목 */
+{ /* 제목 시작 */
+    margin: 4px 0 0; /* 제목 여백 */
+    color: var(--main-text); /* 제목 색상 */
+    font-size: clamp(1.15rem, 2vw, 1.5rem); /* 제목 크기 */
+    letter-spacing: -.02em; /* 제목 자간 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 제목 종료 */
+
+.endingText p /* 엔딩 요약 */
+{ /* 요약 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    color: var(--main-text); /* 요약 색상 */
+    font-size: .92rem; /* 요약 크기 */
+    line-height: 1.55; /* 요약 행간 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 요약 종료 */
+
+.endingText small /* 플레이 기록 */
+{ /* 기록 시작 */
+    color: var(--muted-text); /* 기록 색상 */
+    font-size: .76rem; /* 기록 크기 */
+} /* 기록 종료 */
+
+.endingActions /* 엔딩 동작 */
+{ /* 동작 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 허용 */
+    gap: 10px; /* 버튼 간격 */
+    justify-content: flex-end; /* 오른쪽 정렬 */
+} /* 동작 종료 */
+
+.endingActions button /* 엔딩 버튼 */
+{ /* 버튼 시작 */
+    min-height: 44px; /* 버튼 높이 */
+    padding: 0 20px; /* 버튼 여백 */
+    border: 1px solid var(--accent); /* 버튼 테두리 */
+    border-radius: 12px; /* 버튼 모서리 */
+    background: light-dark(#ffffff, rgb(7 9 15 / 56%)); /* 보조 버튼 배경 */
+    color: var(--accent); /* 보조 버튼 글자 */
+    cursor: pointer; /* 선택 커서 */
+    font-size: .88rem; /* 버튼 크기 */
+    font-weight: 850; /* 버튼 굵기 */
+    white-space: nowrap; /* 한 줄 표시 */
+    transition: filter .18s ease, transform .18s ease; /* 올림 전환 */
+} /* 버튼 종료 */
+
+.endingActions button:first-child /* 처음부터 다시 하기 */
+{ /* 버튼 시작 */
+    background: var(--accent-strong); /* 기본 버튼 배경 */
+    color: #fff; /* 기본 버튼 글자 */
+} /* 버튼 종료 */
+
+.endingActions button:hover, /* 엔딩 버튼 올림 */
+.endingActions button:focus-visible /* 엔딩 버튼 초점 */
+{ /* 강조 시작 */
+    filter: brightness(1.08); /* 밝기 강조 */
+    outline: none; /* 기본 외곽선 제거 */
+    transform: translateY(-2px); /* 위쪽 이동 */
+} /* 강조 종료 */
+
+.endingActions button:focus-visible /* 엔딩 버튼 키보드 초점 */
+{ /* 초점 시작 */
+    box-shadow: 0 0 0 3px var(--accent-soft); /* 초점 강조 */
+} /* 초점 종료 */
+
 .stateLayer /* 상태 레이어 */
 { /* 레이어 시작 */
     position: fixed; /* 화면 고정 */
@@ -955,6 +1111,16 @@
         height: auto; /* 행 수 기준 높이 */
         min-height: 76px; /* 입력 높이 */
     } /* 입력 종료 */
+
+    .endingPanel /* 모바일 엔딩 화면 */
+    { /* 엔딩 화면 시작 */
+        grid-template-columns: minmax(0, 1fr); /* 세로 배치 */
+    } /* 엔딩 화면 종료 */
+
+    .endingActions button /* 모바일 엔딩 버튼 */
+    { /* 버튼 시작 */
+        flex: 1; /* 같은 너비 */
+    } /* 버튼 종료 */
 } /* 미디어 종료 */
 
 @media (min-width: 960px) and (max-height: 760px) /* 낮은 창 */
@@ -1004,6 +1170,18 @@
     { /* 입력 시작 */
         height: 52px; /* 입력 높이 축소 */
     } /* 입력 종료 */
+
+    .endingPanel /* 낮은 창 엔딩 화면 */
+    { /* 엔딩 화면 시작 */
+        gap: 8px 20px; /* 내용 간격 축소 */
+        padding: 10px 16px; /* 화면 여백 축소 */
+    } /* 엔딩 화면 종료 */
+
+    .endingText h2 /* 낮은 창 엔딩 제목 */
+    { /* 제목 시작 */
+        margin-top: 2px; /* 제목 여백 축소 */
+        font-size: 1.1rem; /* 제목 크기 축소 */
+    } /* 제목 종료 */
 } /* 미디어 종료 */
 
 @media (prefers-reduced-motion: reduce) /* 동작 감소 */
@@ -1017,4 +1195,15 @@
     { /* 목록 시작 */
         animation: none; /* 펼침 효과 제거 */
     } /* 목록 종료 */
+
+    .endingPanel /* 엔딩 화면 */
+    { /* 엔딩 화면 시작 */
+        animation: none; /* 떠오르는 효과 제거 */
+    } /* 엔딩 화면 종료 */
+
+    .backMark, /* 돌아가기 화살표 */
+    .endingActions button /* 엔딩 버튼 */
+    { /* 전환 대상 시작 */
+        transition: none; /* 전환 제거 */
+    } /* 전환 대상 종료 */
 } /* 미디어 종료 */

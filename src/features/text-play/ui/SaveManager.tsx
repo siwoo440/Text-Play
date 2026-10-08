@@ -76,7 +76,7 @@ export function SaveManager({ mode, open, onClose }: SaveManagerProps) // 저장
     return ( // 관리자 반환
         <TextPlayDialog labelledBy="text-play-save-dialog-title" describedBy="text-play-save-dialog-description" open={open} onClose={onClose}> {/* 저장 대화상자 */}
             <header className={styles.header}> {/* 저장 머리말 */}
-                <span>{mode === "save" ? "SAVE GAME" : "LOAD GAME"}</span> {/* 영문 표제 */}
+                <span>{mode === "save" ? text.saveEyebrow : text.loadEyebrow}</span> {/* 표제(고른 언어) */}
                 <h2 id="text-play-save-dialog-title">{title}</h2> {/* 저장 제목 */}
                 <p id="text-play-save-dialog-description">{mode === "save" ? text.saveDescription : text.loadDescription}</p> {/* 모드 설명 */}
             </header> {/* 머리말 종료 */}
@@ -89,7 +89,7 @@ export function SaveManager({ mode, open, onClose }: SaveManagerProps) // 저장
                         <article key={slotId} className={styles.slot} role="group" aria-label={text.slotGroup(index + 1)} data-state={corrupt ? "error" : slot === null ? "empty" : "saved"}> {/* 슬롯 카드 */}
                             <div className={styles.slotHeading}> {/* 슬롯 머리말 */}
                                 <strong>{text.slot(index + 1)}</strong> {/* 슬롯 제목 */}
-                                <span>{corrupt ? "ERROR" : slot === null ? "EMPTY" : "SAVED"}</span> {/* 슬롯 상태 */}
+                                <span>{corrupt ? text.stateError : slot === null ? text.stateEmpty : text.stateSaved}</span> {/* 슬롯 상태(고른 언어) */}
                             </div> {/* 머리말 종료 */}
                             {corrupt // 손상 슬롯 확인
                                 ? <p className={styles.error}>{text.corrupt}</p> // 손상 슬롯 안내

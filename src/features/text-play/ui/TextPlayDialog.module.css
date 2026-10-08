@@ -42,7 +42,13 @@
 .backdrop[data-tone="light"] /* 밝은 배경 */
 { /* 배경 시작 */
     background: light-dark(rgb(31 26 46 / 34%), rgb(4 5 10 / 70%)); /* 연한 반투명 배경 */
+    color-scheme: light; /* 기본은 밝은 색 구성(웹은 테마 표시가 없어 밝게 유지) */
 } /* 배경 종료 */
+
+:global(:root[data-theme="dark"]) .backdrop[data-tone="light"] /* 앱 다크 모드의 밝은 톤 대화상자 */
+{ /* 다크 시작 */
+    color-scheme: dark; /* 앱 다크 모드를 따름 */
+} /* 다크 종료 */
 
 .backdrop[data-tone="light"] .panel /* 밝은 패널 */
 { /* 패널 시작 */

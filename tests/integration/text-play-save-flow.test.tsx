@@ -114,6 +114,22 @@ describe("Text-Play 저장 흐름", () => // 저장 흐름 묶음
         const corruptSlot = screen.getByRole("group", { name: "수동 저장 슬롯 2" }); // 손상 슬롯 조회
         expect(await within(corruptSlot).findByText("저장 데이터가 손상되었습니다.")).toBeInTheDocument(); // 손상 안내 확인
         expect(within(corruptSlot).getByRole("button", { name: "손상 슬롯" })).toBeDisabled(); // 불러오기 차단 확인
-        expect(screen.getByRole("group", { name: "수동 저장 슬롯 1" })).toHaveTextContent("저장된 대화가 없습니다."); // 정상 빈 슬롯 확인
+        expect(screen.getByRole("group", { name: "수동 저장 슬롯 1" })).toHaveTextContent("저장된 게임이 없습니다."); // 정상 빈 슬롯 확인
+    }); // 테스트 종료
+
+    it("한국어 화면의 저장 창은 표제와 슬롯 상태를 한국어로 보여 준다", async () => // 저장 창 문구 검증
+    { // 테스트 시작
+        const user = userEvent.setup(); // 사용자 생성
+        render(<TextPlayPlatformProvider value={TEST_TEXT_PLAY_PLATFORM}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new CorruptSlotRepository()}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 화면 렌더
+        await user.click(screen.getByRole("button", { name: "저장 슬롯 열기" })); // 저장 모달 열기
+        const saveDialog = screen.getByRole("dialog", { name: "게임 저장" }); // 저장 창 조회
+        expect(await within(saveDialog).findByText("오류")).toBeInTheDocument(); // 손상 슬롯 상태 확인
+        expect(within(screen.getByRole("group", { name: "수동 저장 슬롯 1" })).getByText("비어 있음")).toBeInTheDocument(); // 빈 슬롯 상태 확인
+        expect(saveDialog.textContent ?? "").not.toMatch(/SAVE GAME|EMPTY|ERROR|SAVED/u); // 영어 표시 없음
+        await user.click(within(saveDialog).getByRole("button", { name: "닫기" })); // 저장 창 닫기
+        await user.click(screen.getByRole("button", { name: "불러오기 슬롯 열기" })); // 불러오기 모달 열기
+        const loadDialog = screen.getByRole("dialog", { name: "게임 불러오기" }); // 불러오기 창 조회
+        expect(loadDialog).toHaveTextContent("이어서 진행할 게임을 선택하세요."); // 불러오기 설명 확인
+        expect(loadDialog.textContent ?? "").not.toMatch(/LOAD GAME|대화/u); // 영어 표제와 '대화' 표현 없음
     }); // 테스트 종료
 }); // 묶음 종료

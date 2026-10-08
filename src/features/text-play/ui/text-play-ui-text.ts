@@ -5,6 +5,7 @@ export const TEXT_PLAY_UI_TEXT = defineText( // Text-Play 플레이 화면 글�
         screen: // 플레이 화면
         { // 화면 시작
             backToMain: (title: string) => `메인으로 돌아가기: ${title}`, // 작품 제목 버튼
+            backLabel: "메인으로", // 돌아가기 버튼에 보이는 글자
             openStatus: "상태 패널 열기", // 상태 열기
             closeStatus: "상태 패널 닫기", // 상태 닫기
             hp: "체력", // 체력
@@ -36,10 +37,18 @@ export const TEXT_PLAY_UI_TEXT = defineText( // Text-Play 플레이 화면 글�
             send: "전송", // 전송
             stop: "응답 중지", // 중지
             systemNotice: "시스템 안내", // 안내 영역
-            idleNotice: "선택하거나 행동을 입력해 이야기를 진행하세요.", // 기본 안내
+            idleNotice: "선택하거나 행동을 입력해 이야기를 진행하세요. Enter로 보내고 Shift+Enter로 줄을 바꿉니다.", // 기본 안내
             retry: "같은 입력 다시 시도", // 재시도
             memoryStorageWarning: "영구 저장소를 사용할 수 없어 현재 실행 중에만 메모리에 저장합니다.", // 메모리 저장 경고
         }, // 화면 종료
+        ending: // 엔딩 화면
+        { // 엔딩 시작
+            region: "엔딩", // 엔딩 영역
+            eyebrow: "엔딩", // 엔딩 표제
+            record: (turns: number, time: string) => `${turns}턴 · 플레이 ${time}`, // 플레이 기록
+            restart: "처음부터 다시 하기", // 다시 시작
+            toMain: "메인으로", // 메인 이동
+        }, // 엔딩 종료
         story: // 이야기 기록
         { // 기록 시작
             log: "이야기 기록", // 기록 영역
@@ -73,12 +82,17 @@ export const TEXT_PLAY_UI_TEXT = defineText( // Text-Play 플레이 화면 글�
         { // 저장 시작
             saveTitle: "게임 저장", // 저장 제목
             loadTitle: "게임 불러오기", // 불러오기 제목
+            saveEyebrow: "수동 저장", // 저장 표제
+            loadEyebrow: "수동 저장", // 불러오기 표제
             saveDescription: "현재 진행을 저장할 슬롯을 선택하세요.", // 저장 설명
-            loadDescription: "이어서 진행할 대화를 선택하세요.", // 불러오기 설명
+            loadDescription: "이어서 진행할 게임을 선택하세요.", // 불러오기 설명
             slotGroup: (slot: number) => `수동 저장 슬롯 ${slot}`, // 슬롯 묶음
             slot: (slot: number) => `슬롯 ${slot}`, // 슬롯 제목
+            stateEmpty: "비어 있음", // 빈 슬롯 상태
+            stateSaved: "저장됨", // 저장된 슬롯 상태
+            stateError: "오류", // 손상 슬롯 상태
             corrupt: "저장 데이터가 손상되었습니다.", // 손상
-            empty: "저장된 대화가 없습니다.", // 빈 슬롯
+            empty: "저장된 게임이 없습니다.", // 빈 슬롯
             playTime: (time: string) => `플레이 ${time}`, // 플레이 시간
             savedAt: (time: string) => `저장 ${time}`, // 저장 시각
             repairSave: "복구 저장", // 손상 슬롯 저장
@@ -170,6 +184,7 @@ export const TEXT_PLAY_UI_TEXT = defineText( // Text-Play 플레이 화면 글�
         screen: // 플레이 화면
         { // 화면 시작
             backToMain: (title: string) => `Back to main: ${title}`, // 작품 제목 버튼
+            backLabel: "Main", // 돌아가기 버튼에 보이는 글자
             openStatus: "Open status panel", // 상태 열기
             closeStatus: "Close status panel", // 상태 닫기
             hp: "HP", // 체력
@@ -201,10 +216,18 @@ export const TEXT_PLAY_UI_TEXT = defineText( // Text-Play 플레이 화면 글�
             send: "Send", // 전송
             stop: "Stop response", // 중지
             systemNotice: "System notice", // 안내 영역
-            idleNotice: "Choose an option or type an action to continue the story.", // 기본 안내
+            idleNotice: "Choose an option or type an action to continue the story. Press Enter to send and Shift+Enter for a new line.", // 기본 안내
             retry: "Retry the same input", // 재시도
             memoryStorageWarning: "Permanent storage is unavailable, so progress is kept in memory only while the app is running.", // 메모리 저장 경고
         }, // 화면 종료
+        ending: // 엔딩 화면
+        { // 엔딩 시작
+            region: "Ending", // 엔딩 영역
+            eyebrow: "ENDING", // 엔딩 표제
+            record: (turns: number, time: string) => `${turns} turn${turns === 1 ? "" : "s"} · played ${time}`, // 플레이 기록
+            restart: "Start over", // 다시 시작
+            toMain: "Back to main", // 메인 이동
+        }, // 엔딩 종료
         story: // 이야기 기록
         { // 기록 시작
             log: "Story log", // 기록 영역
@@ -238,10 +261,15 @@ export const TEXT_PLAY_UI_TEXT = defineText( // Text-Play 플레이 화면 글�
         { // 저장 시작
             saveTitle: "Save game", // 저장 제목
             loadTitle: "Load game", // 불러오기 제목
+            saveEyebrow: "SAVE GAME", // 저장 표제
+            loadEyebrow: "LOAD GAME", // 불러오기 표제
             saveDescription: "Choose a slot to save your current progress.", // 저장 설명
             loadDescription: "Choose a story to continue.", // 불러오기 설명
             slotGroup: (slot: number) => `Manual save slot ${slot}`, // 슬롯 묶음
             slot: (slot: number) => `Slot ${slot}`, // 슬롯 제목
+            stateEmpty: "EMPTY", // 빈 슬롯 상태
+            stateSaved: "SAVED", // 저장된 슬롯 상태
+            stateError: "ERROR", // 손상 슬롯 상태
             corrupt: "This save data is damaged.", // 손상
             empty: "No saved story.", // 빈 슬롯
             playTime: (time: string) => `Played ${time}`, // 플레이 시간

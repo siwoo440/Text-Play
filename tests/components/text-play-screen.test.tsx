@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react"; // 렌더 도구
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"; // 렌더 도구
 import userEvent from "@testing-library/user-event"; // 사용자 동작
 import { renderToString } from "react-dom/server"; // 서버 렌더 도구
 import { chooseTextPlayRecommendation } from "@/test/text-play-recommendations"; // 추천 답안 선택 도우미
@@ -44,6 +44,25 @@ class RetryAdapter implements LLMAdapter // 재시도 어댑터
 function createPlatform(): TextPlayPlatform // 테스트 플랫폼 생성기
 { // 함수 시작
     return { applyWindowResolution: async () => undefined, navigate: vi.fn(), renderSceneImage: (source) => <span data-testid="scene-image">{source}</span> }; // 테스트 플랫폼 반환
+} // 함수 종료
+
+function createRecordingAdapter(inputs: string[]): LLMAdapter // 받은 입력을 기록하는 어댑터
+{ // 함수 시작
+    return { // 어댑터 반환
+        async *streamStructuredReply(input: StructuredLLMInput) // 구조화 응답
+        { // 함수 시작
+            inputs.push(input.userInput); // 입력 기록
+            yield JSON.stringify({ narration: "문양이 희미하게 빛난다", dialogue: null, proposedActions: [] }); // 응답 반환
+        }, // 함수 종료
+        async *streamReply() // 일반 응답
+        { // 함수 시작
+            yield "응답"; // 응답 반환
+        }, // 함수 종료
+        async summarizeConversation() // 대화 요약
+        { // 함수 시작
+            return "요약"; // 요약 반환
+        }, // 함수 종료
+    }; // 어댑터 종료
 } // 함수 종료
 
 describe("Text-Play 플레이 화면", () => // 플레이 검증 묶음
@@ -208,5 +227,42 @@ describe("Text-Play 플레이 화면", () => // 플레이 검증 묶음
         const input = screen.getByRole("textbox", { name: "행동 직접 입력" }); // 입력 영역 조회
         expect(recommendations.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy(); // 추천 영역 선행 확인
         expect(recommendations.parentElement?.nextElementSibling?.contains(input)).toBe(true); // 직접 입력 바로 위 확인
+    }); // 테스트 종료
+
+    it("입력칸에서 Enter를 누르면 전송하고 Shift+Enter는 줄만 바꾼다", async () => // Enter 전송 검증
+    { // 테스트 시작
+        const user = userEvent.setup(); // 사용자 동작 준비
+        const inputs: string[] = []; // 받은 입력 목록
+        render(<TextPlayPlatformProvider value={createPlatform()}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new MemoryTextPlaySaveRepository()} llm={createRecordingAdapter(inputs)}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 화면 렌더
+        const textbox = screen.getByRole("textbox", { name: "행동 직접 입력" }); // 입력칸 조회
+        await user.type(textbox, "첫 줄{Shift>}{Enter}{/Shift}둘째 줄"); // Shift+Enter로 줄바꿈
+        expect(textbox).toHaveValue("첫 줄\n둘째 줄"); // 줄바꿈만 됨
+        expect(inputs).toEqual([]); // 아직 전송 안 함
+        await user.type(textbox, "{Enter}"); // Enter로 전송
+        expect(await screen.findByText("문양이 희미하게 빛난다")).toBeInTheDocument(); // 응답 기록 확인
+        expect(inputs).toEqual(["첫 줄\n둘째 줄"]); // 입력 전달 확인
+        expect(screen.getByRole("textbox", { name: "행동 직접 입력" })).toHaveValue(""); // 입력칸 비움 확인
+    }); // 테스트 종료
+
+    it("한글을 조합하는 중에 누른 Enter는 전송하지 않는다", async () => // 조합 중 Enter 검증
+    { // 테스트 시작
+        const inputs: string[] = []; // 받은 입력 목록
+        render(<TextPlayPlatformProvider value={createPlatform()}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new MemoryTextPlaySaveRepository()} llm={createRecordingAdapter(inputs)}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 화면 렌더
+        const textbox = screen.getByRole("textbox", { name: "행동 직접 입력" }); // 입력칸 조회
+        fireEvent.change(textbox, { target: { value: "문양" } }); // 조합 중인 글자
+        fireEvent.keyDown(textbox, { key: "Enter", isComposing: true }); // 글자 확정용 Enter
+        fireEvent.keyDown(textbox, { key: "Enter", keyCode: 229 }); // 예전 방식의 조합 표시
+        await waitFor(() => expect(textbox).toHaveValue("문양")); // 입력 유지 확인
+        expect(inputs).toEqual([]); // 전송 안 함
+    }); // 테스트 종료
+
+    it("메인으로 돌아가는 버튼임을 글자와 화살표로 보여 주고 Enter 전송을 안내한다", () => // 돌아가기·안내 표시 검증
+    { // 테스트 시작
+        render(<TextPlayPlatformProvider value={createPlatform()}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new MemoryTextPlaySaveRepository()}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 화면 렌더
+        const back = screen.getByRole("button", { name: "메인으로 돌아가기: 달빛 숲의 기록" }); // 돌아가기 버튼
+        expect(back).toHaveTextContent("메인으로"); // 보이는 글자 확인
+        expect(back).toHaveTextContent("달빛 숲의 기록"); // 작품 제목 유지 확인
+        expect(back.querySelector("[data-back-mark]")).not.toBeNull(); // 화살표 표시 확인
+        expect(screen.getByRole("region", { name: "시스템 안내" })).toHaveTextContent("Enter"); // Enter 전송 안내 확인
     }); // 테스트 종료
 }); // 묶음 종료

@@ -52,6 +52,49 @@ test("자유 입력을 외부 네트워크 없이 처리한다", async ({ page }
     expect(externalRequests).toEqual([]); // 외부 요청 부재 확인
 }); // 테스트 종료
 
+test("Enter로 행동을 보내고 엔딩 화면에서 처음부터 다시 시작한다", async ({ page }) => // Enter 전송·엔딩 화면 검증
+{ // 테스트 시작
+    await page.setViewportSize({ width: 1280, height: 720 }); // 기본 창 크기
+    await page.goto("/#/text-play"); // Text-Play 홈 진입
+    await page.getByRole("button", { name: "새 게임" }).click(); // 새 게임 시작
+    const input = page.getByRole("textbox", { name: "행동 직접 입력" }); // 입력칸 조회
+    await input.fill("문양을 자세히 살핀다"); // 자유 행동 입력
+    await input.press("Enter"); // Enter로 전송
+    await expect(page.getByText("그 선택을 기억할게.")).toBeVisible(); // Mock 응답 확인
+    await expect(input).toHaveValue(""); // 입력칸 비움 확인
+    await chooseRecommendation(page, "숲 밖으로 후퇴한다"); // 후퇴 엔딩으로 이동
+    const ending = page.getByRole("region", { name: "엔딩" }); // 엔딩 화면 조회
+    await expect(ending.getByRole("heading", { name: "돌아가는 길" })).toBeVisible(); // 엔딩 제목 확인
+    await expect(ending.getByText("달빛 숲의 입구에서 탐사를 포기하고 돌아왔다.")).toBeVisible(); // 엔딩 요약 확인
+    await expect(page.getByRole("textbox", { name: "행동 직접 입력" })).toHaveCount(0); // 직접 입력 막힘 확인
+    const endingBox = await ending.boundingBox(); // 엔딩 화면 위치
+    expect((endingBox?.y ?? 0) + (endingBox?.height ?? 0)).toBeLessThanOrEqual(720); // 엔딩 화면이 창 안에 들어옴
+    expect(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true); // 창 세로 넘침 없음
+    await ending.getByRole("button", { name: "처음부터 다시 하기" }).click(); // 다시 시작
+    await expect(page.getByRole("heading", { name: "달빛 숲 입구" })).toBeVisible(); // 첫 장면 확인
+    await expect(page.getByRole("textbox", { name: "행동 직접 입력" })).toBeVisible(); // 직접 입력 복귀 확인
+}); // 테스트 종료
+
+test("다크 모드를 켜면 Text-Play 메인과 작품 상세 창도 어두운 색으로 바뀐다", async ({ page }) => // 메인 다크 모드 검증
+{ // 테스트 시작
+    await page.goto("/#/text-play"); // Text-Play 홈 진입
+    const home = page.locator("[data-text-play-home]"); // 메인 화면 조회
+    const readColors = () => home.evaluate((element) => // 메인 색 읽기
+    { // 함수 시작
+        const card = element.querySelector("[class*='card']"); // 첫 작품 카드
+        return { ink: getComputedStyle(element).color, card: card === null ? "" : getComputedStyle(card).backgroundColor }; // 글자색·카드 배경 반환
+    }); // 함수 종료
+    await expect(page.getByRole("heading", { level: 1, name: "오늘, 어떤 이야기를 플레이할까요?" })).toBeVisible(); // 메인 표시 확인
+    expect(await readColors()).toEqual({ ink: "rgb(31, 26, 46)", card: "rgb(255, 255, 255)" }); // 밝은 화면 색 확인
+    await page.getByRole("switch", { name: "다크 모드" }).click(); // 다크 모드 켜기
+    await expect.poll(readColors).toEqual({ ink: "rgb(236, 233, 245)", card: "rgb(27, 24, 37)" }); // 어두운 화면 색 확인
+    await page.getByRole("button", { name: /^달빛 숲의 기록 - / }).first().click(); // 작품 상세 열기
+    const dialog = page.getByRole("dialog", { name: "달빛 숲의 기록" }); // 상세 창 조회
+    await expect(dialog).toBeVisible(); // 상세 창 표시 확인
+    expect(await dialog.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe("rgb(27, 24, 37)"); // 상세 창 어두운 배경 확인
+    expect(await dialog.getByRole("heading", { name: "달빛 숲의 기록" }).evaluate((element) => getComputedStyle(element).color)).toBe("rgb(177, 141, 233)"); // 상세 제목 어두운 화면용 색 확인
+}); // 테스트 종료
+
 test("수동 저장을 불러오고 삭제한다", async ({ page }) => // 수동 저장 흐름 검증
 { // 테스트 시작
     await page.goto("/#/text-play"); // Text-Play 홈 진입
@@ -77,7 +120,7 @@ test("수동 저장을 불러오고 삭제한다", async ({ page }) => // 수동
         await dialog.accept(); // 삭제 승인
     }); // 처리 종료
     await firstSlot.getByRole("button", { name: "삭제" }).click(); // 수동 저장 삭제
-    await expect(firstSlot.getByText("저장된 대화가 없습니다.")).toBeVisible(); // 빈 슬롯 확인
+    await expect(firstSlot.getByText("저장된 게임이 없습니다.")).toBeVisible(); // 빈 슬롯 확인
 }); // 테스트 종료
 
 test("1280×720에서 설정과 여섯 번째 슬롯 전체 흐름을 제공한다", async ({ page }) => // 고정 화면 회귀 검증

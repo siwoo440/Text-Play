@@ -26,6 +26,7 @@ interface TextPlayStore // Text-Play 저장소 구조
     save(slotId: TextPlaySlotId): Promise<void>; // 수동 저장
     load(slotId: TextPlaySlotId): Promise<void>; // 저장 복원
     remove(slotId: TextPlaySlotId): Promise<void>; // 저장 삭제
+    restart(): void; // 처음부터 다시 시작
     toggleStatePanel(): void; // 상태 패널 전환
 } // 구조 종료
 
@@ -100,6 +101,10 @@ export function TextPlayProvider({ children, initialState, repository, llm, llmL
     }, [refreshSlots]); // 조회 함수 의존
     const sendFreeInput = useCallback(async (input: string, signal: AbortSignal) => // 자유 입력 처리
     { // 함수 시작
+        if (stateRef.current.game.endingId !== null) // 엔딩 뒤 입력 확인
+        { // 조건 시작
+            return; // 끝난 이야기에는 입력을 보내지 않음
+        } // 조건 종료
         const controller = createTextPlayController({ llm: llmRef.current, repository: repositoryRef.current, getState: () => stateRef.current, dispatch, now: () => new Date().toISOString(), language }); // 제어기 생성(고른 언어로 답변)
         await controller.sendFreeInput(input, signal); // 자유 입력 실행
         await refreshSlots(); // 자동 저장 목록 갱신
@@ -165,7 +170,12 @@ export function TextPlayProvider({ children, initialState, repository, llm, llmL
         dispatch({ type: "save-notice", message: messagesRef.current.removed }); // 삭제 안내
         await refreshSlots(); // 저장 슬롯 목록 갱신
     }, [refreshSlots, syncStorageWarning]); // 슬롯 갱신 의존
-    const value = useMemo<TextPlayStore>(() => ({ state, slots, corruptSlotIds, llmLabel: activeLLMLabel, storageWarning, selectChoice, sendFreeInput, save, load, remove, toggleStatePanel: () => dispatch({ type: "toggle-state-panel" }) }), [activeLLMLabel, corruptSlotIds, load, remove, save, selectChoice, sendFreeInput, slots, state, storageWarning]); // 문맥 값 생성
+    const restart = useCallback(() => // 처음부터 다시 시작(자동 저장은 새 게임의 첫 행동 때 바뀜)
+    { // 함수 시작
+        dispatch({ type: "game-restored", game: createTextPlayState(DEMO_TEXT_PLAY_PACKAGE, new Date().toISOString()) }); // 첫 장면의 새 게임 상태
+        dispatch({ type: "save-notice", message: null }); // 지난 게임의 저장 안내 지우기
+    }, []); // 고정 콜백
+    const value = useMemo<TextPlayStore>(() => ({ state, slots, corruptSlotIds, llmLabel: activeLLMLabel, storageWarning, selectChoice, sendFreeInput, save, load, remove, restart, toggleStatePanel: () => dispatch({ type: "toggle-state-panel" }) }), [activeLLMLabel, corruptSlotIds, load, remove, restart, save, selectChoice, sendFreeInput, slots, state, storageWarning]); // 문맥 값 생성
     return <TextPlayContext.Provider value={value}>{children}</TextPlayContext.Provider>; // 공급자 반환
 } // 함수 종료
 

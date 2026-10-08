@@ -84,6 +84,21 @@ describe("Text-Play 영어 화면", () => // 영어 화면 검증 묶음
         expect((settings.textContent ?? "").replace("언어 / Language", "").replace("한국어", "")).not.toMatch(HANGUL); // 두 언어로 쓴 언어 선택 말고는 한글 없음
     }); // 테스트 종료
 
+    it("엔딩 화면도 영어로 보여 준다", async () => // 영어 엔딩 검증
+    { // 테스트 시작
+        const user = userEvent.setup(); // 사용자 동작 준비
+        const { container } = renderEnglishScreen(); // 화면 렌더
+        await user.click(await screen.findByRole("button", { name: "AI suggestions" })); // 추천 펼치기
+        await user.click(screen.getByRole("button", { name: "Retreat out of the forest" })); // 후퇴 선택
+        const ending = await screen.findByRole("region", { name: "Ending" }); // 엔딩 화면 조회
+        expect(within(ending).getByRole("heading", { name: "The Way Back", level: 2 })).toBeInTheDocument(); // 엔딩 제목 확인
+        expect(within(ending).getByText("You gave up the expedition at the entrance of the moonlit forest and turned back.")).toBeInTheDocument(); // 엔딩 요약 확인
+        expect(within(ending).getByRole("button", { name: "Start over" })).toBeInTheDocument(); // 처음부터 버튼 확인
+        expect(within(ending).getByRole("button", { name: "Back to main" })).toBeInTheDocument(); // 메인으로 버튼 확인
+        expect(container.textContent ?? "").not.toMatch(HANGUL); // 화면 글자에 한글 없음
+        expect(hangulLabels(container)).toEqual([]); // 접근성 이름에 한글 없음
+    }); // 테스트 종료
+
     it("Text-Play 메인 화면 글자와 샘플 작품을 영어로 보여 준다", async () => // 영어 메인 검증
     { // 테스트 시작
         render(<TextPlayPlatformProvider value={createPlatform()}><TextPlayPreferencesProvider><TextPlayHome repository={new MemoryTextPlaySaveRepository()} /></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 메인 렌더

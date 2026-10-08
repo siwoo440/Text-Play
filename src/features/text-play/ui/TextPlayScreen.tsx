@@ -1,6 +1,6 @@
 "use client"; // 클라이언트 컴포넌트
 
-import { useMemo, useRef, useState, type FormEvent } from "react"; // 리액트 도구
+import { useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react"; // 리액트 도구
 import { getAvailableChoices } from "@/features/text-play/core/engine"; // 선택지 조회기
 import { DEMO_TEXT_PLAY_PACKAGE } from "@/features/text-play/data/demo-package"; // 샘플 작품
 import { createSpeakerNamer, createTextTranslator, localizeTextPlayPackage } from "@/features/text-play/data/localize-package"; // 작품 언어판
@@ -15,6 +15,7 @@ import { StoryLog } from "@/features/text-play/ui/StoryLog"; // 이야기 기록
 import { TextPlayFrameDecoration, TextPlayIcon } from "@/features/text-play/ui/TextPlayIcons"; // 벡터 UI
 import { TextPlaySettingsDialog } from "@/features/text-play/ui/TextPlaySettingsDialog"; // 설정 대화상자
 import { buildTextPlayRecommendations, type TextPlayRecommendation } from "@/features/text-play/ui/text-play-recommendations"; // 추천 답안 생성기
+import { formatTextPlayPlayTime } from "@/features/text-play/ui/text-play-save-summary"; // 플레이 시간 표시
 import { buildTextPlayStoryPages } from "@/features/text-play/ui/text-play-story-pages"; // 이야기 페이지 생성기
 import { TEXT_PLAY_UI_TEXT } from "@/features/text-play/ui/text-play-ui-text"; // 언어별 화면 글자
 import { TEXT_PLAY_MEMORY_STORAGE_WARNING } from "@/features/text-play/storage/browser-save-repository"; // 메모리 저장 경고
@@ -24,7 +25,7 @@ export function TextPlayScreen() // Text-Play 플레이 화면
 { // 함수 시작
     const platform = useTextPlayPlatform(); // 실행 플랫폼 조회
     const { preferences, updatePreferences } = useTextPlayPreferences(); // 게임 설정 조회
-    const { state, llmLabel, storageWarning, selectChoice, sendFreeInput, toggleStatePanel } = useTextPlaySession(); // 세션 조회
+    const { state, llmLabel, storageWarning, selectChoice, sendFreeInput, restart, toggleStatePanel } = useTextPlaySession(); // 세션 조회
     const language = useAppLanguage(); // 고른 언어
     const text = TEXT_PLAY_UI_TEXT[language]; // 언어별 화면 글자
     const work = useMemo(() => localizeTextPlayPackage(DEMO_TEXT_PLAY_PACKAGE, language), [language]); // 고른 언어의 작품
@@ -45,8 +46,14 @@ export function TextPlayScreen() // Text-Play 플레이 화면
     const recommendations = useMemo(() => buildTextPlayRecommendations(getAvailableChoices(work, state.game), text.choices.freeActions), [state.game, text, work]); // 현재 추천 답안 생성
     const [expandedTurn, setExpandedTurn] = useState<string | null>(null); // 추천 펼침 턴 상태
     const recommendationsExpanded = expandedTurn === state.game.updatedAt; // 현재 턴 펼침 여부
+    const ended = state.game.endingId !== null; // 엔딩 도달 여부
+    const ending = useMemo(() => work.endings.find((candidate) => candidate.id === state.game.endingId) ?? null, [state.game.endingId, work]); // 도달한 엔딩(고른 언어)
     const startRequest = (value: string) => // 자유 입력 요청 시작
     { // 함수 시작
+        if (ended) // 엔딩 뒤 입력 확인
+        { // 조건 시작
+            return; // 끝난 이야기에는 입력을 보내지 않음
+        } // 조건 종료
         const controller = new AbortController(); // 중지 제어기 생성
         abortRef.current = controller; // 중지 제어기 저장
         void sendFreeInput(value, controller.signal); // 자유 입력 전송
@@ -60,9 +67,8 @@ export function TextPlayScreen() // Text-Play 플레이 화면
         } // 조건 종료
         startRequest(recommendation.label); // 자유 행동 전송
     }; // 함수 종료
-    const submit = (event: FormEvent<HTMLFormElement>) => // 자유 입력 제출
+    const submitInput = () => // 입력한 행동 보내기
     { // 함수 시작
-        event.preventDefault(); // 기본 제출 차단
         const value = input.trim(); // 입력 정리
         if (value.length === 0 || state.isStreaming) // 전송 가능 확인
         { // 조건 시작
@@ -71,12 +77,29 @@ export function TextPlayScreen() // Text-Play 플레이 화면
         setInput(""); // 입력 초기화
         startRequest(value); // 자유 입력 요청
     }; // 함수 종료
+    const submit = (event: FormEvent<HTMLFormElement>) => // 자유 입력 제출
+    { // 함수 시작
+        event.preventDefault(); // 기본 제출 차단
+        submitInput(); // 행동 보내기
+    }; // 함수 종료
+    const sendOnEnter = (event: KeyboardEvent<HTMLTextAreaElement>) => // Enter로 보내기(Shift+Enter는 줄바꿈)
+    { // 함수 시작
+        if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing || event.keyCode === 229) // 줄바꿈이거나 한글을 조합하는 중
+        { // 조건 시작
+            return; // 입력칸 기본 동작 유지
+        } // 조건 종료
+        event.preventDefault(); // 줄바꿈 막기
+        submitInput(); // 행동 보내기
+    }; // 함수 종료
     return ( // 화면 반환
         <main className={styles.page} data-text-play-root data-theme={preferences.themeId} data-resolution={preferences.resolutionId}> {/* 플레이 화면 */}
             <header className={styles.topbar}> {/* 상태 표시줄 */}
-                <button type="button" className={styles.storyTitle} aria-label={text.screen.backToMain(work.title)} onClick={() => platform.navigate("home")}> {/* 작품 제목 버튼 */}
-                    <span>TEXT-PLAY</span> {/* 작품 표제 */}
-                    <strong>{work.title}</strong> {/* 작품 제목 */}
+                <button type="button" className={styles.storyTitle} aria-label={text.screen.backToMain(work.title)} onClick={() => platform.navigate("home")}> {/* 메인으로 돌아가는 작품 제목 버튼 */}
+                    <span className={styles.backMark} data-back-mark aria-hidden="true">‹</span> {/* 돌아가기 화살표 */}
+                    <span className={styles.storyTitleText}> {/* 제목 글자 묶음 */}
+                        <small>{text.screen.backLabel}</small> {/* 돌아가기 글자 */}
+                        <strong>{work.title}</strong> {/* 작품 제목 */}
+                    </span> {/* 글자 묶음 종료 */}
                 </button> {/* 제목 버튼 종료 */}
                 <button type="button" className={styles.stats} aria-label={state.isStatePanelOpen ? text.screen.closeStatus : text.screen.openStatus} aria-expanded={state.isStatePanelOpen} aria-controls="text-play-state-panel" onClick={toggleStatePanel}> {/* 능력치 버튼 */}
                     <span><TextPlayIcon name="heart" size={17} /><small>{text.screen.hp}</small><strong>{state.game.stats.hp}</strong></span> {/* 체력 정보 */}
@@ -122,20 +145,40 @@ export function TextPlayScreen() // Text-Play 플레이 화면
                     </section> {/* 스토리 상자 종료 */}
                 </section> {/* 장면 무대 종료 */}
                 <aside className={styles.commandDock} aria-label={text.screen.commands}> {/* 명령 도크 */}
-                    <div className={styles.recommendations}> {/* 추천 영역 */}
-                        <ChoiceList recommendations={recommendations} expanded={recommendationsExpanded} disabled={state.isStreaming} onToggle={() => setExpandedTurn(recommendationsExpanded ? null : state.game.updatedAt)} onSelect={selectRecommendation} /> {/* 추천 답안 */}
-                    </div> {/* 추천 영역 종료 */}
-                    <div className={styles.inputPanel}> {/* 직접 입력 영역 */}
-                        <form onSubmit={submit}> {/* 자유 입력 폼 */}
-                            <label htmlFor="text-play-input">{text.screen.typeAction}</label> {/* 입력 표제 */}
-                            <textarea id="text-play-input" value={input} disabled={state.isStreaming} onChange={(event) => setInput(event.target.value)} placeholder={text.screen.placeholder} rows={3} /> {/* 자유 입력 */}
-                            <div className={styles.inputActions}> {/* 입력 동작 */}
-                                <button type="submit" disabled={state.isStreaming}><TextPlayIcon name="send" size={17} />{text.screen.send}</button> {/* 전송 버튼 */}
-                                {state.isStreaming ? <button type="button" onClick={() => abortRef.current?.abort()}><TextPlayIcon name="stop" size={16} />{text.screen.stop}</button> : null} {/* 중지 버튼 */}
-                            </div> {/* 입력 동작 종료 */}
-                        </form> {/* 자유 입력 폼 종료 */}
-                        <section className={styles.notice} role="region" aria-label={text.screen.systemNotice} aria-live="polite"><span>{state.error ?? state.saveNotice ?? text.screen.idleNotice}</span>{state.error !== null && state.pendingInput.length > 0 && !state.isStreaming ? <button type="button" onClick={() => startRequest(state.pendingInput)}>{text.screen.retry}</button> : null}</section> {/* 시스템 안내 */}
-                    </div> {/* 직접 입력 영역 종료 */}
+                    {ended ? ( // 엔딩 도달 확인
+                        <div className={styles.endingDock}> {/* 엔딩 영역(추천 답안과 직접 입력 대신 표시) */}
+                            <section className={styles.endingPanel} aria-label={text.ending.region}> {/* 엔딩 화면 */}
+                                <div className={styles.endingText}> {/* 엔딩 글 */}
+                                    <span>{text.ending.eyebrow}</span> {/* 엔딩 표제 */}
+                                    <h2>{ending?.title ?? scene.title}</h2> {/* 엔딩 제목 */}
+                                    <p>{ending?.summary ?? text.choices.ended}</p> {/* 엔딩 요약 */}
+                                    <small>{text.ending.record(storyPages.length, formatTextPlayPlayTime(state.game.playTimeSeconds, language))}</small> {/* 플레이 기록 */}
+                                </div> {/* 엔딩 글 종료 */}
+                                <div className={styles.endingActions}> {/* 엔딩 동작 */}
+                                    <button type="button" onClick={restart}>{text.ending.restart}</button> {/* 처음부터 다시 하기 */}
+                                    <button type="button" onClick={() => platform.navigate("home")}>{text.ending.toMain}</button> {/* 메인으로 */}
+                                </div> {/* 엔딩 동작 종료 */}
+                            </section> {/* 엔딩 화면 종료 */}
+                            <section className={styles.notice} role="region" aria-label={text.screen.systemNotice} aria-live="polite"><span>{state.error ?? state.saveNotice ?? ""}</span></section> {/* 시스템 안내 */}
+                        </div> // 엔딩 영역 종료
+                    ) : ( // 진행 중 도크
+                        <> {/* 추천 답안과 직접 입력 */}
+                            <div className={styles.recommendations}> {/* 추천 영역 */}
+                                <ChoiceList recommendations={recommendations} expanded={recommendationsExpanded} disabled={state.isStreaming} onToggle={() => setExpandedTurn(recommendationsExpanded ? null : state.game.updatedAt)} onSelect={selectRecommendation} /> {/* 추천 답안 */}
+                            </div> {/* 추천 영역 종료 */}
+                            <div className={styles.inputPanel}> {/* 직접 입력 영역 */}
+                                <form onSubmit={submit}> {/* 자유 입력 폼 */}
+                                    <label htmlFor="text-play-input">{text.screen.typeAction}</label> {/* 입력 표제 */}
+                                    <textarea id="text-play-input" value={input} disabled={state.isStreaming} onChange={(event) => setInput(event.target.value)} onKeyDown={sendOnEnter} placeholder={text.screen.placeholder} rows={3} /> {/* 자유 입력(Enter 전송) */}
+                                    <div className={styles.inputActions}> {/* 입력 동작 */}
+                                        <button type="submit" disabled={state.isStreaming}><TextPlayIcon name="send" size={17} />{text.screen.send}</button> {/* 전송 버튼 */}
+                                        {state.isStreaming ? <button type="button" onClick={() => abortRef.current?.abort()}><TextPlayIcon name="stop" size={16} />{text.screen.stop}</button> : null} {/* 중지 버튼 */}
+                                    </div> {/* 입력 동작 종료 */}
+                                </form> {/* 자유 입력 폼 종료 */}
+                                <section className={styles.notice} role="region" aria-label={text.screen.systemNotice} aria-live="polite"><span>{state.error ?? state.saveNotice ?? text.screen.idleNotice}</span>{state.error !== null && state.pendingInput.length > 0 && !state.isStreaming ? <button type="button" onClick={() => startRequest(state.pendingInput)}>{text.screen.retry}</button> : null}</section> {/* 시스템 안내 */}
+                            </div> {/* 직접 입력 영역 종료 */}
+                        </> // 진행 중 도크 종료
+                    )} {/* 도크 내용 종료 */}
                 </aside> {/* 명령 도크 종료 */}
             </div> {/* 작업 영역 종료 */}
             {state.isStatePanelOpen ? <div className={styles.stateLayer}><button type="button" className={styles.stateScrim} aria-label={text.screen.closeStatus} onClick={toggleStatePanel} /><div className={styles.statePopover}><StatusPanel state={state.game} open /></div></div> : null} {/* 상태 팝업 */}

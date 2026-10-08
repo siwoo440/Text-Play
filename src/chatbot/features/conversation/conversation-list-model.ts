@@ -1,8 +1,10 @@
 import { canViewMatureContent, isMatureCharacter } from "@chatbot/features/adult/adult-access"; // 19세 콘텐츠 판정
+import { getRelationStat } from "@chatbot/features/chat/relation-model"; // 관계 스탯
 import { getConversationSummary, type ConversationSummary } from "@chatbot/features/conversation/conversation-versioning"; // 대화 요약 조회
-import type { AppState, Character, Conversation, ConversationFilter, ConversationFolder, ConversationSort, StatusSnapshot, Story } from "@chatbot/features/core/types"; // 도메인 타입
+import type { AppState, Character, Conversation, ConversationFilter, ConversationFolder, ConversationSort, Message, StatusSnapshot, Story } from "@chatbot/features/core/types"; // 도메인 타입
 import { isMatureStory } from "@chatbot/features/story/story-model"; // 19세 스토리 판정
 import { getDateParts, getDayNumber } from "@chatbot/lib/time/date-key"; // 시간대 기준 날짜
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
 
 export const CONVERSATION_PIN_LIMIT = 5; // 대화방 고정 최대 개수
 
@@ -32,6 +34,7 @@ export interface ConversationListItem // 대화방 목록 항목
     locked: boolean; // 19+ 잠금 여부
     pinned: boolean; // 고정 여부
     latestStatus: StatusSnapshot | null; // 현재 버전의 마지막 상태창
+    relationLead: string | null; // 스토리 대화에서 관계를 보여 줄 대표 인물(관계 스탯이 없으면 null)
 } // 구조 종료
 
 export interface ConversationListGroup // 대화방 묶음
@@ -63,27 +66,27 @@ export function formatConversationTime(iso: string, now: Date): string // 짧은
     const minutes = Math.floor((now.getTime() - time.getTime()) / 60_000); // 경과 분
     if (minutes < 1) // 1분 미만 판정
     { // 조건 시작
-        return "방금 전"; // 방금 표시
+        return t("방금 전"); // 방금 표시
     } // 조건 종료
     if (minutes < 60) // 1시간 미만 판정
     { // 조건 시작
-        return `${minutes}분 전`; // 분 표시
+        return t("{0}분 전", [minutes]); // 분 표시
     } // 조건 종료
     const days = getCalendarDayDifference(iso, now); // 날짜 차이
     if (days <= 0) // 같은 날 판정
     { // 조건 시작
-        return `${Math.floor(minutes / 60)}시간 전`; // 시간 표시
+        return t("{0}시간 전", [Math.floor(minutes / 60)]); // 시간 표시
     } // 조건 종료
     if (days === 1) // 어제 판정
     { // 조건 시작
-        return "어제"; // 어제 표시
+        return t("어제"); // 어제 표시
     } // 조건 종료
     if (days < 7) // 일주일 안 판정
     { // 조건 시작
-        return `${days}일 전`; // 일 표시
+        return t("{0}일 전", [days]); // 일 표시
     } // 조건 종료
     const target = getDateParts(time); // 대상 날짜
-    return target.year === getDateParts(now).year ? `${target.month}월 ${target.day}일` : `${target.year}. ${target.month}. ${target.day}.`; // 날짜 표시
+    return target.year === getDateParts(now).year ? t("{0}월 {1}일", [target.month, target.day]) : `${target.year}. ${target.month}. ${target.day}.`; // 날짜 표시
 } // 함수 종료
 
 function getInitial(character: string): string // 음절 초성 조회
@@ -116,11 +119,48 @@ export function matchesKoreanText(text: string, query: string): boolean // 한�
     return false; // 불일치 반환
 } // 함수 종료
 
-export function matchesConversationQuery(item: ConversationListItem, query: string): boolean // 대화방 검색 판정
+export function splitSearchWords(query: string): string[] // 검색어를 낱말로 나누기(보관함·대화 목록 공통 규칙)
+{ // 함수 시작
+    return query.trim().split(/\s+/).filter((word) => word.length > 0); // 빈 낱말 제외
+} // 함수 종료
+
+function conversationSearchFields(item: ConversationListItem): string[] // 대화방 검색 대상(제목·이름·마지막 말)
 { // 함수 시작
     const storyFields = item.story === null ? [] : [item.story.title, ...item.conversation.storyCast.map((member) => member.displayName)]; // 스토리 제목·등장인물 이름
-    const fields = [item.conversation.title, item.character.name, ...storyFields, ...(item.locked ? [] : [item.summary.lastMessage])]; // 검색 대상(잠금 시 메시지 제외)
-    return fields.some((field) => matchesKoreanText(field, query)); // 일치 여부 반환
+    return [item.conversation.title, item.character.name, ...storyFields, ...(item.locked ? [] : [item.summary.lastMessage])]; // 검색 대상(잠금 시 메시지 제외)
+} // 함수 종료
+
+export function matchesConversationQuery(item: ConversationListItem, query: string): boolean // 대화방 검색 판정(낱말마다 어느 한 대상에라도 맞아야 함)
+{ // 함수 시작
+    const fields = conversationSearchFields(item); // 검색 대상
+    return splitSearchWords(query).every((word) => fields.some((field) => matchesKoreanText(field, word))); // 모든 낱말 일치(보관함 검색과 같은 규칙)
+} // 함수 종료
+
+export interface ConversationMatch // 검색으로 찾은 자리
+{ // 구조 시작
+    message: Message | null; // 찾은 메시지(제목·이름·마지막 메시지로 찾았으면 null)
+} // 구조 종료
+
+export function findConversationMatch(item: ConversationListItem, query: string, messages: readonly Message[]): ConversationMatch | null // 대화방 검색(제목·이름 먼저, 없으면 대화 전체 내용에서)
+{ // 함수 시작
+    const text = query.trim(); // 검색어 정리
+    if (text.length === 0 || matchesConversationQuery(item, text)) // 검색어가 없거나 제목·이름·마지막 메시지에 맞음
+    { // 조건 시작
+        return { message: null }; // 대화방만 찾음
+    } // 조건 종료
+    if (item.locked) // 19+ 잠금(대화 내용은 찾지 않음)
+    { // 조건 시작
+        return null; // 불일치
+    } // 조건 종료
+    const words = splitSearchWords(text); // 검색 낱말
+    const fields = conversationSearchFields(item); // 제목·이름·마지막 말
+    const current = messages.filter((message) => message.versionId === item.conversation.currentVersionId && message.role !== "system"); // 지금 버전의 대화
+    if (!words.every((word) => fields.some((field) => matchesKoreanText(field, word)) || current.some((message) => matchesKoreanText(message.content, word)))) // 제목·이름·대화 어디에도 없는 낱말이 있음
+    { // 조건 시작
+        return null; // 불일치
+    } // 조건 종료
+    const found = current.filter((message) => words.every((word) => matchesKoreanText(message.content, word))).at(-1) ?? current.filter((message) => words.some((word) => matchesKoreanText(message.content, word))).at(-1); // 낱말이 모두 든 가장 최근 말, 없으면 하나라도 든 가장 최근 말
+    return found === undefined ? null : { message: found }; // 찾은 말 반환
 } // 함수 종료
 
 export function buildConversationListItems(state: AppState, now: Date): ConversationListItem[] // 진행 중인 대화방 항목 생성
@@ -152,7 +192,7 @@ export function buildConversationListItems(state: AppState, now: Date): Conversa
         } // 조건 종료
         const lastActivityAt = summary.updatedAt.localeCompare(conversation.updatedAt) > 0 ? summary.updatedAt : conversation.updatedAt; // 더 최근 시각
         const mature = story === null ? isMatureCharacter(character) : isMatureStory(story); // 19세 판정(스토리는 스토리 등급 기준)
-        return [{ conversation, character, story, summary, lastActivityAt, turnCount: turnCounts.get(summary.versionId) ?? 0, locked: mature && !showMature, pinned: pinned.has(conversation.id), latestStatus: statuses.get(summary.versionId) ?? null }]; // 항목 반환
+        return [{ conversation, character, story, summary, lastActivityAt, turnCount: turnCounts.get(summary.versionId) ?? 0, locked: mature && !showMature, pinned: pinned.has(conversation.id), latestStatus: statuses.get(summary.versionId) ?? null, relationLead: story !== null && getRelationStat(story.statusTemplate) !== null ? conversation.storyCast[0]?.displayName ?? null : null }]; // 항목 반환
     }); // 변환 종료
 } // 함수 종료
 
@@ -199,12 +239,12 @@ export function groupConversationItems(items: readonly ConversationListItem[], s
     const inFolder = (item: ConversationListItem) => item.conversation.folderId !== null && folderIds.has(item.conversation.folderId); // 폴더 대화 판정
     const rest = sortConversationItems(items.filter((item) => !item.pinned && !inFolder(item)), sort); // 나머지 정렬
     const folderGroups = folders.map((folder): ConversationListGroup => ({ id: `folder-${folder.id}`, label: folder.name, folderId: folder.id, items: sortConversationItems(items.filter((item) => !item.pinned && item.conversation.folderId === folder.id), sort) })).filter((group) => showEmptyFolders || group.items.length > 0); // 폴더 묶음
-    const groups: ConversationListGroup[] = [...(pinned.length === 0 ? [] : [{ id: "pinned", label: "고정됨", items: pinned }]), ...folderGroups]; // 고정·폴더 묶음
+    const groups: ConversationListGroup[] = [...(pinned.length === 0 ? [] : [{ id: "pinned", label: t("고정됨"), items: pinned }]), ...folderGroups]; // 고정·폴더 묶음
     if (sort !== "recent") // 최근순 외 판정
     { // 조건 시작
-        return rest.length === 0 ? groups : [...groups, { id: "all", label: "전체 대화", items: rest }]; // 단일 묶음 반환
+        return rest.length === 0 ? groups : [...groups, { id: "all", label: t("전체 대화"), items: rest }]; // 단일 묶음 반환
     } // 조건 종료
-    const buckets: ConversationListGroup[] = [{ id: "today", label: "오늘", items: [] }, { id: "yesterday", label: "어제", items: [] }, { id: "week", label: "최근 7일", items: [] }, { id: "older", label: "이전", items: [] }]; // 날짜 묶음
+    const buckets: ConversationListGroup[] = [{ id: "today", label: t("오늘"), items: [] }, { id: "yesterday", label: t("어제"), items: [] }, { id: "week", label: t("최근 7일"), items: [] }, { id: "older", label: t("이전"), items: [] }]; // 날짜 묶음
     for (const item of rest) // 항목 순회
     { // 순회 시작
         const days = getCalendarDayDifference(item.lastActivityAt, now); // 날짜 차이

@@ -73,7 +73,8 @@ describe("스토리 입력 검증", () => // 검증 묶음
 
     it("표지는 준비된 장면 이미지나 프로젝트의 캐릭터 이미지만 쓸 수 있다", () => // 표지 검증
     { // 검증 시작
-        expect(storyCoverOptions).toContain("/images/scenes/moon-library.svg"); // 표지 목록 확인
+        expect(storyCoverOptions).toContain("/images/scenes/moon-library.webp"); // 표지 목록 확인
+        expect(storyCoverOptions).not.toContain("/images/scenes/moon-library.svg"); // 예전 임시 그림은 선택지에 없음
         expect(validateStoryDraft({ ...validDraft(), coverImage: "/images/characters/rian.webp" }, state.characters).errors.coverImage).toBeUndefined(); // 캐릭터 이미지 허용
         expect(validateStoryDraft({ ...validDraft(), coverImage: "https://example.com/a.png" }, state.characters).errors.coverImage).toBe("준비된 표지 이미지를 골라 주세요."); // 외부 이미지 거부
         expect(validateStoryDraft({ ...validDraft(), coverImage: "/images/characters/../secret.webp" }, state.characters).errors.coverImage).toBe("준비된 표지 이미지를 골라 주세요."); // 경로 이동 거부

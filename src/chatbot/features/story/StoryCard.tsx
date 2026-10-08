@@ -4,6 +4,7 @@ import Link from "@/desktop/next-compat/link"; // 내부 경로 링크
 import type { ContentRating, Story } from "@chatbot/features/core/types"; // 도메인 타입
 import type { StoryCastEntry } from "@chatbot/features/story/story-model"; // 등장인물 연결
 import styles from "@chatbot/features/story/Story.module.css"; // 스토리 스타일
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
 
 export const storyRatingLabels: Record<ContentRating, string> = { all: "전체", teen: "15+", mature: "19+" }; // 등급 짧은 표시
 
@@ -24,14 +25,14 @@ export function StoryCard({ story, cast }: { story: Story; cast: StoryCastEntry[
             <Link href={`/stories/${encodeURIComponent(story.id)}` as Route} className={styles.cardLink}> {/* 상세 링크 */}
                 <span className={styles.cardMedia}> {/* 대표 이미지 */}
                     <Image src={story.coverImage} alt="" width={640} height={400} /> {/* 이미지 */}
-                    <span className={styles.ratingChip}>{storyRatingLabels[story.contentRating]}</span> {/* 등급 */}
-                    {story.publicationStatus === "draft" ? <span className={styles.draftChip}>임시 저장</span> : null} {/* 임시 저장 표시 */}
+                    <span className={styles.ratingChip}>{t(storyRatingLabels[story.contentRating])}</span> {/* 등급 */}
+                    {story.publicationStatus === "draft" ? <span className={styles.draftChip}>{t("임시 저장")}</span> : null} {/* 임시 저장 표시 */}
                 </span> {/* 이미지 종료 */}
                 <span className={styles.cardBody}> {/* 카드 본문 */}
-                    <h3>{story.title}</h3> {/* 제목 */}
+                    <h3>{t(story.title)}</h3> {/* 제목 */}
                     <span className={styles.cardSummary}>{story.summary}</span> {/* 한 줄 소개 */}
                     <StoryCast cast={cast} /> {/* 등장인물 */}
-                    <span className={styles.cardMeta}><span className={styles.castCount}>등장인물 {story.cast.length}명</span>{story.tags.slice(0, 3).map((tag) => <span key={tag}>#{tag}</span>)}</span> {/* 인물 수·태그 */}
+                    <span className={styles.cardMeta}><span className={styles.castCount}>{t("등장인물")} {story.cast.length}{t("명")}</span>{story.tags.slice(0, 3).map((tag) => <span key={tag}>#{tag}</span>)}</span> {/* 인물 수·태그 */}
                 </span> {/* 본문 종료 */}
             </Link> {/* 링크 종료 */}
         </article> // 카드 종료

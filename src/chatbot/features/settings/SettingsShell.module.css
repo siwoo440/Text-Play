@@ -1,8 +1,8 @@
 .shell /* 설정 틀 */
 { /* 틀 시작 */
     --tone: #6d28d9; /* 묶음 강조색 */
-    --tone-soft: #f3edff; /* 묶음 연한 배경 */
-    --tone-strong: #4c1d95; /* 묶음 진한 글자 */
+    --tone-soft: light-dark(#f3edff, #1f1338); /* 묶음 연한 배경 */
+    --tone-strong: light-dark(#4c1d95, #b18de9); /* 묶음 진한 글자 */
     display: grid; /* 두 열 배치 */
     grid-template-columns: 270px minmax(0, 1fr); /* 메뉴와 본문 */
     gap: clamp(20px, 3vw, 40px); /* 열 간격 */
@@ -11,31 +11,30 @@
     overflow-x: clip; /* 가로 넘침 자르기 */
     padding: clamp(24px, 4vw, 48px) clamp(16px, 4vw, 56px) 96px; /* 화면 여백 */
     color: var(--mv-ink); /* 기본 글자 */
-    color-scheme: light; /* 밝은 입력 요소 */
-    background: radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--tone) 16%, transparent), transparent 36%), radial-gradient(circle at 100% 0%, rgb(186 230 253 / 30%), transparent 30%), var(--mv-canvas); /* 화면 배경 */
+    background: radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--tone) 16%, transparent), transparent 36%), radial-gradient(circle at 100% 0%, light-dark(rgb(186 230 253 / 30%), rgb(28 25 38 / 30%)), transparent 30%), var(--mv-canvas); /* 화면 배경 */
 } /* 틀 종료 */
 
 .shell[data-tone="preferences"], /* 설정 묶음 */
 .navGroup[data-tone="preferences"] /* 설정 메뉴 묶음 */
 { /* 설정 색 시작 */
     --tone: #1d4ed8; /* 파랑 강조 */
-    --tone-soft: #e0ecff; /* 파랑 배경 */
-    --tone-strong: #1e3a8a; /* 파랑 글자 */
+    --tone-soft: light-dark(#e0ecff, #14243c); /* 파랑 배경 */
+    --tone-strong: light-dark(#1e3a8a, #92a8e7); /* 파랑 글자 */
 } /* 설정 색 종료 */
 
 .shell[data-tone="support"], /* 지원 묶음 */
 .navGroup[data-tone="support"] /* 지원 메뉴 묶음 */
 { /* 지원 색 시작 */
     --tone: #047857; /* 초록 강조 */
-    --tone-soft: #dcfce7; /* 초록 배경 */
-    --tone-strong: #065f46; /* 초록 글자 */
+    --tone-soft: light-dark(#dcfce7, #173d24); /* 초록 배경 */
+    --tone-strong: light-dark(#065f46, #9af7dd); /* 초록 글자 */
 } /* 지원 색 종료 */
 
 .navGroup[data-tone="account"] /* 계정 메뉴 묶음 */
 { /* 계정 색 시작 */
     --tone: #6d28d9; /* 보라 강조 */
-    --tone-soft: #f3edff; /* 보라 배경 */
-    --tone-strong: #4c1d95; /* 보라 글자 */
+    --tone-soft: light-dark(#f3edff, #1f1338); /* 보라 배경 */
+    --tone-strong: light-dark(#4c1d95, #b18de9); /* 보라 글자 */
 } /* 계정 색 종료 */
 
 .nav /* 설정 메뉴 */
@@ -60,7 +59,7 @@
     overflow: hidden; /* 모서리 자르기 */
     border: 1px solid var(--mv-line); /* 묶음 경계 */
     border-radius: 18px; /* 묶음 모서리 */
-    background: #ffffff; /* 묶음 배경 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 묶음 배경 */
 } /* 묶음 종료 */
 
 .navGroup h2 /* 묶음 이름 */
@@ -199,7 +198,7 @@
     .navGroup /* 좁은 화면 묶음 */
     { /* 묶음 시작 */
         flex: none; /* 크기 고정 */
-        border-color: color-mix(in srgb, var(--tone) 30%, white); /* 묶음 경계 */
+        border-color: color-mix(in srgb, var(--tone) 30%, var(--mv-surface)); /* 묶음 경계 */
     } /* 묶음 종료 */
 
     .navGroup ul /* 좁은 화면 목록 */

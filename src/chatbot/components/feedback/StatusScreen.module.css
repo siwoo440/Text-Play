@@ -5,39 +5,45 @@
     min-height: calc(100vh - 64px); /* 화면 높이 */
     overflow-x: clip; /* 장식 가로 넘침 자르기 */
     padding: clamp(28px, 6vw, 72px) 16px 96px; /* 반응형 여백 */
-    background: radial-gradient(circle at 50% 10%, rgb(196 181 253 / 38%), transparent 40%), radial-gradient(circle at 85% 80%, rgb(153 246 228 / 24%), transparent 32%), var(--mv-canvas); /* 화면 배경 */
+    background: radial-gradient(circle at 50% 10%, light-dark(rgb(196 181 253 / 38%), rgb(28 25 38 / 38%)), transparent 40%), radial-gradient(circle at 85% 80%, rgb(153 246 228 / 24%), transparent 32%), var(--mv-canvas); /* 화면 배경 */
     color: var(--mv-ink); /* 기본 글자 */
-    color-scheme: light; /* 밝은 입력 요소 */
 } /* 화면 종료 */
 
 .panel /* 안내 카드 */
 { /* 카드 시작 */
     --tone: #6d28d9; /* 기본 강조색 */
-    --tone-soft: #f3edff; /* 기본 연한 배경 */
-    --tone-strong: #4c1d95; /* 기본 진한 글자 */
+    --tone-soft: light-dark(#f3edff, #1f1338); /* 기본 연한 배경 */
+    --tone-strong: light-dark(#4c1d95, #b18de9); /* 기본 진한 글자 */
     width: min(100%, 560px); /* 카드 너비 */
     padding: clamp(28px, 6vw, 48px); /* 카드 여백 */
     border: 1px solid var(--mv-line); /* 카드 테두리 */
     border-top: 5px solid var(--tone); /* 상태 색 띠 */
     border-radius: 24px; /* 카드 모서리 */
     background: var(--mv-surface); /* 카드 배경 */
-    box-shadow: 0 24px 60px rgb(76 29 149 / 12%); /* 카드 그림자 */
+    box-shadow: 0 24px 60px light-dark(rgb(76 29 149 / 12%), rgb(0 0 0 / 26.4%)); /* 카드 그림자 */
     text-align: center; /* 중앙 정렬 */
 } /* 카드 종료 */
 
 .panel[data-tone="error"] /* 오류 상태 */
 { /* 오류 시작 */
     --tone: #be123c; /* 오류 강조색 */
-    --tone-soft: #ffe4e6; /* 오류 연한 배경 */
-    --tone-strong: #881337; /* 오류 진한 글자 */
+    --tone-soft: light-dark(#ffe4e6, #3b1417); /* 오류 연한 배경 */
+    --tone-strong: light-dark(#881337, #ef8fac); /* 오류 진한 글자 */
 } /* 오류 종료 */
 
 .panel[data-tone="restricted"] /* 제한 상태 */
 { /* 제한 시작 */
     --tone: #b45309; /* 제한 강조색 */
-    --tone-soft: #fef3c7; /* 제한 연한 배경 */
-    --tone-strong: #78350f; /* 제한 진한 글자 */
+    --tone-soft: light-dark(#fef3c7, #463d17); /* 제한 연한 배경 */
+    --tone-strong: light-dark(#78350f, #f2b593); /* 제한 진한 글자 */
 } /* 제한 종료 */
+
+.panel[data-tone="invite"] /* 친구 초대 */
+{ /* 초대 시작 */
+    --tone: #be185d; /* 초대 강조색 */
+    --tone-soft: light-dark(#fce7f3, #38162a); /* 초대 연한 배경 */
+    --tone-strong: light-dark(#9d174d, #f08bb6); /* 초대 진한 글자 */
+} /* 초대 종료 */
 
 .symbol /* 상태 기호 */
 { /* 기호 시작 */
@@ -123,7 +129,7 @@
 
 .actions > :first-child:hover /* 주요 동작 올림 */
 { /* 주요 올림 시작 */
-    background: var(--tone-strong); /* 진한 배경 */
+    background: color-mix(in srgb, var(--tone) 82%, black); /* 조금 진한 배경(다크 모드에서도 흰 글자가 보이게) */
 } /* 주요 올림 종료 */
 
 .actions a:focus-visible, /* 링크 초점 */

@@ -199,7 +199,7 @@ describe("왼쪽 대화방 창", () => // 대화방 창 묶음
         expect(confirm).toHaveTextContent("메시지 3개"); // 메시지 수 안내 확인
         expect(within(confirm).getByRole("button", { name: "취소" })).toHaveFocus(); // 안전 초점 확인
         await user.click(within(confirm).getByRole("button", { name: "대화 삭제 확인" })); // 삭제 확인
-        expect(repository.createBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 12 }), "conversation-delete"); // 백업 확인
+        expect(repository.createBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 18 }), "conversation-delete"); // 백업 확인
         expect(cardTitles(panel)).not.toContain("새벽 도서관의 리안"); // 삭제 확인
         expect(within(panel).getByRole("status")).toHaveTextContent("‘새벽 도서관의 리안’ 대화를 삭제했습니다."); // 삭제 안내 확인
         expect(within(panel).getByRole("button", { name: "안내 닫기" })).toHaveFocus(); // 사라진 카드 대신 초점 확인
@@ -256,7 +256,8 @@ describe("왼쪽 대화방 창", () => // 대화방 창 묶음
         expect(card).toHaveTextContent("등장인물 3명"); // 인물 수 확인
         expect(card).toHaveTextContent("노아: …달이 지기 전에 찾아야 해."); // 마지막 대사 확인
         expect(card.querySelector(".conversation-card-link")).toHaveAttribute("href", started.href); // 스토리 주소 확인
-        expect(card.querySelector("[role='meter']")).not.toBeInTheDocument(); // 관계 막대 없음 확인
+        expect(card).toHaveTextContent("등장인물 3명 · 리안 첫 만남"); // 대표 인물(첫 등장인물)의 관계 단계
+        expect(within(card).getByRole("meter", { name: "리안 관계 수치" })).toHaveAttribute("aria-valuenow", "0"); // 대표 인물 관계 막대(호감도 초기값 0)
         await user.click(within(card).getByRole("button", { name: "비 그친 밤의 기록관 더보기" })); // 메뉴 열기
         expect(within(panel).getByRole("menuitem", { name: "스토리 보기" })).toHaveAttribute("href", "/stories/story-moonlit-archive"); // 스토리 보기 확인
         await user.keyboard("{Escape}"); // 메뉴 닫기

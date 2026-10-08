@@ -1,4 +1,7 @@
+import type { Metadata } from "next"; // 메타데이터 타입
 import { StoryDetail } from "@chatbot/features/story/StoryDetail"; // 스토리 상세
+
+export const metadata: Metadata = { title: "스토리 | Mate Verse" }; // 페이지 제목(작품 이름은 화면에서 다시 맞춤)
 
 interface StoryPageProps // 스토리 상세 페이지 속성
 { // 구조 시작

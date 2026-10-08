@@ -1,0 +1,145 @@
+.offer /* 가져오기 물음·결과 안내(화면 아래 떠 있는 카드) */
+{ /* 카드 시작 */
+    --tone: #6d28d9; /* 계정 묶음 색 */
+    --tone-strong: light-dark(#5b21b6, #c4b5fd); /* 진한 글자 색 */
+    position: fixed; /* 화면 고정 */
+    z-index: 40; /* 본문 위 */
+    right: 16px; /* 오른쪽 여백 */
+    bottom: 16px; /* 아래 여백 */
+    display: grid; /* 세로 배치 */
+    gap: 8px; /* 요소 간격 */
+    width: min(360px, calc(100vw - 32px)); /* 좁은 화면에서도 넘치지 않는 너비 */
+    margin: 0; /* 기본 여백 제거 */
+    padding: 16px 18px; /* 카드 여백 */
+    border: 1px solid color-mix(in srgb, var(--tone) 30%, var(--mv-surface)); /* 카드 경계 */
+    border-radius: 18px; /* 카드 모서리 */
+    color: var(--mv-ink); /* 글자 색 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 카드 배경 */
+    box-shadow: 0 18px 44px light-dark(rgb(31 26 46 / 16%), rgb(0 0 0 / 45%)); /* 카드 그림자 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 카드 종료 */
+
+.offer p /* 설명 */
+{ /* 설명 시작 */
+    margin: 0; /* 기본 여백 제거 */
+    color: var(--mv-muted); /* 설명 색 */
+    font-size: 0.9rem; /* 설명 크기 */
+    line-height: 1.6; /* 줄 높이 */
+} /* 설명 종료 */
+
+.offer div /* 선택 버튼 묶음 */
+{ /* 묶음 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 좁으면 줄바꿈 */
+    gap: 8px; /* 버튼 간격 */
+} /* 묶음 종료 */
+
+.primary, /* 주요 버튼 */
+.secondary /* 보조 버튼 */
+{ /* 버튼 시작 */
+    min-height: 42px; /* 조작 높이 */
+    padding: 0 16px; /* 버튼 여백 */
+    border-radius: 12px; /* 버튼 모서리 */
+    font: inherit; /* 글꼴 상속 */
+    font-weight: 800; /* 버튼 굵기 */
+    cursor: pointer; /* 선택 커서 */
+} /* 버튼 종료 */
+
+.primary /* 주요 버튼 */
+{ /* 주요 시작 */
+    border: 0; /* 경계 제거 */
+    color: #ffffff; /* 흰 글자 */
+    background: var(--tone); /* 계정 색 배경 */
+} /* 주요 종료 */
+
+.secondary /* 보조 버튼 */
+{ /* 보조 시작 */
+    justify-self: start; /* 내용 너비 */
+    border: 1px solid color-mix(in srgb, var(--tone) 35%, var(--mv-surface)); /* 보조 경계 */
+    color: var(--tone-strong); /* 보조 글자 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 보조 배경 */
+} /* 보조 종료 */
+
+@media (max-width: 760px) /* 좁은 화면: 아래 메뉴 위에 띄움 */
+{ /* 좁은 화면 시작 */
+    .offer /* 카드 */
+    { /* 카드 시작 */
+        bottom: 88px; /* 아래 메뉴 위 */
+    } /* 카드 종료 */
+} /* 좁은 화면 종료 */
+
+.backdrop /* 겹침 선택 창의 배경 */
+{ /* 배경 시작 */
+    position: fixed; /* 화면 고정 */
+    z-index: 60; /* 가장 위 */
+    inset: 0; /* 전체 화면 */
+    display: grid; /* 가운데 배치 */
+    place-items: center; /* 가운데 정렬 */
+    padding: 20px; /* 여백 */
+    background: rgb(31 26 46 / 42%); /* 반투명 배경 */
+    backdrop-filter: blur(3px); /* 뒤 흐림 */
+} /* 배경 종료 */
+
+.dialog /* 겹침 선택 창 */
+{ /* 창 시작 */
+    width: min(100%, 480px); /* 반응형 너비 */
+    padding: 28px; /* 여백 */
+    border: 1px solid var(--mv-line); /* 경계 */
+    border-top: 5px solid #6d28d9; /* 계정 색 띠 */
+    border-radius: 22px; /* 모서리 */
+    color: var(--mv-ink); /* 글자 */
+    background: var(--mv-surface); /* 배경 */
+    box-shadow: 0 30px 80px light-dark(rgb(31 26 46 / 24%), rgb(0 0 0 / 52.8%)); /* 그림자 */
+} /* 창 종료 */
+
+.dialog > span /* 표시 */
+{ /* 표시 시작 */
+    display: inline-flex; /* 알약 배치 */
+    padding: 6px 14px; /* 표시 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    color: light-dark(#5b21b6, #c4b5fd); /* 표시 글자 */
+    font-size: 0.76rem; /* 표시 크기 */
+    font-weight: 850; /* 표시 굵기 */
+    letter-spacing: 0.14em; /* 표시 자간 */
+    background: light-dark(#ede9fe, #2a1f47); /* 표시 배경 */
+} /* 표시 종료 */
+
+.dialog h2 /* 제목 */
+{ /* 제목 시작 */
+    margin: 14px 0 8px; /* 제목 여백 */
+} /* 제목 종료 */
+
+.dialog p /* 설명 */
+{ /* 설명 시작 */
+    margin: 0 0 6px; /* 설명 여백 */
+    color: var(--mv-muted); /* 설명 색 */
+    line-height: 1.7; /* 줄 높이 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 설명 종료 */
+
+.dialog div /* 선택 버튼 묶음 */
+{ /* 묶음 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 좁으면 줄바꿈 */
+    justify-content: end; /* 오른쪽 정렬 */
+    gap: 10px; /* 버튼 간격 */
+    margin-top: 20px; /* 위 여백 */
+} /* 묶음 종료 */
+
+.dialog button /* 선택 버튼 */
+{ /* 버튼 시작 */
+    min-height: 44px; /* 조작 높이 */
+    padding: 0 16px; /* 버튼 여백 */
+    border: 1px solid var(--mv-line); /* 버튼 경계 */
+    border-radius: 12px; /* 버튼 모서리 */
+    color: var(--mv-ink); /* 버튼 글자 */
+    font: inherit; /* 글꼴 상속 */
+    font-weight: 800; /* 버튼 굵기 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 버튼 배경 */
+    cursor: pointer; /* 선택 커서 */
+} /* 버튼 종료 */
+
+.dialog button:hover /* 선택 버튼 올림 */
+{ /* 올림 시작 */
+    border-color: #6d28d9; /* 강조 경계 */
+} /* 올림 종료 */

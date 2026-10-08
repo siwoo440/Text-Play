@@ -6,6 +6,7 @@ import { usePathname } from "@/desktop/next-compat/navigation"; // 현재 경로
 import { useEffect, useRef, type ReactNode } from "react"; // 리액트 도구
 import { findSettingsGroup, settingsNavigation } from "@chatbot/features/settings/settings-navigation"; // 공통 메뉴 정의
 import styles from "@chatbot/features/settings/SettingsShell.module.css"; // 설정 틀 스타일
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
 
 export function SettingsShell({ children }: { children: ReactNode }) // 설정 공통 틀
 { // 함수 시작
@@ -23,17 +24,17 @@ export function SettingsShell({ children }: { children: ReactNode }) // 설정 �
     }, [pathname]); // 경로 변경 의존
     return ( // 틀 반환
         <div className={styles.shell} data-tone={findSettingsGroup(pathname)} data-surface="light"> {/* 설정 틀 */}
-            <nav ref={navRef} className={styles.nav} aria-label="설정 메뉴"> {/* 설정 메뉴 */}
+            <nav ref={navRef} className={styles.nav} aria-label={t("설정 메뉴")}> {/* 설정 메뉴 */}
                 <p className={styles.navTitle}>MY SPACE</p> {/* 메뉴 표제 */}
                 {settingsNavigation.map((group) => ( // 묶음 순회
                     <section key={group.id} className={styles.navGroup} data-tone={group.id} aria-labelledby={`settings-nav-${group.id}`}> {/* 메뉴 묶음 */}
-                        <h2 id={`settings-nav-${group.id}`}>{group.label}</h2> {/* 묶음 이름 */}
+                        <h2 id={`settings-nav-${group.id}`}>{t(group.label)}</h2> {/* 묶음 이름 */}
                         <ul> {/* 항목 목록 */}
                             {group.items.map((item) => ( // 항목 순회
                                 <li key={item.href}> {/* 메뉴 항목 */}
                                     <Link href={item.href as Route} aria-current={pathname.startsWith(item.href) ? "page" : undefined}> {/* 메뉴 링크 */}
-                                        <strong>{item.label}</strong> {/* 메뉴 이름 */}
-                                        <small>{item.description}</small> {/* 메뉴 설명 */}
+                                        <strong>{t(item.label)}</strong> {/* 메뉴 이름 */}
+                                        <small>{t(item.description)}</small> {/* 메뉴 설명 */}
                                     </Link> {/* 메뉴 링크 종료 */}
                                 </li> // 메뉴 항목 종료
                             ))} {/* 항목 순회 종료 */}

@@ -239,6 +239,7 @@ test("상단 바 오른쪽 화살표로 메인부터 고객 지원까지 사이�
 
 test("Text-Play를 플레이하고 돌아오면 사이드바 Text-Play 대화방에 기록이 생기고 눌러서 이어한다", async ({ page }) => // Text-Play 대화방 검증
 { // 테스트 시작
+    await page.setViewportSize({ width: 1440, height: 1000 }); // 사이드바가 따로 스크롤하지 않는 높은 창(낮은 창은 사이드바 전체가 스크롤)
     await page.goto("/#/text-play"); // Text-Play 홈 진입
     const playRooms = page.getByRole("region", { name: "Text-Play 대화방" }); // Text-Play 대화방
     await expect(playRooms.getByText("아직 Text-Play 기록이 없습니다.")).toBeVisible(); // 빈 기록 확인
@@ -251,6 +252,7 @@ test("Text-Play를 플레이하고 돌아오면 사이드바 Text-Play 대화방
     const chatRooms = await page.getByRole("complementary", { name: "진행 중인 대화방" }).boundingBox(); // ChatBot 대화방 위치
     const playBox = await playRooms.boundingBox(); // Text-Play 대화방 위치
     expect(playBox!.y).toBeGreaterThan(chatRooms!.y); // ChatBot 대화방 아래 배치 확인
+    expect(playBox!.y - (chatRooms!.y + chatRooms!.height)).toBeLessThan(80); // ChatBot 대화방 바로 아래(가져오기 링크만 사이에 두고)에 붙어 있음 확인
     await record.click(); // 기록 선택
     await expect(page.getByRole("heading", { name: "폐허 회랑" })).toBeVisible(); // 이어하기 장면 확인
 }); // 테스트 종료

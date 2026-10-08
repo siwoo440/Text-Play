@@ -2,6 +2,7 @@ import { canViewMatureContent } from "@chatbot/features/adult/adult-access"; // 
 import { createDefaultConversationSettings } from "@chatbot/features/core/defaults"; // 대화방 기본 설정
 import { createConversationHref, createUniqueConversationId, type ConversationRouteSelection, type ConversationStartResult } from "@chatbot/features/character/character-detail-model"; // 대화 주소·생성 도구
 import type { AppState, Character, ContentRating, Conversation, ConversationVersion, Message, Story, StoryCastMember } from "@chatbot/features/core/types"; // 도메인 타입
+import { resolveStartRelation } from "@chatbot/features/chat/relation-model"; // 시작 관계
 
 export const STORY_CAST_LIMIT = 4; // 등장인물 최대 수
 export const STORY_NARRATOR_LABEL = "내레이션"; // 내레이션 표시 이름
@@ -148,13 +149,14 @@ export function createStoryConversation(state: AppState, storyId: string, now = 
     const opening = createStoryOpening(story); // 시작 장면
     const conversationId = createUniqueConversationId(state, story.id, now); // 대화 식별자
     const versionId = `${conversationId}-version-1`; // 최초 버전 식별자
+    const startRelation = resolveStartRelation(story.statusTemplate, { presetId: "story-opening", relationshipLevel: 0, relationshipStage: "첫 만남" }); // 시작 관계(대표 인물의 관계 스탯 초기값)
     const conversation: Conversation = // 새 스토리 대화
     { // 대화 시작
         id: conversationId, // 대화 식별자
         characterId: lead.characterId, // 첫 등장인물(장면·호환용)
         userId: state.profile.id, // 사용자 식별자
         title: story.title, // 대화 제목
-        startSettings: { profileId: state.profile.id, presetId: "story-opening", relationshipStage: "첫 만남", relationshipLevel: 0, emotion: "설렘", scene: story.coverImage, greeting: opening }, // 시작 설정
+        startSettings: { profileId: state.profile.id, presetId: "story-opening", relationshipStage: startRelation.relationshipStage, relationshipLevel: startRelation.relationshipLevel, emotion: "설렘", scene: story.coverImage, greeting: opening }, // 시작 설정
         currentVersionId: versionId, // 현재 버전
         archivedAt: null, // 보관 시각
         createdAt: now, // 생성 시각
@@ -165,7 +167,7 @@ export function createStoryConversation(state: AppState, storyId: string, now = 
         settings: createDefaultConversationSettings(), // 대화방 기본 설정
         folderId: null, // 폴더 없음
     }; // 대화 종료
-    const version: ConversationVersion = { id: versionId, conversationId, parentVersionId: null, forkRootVersionId: null, forkedFromMessageId: null, ordinal: 1, relationshipLevel: 0, relationshipStage: "첫 만남", emotion: "설렘", currentScene: story.coverImage, lastMessage: opening, createdAt: now, updatedAt: now }; // 최초 버전
+    const version: ConversationVersion = { id: versionId, conversationId, parentVersionId: null, forkRootVersionId: null, forkedFromMessageId: null, ordinal: 1, relationshipLevel: startRelation.relationshipLevel, relationshipStage: startRelation.relationshipStage, emotion: "설렘", currentScene: story.coverImage, lastMessage: opening, createdAt: now, updatedAt: now }; // 최초 버전
     const message: Message = { id: `${conversationId}-message-1`, conversationId, versionId, sourceMessageId: null, role: "assistant", content: opening, emotion: "설렘", sceneEvent: null, createdAt: now }; // 시작 장면 메시지
     const nextState: AppState = { ...state, conversations: [...state.conversations, conversation], conversationVersions: [...state.conversationVersions, version], messages: [...state.messages, message], selectedConversationId: conversationId }; // 다음 상태
     return { state: nextState, conversation, version, message, href: createStoryChatHref(story.id, conversationId, versionId) }; // 시작 결과 반환

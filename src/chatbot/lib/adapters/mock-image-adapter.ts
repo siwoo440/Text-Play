@@ -1,12 +1,7 @@
 import type { ImageGenerationAdapter, SceneAsset, SceneInput } from "@chatbot/lib/adapters/image-generation-adapter"; // 이미지 계약
+import { scenePaths as sceneAssetPaths } from "@chatbot/lib/assets/scene-paths"; // 장면 그림 경로
 
-const scenePaths: Record<string, string> = // 장면 경로
-{ // 경로 시작
-    dawn: "/images/scenes/dawn-letter.svg", // 새벽 장면
-    rain: "/images/scenes/rainy-classroom.svg", // 비 장면
-    library: "/images/scenes/moon-library.svg", // 기록관 장면
-    fallback: "/images/scenes/fallback-scene.svg", // 대체 장면
-}; // 경로 종료
+const scenePaths: Record<string, string> = sceneAssetPaths; // 장면 경로(새벽·비·기록관·기본)
 
 export class MockImageAdapter implements ImageGenerationAdapter // Mock 이미지 어댑터
 { // 클래스 시작

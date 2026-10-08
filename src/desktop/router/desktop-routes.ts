@@ -22,6 +22,11 @@ export type DesktopRouteMatch = // 화면 경로 결과
     | { kind: "settings"; section: DesktopSettingsSection } // 설정
     | { kind: "support" } // 고객 지원
     | { kind: "images" } // 이미지 스튜디오
+    | { kind: "login" } // 로그인
+    | { kind: "rewards" } // 출석과 미션
+    | { kind: "invite"; code: string } // 친구 초대 링크
+    | { kind: "auth-callback" } // 간편 로그인에서 돌아오는 화면
+    | { kind: "auth-reset" } // 비밀번호 다시 정하기
     | { kind: "ai-models" } // 내장 AI 모델
     | { kind: "story-home" } // 스토리 모드 홈
     | { kind: "story-new" } // 새 스토리 만들기
@@ -157,6 +162,22 @@ export function matchDesktopRoute(location: DesktopLocation): DesktopRouteMatch 
     if (first === "images" && segments.length === 1) // 이미지 스튜디오 확인
     { // 조건 시작
         return { kind: "images" }; // 이미지 스튜디오 반환
+    } // 조건 종료
+    if (first === "login" && segments.length === 1) // 로그인 확인
+    { // 조건 시작
+        return { kind: "login" }; // 로그인 반환
+    } // 조건 종료
+    if (first === "rewards" && segments.length === 1) // 출석과 미션 확인
+    { // 조건 시작
+        return { kind: "rewards" }; // 출석과 미션 반환
+    } // 조건 종료
+    if (first === "invite" && second !== undefined && segments.length === 2) // 친구 초대 확인
+    { // 조건 시작
+        return { kind: "invite", code: second }; // 친구 초대 반환
+    } // 조건 종료
+    if (first === "auth" && (second === "callback" || second === "reset") && segments.length === 2) // 로그인 복귀·비밀번호 화면 확인
+    { // 조건 시작
+        return { kind: second === "callback" ? "auth-callback" : "auth-reset" }; // 화면 반환
     } // 조건 종료
     if (first === "ai-models" && segments.length === 1) // AI 모델 확인
     { // 조건 시작

@@ -21,7 +21,7 @@ const baseStories: BaseStory[] = // 기본 예시 스토리(추가 필드 전)
             { characterId: "noah", displayName: "노아", role: "달빛 기록자. 말하지 못한 마음을 기록해 왔다.", firstLine: "…달이 지기 전에 찾아야 해." }, // 노아
         ], // 등장인물 종료
         tags: ["미스터리", "판타지", "도서관"], // 태그
-        coverImage: "/images/scenes/moon-library.svg", // 대표 이미지
+        coverImage: "/images/scenes/moon-library.webp", // 대표 이미지
         visibility: "public", // 공개 범위
         contentRating: "teen", // 이용 등급(세라 15세 기준)
         publicationStatus: "published", // 발행 상태
@@ -44,7 +44,7 @@ const baseStories: BaseStory[] = // 기본 예시 스토리(추가 필드 전)
             { characterId: "yuna", displayName: "유나", role: "옥상 밴드 리더. 비에 젖은 기타를 지키려고 뛰어 들어왔다.", firstLine: "잠깐만 비 좀 피해도 될까? 기타가 젖으면 안 되거든." }, // 유나
         ], // 등장인물 종료
         tags: ["힐링", "현대", "음악"], // 태그
-        coverImage: "/images/scenes/rainy-classroom.svg", // 대표 이미지
+        coverImage: "/images/scenes/rainy-classroom.webp", // 대표 이미지
         visibility: "public", // 공개 범위
         contentRating: "all", // 이용 등급
         publicationStatus: "published", // 발행 상태
@@ -66,7 +66,7 @@ const baseStories: BaseStory[] = // 기본 예시 스토리(추가 필드 전)
             { characterId: "kyle", displayName: "카일", role: "구조 신호를 쫓는 별 항해사.", firstLine: "신호가 또 들렸어. 이번엔 네 좌석 쪽 스피커에서." }, // 카일
         ], // 등장인물 종료
         tags: ["SF", "모험"], // 태그
-        coverImage: "/images/scenes/dawn-letter.svg", // 대표 이미지
+        coverImage: "/images/scenes/dawn-letter.webp", // 대표 이미지
         visibility: "public", // 공개 범위
         contentRating: "all", // 이용 등급
         publicationStatus: "published", // 발행 상태

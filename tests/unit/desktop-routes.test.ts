@@ -46,6 +46,11 @@ describe("데스크톱 화면 경로", () => // 화면 경로 묶음
         expect(matchDesktopRoute(at("/settings/tokens"))).toEqual({ kind: "settings", section: "tokens" }); // 설정 확인
         expect(matchDesktopRoute(at("/support"))).toEqual({ kind: "support" }); // 지원 확인
         expect(matchDesktopRoute(at("/images"))).toEqual({ kind: "images" }); // 이미지 스튜디오 확인
+        expect(matchDesktopRoute(at("/login"))).toEqual({ kind: "login" }); // 로그인 확인
+        expect(matchDesktopRoute(at("/rewards"))).toEqual({ kind: "rewards" }); // 출석과 미션 확인
+        expect(matchDesktopRoute(at("/invite/abc123"))).toEqual({ kind: "invite", code: "abc123" }); // 친구 초대 확인
+        expect(matchDesktopRoute(at("/auth/callback"))).toEqual({ kind: "auth-callback" }); // 간편 로그인 복귀 확인
+        expect(matchDesktopRoute(at("/auth/reset"))).toEqual({ kind: "auth-reset" }); // 비밀번호 다시 정하기 확인
         expect(matchDesktopRoute(at("/ai-models"))).toEqual({ kind: "ai-models" }); // AI 모델 확인
     }); // 테스트 종료
 
@@ -91,5 +96,8 @@ describe("데스크톱 화면 경로", () => // 화면 경로 묶음
         expect(getDesktopRouteTitle({ kind: "text-play-home" })).toBe("Text-Play"); // Text-Play 제목 확인
         expect(getDesktopRouteTitle({ kind: "ai-models" })).toBe("AI 모델"); // AI 모델 제목 확인
         expect(getDesktopRouteTitle({ kind: "images" })).toBe("이미지 스튜디오"); // 이미지 스튜디오 제목 확인
+        expect(getDesktopRouteTitle({ kind: "rewards" })).toBe("출석과 미션"); // 출석과 미션 제목 확인
+        expect(getDesktopRouteTitle({ kind: "login" })).toBe("로그인"); // 로그인 제목 확인
+        expect(getDesktopRouteTitle({ kind: "invite", code: "abc" }, "en")).toBe("Invite friends"); // 친구 초대 영어 제목 확인
     }); // 테스트 종료
 }); // 묶음 종료

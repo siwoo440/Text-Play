@@ -49,10 +49,16 @@ export function getDesktopAreaId(match: DesktopRouteMatch): DesktopAreaId | null
             return "settings"; // 설정 소속
         case "images": // 이미지 스튜디오
             return "images"; // 이미지 소속
+        case "rewards": // 출석과 미션(설정 틀 안의 화면)
+            return "settings"; // 설정 소속
         case "ai-models": // 내장 AI 모델
             return "ai-models"; // AI 모델 소속
         case "support": // 고객 지원
             return "support"; // 지원 소속
+        case "login": // 로그인(사용자 패널에서 여는 화면)
+        case "invite": // 친구 초대 링크
+        case "auth-callback": // 간편 로그인 복귀
+        case "auth-reset": // 비밀번호 다시 정하기
         case "redirect": // 주소 이동 중
         case "not-found": // 없는 화면
             return null; // 소속 없음

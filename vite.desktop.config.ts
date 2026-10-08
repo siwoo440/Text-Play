@@ -11,6 +11,7 @@ export default defineConfig( // 데스크톱 Vite 설정
     define: // ChatBot 코드가 읽는 Next 공개 환경 값(Vite에는 process가 없어 빌드 때 글자로 바꿔 넣음)
     { // 객체 시작
         "process.env.NEXT_PUBLIC_SERVICE_REGION": JSON.stringify(process.env.NEXT_PUBLIC_SERVICE_REGION ?? "kr"), // 서비스 지역(없으면 한국 서버 규칙)
+        "process.env": "{}", // 그 밖의 환경 값은 빈 값(ChatBot에 새 값이 생겨도 화면이 깨지지 않음. 계정 서비스 값이 비어 로그인은 연습용으로만 동작하고 바깥 서버에 닿지 않음)
     }, // 환경 값 종료
     resolve: // 경로 해석 설정
     { // 객체 시작

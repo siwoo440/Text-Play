@@ -77,6 +77,21 @@ describe("라우트 오류 화면", () => // 라우트 묶음
         expect(markup).toContain("<html lang=\"ko\">"); // 자체 문서 확인
         expect(markup).toContain("앱을 불러오지 못했습니다"); // 제목 확인
         expect(markup).toContain("href=\"/\""); // 처음 화면 링크 확인
+        expect(markup).toContain("color-scheme:light"); // 서버에서는 밝게
+    }); // 검증 종료
+
+    it("최상위 오류 화면도 저장된 다크 모드를 따른다", () => // 전역 오류 다크 검증
+    { // 검증 시작
+        localStorage.setItem("mateverse:theme", "dark"); // 다크 저장
+        const host = document.createElement("div"); // 그릴 자리
+        const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined); // 문서 안 문서 경고와 오류 기록 숨김
+        const { unmount } = render(<GlobalError error={new Error("레이아웃 실패")} retry={() => undefined} />, { container: host }); // 브라우저 렌더
+        const card = host.querySelector("main"); // 안내 카드
+        expect(card).toHaveStyle({ background: "#1b1825" }); // 어두운 카드
+        expect(host.querySelector("h1")).toHaveTextContent("앱을 불러오지 못했습니다"); // 제목 유지
+        unmount(); // 정리
+        consoleError.mockRestore(); // 경고 복원
+        localStorage.removeItem("mateverse:theme"); // 저장 지우기
     }); // 검증 종료
 }); // 묶음 종료
 

@@ -2,6 +2,7 @@ import { act, fireEvent, screen, within } from "@testing-library/react"; // 화�
 import userEvent from "@testing-library/user-event"; // 사용자 동작
 import { describe, expect, it, vi } from "vitest"; // 테스트 도구
 import { AppShell } from "@chatbot/components/app-shell/AppShell"; // 앱 셸
+import { createInitialState } from "@chatbot/features/core/initial-state"; // 초기 상태
 import { renderWithApp } from "@chatbot/test/render-with-app"; // 앱 렌더
 
 vi.mock("@/desktop/next-compat/navigation", () => // 경로 도구 대체
@@ -16,7 +17,7 @@ describe("앱 셸 패널", () => // 패널 묶음
     it("60분 동안 이용하면 쉬어 가기 알림을 보여 주고 확인하면 닫는다", () => // 이용 시간 알림 검증
     { // 검증 시작
         vi.useFakeTimers({ now: new Date("2026-10-01T00:00:00.000Z") }); // 시각 고정
-        window.sessionStorage.clear(); // 이전 기록 제거
+        window.localStorage.removeItem("mateverse:v1:usage-time"); // 이전 기록 제거
         try // 시계 복원 보장
         { // 시도 시작
             renderWithApp(<AppShell><main>본문</main></AppShell>); // 화면 렌더
@@ -132,13 +133,17 @@ describe("앱 셸 패널", () => // 패널 묶음
         expect(within(panel).getByRole("heading", { name: "지원" })).toBeInTheDocument(); // 지원 영역 확인
     }); // 검증 종료
 
-    it("우측 패널 로그아웃을 위험 동작 버튼으로 표시한다", async () => // 로그아웃 디자인 검증
+    it("우측 패널에 로그아웃 버튼은 없고, 19+ 보기를 켰을 때만 끄기 버튼을 위험 동작으로 표시한다", async () => // 19+ 보기 끄기 버튼 검증
     { // 검증 시작
         const user = userEvent.setup(); // 사용자 생성
-        renderWithApp(<AppShell><main>본문</main></AppShell>); // 화면 렌더
+        const initial = createInitialState(); // 초기 상태
+        const { unmount } = renderWithApp(<AppShell><main>본문</main></AppShell>); // 19+ 보기를 끈 화면
         await user.click(screen.getByRole("button", { name: "사용자 패널 열기와 닫기" })); // 사용자 패널 열기
-        const logoutButton = screen.getByRole("button", { name: "로그아웃" }); // 로그아웃 버튼
-        expect(logoutButton).toHaveClass("user-panel-logout"); // 위험 버튼 확인
+        expect(screen.queryByRole("button", { name: "로그아웃" })).toBeNull(); // 로그인이 없으니 로그아웃도 없음
+        expect(screen.queryByRole("button", { name: "19+ 보기 끄기" })).toBeNull(); // 꺼져 있으면 끄기 버튼도 없음
+        unmount(); // 화면 정리
+        renderWithApp(<AppShell><main>본문</main></AppShell>, { ...initial, settings: { ...initial.settings, matureContentEnabled: true, rightPanelOpen: true } }); // 19+ 보기를 켠 화면
+        expect(screen.getByRole("button", { name: "19+ 보기 끄기" })).toHaveClass("user-panel-logout"); // 위험 버튼 확인
     }); // 검증 종료
 
     it("우측 패널 표제와 빈 초상화를 강조한다", async () => // 패널 강조 검증

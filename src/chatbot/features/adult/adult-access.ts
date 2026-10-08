@@ -1,4 +1,5 @@
 import type { AdultVerification, AppSettings, Character, ContentRating, UserProfile } from "@chatbot/features/core/types"; // 도메인 타입
+import { localeTag } from "@chatbot/lib/i18n"; // 날짜와 숫자 형식
 
 export const adultAge = 19; // 성인 기준 나이
 export const contentRatingLabels: Record<ContentRating, string> = { all: "전체 이용가", teen: "15세 이용가", mature: "19세 이용가" }; // 등급 문구
@@ -73,5 +74,5 @@ export function getDiscoverableCharacters(characters: readonly Character[], show
 
 export function formatVerificationDate(value: string): string // 인증 날짜 표시
 { // 함수 시작
-    return new Intl.DateTimeFormat("ko-KR", { dateStyle: "long", timeZone: "Asia/Seoul" }).format(new Date(value)); // 한국 날짜 반환
+    return new Intl.DateTimeFormat(localeTag(), { dateStyle: "long", timeZone: "Asia/Seoul" }).format(new Date(value)); // 한국 날짜 반환
 } // 함수 종료

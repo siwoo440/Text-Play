@@ -1,5 +1,6 @@
 import type { Character } from "@chatbot/features/core/types"; // 캐릭터 타입
 import { getGenreKey, type GenreKey } from "@chatbot/lib/theme/genre-theme"; // 장르 색 도구
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
 
 export interface TagStat // 태그 통계
 { // 구조 시작
@@ -91,7 +92,7 @@ export function buildCreatorStats(characters: readonly Character[]): CreatorStat
             genreCounts.set(genre, (genreCounts.get(genre) ?? 0) + 1); // 장르 누적
         } // 순회 종료
         const genre = [...genreCounts.entries()].sort((left, right) => right[1] - left[1])[0]?.[0] ?? "other"; // 대표 장르
-        return { creatorId, creatorName: sorted[0]?.creatorName ?? "알 수 없는 제작자", works: sorted, totalPopularity: sorted.reduce((sum, work) => sum + work.popularity, 0), topTags: tagStats.slice(0, 3).map((stat) => stat.tag), genre }; // 제작자 통계 반환
+        return { creatorId, creatorName: sorted[0]?.creatorName ?? t("알 수 없는 제작자"), works: sorted, totalPopularity: sorted.reduce((sum, work) => sum + work.popularity, 0), topTags: tagStats.slice(0, 3).map((stat) => stat.tag), genre }; // 제작자 통계 반환
     }).sort((left, right) => right.totalPopularity - left.totalPopularity || left.creatorName.localeCompare(right.creatorName, "ko")); // 대화 합계 순서 반환
 } // 함수 종료
 
@@ -128,7 +129,13 @@ export function getTagHue(tag: string): number // 태그 색 번호
     return hash % tagHueCount; // 색 번호 반환
 } // 함수 종료
 
-export function createExploreHref(tag: string | null): string // 탐색 주소 생성
+export function getCharactersByTags(characters: readonly Character[], tags: readonly string[]): Character[] // 고른 태그를 모두 가진 작품 조회
 { // 함수 시작
-    return tag === null ? "/explore" : `/explore?tag=${encodeURIComponent(tag)}`; // 태그 주소 반환
+    return characters.filter((character) => tags.every((tag) => character.tags.includes(tag))).sort(byPopularity); // 인기순 작품 반환
+} // 함수 종료
+
+export function createExploreHref(tag: string | readonly string[] | null): string // 탐색 주소 생성(태그 여러 개는 tag를 되풀이)
+{ // 함수 시작
+    const tags = tag === null ? [] : typeof tag === "string" ? [tag] : tag; // 태그 목록
+    return tags.length === 0 ? "/explore" : `/explore?${tags.map((item) => `tag=${encodeURIComponent(item)}`).join("&")}`; // 태그 주소 반환
 } // 함수 종료

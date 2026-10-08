@@ -15,6 +15,6 @@ interface ExplorePageProps // 페이지 속성
 export default async function ExplorePage({ searchParams }: ExplorePageProps) // 탐색 페이지
 { // 함수 시작
     const { tag } = await searchParams; // 태그 매개변수 조회
-    const initialTag = typeof tag === "string" && tag.trim().length > 0 ? tag.trim() : null; // 초기 태그 정리
-    return <ExploreScreen key={initialTag ?? "all"} initialTag={initialTag} />; // 탐색 화면 반환
+    const tags = (Array.isArray(tag) ? tag : typeof tag === "string" ? [tag] : []).map((item) => item.trim()).filter((item) => item.length > 0); // 초기 태그 정리(여러 개 가능)
+    return <ExploreScreen key={tags.join("|") || "all"} initialTag={tags.length === 0 ? null : tags} />; // 탐색 화면 반환
 } // 함수 종료

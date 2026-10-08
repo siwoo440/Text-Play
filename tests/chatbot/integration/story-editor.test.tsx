@@ -33,6 +33,7 @@ describe("스토리 편집기", { timeout: 20_000 }, () => // 편집기 묶음(�
     { // 검증 시작
         const user = userEvent.setup(); // 사용자 생성
         renderWithApp(<><StoryEditor /><StoryProbe /></>); // 편집기 렌더
+        await user.click(screen.getByRole("button", { name: "전체 펼쳐 보기" })); // 모든 단계를 한 화면에서 입력(기본은 단계별 보기)
         await user.type(screen.getByLabelText("스토리 제목"), "새벽 기록 조사"); // 제목 입력
         await user.type(screen.getByLabelText("한 줄 소개"), "사라진 문장을 찾는다."); // 소개 입력
         await user.type(screen.getByLabelText("시작 장면"), "기록관 문이 천천히 열린다."); // 시작 장면 입력
@@ -60,6 +61,7 @@ describe("스토리 편집기", { timeout: 20_000 }, () => // 편집기 묶음(�
     { // 검증 시작
         const user = userEvent.setup(); // 사용자 생성
         renderWithApp(<StoryEditor />); // 편집기 렌더
+        await user.click(screen.getByRole("button", { name: "전체 펼쳐 보기" })); // 모든 단계를 한 화면에서 입력(기본은 단계별 보기)
         const picker = screen.getByRole("group", { name: "등장인물 고르기" }); // 인물 고르기
         await user.click(within(picker).getByRole("checkbox", { name: /새벽 도서관의 리안/ })); // 리안 선택
         await user.type(within(picker).getByRole("searchbox", { name: "등장인물 검색" }), "ㅅㄹ"); // 초성 검색
@@ -76,6 +78,7 @@ describe("스토리 편집기", { timeout: 20_000 }, () => // 편집기 묶음(�
     { // 검증 시작
         const user = userEvent.setup(); // 사용자 생성
         renderWithApp(<><StoryEditor /><StoryProbe /></>); // 편집기 렌더
+        await user.click(screen.getByRole("button", { name: "전체 펼쳐 보기" })); // 모든 단계를 한 화면에서 입력(기본은 단계별 보기)
         await user.click(screen.getByRole("button", { name: "임시 저장" })); // 저장 시도
         expect(screen.getAllByRole("alert")).toHaveLength(4); // 제목·소개·시작 장면·등장인물 오류
         expect(screen.getByText("등장인물을 1명 이상 골라 주세요.")).toBeVisible(); // 인물 오류 확인
@@ -86,6 +89,7 @@ describe("스토리 편집기", { timeout: 20_000 }, () => // 편집기 묶음(�
     { // 검증 시작
         const user = userEvent.setup(); // 사용자 생성
         renderWithApp(<StoryEditor />); // 편집기 렌더
+        await user.click(screen.getByRole("button", { name: "전체 펼쳐 보기" })); // 모든 단계를 한 화면에서 입력(기본은 단계별 보기)
         const picker = screen.getByRole("group", { name: "등장인물 고르기" }); // 인물 고르기
         const boxes = within(picker).getAllByRole("checkbox"); // 후보 목록
         for (const box of boxes.slice(0, 4)) // 4명 선택

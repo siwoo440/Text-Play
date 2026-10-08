@@ -1,17 +1,29 @@
-import type { Character, ChatTierId, ConversationSettings, Persona, StatusTemplate, TierOption, UserProfile } from "@chatbot/features/core/types"; // 도메인 타입
+import { createDefaultEvents } from "@chatbot/features/chat/event-model"; // 예시 이벤트
+import { AFFECTION_STAT_ID, createAffectionStat } from "@chatbot/features/chat/stat-model"; // 기본 호감도 스탯
+import type { Character, ChatTierId, ConversationSettings, Persona, ReferralState, RewardState, StatusTemplate, TierOption, UserProfile } from "@chatbot/features/core/types"; // 도메인 타입
 
-export type WorkExtras = Pick<Character, "playGuide" | "statusTemplate" | "updates">; // 작품 공통 추가 필드
+export type WorkExtras = Pick<Character, "playGuide" | "statusTemplate" | "updates" | "events" | "lorebook" | "examples">; // 작품 공통 추가 필드
 
 export const DEFAULT_PERSONA_ID = "persona-default"; // 기본 대화 프로필 식별자
 
+export function createDefaultRewardState(): RewardState // 출석·미션 처음 상태
+{ // 함수 시작
+    return { attendance: { lastDate: null, cycleDay: 0, totalDays: 0 }, missions: { dateKey: null, progress: {}, claimed: [], bonusClaimed: false }, totalEarned: 0 }; // 빈 상태 반환
+} // 함수 종료
+
+export function createDefaultReferralState(): ReferralState // 친구 초대 처음 상태
+{ // 함수 시작
+    return { code: null, createdAt: null, redeemedCode: null, redeemedAt: null, qualifyingMessages: 0, friends: [] }; // 빈 상태 반환
+} // 함수 종료
+
 export function createDefaultStatusTemplate(enabled = true): StatusTemplate // 기본 상태창 형식
 { // 함수 시작
-    return { enabled, location: true, time: true, tip: true, affection: true, thought: true, customLabels: [] }; // 기본 항목 반환
+    return { enabled, location: true, time: true, tip: true, thought: true, customLabels: [], stats: [createAffectionStat()], relationStatId: AFFECTION_STAT_ID }; // 기본 항목(호감도 초기값 0, 호감도가 관계 스탯) 반환
 } // 함수 종료
 
 export function createDefaultTierOptions(): Record<ChatTierId, TierOption> // 등급별 기본 답변 설정
 { // 함수 시작
-    return { basic: { length: 1, thinking: "off" }, plus: { length: 1, thinking: "off" }, premium: { length: 1, thinking: "off" } }; // 기본 길이·생각 끄기
+    return { open: { length: 1, thinking: "off" }, basic: { length: 1, thinking: "off" }, smart: { length: 1, thinking: "off" }, balance: { length: 1, thinking: "off" }, plus: { length: 1, thinking: "off" }, premium: { length: 1, thinking: "off" }, master: { length: 1, thinking: "off" } }; // 기본 길이·생각 끄기
 } // 함수 종료
 
 export function createDefaultConversationSettings(): ConversationSettings // 대화방 기본 설정
@@ -31,5 +43,6 @@ export function createDefaultPlayGuide(name: string, summary: string): string //
 
 export function withWorkDefaults<T extends { summary: string; name?: string; title?: string }>(work: T): T & WorkExtras // 작품 기본 필드 채우기(플레이 가이드·상태창·업데이트 기록)
 { // 함수 시작
-    return { ...work, playGuide: createDefaultPlayGuide(work.name ?? work.title ?? "상대", work.summary), statusTemplate: createDefaultStatusTemplate(true), updates: [] }; // 기본 필드 반환
+    const statusTemplate = createDefaultStatusTemplate(true); // 기본 상태창
+    return { ...work, playGuide: createDefaultPlayGuide(work.name ?? work.title ?? "상대", work.summary), statusTemplate, updates: [], events: createDefaultEvents(statusTemplate), lorebook: [], examples: [] }; // 기본 필드 반환(예시 이벤트 포함, 설정집·예시 대화는 비움)
 } // 함수 종료

@@ -1,17 +1,17 @@
 .page /* 전체 페이지 */
 { /* 페이지 시작 */
-    --tp-ink: #2b1a0e; /* 기본 글자 */
-    --tp-muted: #6b5442; /* 보조 글자 */
+    --tp-ink: light-dark(#2b1a0e, #e8ccb8); /* 기본 글자 */
+    --tp-muted: light-dark(#6b5442, #cdb9a6); /* 보조 글자 */
     --tp-orange: #f97316; /* 주 오렌지 */
-    --tp-orange-deep: #c2410c; /* 진한 오렌지 */
+    --tp-orange-deep: light-dark(#c2410c, #f49c78); /* 진한 오렌지 */
     --tp-amber: #f59e0b; /* 호박색 */
     --tp-yellow: #fcd34d; /* 노란색 */
-    --tp-line: #f2dcc0; /* 경계선 */
-    --tp-card: #ffffff; /* 카드 배경 */
+    --tp-line: light-dark(#f2dcc0, #5b4931); /* 경계선 */
+    --tp-card: light-dark(#ffffff, var(--mv-surface)); /* 카드 배경 */
     min-height: calc(100vh - 64px); /* 화면 높이 */
     overflow-x: clip; /* 장식 가로 넘침 자르기 */
     padding: clamp(28px, 4.5vw, 64px) clamp(16px, 5vw, 72px) 64px; /* 반응형 여백 */
-    background: radial-gradient(circle at 12% 0%, rgb(252 211 77 / 34%), transparent 34%), radial-gradient(circle at 92% 8%, rgb(249 115 22 / 18%), transparent 30%), linear-gradient(180deg, #fffaf1, #fff4e2 60%, #fffaf3); /* 따뜻한 배경 */
+    background: radial-gradient(circle at 12% 0%, rgb(252 211 77 / 34%), transparent 34%), radial-gradient(circle at 92% 8%, rgb(249 115 22 / 18%), transparent 30%), linear-gradient(180deg, light-dark(#fffaf1, #362912), light-dark(#fff4e2, #3c2d14) 60%, light-dark(#fffaf3, #19140d)); /* 따뜻한 배경 */
     color: var(--tp-ink); /* 기본 글자 */
 } /* 페이지 종료 */
 
@@ -34,8 +34,8 @@
     padding: 7px 14px; /* 표제 여백 */
     border: 1px solid #fbd38d; /* 표제 테두리 */
     border-radius: 999px; /* 알약 모양 */
-    background: #fff3d6; /* 표제 배경 */
-    color: var(--tp-orange-deep); /* 표제 색상 */
+    background: light-dark(#fff3d6, #403415); /* 표제 배경 */
+    color: light-dark(var(--tp-orange-deep), color-mix(in srgb, var(--tp-orange-deep) 55%, white)); /* 표제 색상 */
     font-size: .76rem; /* 표제 크기 */
     font-weight: 850; /* 표제 굵기 */
     letter-spacing: .12em; /* 표제 자간 */
@@ -71,7 +71,7 @@
 { /* 설명 시작 */
     max-width: 560px; /* 설명 너비 */
     margin: 22px 0 0; /* 설명 여백 */
-    color: var(--tp-muted); /* 설명 색상 */
+    color: light-dark(var(--tp-muted), color-mix(in srgb, var(--tp-muted) 55%, white)); /* 설명 색상 */
     font-size: clamp(1rem, 1.4vw, 1.14rem); /* 설명 크기 */
     line-height: 1.8; /* 설명 줄 높이 */
     word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
@@ -103,22 +103,22 @@
 .statusBadge[data-status="preparing"] /* 준비 상태 */
 { /* 준비 상태 시작 */
     border-color: #f6c35b; /* 준비 테두리 */
-    background: #fff3c4; /* 준비 배경 */
-    color: #7a4a00; /* 준비 글자 */
+    background: light-dark(#fff3c4, #473d18); /* 준비 배경 */
+    color: light-dark(#7a4a00, #f6cf93); /* 준비 글자 */
 } /* 준비 상태 종료 */
 
 .statusBadge[data-status="beta"] /* 베타 상태 */
 { /* 베타 상태 시작 */
     border-color: #fb923c; /* 베타 테두리 */
-    background: #ffedd5; /* 베타 배경 */
-    color: #9a3412; /* 베타 글자 */
+    background: light-dark(#ffedd5, #412e16); /* 베타 배경 */
+    color: light-dark(#9a3412, #f1a187); /* 베타 글자 */
 } /* 베타 상태 종료 */
 
 .statusBadge[data-status="stable"] /* 정식 상태 */
 { /* 정식 상태 시작 */
     border-color: #86efac; /* 정식 테두리 */
-    background: #ecfdf3; /* 정식 배경 */
-    color: #166534; /* 정식 글자 */
+    background: light-dark(#ecfdf3, #153723); /* 정식 배경 */
+    color: light-dark(#166534, #9feabb); /* 정식 글자 */
 } /* 정식 상태 종료 */
 
 .heroDownload /* 상단 다운로드 */
@@ -161,8 +161,8 @@
 .downloadButton:disabled /* 비활성 버튼 */
 { /* 비활성 시작 */
     border: 1px dashed #e7c79c; /* 비활성 테두리 */
-    background: repeating-linear-gradient(135deg, #fff6e6, #fff6e6 10px, #fdeed6 10px, #fdeed6 20px); /* 비활성 무늬 */
-    color: #7a5a35; /* 비활성 글자 */
+    background: repeating-linear-gradient(135deg, light-dark(#fff6e6, #3a2c13), light-dark(#fff6e6, #3a2c13) 10px, light-dark(#fdeed6, #413016) 10px, light-dark(#fdeed6, #413016) 20px); /* 비활성 무늬 */
+    color: light-dark(#7a5a35, #d6bda1); /* 비활성 글자 */
     box-shadow: none; /* 그림자 제거 */
     cursor: not-allowed; /* 비활성 커서 */
 } /* 비활성 종료 */
@@ -170,7 +170,7 @@
 .downloadHint /* 다운로드 안내 */
 { /* 안내 시작 */
     margin: 10px 0 0; /* 안내 여백 */
-    color: var(--tp-muted); /* 안내 색상 */
+    color: light-dark(var(--tp-muted), color-mix(in srgb, var(--tp-muted) 55%, white)); /* 안내 색상 */
     font-size: .86rem; /* 안내 크기 */
     word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
 } /* 안내 종료 */
@@ -187,7 +187,7 @@
     inset: -8% -6% 4% 10%; /* 장식 범위 */
     z-index: 0; /* 뒤쪽 표시 */
     border-radius: 48% 52% 40% 60%; /* 유기적 모양 */
-    background: radial-gradient(circle at 40% 40%, #ffe7a3, #ffc76b 55%, rgb(255 154 31 / 0%) 75%); /* 노을 배경 */
+    background: radial-gradient(circle at 40% 40%, light-dark(#ffe7a3, #53451c), #ffc76b 55%, rgb(255 154 31 / 0%) 75%); /* 노을 배경 */
     content: ""; /* 가상 요소 */
     filter: blur(2px); /* 부드러운 경계 */
 } /* 배경 원 종료 */
@@ -196,7 +196,7 @@
 { /* 설명 시작 */
     position: relative; /* 앞쪽 표시 */
     margin-top: 14px; /* 상단 여백 */
-    color: var(--tp-muted); /* 설명 색상 */
+    color: light-dark(var(--tp-muted), color-mix(in srgb, var(--tp-muted) 55%, white)); /* 설명 색상 */
     font-size: .82rem; /* 설명 크기 */
     text-align: center; /* 중앙 정렬 */
 } /* 설명 종료 */
@@ -206,7 +206,7 @@
     position: relative; /* 표시 기준 */
     z-index: 1; /* 앞쪽 표시 */
     overflow: visible; /* 떠 있는 표시 허용 */
-    border: 1px solid #f1d2a8; /* 창 테두리 */
+    border: 1px solid light-dark(#f1d2a8, #624e32); /* 창 테두리 */
     border-radius: 20px; /* 창 모서리 */
     background: var(--tp-card); /* 창 배경 */
     box-shadow: 0 30px 70px rgb(154 52 18 / 18%), 0 8px 20px rgb(154 52 18 / 8%); /* 창 그림자 */
@@ -218,9 +218,9 @@
     gap: 12px; /* 요소 간격 */
     align-items: center; /* 세로 중앙 */
     padding: 12px 16px; /* 표시줄 여백 */
-    border-bottom: 1px solid #f6e3c8; /* 하단 선 */
+    border-bottom: 1px solid light-dark(#f6e3c8, #5b482e); /* 하단 선 */
     border-radius: 20px 20px 0 0; /* 상단 모서리 */
-    background: linear-gradient(180deg, #fffdf8, #fff5e4); /* 표시줄 배경 */
+    background: linear-gradient(180deg, light-dark(#fffdf8, #19160d), light-dark(#fff5e4, #3b2c14)); /* 표시줄 배경 */
     font-size: .8rem; /* 표시줄 크기 */
 } /* 표시줄 종료 */
 
@@ -232,7 +232,7 @@
 .titleBar > span:last-child /* 작품 이름 */
 { /* 작품 시작 */
     margin-left: auto; /* 오른쪽 정렬 */
-    color: var(--tp-muted); /* 작품 색상 */
+    color: light-dark(var(--tp-muted), color-mix(in srgb, var(--tp-muted) 55%, white)); /* 작품 색상 */
 } /* 작품 종료 */
 
 .windowDots /* 창 버튼 */
@@ -305,13 +305,13 @@
     padding: 9px 12px; /* 대사 여백 */
     border-left: 3px solid var(--tp-orange); /* 대사 강조선 */
     border-radius: 0 10px 10px 0; /* 대사 모서리 */
-    background: #fff7ea; /* 대사 배경 */
+    background: light-dark(#fff7ea, #392a13); /* 대사 배경 */
 } /* 대사 종료 */
 
 .dialogue b /* 화자 이름 */
 { /* 화자 시작 */
     margin-right: 6px; /* 이름 간격 */
-    color: var(--tp-orange-deep); /* 이름 색상 */
+    color: light-dark(var(--tp-orange-deep), color-mix(in srgb, var(--tp-orange-deep) 55%, white)); /* 이름 색상 */
 } /* 화자 종료 */
 
 .choices /* 선택지 */
@@ -329,7 +329,7 @@
     gap: 8px; /* 요소 간격 */
     align-items: center; /* 세로 중앙 */
     padding: 7px 10px; /* 항목 여백 */
-    border: 1px solid #f3d9b4; /* 항목 테두리 */
+    border: 1px solid light-dark(#f3d9b4, #5f4c31); /* 항목 테두리 */
     border-radius: 10px; /* 항목 모서리 */
     background: var(--tp-card); /* 항목 배경 */
     font-size: .8rem; /* 항목 크기 */
@@ -339,7 +339,7 @@
 .choices li:first-child /* 선택된 항목 */
 { /* 선택 시작 */
     border-color: #fbbf24; /* 선택 테두리 */
-    background: #fff6d6; /* 선택 배경 */
+    background: light-dark(#fff6d6, #403715); /* 선택 배경 */
 } /* 선택 종료 */
 
 .choices span /* 선택 번호 */
@@ -362,7 +362,7 @@
     padding: 9px 12px; /* 입력 여백 */
     border: 1px dashed #f0b765; /* 입력 테두리 */
     border-radius: 10px; /* 입력 모서리 */
-    color: var(--tp-muted); /* 입력 글자 */
+    color: light-dark(var(--tp-muted), color-mix(in srgb, var(--tp-muted) 55%, white)); /* 입력 글자 */
     font-size: .8rem; /* 입력 크기 */
 } /* 입력 종료 */
 
@@ -370,8 +370,8 @@
 { /* 표제 시작 */
     padding: 2px 7px; /* 표제 여백 */
     border-radius: 6px; /* 표제 모서리 */
-    background: #ffedd5; /* 표제 배경 */
-    color: var(--tp-orange-deep); /* 표제 글자 */
+    background: light-dark(#ffedd5, #412e16); /* 표제 배경 */
+    color: light-dark(var(--tp-orange-deep), color-mix(in srgb, var(--tp-orange-deep) 55%, white)); /* 표제 글자 */
     font-size: .7rem; /* 표제 크기 */
     font-weight: 800; /* 표제 굵기 */
 } /* 표제 종료 */
@@ -401,14 +401,14 @@
     display: grid; /* 세로 배치 */
     gap: 4px; /* 요소 간격 */
     padding: 10px; /* 카드 여백 */
-    border: 1px solid #f6e3c8; /* 카드 테두리 */
+    border: 1px solid light-dark(#f6e3c8, #5b482e); /* 카드 테두리 */
     border-radius: 10px; /* 카드 모서리 */
-    background: #fffbf3; /* 카드 배경 */
+    background: light-dark(#fffbf3, #19150d); /* 카드 배경 */
 } /* 카드 종료 */
 
 .sideCard small /* 카드 표제 */
 { /* 표제 시작 */
-    color: var(--tp-orange-deep); /* 표제 색상 */
+    color: light-dark(var(--tp-orange-deep), color-mix(in srgb, var(--tp-orange-deep) 55%, white)); /* 표제 색상 */
     font-size: .66rem; /* 표제 크기 */
     font-weight: 800; /* 표제 굵기 */
     letter-spacing: .06em; /* 표제 자간 */
@@ -428,7 +428,7 @@
     height: 8px; /* 막대 높이 */
     overflow: hidden; /* 막대 자르기 */
     border-radius: 99px; /* 막대 모서리 */
-    background: #fdecd0; /* 막대 배경 */
+    background: light-dark(#fdecd0, #433216); /* 막대 배경 */
 } /* 수치 종료 */
 
 .meter i /* 수치 채움 */
@@ -498,19 +498,19 @@
     padding: 18px 20px; /* 항목 여백 */
     border: 1px solid var(--tp-line); /* 항목 테두리 */
     border-radius: 18px; /* 항목 모서리 */
-    background: rgb(255 255 255 / 78%); /* 항목 배경 */
+    background: light-dark(rgb(255 255 255 / 78%), rgb(28 25 38 / 78%)); /* 항목 배경 */
 } /* 항목 종료 */
 
 .highlights strong /* 요약 값 */
 { /* 값 시작 */
-    color: var(--tp-orange-deep); /* 값 색상 */
+    color: light-dark(var(--tp-orange-deep), color-mix(in srgb, var(--tp-orange-deep) 55%, white)); /* 값 색상 */
     font-size: 1.12rem; /* 값 크기 */
     font-weight: 850; /* 값 굵기 */
 } /* 값 종료 */
 
 .highlights span /* 요약 설명 */
 { /* 설명 시작 */
-    color: var(--tp-muted); /* 설명 색상 */
+    color: light-dark(var(--tp-muted), color-mix(in srgb, var(--tp-muted) 55%, white)); /* 설명 색상 */
     font-size: .86rem; /* 설명 크기 */
     word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
 } /* 설명 종료 */
@@ -529,7 +529,7 @@
 .kicker /* 구역 표제 */
 { /* 표제 시작 */
     margin: 0 0 8px; /* 표제 여백 */
-    color: var(--tp-orange-deep); /* 표제 색상 */
+    color: light-dark(var(--tp-orange-deep), color-mix(in srgb, var(--tp-orange-deep) 55%, white)); /* 표제 색상 */
     font-size: .74rem; /* 표제 크기 */
     font-weight: 850; /* 표제 굵기 */
     letter-spacing: .14em; /* 표제 자간 */
@@ -547,7 +547,7 @@
 .sectionLead /* 구역 설명 */
 { /* 설명 시작 */
     margin: 10px 0 0; /* 설명 여백 */
-    color: var(--tp-muted); /* 설명 색상 */
+    color: light-dark(var(--tp-muted), color-mix(in srgb, var(--tp-muted) 55%, white)); /* 설명 색상 */
     line-height: 1.7; /* 설명 줄 높이 */
 } /* 설명 종료 */
 
@@ -568,7 +568,7 @@
     padding: 26px; /* 단계 여백 */
     border: 1px solid var(--tp-line); /* 단계 테두리 */
     border-radius: 22px; /* 단계 모서리 */
-    background: linear-gradient(160deg, #ffffff, #fff8ec); /* 단계 배경 */
+    background: linear-gradient(160deg, light-dark(#ffffff, var(--mv-surface)), light-dark(#fff8ec, #382a13)); /* 단계 배경 */
 } /* 단계 종료 */
 
 .flow li:not(:last-child)::after /* 단계 연결 화살표 */
@@ -583,7 +583,7 @@
     height: 28px; /* 화살표 높이 */
     border-radius: 50%; /* 원형 */
     background: var(--tp-yellow); /* 화살표 배경 */
-    color: #7a3d00; /* 화살표 색상 */
+    color: light-dark(#7a3d00, #f6c593); /* 화살표 색상 */
     content: "→"; /* 화살표 문자 */
     font-weight: 900; /* 화살표 굵기 */
 } /* 화살표 종료 */
@@ -613,7 +613,7 @@
 .featureGrid p /* 기능 설명 */
 { /* 카드 설명 시작 */
     margin: 10px 0 0; /* 설명 여백 */
-    color: var(--tp-muted); /* 설명 색상 */
+    color: light-dark(var(--tp-muted), color-mix(in srgb, var(--tp-muted) 55%, white)); /* 설명 색상 */
     line-height: 1.7; /* 설명 줄 높이 */
     word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
 } /* 카드 설명 종료 */
@@ -648,7 +648,7 @@
     margin-bottom: 16px; /* 하단 여백 */
     padding: 10px; /* 아이콘 여백 */
     border-radius: 14px; /* 아이콘 모서리 */
-    background: #fff1d6; /* 아이콘 배경 */
+    background: light-dark(#fff1d6, #403215); /* 아이콘 배경 */
     fill: none; /* 채움 제거 */
     stroke: var(--tp-orange-deep); /* 선 색상 */
     stroke-linecap: round; /* 선 끝 */
@@ -674,13 +674,13 @@
 .compare article[data-accent="true"] /* 강조 비교 카드 */
 { /* 강조 시작 */
     border-color: #fbbf24; /* 강조 테두리 */
-    background: linear-gradient(150deg, #fff8e1, #ffedd5); /* 강조 배경 */
+    background: linear-gradient(150deg, light-dark(#fff8e1, #3c3314), light-dark(#ffedd5, #412e16)); /* 강조 배경 */
 } /* 강조 종료 */
 
 .compareLabel /* 비교 표제 */
 { /* 표제 시작 */
     margin: 0 0 8px; /* 표제 여백 */
-    color: var(--tp-orange-deep); /* 표제 색상 */
+    color: light-dark(var(--tp-orange-deep), color-mix(in srgb, var(--tp-orange-deep) 55%, white)); /* 표제 색상 */
     font-size: .8rem; /* 표제 크기 */
     font-weight: 800; /* 표제 굵기 */
 } /* 표제 종료 */
@@ -694,7 +694,7 @@
 .compare article p:not(.compareLabel) /* 비교 설명 */
 { /* 설명 시작 */
     margin: 10px 0 0; /* 설명 여백 */
-    color: var(--tp-muted); /* 설명 색상 */
+    color: light-dark(var(--tp-muted), color-mix(in srgb, var(--tp-muted) 55%, white)); /* 설명 색상 */
     line-height: 1.7; /* 설명 줄 높이 */
     word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
 } /* 설명 종료 */
@@ -705,8 +705,8 @@
     padding: 14px 16px; /* 경고 내부 여백 */
     border: 1px solid #fb923c; /* 경고 테두리 */
     border-radius: 12px; /* 경고 모서리 */
-    background: #fff1e6; /* 경고 배경 */
-    color: #9a3412; /* 경고 글자 */
+    background: light-dark(#fff1e6, #3a2413); /* 경고 배경 */
+    color: light-dark(#9a3412, #f1a187); /* 경고 글자 */
 } /* 경고 종료 */
 
 .stepList /* 설치 단계 */
@@ -747,7 +747,7 @@
     place-items: center; /* 가운데 정렬 */
     width: 48px; /* 번호 너비 */
     height: 48px; /* 번호 높이 */
-    border: 3px solid #fff8ec; /* 번호 테두리 */
+    border: 3px solid light-dark(#fff8ec, #564425); /* 번호 테두리 */
     border-radius: 50%; /* 원형 번호 */
     background: linear-gradient(135deg, #fcd34d, #f97316); /* 번호 배경 */
     color: #2b1400; /* 번호 글자 */
@@ -808,8 +808,8 @@
     width: 26px; /* 표시 너비 */
     height: 26px; /* 표시 높이 */
     border-radius: 50%; /* 원형 */
-    background: #fff1d6; /* 표시 배경 */
-    color: var(--tp-orange-deep); /* 표시 색상 */
+    background: light-dark(#fff1d6, #403215); /* 표시 배경 */
+    color: light-dark(var(--tp-orange-deep), color-mix(in srgb, var(--tp-orange-deep) 55%, white)); /* 표시 색상 */
     content: "+"; /* 펼침 기호 */
     font-weight: 900; /* 기호 굵기 */
 } /* 펼침 종료 */
@@ -823,7 +823,7 @@
 { /* 답변 시작 */
     margin: 0; /* 기본 여백 제거 */
     padding: 0 20px 20px; /* 답변 여백 */
-    color: var(--tp-muted); /* 답변 색상 */
+    color: light-dark(var(--tp-muted), color-mix(in srgb, var(--tp-muted) 55%, white)); /* 답변 색상 */
     line-height: 1.75; /* 답변 줄 높이 */
     word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
 } /* 답변 종료 */
@@ -874,8 +874,8 @@
     min-height: 46px; /* 링크 높이 */
     padding: 0 18px; /* 링크 여백 */
     border-radius: 14px; /* 링크 모서리 */
-    background: #ffffff; /* 링크 배경 */
-    color: #2b1400; /* 링크 글자 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 링크 배경 */
+    color: light-dark(#2b1400, #f8d0ad); /* 링크 글자 */
     font-weight: 800; /* 링크 굵기 */
     text-decoration: none; /* 밑줄 제거 */
     box-shadow: 0 8px 20px rgb(154 52 18 / 16%); /* 링크 그림자 */
@@ -885,6 +885,7 @@
 { /* 보조 시작 */
     border: 1px solid rgb(43 20 0 / 30%); /* 보조 테두리 */
     background: transparent; /* 보조 배경 */
+    color: #2b1400; /* 보조 글자(밝은 띠 위라 다크에서도 진하게) */
     box-shadow: none; /* 그림자 제거 */
 } /* 보조 종료 */
 
@@ -903,7 +904,7 @@
 .footer p /* 하단 브랜드 */
 { /* 브랜드 시작 */
     margin: 0; /* 기본 여백 제거 */
-    color: var(--tp-orange-deep); /* 브랜드 색상 */
+    color: light-dark(var(--tp-orange-deep), color-mix(in srgb, var(--tp-orange-deep) 55%, white)); /* 브랜드 색상 */
     font-weight: 900; /* 브랜드 굵기 */
 } /* 브랜드 종료 */
 
@@ -918,19 +919,19 @@
 .footer a, /* 하단 링크 */
 .footer span /* 하단 상태 */
 { /* 하단 요소 시작 */
-    color: var(--tp-muted); /* 요소 색상 */
+    color: light-dark(var(--tp-muted), color-mix(in srgb, var(--tp-muted) 55%, white)); /* 요소 색상 */
     font-size: .88rem; /* 요소 크기 */
     text-decoration: none; /* 밑줄 제거 */
 } /* 하단 요소 종료 */
 
 .footer a:hover /* 하단 링크 올림 */
 { /* 올림 시작 */
-    color: var(--tp-orange-deep); /* 올림 색상 */
+    color: light-dark(var(--tp-orange-deep), color-mix(in srgb, var(--tp-orange-deep) 55%, white)); /* 올림 색상 */
 } /* 올림 종료 */
 
 .footer span[aria-disabled="true"] /* 비활성 하단 상태 */
 { /* 비활성 시작 */
-    color: #8a7563; /* 비활성 색상 */
+    color: light-dark(#8a7563, #bdafa3); /* 비활성 색상 */
 } /* 비활성 종료 */
 
 .downloadButton:focus-visible, /* 버튼 초점 */

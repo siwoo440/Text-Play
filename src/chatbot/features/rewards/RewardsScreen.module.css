@@ -1,0 +1,547 @@
+.notice /* 받은 안내 */
+{ /* 안내 시작 */
+    min-height: 1.4em; /* 안정 높이 */
+    margin: 0; /* 여백 제거 */
+    color: var(--tone-strong); /* 묶음 글자 */
+    font-size: .92rem; /* 크기 */
+    font-weight: 800; /* 굵기 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 안내 종료 */
+
+.notice:empty /* 빈 안내 */
+{ /* 빈 안내 시작 */
+    display: none; /* 자리 차지 없음 */
+} /* 빈 안내 종료 */
+
+.stampBoard /* 출석 도장판 */
+{ /* 도장판 시작 */
+    display: grid; /* 격자 */
+    grid-template-columns: repeat(7, minmax(0, 1fr)); /* 일곱 칸 */
+    gap: 8px; /* 칸 간격 */
+    margin: 0; /* 여백 제거 */
+    padding: 0; /* 여백 제거 */
+    list-style: none; /* 번호 제거 */
+} /* 도장판 종료 */
+
+.stampBoard li /* 도장 칸 */
+{ /* 칸 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 6px; /* 간격 */
+    min-width: 0; /* 줄임 허용 */
+    padding: 12px 4px; /* 여백 */
+    border: 1px dashed light-dark(#d8d0e8, #453d57); /* 점선 테두리 */
+    border-radius: 16px; /* 모서리 */
+    background: light-dark(#faf8fd, #17131f); /* 빈 칸 배경 */
+    color: var(--mv-muted); /* 글자 */
+    text-align: center; /* 가운데 */
+} /* 칸 종료 */
+
+.stampBoard li span /* 일차 */
+{ /* 일차 시작 */
+    font-size: .74rem; /* 크기 */
+    font-weight: 800; /* 굵기 */
+    white-space: nowrap; /* 한 줄 */
+} /* 일차 종료 */
+
+.stampBoard li strong /* 보상·도장 */
+{ /* 값 시작 */
+    display: grid; /* 가운데 */
+    width: min(44px, 100%); /* 너비 */
+    aspect-ratio: 1; /* 원형 */
+    margin: 0 auto; /* 가운데 */
+    border-radius: 50%; /* 원 */
+    background: light-dark(#efeaf7, #262031); /* 빈 도장 */
+    color: var(--mv-muted); /* 글자 */
+    font-size: .84rem; /* 크기 */
+    font-weight: 900; /* 굵기 */
+    place-items: center; /* 가운데 */
+} /* 값 종료 */
+
+.stampBoard li[data-final="true"] /* 7일차 칸 */
+{ /* 7일차 시작 */
+    border-color: light-dark(#f5c26b, #7a5a1c); /* 금색 테두리 */
+    background: light-dark(#fff8e6, #2a2111); /* 금색 배경 */
+} /* 7일차 종료 */
+
+.stampBoard li[data-final="true"] strong /* 7일차 보상 */
+{ /* 보상 시작 */
+    background: light-dark(#fde9b8, #4a3a14); /* 금색 원 */
+    color: light-dark(#92400e, #f6cf7f); /* 금색 글자 */
+} /* 보상 종료 */
+
+.stampBoard li[data-state="today"] /* 오늘 찍을 칸 */
+{ /* 오늘 시작 */
+    border: 2px solid var(--tone); /* 강조 테두리 */
+    background: var(--tone-soft); /* 강조 배경 */
+    color: var(--tone-strong); /* 강조 글자 */
+} /* 오늘 종료 */
+
+.stampBoard li[data-state="today"] strong /* 오늘 보상 */
+{ /* 보상 시작 */
+    background: var(--mv-surface); /* 밝은 원 */
+    color: var(--tone-strong); /* 강조 글자 */
+} /* 보상 종료 */
+
+.stampBoard li[data-state="done"] /* 찍은 칸 */
+{ /* 찍음 시작 */
+    border-style: solid; /* 실선 */
+    border-color: color-mix(in srgb, var(--tone) 40%, var(--mv-surface)); /* 묶음 테두리 */
+    background: var(--tone-soft); /* 묶음 배경 */
+    color: var(--tone-strong); /* 묶음 글자 */
+} /* 찍음 종료 */
+
+.stampBoard li[data-state="done"] strong /* 도장 */
+{ /* 도장 시작 */
+    background: var(--tone); /* 묶음 채움 */
+    color: #ffffff; /* 흰 글자 */
+    font-size: 1.05rem; /* 크기 */
+} /* 도장 종료 */
+
+.missionList /* 미션 목록 */
+{ /* 목록 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 10px; /* 간격 */
+    margin: 0; /* 여백 제거 */
+    padding: 0; /* 여백 제거 */
+    list-style: none; /* 점 제거 */
+} /* 목록 종료 */
+
+.missionList li /* 미션 */
+{ /* 미션 시작 */
+    display: grid; /* 격자 */
+    grid-template-columns: minmax(0, 1.4fr) minmax(120px, 1fr) 152px; /* 이름·진행·받기(받기 칸 너비를 고정해 줄마다 막대와 버튼 위치가 같게) */
+    gap: 10px 16px; /* 간격 */
+    align-items: center; /* 세로 중앙 */
+    padding: 14px 16px; /* 여백 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 16px; /* 모서리 */
+    background: light-dark(#fdfcff, #17131f); /* 배경 */
+} /* 미션 종료 */
+
+.missionList li > .claim, /* 미션 받기 버튼 */
+.missionList li > .go, /* 미션 하러 가기 */
+.missionList li > .claimed, /* 미션 받음 */
+.missionList li > .locked /* 미션 잠김 */
+{ /* 미션 동작 시작 */
+    width: 100%; /* 받기 칸을 가득 채워 줄마다 같은 길이 */
+} /* 미션 동작 종료 */
+
+.missionList li[data-state="ready"] /* 받을 수 있는 미션 */
+{ /* 준비 시작 */
+    border-color: color-mix(in srgb, var(--tone) 45%, var(--mv-surface)); /* 강조 테두리 */
+    background: var(--tone-soft); /* 강조 배경 */
+} /* 준비 종료 */
+
+.missionList li[data-bonus="true"] /* 보너스 */
+{ /* 보너스 시작 */
+    border-style: dashed; /* 점선 */
+} /* 보너스 종료 */
+
+.missionCopy /* 이름과 설명 */
+{ /* 글 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 3px; /* 간격 */
+    min-width: 0; /* 줄임 허용 */
+} /* 글 종료 */
+
+.missionCopy strong /* 미션 이름 */
+{ /* 이름 시작 */
+    color: var(--mv-ink); /* 글자 */
+    font-size: .98rem; /* 크기 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 이름 종료 */
+
+.missionCopy small /* 미션 설명 */
+{ /* 설명 시작 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-size: .8rem; /* 크기 */
+    line-height: 1.5; /* 행간 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 설명 종료 */
+
+.missionProgress /* 진행 */
+{ /* 진행 시작 */
+    display: grid; /* 격자 */
+    grid-template-columns: minmax(0, 1fr) 2.4em; /* 막대·숫자(숫자 칸 너비를 고정해 막대 길이가 같게) */
+    gap: 10px; /* 간격 */
+    align-items: center; /* 세로 중앙 */
+    color: var(--mv-muted); /* 숫자 글자 */
+    font-variant-numeric: tabular-nums; /* 숫자 폭 고정 */
+    font-size: .82rem; /* 크기 */
+    font-weight: 800; /* 굵기 */
+} /* 진행 종료 */
+
+.missionProgress [role="progressbar"] /* 진행 막대 */
+{ /* 막대 시작 */
+    height: 8px; /* 높이 */
+    overflow: hidden; /* 채움 자르기 */
+    border-radius: 999px; /* 둥근 막대 */
+    background: light-dark(#ebe7f3, #2a2435); /* 빈 막대 */
+} /* 막대 종료 */
+
+.missionProgress [role="progressbar"] span /* 진행 채움 */
+{ /* 채움 시작 */
+    display: block; /* 블록 */
+    height: 100%; /* 높이 */
+    border-radius: inherit; /* 모서리 상속 */
+    background: var(--tone); /* 묶음 채움 */
+    transition: width 200ms ease; /* 전환 */
+} /* 채움 종료 */
+
+.claim, /* 받기 버튼 */
+.go, /* 하러 가기 */
+.claimed, /* 받음 */
+.locked /* 잠김 */
+{ /* 동작 시작 */
+    display: inline-flex; /* 가로 배치 */
+    align-items: center; /* 세로 중앙 */
+    justify-content: center; /* 가운데 */
+    min-width: 108px; /* 너비 */
+    min-height: 40px; /* 높이 */
+    padding: 0 14px; /* 여백 */
+    border-radius: 999px; /* 알약 */
+    font: inherit; /* 글꼴 상속 */
+    font-size: .84rem; /* 크기 */
+    font-weight: 800; /* 굵기 */
+    white-space: nowrap; /* 한 줄 */
+} /* 동작 종료 */
+
+.claim /* 받기 버튼 */
+{ /* 받기 시작 */
+    border: 0; /* 테두리 제거 */
+    background: var(--tone); /* 묶음 채움 */
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--tone) 26%, transparent); /* 그림자 */
+    color: #ffffff; /* 흰 글자 */
+    cursor: pointer; /* 커서 */
+} /* 받기 종료 */
+
+.go /* 하러 가기 */
+{ /* 이동 시작 */
+    border: 1px solid color-mix(in srgb, var(--tone) 35%, var(--mv-surface)); /* 테두리 */
+    background: var(--mv-surface); /* 배경 */
+    color: var(--tone-strong); /* 글자 */
+    text-decoration: none; /* 밑줄 제거 */
+} /* 이동 종료 */
+
+.go:hover /* 하러 가기 올림 */
+{ /* 올림 시작 */
+    background: var(--tone-soft); /* 연한 배경 */
+} /* 올림 종료 */
+
+.claimed, /* 받음 */
+.locked /* 잠김 */
+{ /* 표시 시작 */
+    border: 1px dashed var(--mv-line); /* 점선 */
+    color: var(--mv-muted); /* 보조 글자 */
+} /* 표시 종료 */
+
+.claim:focus-visible, /* 받기 초점 */
+.go:focus-visible /* 이동 초점 */
+{ /* 초점 시작 */
+    outline: 3px solid var(--mv-focus); /* 초점 외곽선 */
+    outline-offset: 3px; /* 외곽선 간격 */
+} /* 초점 종료 */
+
+.records /* 받은 기록 */
+{ /* 기록 시작 */
+    display: grid; /* 세로 배치 */
+    margin: 0; /* 여백 제거 */
+    padding: 0; /* 여백 제거 */
+    list-style: none; /* 번호 제거 */
+} /* 기록 종료 */
+
+.records li /* 기록 줄 */
+{ /* 줄 시작 */
+    display: flex; /* 가로 배치 */
+    gap: 12px; /* 간격 */
+    align-items: center; /* 세로 중앙 */
+    justify-content: space-between; /* 양끝 */
+    padding: 12px 2px; /* 여백 */
+    border-bottom: 1px solid var(--mv-line); /* 구분선 */
+} /* 줄 종료 */
+
+.records li:last-child /* 마지막 줄 */
+{ /* 마지막 시작 */
+    border-bottom: 0; /* 구분선 제거 */
+} /* 마지막 종료 */
+
+.records li div /* 기록 글 */
+{ /* 글 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 2px; /* 간격 */
+    min-width: 0; /* 줄임 허용 */
+} /* 글 종료 */
+
+.records li strong /* 기록 이름 */
+{ /* 이름 시작 */
+    color: var(--mv-ink); /* 글자 */
+    font-size: .94rem; /* 크기 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 이름 종료 */
+
+.records li small /* 기록 시각 */
+{ /* 시각 시작 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-size: .78rem; /* 크기 */
+} /* 시각 종료 */
+
+.records li b /* 받은 토큰 */
+{ /* 토큰 시작 */
+    flex: none; /* 크기 유지 */
+    color: var(--tone-strong); /* 묶음 글자 */
+    font-size: 1rem; /* 크기 */
+    font-weight: 900; /* 굵기 */
+} /* 토큰 종료 */
+
+.inviteSection /* 친구 초대 칸 */
+{ /* 칸 시작 */
+    scroll-margin-top: 84px; /* 헤더에 가리지 않게(#invite로 이동) */
+} /* 칸 종료 */
+
+.inviteBox /* 내 초대 링크 */
+{ /* 상자 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 14px; /* 간격 */
+    padding: 16px; /* 여백 */
+    border: 1px solid color-mix(in srgb, var(--tone) 30%, var(--mv-surface)); /* 테두리 */
+    border-radius: 16px; /* 모서리 */
+    background: var(--tone-soft); /* 배경 */
+} /* 상자 종료 */
+
+.inviteCode /* 내 초대 코드 */
+{ /* 코드 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 2px; /* 간격 */
+    margin: 0; /* 여백 제거 */
+} /* 코드 종료 */
+
+.inviteCode span /* 코드 표제 */
+{ /* 표제 시작 */
+    color: var(--tone-strong); /* 글자 */
+    font-size: .78rem; /* 크기 */
+    font-weight: 800; /* 굵기 */
+} /* 표제 종료 */
+
+.inviteCode strong /* 코드 값 */
+{ /* 값 시작 */
+    color: var(--mv-ink); /* 글자 */
+    font-size: clamp(1.5rem, 5vw, 2rem); /* 크기 */
+    font-variant-numeric: tabular-nums; /* 고정 폭 숫자 */
+    letter-spacing: .12em; /* 자간 */
+} /* 값 종료 */
+
+.inviteField /* 초대 링크·코드 입력 */
+{ /* 입력 묶음 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 6px; /* 간격 */
+    min-width: 0; /* 줄임 허용 */
+    color: var(--mv-ink); /* 표제 글자 */
+    font-size: .86rem; /* 크기 */
+    font-weight: 800; /* 굵기 */
+} /* 입력 묶음 종료 */
+
+.inviteField input /* 입력 */
+{ /* 입력 시작 */
+    width: 100%; /* 너비 */
+    min-width: 0; /* 줄임 허용 */
+    min-height: 46px; /* 높이 */
+    padding: 0 14px; /* 여백 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 12px; /* 모서리 */
+    background: var(--mv-surface); /* 배경 */
+    color: var(--mv-ink); /* 글자 */
+    font: inherit; /* 글꼴 상속 */
+    font-weight: 600; /* 굵기 */
+} /* 입력 종료 */
+
+.inviteField input:focus-visible /* 입력 초점 */
+{ /* 초점 시작 */
+    border-color: var(--tone); /* 테두리 */
+    outline: 3px solid var(--mv-focus); /* 초점 외곽선 */
+    outline-offset: 2px; /* 외곽선 간격 */
+} /* 초점 종료 */
+
+.inviteRedeem /* 초대받은 사람 */
+{ /* 영역 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 12px; /* 간격 */
+    padding-top: 16px; /* 위 여백 */
+    border-top: 1px solid var(--mv-line); /* 구분선 */
+} /* 영역 종료 */
+
+.inviteRedeem h3 /* 소제목 */
+{ /* 소제목 시작 */
+    margin: 0; /* 여백 제거 */
+    color: var(--mv-ink); /* 글자 */
+    font-size: 1.02rem; /* 크기 */
+} /* 소제목 종료 */
+
+.inviteForm /* 초대 코드 입력 양식 */
+{ /* 양식 시작 */
+    display: grid; /* 격자 */
+    grid-template-columns: minmax(0, 320px) auto; /* 입력·버튼 */
+    gap: 10px 12px; /* 간격 */
+    align-items: end; /* 아래 정렬 */
+    justify-content: start; /* 왼쪽 */
+} /* 양식 종료 */
+
+.inviteForm p /* 입력 오류 */
+{ /* 오류 시작 */
+    grid-column: 1 / -1; /* 한 줄 전체 */
+    margin: 0; /* 여백 제거 */
+} /* 오류 종료 */
+
+.inviteDone /* 받은 안내 */
+{ /* 안내 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 8px; /* 간격 */
+    max-width: 520px; /* 너비 */
+} /* 안내 종료 */
+
+.inviteDone p /* 받음 문구 */
+{ /* 문구 시작 */
+    margin: 0; /* 여백 제거 */
+    color: var(--tone-strong); /* 글자 */
+    font-weight: 800; /* 굵기 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 문구 종료 */
+
+.inviteDone small /* 조건 안내 */
+{ /* 안내 시작 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-size: .8rem; /* 크기 */
+    line-height: 1.5; /* 행간 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 안내 종료 */
+
+.banner /* 메인 화면 보상 카드 */
+{ /* 카드 시작 */
+    display: flex; /* 가로 배치 */
+    gap: 14px; /* 간격 */
+    align-items: center; /* 세로 중앙 */
+    max-width: 1400px; /* 최대 너비 */
+    margin: 0 auto 22px; /* 가운데·아래 여백 */
+    padding: 14px 18px; /* 여백 */
+    border: 1px solid light-dark(#e6dcfb, #3a2f55); /* 테두리 */
+    border-radius: 20px; /* 모서리 */
+    background: linear-gradient(110deg, light-dark(#f5efff, #1d162c), light-dark(#fff1f7, #261624) 60%, light-dark(#fff6ea, #2a2014)); /* 은은한 무지개 배경 */
+    box-shadow: 0 12px 28px light-dark(rgb(109 40 217 / 9%), rgb(0 0 0 / 22%)); /* 그림자 */
+    color: var(--mv-ink); /* 글자 */
+    text-decoration: none; /* 밑줄 제거 */
+    transition: transform 160ms ease, box-shadow 160ms ease; /* 전환 */
+} /* 카드 종료 */
+
+.banner:hover /* 카드 올림 */
+{ /* 올림 시작 */
+    box-shadow: 0 16px 34px light-dark(rgb(109 40 217 / 15%), rgb(0 0 0 / 30%)); /* 진한 그림자 */
+    transform: translateY(-1px); /* 살짝 올림 */
+} /* 올림 종료 */
+
+.banner:focus-visible /* 카드 초점 */
+{ /* 초점 시작 */
+    outline: 3px solid var(--mv-focus); /* 초점 외곽선 */
+    outline-offset: 3px; /* 외곽선 간격 */
+} /* 초점 종료 */
+
+.bannerIcon /* 선물 아이콘 */
+{ /* 아이콘 시작 */
+    display: grid; /* 가운데 */
+    flex: none; /* 크기 유지 */
+    width: 44px; /* 너비 */
+    height: 44px; /* 높이 */
+    border-radius: 14px; /* 모서리 */
+    background: var(--mv-surface); /* 배경 */
+    font-size: 1.35rem; /* 크기 */
+    place-items: center; /* 가운데 */
+} /* 아이콘 종료 */
+
+.bannerCopy /* 카드 글 */
+{ /* 글 시작 */
+    display: grid; /* 세로 배치 */
+    flex: 1; /* 남는 폭 */
+    gap: 2px; /* 간격 */
+    min-width: 0; /* 줄임 허용 */
+} /* 글 종료 */
+
+.bannerCopy strong /* 카드 제목 */
+{ /* 제목 시작 */
+    font-size: 1rem; /* 크기 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 제목 종료 */
+
+.bannerCopy small /* 카드 설명 */
+{ /* 설명 시작 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-size: .82rem; /* 크기 */
+    line-height: 1.5; /* 행간 */
+    word-break: keep-all; /* 한글 줄바꿈 */
+} /* 설명 종료 */
+
+.bannerAction /* 카드 동작 */
+{ /* 동작 시작 */
+    flex: none; /* 크기 유지 */
+    padding: 8px 14px; /* 여백 */
+    border-radius: 999px; /* 알약 */
+    background: var(--mv-surface); /* 배경 */
+    color: light-dark(#5b21b6, #c4a7f5); /* 보라 글자 */
+    font-size: .84rem; /* 크기 */
+    font-weight: 800; /* 굵기 */
+    white-space: nowrap; /* 한 줄 */
+} /* 동작 종료 */
+
+.banner[data-ready="true"] .bannerAction /* 받을 보상 있음 */
+{ /* 강조 시작 */
+    background: light-dark(#6d28d9, #7c3aed); /* 보라 채움 */
+    color: #ffffff; /* 흰 글자 */
+} /* 강조 종료 */
+
+@media (max-width: 640px) /* 좁은 화면 */
+{ /* 미디어 시작 */
+    .stampBoard /* 도장판 */
+    { /* 도장판 시작 */
+        grid-template-columns: repeat(4, minmax(0, 1fr)); /* 네 칸씩 */
+    } /* 도장판 종료 */
+
+    .missionList li /* 미션 */
+    { /* 미션 시작 */
+        grid-template-columns: minmax(0, 1fr) 132px; /* 이름·받기(받기 칸 너비 고정) */
+    } /* 미션 종료 */
+
+    .missionProgress /* 진행 */
+    { /* 진행 시작 */
+        grid-column: 1 / -1; /* 한 줄 전체 */
+        grid-row: 2; /* 둘째 줄 */
+    } /* 진행 종료 */
+
+    .claim, /* 받기 */
+    .go, /* 이동 */
+    .claimed, /* 받음 */
+    .locked /* 잠김 */
+    { /* 동작 시작 */
+        min-width: 88px; /* 좁은 너비 */
+    } /* 동작 종료 */
+
+    .bannerAction /* 카드 동작 */
+    { /* 동작 시작 */
+        display: none; /* 숨김(카드 전체가 링크) */
+    } /* 동작 종료 */
+
+    .inviteForm /* 초대 코드 입력 양식 */
+    { /* 양식 시작 */
+        grid-template-columns: minmax(0, 1fr); /* 세로로 */
+    } /* 양식 종료 */
+} /* 미디어 종료 */
+
+@media (prefers-reduced-motion: reduce) /* 동작 축소 */
+{ /* 미디어 시작 */
+    .banner, /* 카드 */
+    .missionProgress [role="progressbar"] span /* 진행 채움 */
+    { /* 전환 시작 */
+        transition: none; /* 전환 제거 */
+    } /* 전환 종료 */
+
+    .banner:hover /* 카드 올림 */
+    { /* 올림 시작 */
+        transform: none; /* 이동 제거 */
+    } /* 올림 종료 */
+} /* 미디어 종료 */

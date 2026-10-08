@@ -24,9 +24,11 @@ class CapturingLLMAdapter implements LLMAdapter // 입력 기록 어댑터
         yield "기록한 응답"; // 응답
     } // 함수 종료
 
-    public async summarizeConversation(_input: SummaryInput): Promise<string> // 요약
+    public summaries: SummaryInput[] = []; // 받은 요약 입력
+
+    public async summarizeConversation(input: SummaryInput): Promise<string> // 요약
     { // 함수 시작
-        void _input; // 사용 표시
+        this.summaries.push(input); // 입력 기록
         return Promise.resolve("둘은 도서관에서 오래 이야기를 나눴다."); // 요약 반환
     } // 함수 종료
 } // 클래스 종료
@@ -52,6 +54,30 @@ async function send(user: ReturnType<typeof userEvent.setup>, text: string) // E
 
 describe("채팅방 설정과 고정 상태창", () => // 기능 묶음
 { // 묶음 시작
+    it("장면 이미지 생성 버튼은 입력창 아래 입력 보조에 있고, 만든 그림은 마지막 응답 아래에 붙는다", async () => // 장면 버튼 위치 검증
+    { // 검증 시작
+        const user = userEvent.setup(); // 사용자 도구
+        renderChat(); // 렌더
+        const balance = () => Number(screen.getByLabelText("상태 확인").textContent?.split("|")[0]); // 잔액 읽기
+        const before = balance(); // 만들기 전 잔액
+        const tools = screen.getByRole("group", { name: "입력 보조" }); // 입력 보조
+        await user.click(within(tools).getByRole("button", { name: "장면 이미지 생성 · 20토큰" })); // 장면 만들기
+        expect((await screen.findByRole("img", { name: "이 장면의 상황 이미지" })).getAttribute("src")).toContain("fallback-scene.webp"); // 마지막 응답 아래 그림
+        expect(screen.getByText("새 장면을 만들었습니다.")).toBeVisible(); // 안내
+        await waitFor(() => expect(balance()).toBe(before - 20)); // 20토큰 차감
+    }); // 검증 종료
+
+    it("상황 이미지 보기를 끈 채 장면 이미지를 만들면 켜는 방법을 알려 준다", async () => // 숨김 안내 검증
+    { // 검증 시작
+        const user = userEvent.setup(); // 사용자 도구
+        const state = createInitialState(); // 초기 상태
+        state.settings.showSceneImages = false; // 상황 이미지 숨김
+        renderWithApp(<ChatScreen characterId="rian" llm={new MockLLMAdapter({ delayMs: 0 })} images={new MockImageAdapter()} />, state); // 렌더
+        await user.click(screen.getByRole("button", { name: "장면 이미지 생성 · 20토큰" })); // 장면 만들기
+        expect(await screen.findByText("새 장면을 만들었습니다. ‘상황 이미지 보기’를 켜면 대화에서 볼 수 있어요.")).toBeVisible(); // 켜는 방법 안내
+        expect(screen.queryByRole("img", { name: "이 장면의 상황 이미지" })).toBeNull(); // 대화에는 숨김
+    }); // 검증 종료
+
     it("INFO 상태창은 응답마다 고정 자리에서 갱신되고 이전 턴 상태창을 넘겨 볼 수 있다", async () => // 상태창 검증
     { // 검증 시작
         const user = userEvent.setup(); // 사용자 도구
@@ -133,6 +159,25 @@ describe("채팅방 설정과 고정 상태창", () => // 기능 묶음
         expect(options?.persona?.name).toBeTruthy(); // 기본 대화 프로필 전달
     }); // 검증 종료
 
+    it("요약을 맡길 때 지금 고른 채팅 등급과 이름, 작품 등급을 함께 넘긴다", async () => // 요약 입력 검증
+    { // 검증 시작
+        const user = userEvent.setup(); // 사용자 도구
+        const llm = new CapturingLLMAdapter(); // 기록 어댑터
+        renderChat(llm); // 렌더(기존 1턴, 베이직챗)
+        await user.click(screen.getByRole("button", { name: /^채팅 모델/ })); // 등급 메뉴
+        await user.click(within(screen.getByRole("menu", { name: "채팅 모델 선택" })).getByRole("menuitemradio", { name: /플러스챗/ })); // 대화 도중 플러스챗으로 바꿈
+        for (const text of ["하나", "둘", "셋", "넷"]) // 2~5턴
+        { // 순회 시작
+            await send(user, text); // 전송
+        } // 순회 종료
+        await waitFor(() => expect(llm.summaries).toHaveLength(1)); // 5턴에 요약 한 번
+        const input = llm.summaries[0]; // 요약 입력
+        expect(input.conversation.settings.tier).toBe("plus"); // 바꾼 등급으로 맡김(화면을 열 때의 등급이 아님)
+        expect([input.speakerName, input.contentRating, input.language]).toEqual(["리안", "all", "ko"]); // 캐릭터의 짧은 이름, 작품 등급, 화면 언어
+        expect(input.userName).toBeTruthy(); // 대화 프로필 이름
+        expect(input.messages).toHaveLength(10); // 최근 10개 메시지
+    }); // 검증 종료
+
     it("5턴마다 요약 메모리가 자동으로 쌓이고 알림이 오며, 목표는 직접 추가할 수 있다", async () => // 요약 메모리 검증
     { // 검증 시작
         const user = userEvent.setup(); // 사용자 도구
@@ -156,19 +201,36 @@ describe("채팅방 설정과 고정 상태창", () => // 기능 묶음
         await waitFor(() => expect(screen.getByLabelText("상태 확인")).toHaveTextContent(/goal,relation,short/)); // 저장
     }); // 검증 종료
 
-    it("채팅 다크 모드와 글꼴 크기는 채팅 화면에 바로 반영된다", async () => // 화면 설정 검증
+    it("글꼴 크기는 채팅 화면에 바로 반영된다", async () => // 화면 설정 검증
     { // 검증 시작
         const user = userEvent.setup(); // 사용자 도구
         renderChat(); // 렌더
         const main = screen.getByRole("main"); // 채팅 본문
-        expect(main).toHaveAttribute("data-chat-theme", "light"); // 기본 밝게
-        await user.click(screen.getByRole("switch", { name: "채팅 다크 모드" })); // 다크 모드
-        expect(main).toHaveAttribute("data-chat-theme", "dark"); // 어둡게
         await user.click(screen.getByRole("button", { name: /^글꼴/ })); // 글꼴 열기
         const dialog = screen.getByRole("dialog", { name: "글꼴" }); // 대화상자
         await user.click(within(dialog).getByRole("radio", { name: /크게/ })); // 큰 글자
         await user.click(within(dialog).getByRole("button", { name: /확인|저장/ })); // 저장
         expect(main.style.getPropertyValue("--chat-font-size")).not.toBe("1rem"); // 크기 반영
+    }); // 검증 종료
+
+    it("INFO는 첫 응답 전에 제작자 스탯 초기값을 보여 주고, 낱말 규칙과 AI 판단으로 매 턴 바뀐다", async () => // 스탯 검증
+    { // 검증 시작
+        const user = userEvent.setup(); // 사용자 도구
+        renderChat(); // 렌더(기본 호감도: ‘선물’ +5, ‘고마워’ +2, AI 최대 ±5. 리안 대화는 관계 34에서 이어 감)
+        const panel = screen.getByRole("region", { name: "상태창" }); // 상태창
+        expect(within(panel).getByLabelText("시작 스탯")).toHaveTextContent("리안 호감도 34/100"); // 대화의 관계 수치에서 시작
+        expect(screen.getByText("관계 · 아는 사이")).toBeVisible(); // 오른쪽 관계 단계
+        expect(screen.getByText("❤️ 호감도 34/100")).toBeVisible(); // 오른쪽 관계 표시도 같은 값
+        await send(user, "선물 가져왔어, 고마워"); // 선물 +5, 고마워 +2, AI 판단 +
+        const first = Number(within(panel).getByText(/\/100/).textContent?.split("/")[0]); // 1턴 호감도
+        expect(first).toBeGreaterThanOrEqual(41); // 34 + 규칙 7 이상
+        expect(first).toBeLessThanOrEqual(46); // AI는 최대 +5
+        expect(screen.getByText(`❤️ 호감도 ${first}/100`)).toBeVisible(); // 관계 표시가 스탯을 따라감
+        await send(user, "짜증나, 꺼져"); // 거친 말
+        const second = Number(within(panel).getByText(/\/100/).textContent?.split("/")[0]); // 2턴 호감도
+        expect(second).toBeLessThan(first); // 내려감
+        await user.click(within(panel).getByRole("button", { name: "이전 턴 상태창" })); // 이전 턴
+        expect(within(panel).getByText(/\/100/)).toHaveTextContent(`${first}/100`); // 그 턴의 값
     }); // 검증 종료
 
     it("Ctrl+/로 단축키 안내를 열고 Esc로 닫으면 초점이 돌아온다", async () => // 단축키 검증

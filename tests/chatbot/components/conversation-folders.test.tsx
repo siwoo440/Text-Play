@@ -140,7 +140,7 @@ describe("왼쪽 대화방 탭·폴더·상태 줄", () => // 기능 묶음
     it("카드에 현재 버전의 마지막 상태창 장소·시간을 한 줄로 보여 주고 잠긴 대화는 가린다", () => // 상태 줄 검증
     { // 검증 시작
         const state = createInitialState(); // 초기 상태
-        state.messages = state.messages.map((message) => message.conversationId === "conversation-rian" && message.role === "assistant" ? { ...message, status: { turn: 1, location: "새벽 도서관 창가", time: "월요일 20:06", tip: null, affection: [], thoughts: [], custom: [] } } : message); // 리안 상태창
+        state.messages = state.messages.map((message) => message.conversationId === "conversation-rian" && message.role === "assistant" ? { ...message, status: { turn: 1, location: "새벽 도서관 창가", time: "월요일 20:06", tip: null, stats: [], thoughts: [], custom: [] } } : message); // 리안 상태창
         const panel = renderShell(state); // 렌더
         const card = cardTitles(panel).indexOf("새벽 도서관의 리안"); // 리안 위치
         const status = panel.querySelectorAll(".conversation-card")[card]?.querySelector(".conversation-card-status"); // 상태 줄

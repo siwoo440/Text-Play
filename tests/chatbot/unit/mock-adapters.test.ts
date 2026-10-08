@@ -32,7 +32,7 @@ describe("Mock 어댑터", () => // 어댑터 묶음
 
     it("대화방 설정의 문체·답변 길이·사칭 방지·대화 프로필을 Mock 응답에 반영하고 기본 설정이면 그대로 둔다", () => // 설정 반영 검증
     { // 검증 시작
-        const options = { tier: "basic" as const, length: 1 as const, thinking: "off" as const, writingStyle: "default" as const, preventImpersonation: true, persona: null, userNote: "", memories: [], playGuide: "" }; // 기본 설정
+        const options = { tier: "basic" as const, length: 1 as const, thinking: "off" as const, writingStyle: "default" as const, preventImpersonation: true, persona: null, userNote: "", memories: [], playGuide: "", stats: [], lore: [] as Array<{ title: string; keywords: string[]; content: string }>, examples: [] as Array<{ user: string; reply: string }> }; // 기본 설정
         expect(decorateReply("안녕.", options, 1, false)).toBe("안녕."); // 기본은 그대로
         expect(decorateReply("안녕.", { ...options, writingStyle: "romance" }, 1, false)).toBe("*시선이 잠시 네게 머문다.* 안녕."); // 문체
         expect(decorateReply("안녕.", { ...options, length: 3 }, 1, false).split(" ").length).toBeGreaterThan(5); // 긴 답변
@@ -40,6 +40,22 @@ describe("Mock 어댑터", () => // 어댑터 묶음
         expect(decorateReply("안녕.", { ...options, preventImpersonation: true }, 2, false)).not.toContain("*당신은"); // 사칭 방지 켬
         expect(decorateReply("안녕.", { ...options, persona: { name: "시우", description: "" } }, 3, false)).toBe("시우, 안녕."); // 이름 부르기
         expect(decorateReply("[리안] 안녕.", { ...options, length: 1.5 }, 1, true).split("\n")).toHaveLength(2); // 스토리 내레이션 추가
+    }); // 검증 종료
+
+    it("방금 한 말에 키워드가 나온 설정 하나를 Mock 응답에 덧붙이고, 예시와 같은 말에는 예시 답으로 답한다", async () => // 설정집·예시 대화 반영 검증
+    { // 검증 시작
+        const options = { tier: "basic" as const, length: 1 as const, thinking: "off" as const, writingStyle: "default" as const, preventImpersonation: true, persona: null, userNote: "", memories: [], playGuide: "", stats: [], lore: [{ title: "달빛 도서관", keywords: ["도서관", "Library"], content: "자정에만 열린다." }, { title: "금서 구역", keywords: ["금서"], content: "사서만 들어갈 수 있다." }], examples: [{ user: "오늘 뭐 해?", reply: "책을 정리하고 있었어." }] }; // 설정집과 예시가 있는 설정
+        expect(decorateReply("안녕.", options, 1, false, "이 도서관은 언제 열어?")).toBe("안녕. *‘달빛 도서관’ 이야기가 떠오른다.*"); // 캐릭터 응답 뒤에 덧붙임
+        expect(decorateReply("안녕.", options, 1, false, "library가 어디야?")).toBe("안녕. *‘달빛 도서관’ 이야기가 떠오른다.*"); // 대소문자 무시
+        expect(decorateReply("[리안] 안녕.", options, 1, true, "금서를 보고 싶어")).toBe("[리안] 안녕.\n[내레이션] ‘금서 구역’ 이야기가 떠오른다."); // 스토리는 내레이션 줄
+        expect(decorateReply("안녕.", options, 1, false, "그럼 가 보자")).toBe("안녕."); // 방금 한 말에 키워드가 없으면 되풀이하지 않음
+        expect(decorateReply("안녕.", { ...options, lore: [] }, 1, false, "이 도서관은 언제 열어?")).toBe("안녕."); // 넘어온 설정이 없으면 그대로
+        const adapter = new MockLLMAdapter({ delayMs: 0, seed: 7 }); // 어댑터
+        const reply = await collect(adapter.streamReply({ ...makeInput("오늘  뭐 해? "), options: { ...options, lore: [] } })); // 예시와 같은 말
+        expect(reply).toBe("책을 정리하고 있었어."); // 예시 답
+        const other = await collect(adapter.streamReply({ ...makeInput("내일 뭐 해?"), options: { ...options, lore: [] } })); // 다른 말
+        expect(other).not.toBe("책을 정리하고 있었어."); // 평소 응답
+        expect(other).toBe(await collect(adapter.streamReply(makeInput("내일 뭐 해?")))); // 설정이 없을 때와 같음
     }); // 검증 종료
 
     it("중단 신호를 받으면 대기 중인 응답을 종료한다", async () => // 중단 신호 검증
@@ -55,7 +71,7 @@ describe("Mock 어댑터", () => // 어댑터 묶음
     it("알려진 장면과 알 수 없는 장면의 경로를 구분한다", async () => // 이미지 검증
     { // 검증 시작
         const adapter = new MockImageAdapter(); // 이미지 어댑터 생성
-        await expect(adapter.generateScene({ sceneId: "dawn" })).resolves.toMatchObject({ path: "/images/scenes/dawn-letter.svg", fallback: false }); // 알려진 장면
-        await expect(adapter.generateScene({ sceneId: "unknown" })).resolves.toMatchObject({ path: "/images/scenes/fallback-scene.svg", fallback: true }); // 대체 장면
+        await expect(adapter.generateScene({ sceneId: "dawn" })).resolves.toMatchObject({ path: "/images/scenes/dawn-letter.webp", fallback: false }); // 알려진 장면
+        await expect(adapter.generateScene({ sceneId: "unknown" })).resolves.toMatchObject({ path: "/images/scenes/fallback-scene.webp", fallback: true }); // 대체 장면
     }); // 검증 종료
 }); // 묶음 종료

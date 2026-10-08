@@ -1,6 +1,7 @@
 "use client"; // 클라이언트 훅
 
 import { useEffect } from "react"; // 리액트 효과
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
 
 export function useUnsavedChangesGuard(dirty: boolean) // 저장하지 않은 변경 이탈 경고
 { // 함수 시작
@@ -34,7 +35,7 @@ export function useUnsavedChangesGuard(dirty: boolean) // 저장하지 않은 �
             { // 조건 시작
                 return; // 처리 종료
             } // 조건 종료
-            const accepted = window.confirm("저장하지 않은 변경 사항이 있습니다. 페이지를 이동하시겠습니까?"); // 이동 확인
+            const accepted = window.confirm(t("저장하지 않은 변경 사항이 있습니다. 페이지를 이동하시겠습니까?")); // 이동 확인
             if (!accepted) // 이동 취소 판정
             { // 조건 시작
                 event.preventDefault(); // 기본 이동 취소

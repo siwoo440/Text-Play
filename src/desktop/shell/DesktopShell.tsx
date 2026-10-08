@@ -4,9 +4,17 @@ import { useEffect, useRef, useState, type ReactElement, type ReactNode } from "
 import chatbotShellStyles from "@chatbot/components/app-shell/AppShell.module.css"; // ChatBot 패널 안쪽 스타일
 import { ConversationPanel } from "@chatbot/components/app-shell/ConversationPanel"; // ChatBot 대화방 목록
 import { NotificationBell } from "@chatbot/components/app-shell/NotificationBell"; // ChatBot 알림함
+import { ThemeToggle } from "@chatbot/components/app-shell/ThemeToggle"; // ChatBot 다크 모드 스위치
 import { UserPanel } from "@chatbot/components/app-shell/UserPanel"; // ChatBot 사용자 패널
 import { AdultContentSwitch } from "@chatbot/features/adult/AdultContentSwitch"; // ChatBot 19+ 스위치
+import { getAuthAdapter, signOutAndLeave } from "@chatbot/features/account/account-actions"; // ChatBot 로그아웃
+import { AccountSync } from "@chatbot/features/account/AccountSync"; // ChatBot 계정 데이터 맞추기
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // ChatBot 앱 저장소
+import { getClaimableCount } from "@chatbot/features/rewards/reward-model"; // ChatBot 받을 보상 수
+import { formatUsageDuration } from "@chatbot/features/safety/usage-time"; // ChatBot 이용 시간 표시
+import { useUsageReminder } from "@chatbot/features/safety/useUsageReminder"; // ChatBot 이용 시간 알림
+import { t } from "@chatbot/lib/i18n"; // ChatBot 화면 글자 번역(ChatBot과 같은 문구는 그 사전을 씀)
+import { THEME_STORAGE_KEY } from "@chatbot/lib/theme/stored-theme"; // ChatBot 테마 저장 키
 import { DESKTOP_UI_TEXT } from "@/desktop/desktop-ui-text"; // 언어별 틀 글자
 import Image from "@/desktop/next-compat/image"; // 데스크톱 이미지
 import Link from "@/desktop/next-compat/link"; // 데스크톱 링크
@@ -72,7 +80,33 @@ function AreaStepButton({ direction, target }: { direction: "previous" | "next";
 
 export function DesktopShell({ pathname, area, title, repository, children }: DesktopShellProps): ReactElement // 데스크톱 틀
 { // 함수 시작
-    const { state, storageError, storageNotice, dismissStorageNotice } = useAppStore(); // ChatBot 앱 상태
+    const { state, dispatch, storageError, storageNotice, dismissStorageNotice } = useAppStore(); // ChatBot 앱 상태
+    const usageReminder = useUsageReminder(); // 이용 시간 알림(ChatBot 셸과 같음)
+    const [matureHidden, setMatureHidden] = useState(false); // 19+ 보기를 껐다는 안내 표시
+    const rewardCount = getClaimableCount(state.rewards, new Date()); // 받을 보상 수
+    const theme = state.settings.theme; // 앱 테마(밝게·어둡게)
+    useEffect(() => // 테마 적용(ChatBot 셸과 같은 방식: 문서 루트 표시와 다음 실행 첫 화면용 저장)
+    { // 효과 시작
+        document.documentElement.dataset.theme = theme; // 루트 표시
+        try // 저장 시도
+        { // 시도 시작
+            window.localStorage.setItem(THEME_STORAGE_KEY, theme); // 테마 저장
+        } // 시도 종료
+        catch // 저장 실패 처리
+        { // 실패 시작
+            void theme; // 화면 적용만 유지
+        } // 실패 종료
+    }, [theme]); // 테마 의존
+    const hideMature = () => // 19+ 보기 끄기(사용자 패널의 버튼, ChatBot 셸과 같음)
+    { // 함수 시작
+        if (!window.confirm(t("19+ 보기를 끌까요? 캐릭터와 대화, 토큰은 그대로 남아요."))) // 확인 취소
+        { // 조건 시작
+            return; // 그대로 둠
+        } // 조건 종료
+        dispatch({ type: "end-local-session" }); // 19+ 보기 끄기
+        setUserPanelOpen(false); // 사용자 패널 닫기
+        setMatureHidden(true); // 안내 표시
+    }; // 함수 종료
     const text = DESKTOP_UI_TEXT[useAppLanguage()].shell; // 언어별 틀 글자
     const adjacent = getAdjacentDesktopAreas(area); // 이전·다음 메뉴 영역
     const [userPanelOpen, setUserPanelOpen] = useState(false); // 사용자 패널 열림 상태
@@ -120,7 +154,8 @@ export function DesktopShell({ pathname, area, title, repository, children }: De
         <div className={styles.desktop}> {/* 데스크톱 틀 */}
             <aside className={styles.sidebar} aria-label={text.sidebar}> {/* 사이드바 */}
                 <Link href="/" className={styles.brand} aria-label={text.brand}> {/* 브랜드 링크 */}
-                    <Image src="/images/brand/mate-verse-logo-v3.png" alt="Mate Verse" width={2172} height={724} priority /> {/* 브랜드 로고 */}
+                    <Image src="/images/brand/mate-verse-logo-v3.png" alt="Mate Verse" width={2172} height={724} priority data-logo="light" /> {/* 브랜드 로고 */}
+                    <Image src="/images/brand/mate-verse-logo-v3-dark.webp" alt="" aria-hidden="true" width={1086} height={362} data-logo="dark" /> {/* 다크 모드 로고(ChatBot과 같은 그림) */}
                     <span className={styles.productBadge}>Text-Play</span> {/* 제품 표시 */}
                 </Link> {/* 브랜드 링크 종료 */}
                 <NavigationList group="primary" label={text.primaryMenu} pathname={pathname} area={area} /> {/* 주요 메뉴 */}
@@ -141,21 +176,35 @@ export function DesktopShell({ pathname, area, title, repository, children }: De
                     </div> {/* 메뉴 이동 종료 */}
                     <p className={styles.title}>{title}</p> {/* 현재 화면 제목 */}
                     <div className={styles.topbarActions}> {/* 상단 동작 */}
+                        <div className={`${chatbotShellStyles.shell} ${styles.chatbotHost}`}><ThemeToggle /></div> {/* ChatBot 다크 모드 스위치(19+ 왼쪽, 스타일은 ChatBot 셸 규칙 그대로) */}
                         <AdultContentSwitch /> {/* 19+ 스위치 */}
-                        <div className={`${chatbotShellStyles.shell} ${styles.bellHost}`}><NotificationBell onNavigate={() => setUserPanelOpen(false)} /></div> {/* ChatBot 알림함(종 스타일은 ChatBot 셸 규칙 그대로, 셸의 높이·바탕만 끔) */}
+                        <div className={`${chatbotShellStyles.shell} ${styles.chatbotHost}`}><NotificationBell onNavigate={() => setUserPanelOpen(false)} /></div> {/* ChatBot 알림함(종 스타일은 ChatBot 셸 규칙 그대로, 셸의 높이·바탕만 끔) */}
                         <Link href="/settings/tokens" className={styles.tokenChip} aria-label={text.tokens(state.wallet.balance.toLocaleString())}><span aria-hidden="true">◆</span>{state.wallet.balance.toLocaleString()}</Link> {/* 토큰 잔액 */}
-                        <button ref={toggleRef} type="button" className={styles.profileButton} aria-label={text.userPanel} aria-expanded={userPanelOpen} aria-controls="user-panel" onClick={() => (userPanelOpen ? closeUserPanel(false) : setUserPanelOpen(true))}> {/* 사용자 패널 버튼 */}
+                        <button ref={toggleRef} type="button" className={styles.profileButton} aria-label={text.userPanel} aria-expanded={userPanelOpen} aria-controls="user-panel" data-reward={rewardCount > 0 ? "true" : undefined} title={rewardCount > 0 ? t("받을 수 있는 출석·미션 보상 {0}개", [rewardCount]) : undefined} onClick={() => (userPanelOpen ? closeUserPanel(false) : setUserPanelOpen(true))}> {/* 사용자 패널 버튼 */}
                             <span className={styles.avatar} aria-hidden="true">{state.profile.nickname.slice(0, 1)}</span> {/* 프로필 글자 */}
                             <span className={styles.nickname}>{state.profile.nickname}</span> {/* 사용자 이름 */}
+                            {rewardCount > 0 ? <span className={styles.rewardDot} aria-hidden="true" /> : null} {/* 받을 보상 표시 */}
                         </button> {/* 버튼 종료 */}
                     </div> {/* 상단 동작 종료 */}
                 </header> {/* 상단 바 종료 */}
-                {storageError === null && storageNotice === null ? null : ( // 저장소 메시지 판정
-                    <div className={styles.storageMessages}> {/* 저장소 메시지 묶음 */}
+                {storageError === null && storageNotice === null && !usageReminder.due && !matureHidden ? null : ( // 상단 메시지 판정
+                    <div className={styles.storageMessages}> {/* 상단 메시지 묶음 */}
+                        {usageReminder.due ? ( // 이용 시간 알림 판정
+                            <div className={styles.storageNotice} data-tone="rest" role="status"> {/* 이용 시간 알림 */}
+                                <p>{t("오늘 {0} 동안 이용했어요. 잠깐 쉬어 가도 대화는 그대로 남아 있어요.", [formatUsageDuration(usageReminder.activeMs)])}</p> {/* 알림 문구 */}
+                                <button type="button" onClick={usageReminder.acknowledge}>{t("계속 이용하기")}</button> {/* 알림 확인 */}
+                            </div> // 이용 시간 알림 종료
+                        ) : null} {/* 이용 시간 알림 판정 종료 */}
+                        {!matureHidden ? null : ( // 19+ 보기 끔 안내 판정
+                            <div className={styles.storageNotice} data-tone="info" role="status"> {/* 19+ 보기 끔 안내 */}
+                                <p>{t("19+ 보기를 껐습니다. 캐릭터와 대화는 이 브라우저에 그대로 남아 있어요.")}</p> {/* 안내 문구 */}
+                                <button type="button" onClick={() => setMatureHidden(false)}>{text.close}</button> {/* 안내 닫기 */}
+                            </div> // 19+ 보기 끔 안내 종료
+                        )} {/* 19+ 보기 끔 안내 판정 종료 */}
                         {storageError === null ? null : <p className={styles.storageError} role="alert">{storageError}</p>} {/* 저장 오류 */}
                         {storageNotice === null ? null : ( // 저장소 안내 판정
                             <div className={styles.storageNotice} data-tone={storageNotice.tone} role="status"> {/* 저장소 안내 */}
-                                <p>{storageNotice.message}</p> {/* 안내 문구 */}
+                                <p>{t(storageNotice.message)}</p> {/* 안내 문구(ChatBot 사전으로 고른 언어 표시) */}
                                 {storageNotice.tone === "warning" ? <Link href="/settings/privacy#data">{text.openDataSettings}</Link> : null} {/* 데이터 관리 링크 */}
                                 <button type="button" onClick={dismissStorageNotice}>{text.close}</button> {/* 안내 닫기 */}
                             </div> // 저장소 안내 종료
@@ -164,7 +213,8 @@ export function DesktopShell({ pathname, area, title, repository, children }: De
                 )} {/* 메시지 판정 종료 */}
                 <div className={styles.content}>{children}</div> {/* 화면 내용 */}
             </div> {/* 본문 영역 종료 */}
-            {userPanelOpen ? <div ref={panelRef} className={`${chatbotShellStyles.grid} ${styles.userPopover}`}><UserPanel profile={state.profile} wallet={state.wallet} settings={state.settings} open onNavigate={() => closeUserPanel(false)} /></div> : null} {/* 사용자 패널 */}
+            {userPanelOpen ? <div ref={panelRef} className={`${chatbotShellStyles.grid} ${styles.userPopover}`}><UserPanel profile={state.profile} wallet={state.wallet} settings={state.settings} rewards={state.rewards} open onNavigate={() => closeUserPanel(false)} onLogout={() => void signOutAndLeave(getAuthAdapter())} onHideMature={hideMature} /></div> : null} {/* 사용자 패널(출석·미션 카드, 로그아웃, 19+ 보기 끄기 포함) */}
+            <AccountSync /> {/* 로그인했을 때 계정 데이터를 맞춤(손님이면 아무것도 하지 않음, exe는 연습용 로그인) */}
         </div> // 틀 종료
     ); // 반환 종료
 } // 함수 종료

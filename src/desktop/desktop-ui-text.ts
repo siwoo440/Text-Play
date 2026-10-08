@@ -10,6 +10,7 @@ export const DESKTOP_UI_TEXT = defineText( // 데스크톱 틀 글자
         { // 제목 시작
             home: "메인", explore: "탐색", character: "캐릭터 상세", "character-new": "캐릭터 만들기", "character-edit": "캐릭터 수정", // 캐릭터 화면
             chat: "대화", library: "내 작품", images: "이미지 스튜디오", support: "고객 지원", "ai-models": "AI 모델", // 기본 화면
+            login: "로그인", rewards: "출석과 미션", invite: "친구 초대", "auth-callback": "로그인", "auth-reset": "비밀번호 다시 정하기", // 계정·보상 화면
             "story-home": "스토리 모드", "story-new": "새 스토리 만들기", story: "스토리 상세", "story-chat": "스토리 대화", "story-edit": "스토리 수정", // 스토리 화면
             "text-play-home": "Text-Play", "text-play-play": "Text-Play 플레이", redirect: "이동 중", "not-found": "페이지를 찾을 수 없음", // 기타 화면
         } satisfies Record<RouteTitleKind, string>, // 제목 종료
@@ -46,6 +47,7 @@ export const DESKTOP_UI_TEXT = defineText( // 데스크톱 틀 글자
         { // 제목 시작
             home: "Home", explore: "Explore", character: "Character", "character-new": "Create character", "character-edit": "Edit character", // 캐릭터 화면
             chat: "Chat", library: "My works", images: "Image studio", support: "Support", "ai-models": "AI models", // 기본 화면
+            login: "Log in", rewards: "Check-in & missions", invite: "Invite friends", "auth-callback": "Log in", "auth-reset": "Reset password", // 계정·보상 화면(ChatBot 영어 사전과 같은 말)
             "story-home": "Story mode", "story-new": "Create story", story: "Story", "story-chat": "Story chat", "story-edit": "Edit story", // 스토리 화면
             "text-play-home": "Text-Play", "text-play-play": "Text-Play play", redirect: "Moving", "not-found": "Page not found", // 기타 화면
         }, // 제목 종료

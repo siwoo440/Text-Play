@@ -8,7 +8,7 @@ describe("초기 앱 상태", () => // 초기 상태 묶음
     it("스키마 버전과 Mock 공급자를 고정한다", () => // 기본값 검증
     { // 검증 시작
         const state = createInitialState(); // 초기 상태 생성
-        expect(state.schemaVersion).toBe(12); // 스키마 버전 확인
+        expect(state.schemaVersion).toBe(18); // 스키마 버전 확인
         expect(state.providerMode).toBe("mock"); // Mock 공급자 확인
         expect(state.settings.leftPanelOpen).toBe(true); // 왼쪽 패널 확인
         expect(state.settings.rightPanelOpen).toBe(false); // 오른쪽 패널 확인

@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react"; // 렌더 도구
 import userEvent, { type UserEvent } from "@testing-library/user-event"; // 사용자 동작
 import { beforeEach, describe, expect, it, vi } from "vitest"; // 테스트 도구
+import { THEME_STORAGE_KEY } from "@chatbot/lib/theme/stored-theme"; // ChatBot 테마 저장 키
 import { DesktopApp } from "@/desktop/DesktopApp"; // 데스크톱 앱
 import { createTextPlayState } from "@/features/text-play/core/engine"; // 초기 게임 상태 생성기
 import type { TextPlaySaveSlot, TextPlaySlotId, TextPlayState } from "@/features/text-play/core/types"; // 저장 도메인 계약
@@ -223,6 +224,37 @@ describe("데스크톱 앱 틀", () => // 데스크톱 틀 묶음
         await user.keyboard("{Escape}"); // 패널 닫기
         expect(screen.queryByRole("complementary", { name: "사용자 정보와 설정" })).not.toBeInTheDocument(); // 닫힘 확인
         expect(toggle).toHaveFocus(); // 초점 복귀 확인
+    }); // 테스트 종료
+
+    it("상단 바의 다크 모드 스위치로 앱 전체 테마를 바꾸고 다음 실행을 위해 기억한다", async () => // 다크 모드 검증
+    { // 테스트 시작
+        const user = userEvent.setup(); // 사용자 동작 준비
+        render(<DesktopApp createRepository={() => new MemoryTextPlaySaveRepository()} />); // 데스크톱 앱 렌더
+        const toggle = await screen.findByRole("switch", { name: "다크 모드" }); // 다크 모드 스위치 조회
+        expect(document.documentElement.dataset.theme).toBe("light"); // 처음은 밝은 테마
+        await user.click(toggle); // 다크 모드 켜기
+        expect(document.documentElement.dataset.theme).toBe("dark"); // 문서 테마 적용 확인
+        expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("dark"); // 다음 실행용 기억 확인
+        await user.click(screen.getByRole("switch", { name: "다크 모드" })); // 다시 밝게
+        expect(document.documentElement.dataset.theme).toBe("light"); // 밝은 테마 복귀 확인
+    }); // 테스트 종료
+
+    it("사용자 패널의 출석·미션 카드로 출석과 미션 화면을 열고 설정 메뉴 소속으로 표시한다", async () => // 출석과 미션 검증
+    { // 테스트 시작
+        const user = userEvent.setup(); // 사용자 동작 준비
+        render(<DesktopApp createRepository={() => new MemoryTextPlaySaveRepository()} />); // 데스크톱 앱 렌더
+        await user.click(await screen.findByRole("button", { name: "사용자 패널 열기와 닫기" })); // 패널 열기
+        await user.click(within(screen.getByRole("complementary", { name: "사용자 정보와 설정" })).getByRole("link", { name: /출석/u })); // 출석·미션 카드 선택
+        expect(await screen.findByRole("heading", { level: 1, name: "출석과 미션" })).toBeInTheDocument(); // 화면 확인
+        expect(within(screen.getByRole("navigation", { name: "프로그램 메뉴" })).getByRole("link", { name: "설정" })).toHaveAttribute("aria-current", "true"); // 설정 소속 표시 확인
+    }); // 테스트 종료
+
+    it("로그인 화면을 사이드바 틀 안에서 연다(연습용 로그인)", async () => // 로그인 화면 검증
+    { // 테스트 시작
+        window.history.replaceState(null, "", "/#/login"); // 로그인 주소로 시작
+        render(<DesktopApp createRepository={() => new MemoryTextPlaySaveRepository()} />); // 데스크톱 앱 렌더
+        expect(await screen.findByRole("heading", { level: 1, name: /로그인/u })).toBeInTheDocument(); // 로그인 화면 확인
+        expect(screen.getByRole("complementary", { name: "Mate Verse 사이드바" })).toBeInTheDocument(); // 사이드바 유지 확인
     }); // 테스트 종료
 
     it("캐릭터와 새 대화를 시작하고 임시 응답을 받는다", async () => // 대화 흐름 검증

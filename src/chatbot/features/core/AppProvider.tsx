@@ -1,10 +1,34 @@
 "use client"; // 클라이언트 컴포넌트
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type Dispatch, type ReactNode } from "react"; // 리액트 도구
+import { createContext, Fragment, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type Dispatch, type ReactNode } from "react"; // 리액트 도구
 import { appReducer, type AppAction } from "@chatbot/features/core/app-reducer"; // 앱 리듀서
 import { createInitialState } from "@chatbot/features/core/initial-state"; // 초기 상태
 import type { AppState } from "@chatbot/features/core/types"; // 상태 타입
+import { trackRewardProgress } from "@chatbot/features/rewards/reward-tracker"; // 미션 진행 추적
 import { isStorageQuotaError, LocalStorageGateway, type BackupReason, type LoadResult } from "@chatbot/lib/repositories/local-storage-gateway"; // 로컬 저장소
+import { getAppStorage } from "@chatbot/lib/account/scoped-storage"; // 로그인한 계정의 저장 칸
+import { resolveLocale, setActiveLocale, t } from "@chatbot/lib/i18n"; // 화면 글자 번역·화면 언어
+import { useDocumentLanguage } from "@chatbot/features/core/use-document-language"; // 문서 언어·탭 제목 맞추기
+
+export const NARROW_FIRST_VISIT_WIDTH = 760; // 처음 방문 때 패널을 닫고 시작하는 화면 너비(전체 틀의 모바일 기준과 같음)
+const STATE_STORAGE_KEY = "mateverse:v1:state"; // 앱 상태 저장 키(저장된 것이 없으면 첫 방문)
+
+export function closePanelsOnNarrowFirstVisit(state: AppState, firstVisit: boolean, width: number): AppState // 좁은 화면으로 처음 들어오면 양쪽 패널을 닫은 상태로 바꾸기(대화 목록이 화면을 덮지 않게)
+{ // 함수 시작
+    return firstVisit && width <= NARROW_FIRST_VISIT_WIDTH ? { ...state, settings: { ...state.settings, leftPanelOpen: false, rightPanelOpen: false } } : state; // 첫 방문·좁은 화면이 아니면 그대로
+} // 함수 종료
+
+function isFirstVisit(): boolean // 저장된 앱 상태가 없는 첫 방문인지
+{ // 함수 시작
+    try // 저장소 읽기 시도
+    { // 시도 시작
+        return getAppStorage().getItem(STATE_STORAGE_KEY) === null; // 저장된 것이 없으면 첫 방문(로그인한 계정의 칸 기준)
+    } // 시도 종료
+    catch // 저장소를 읽지 못함
+    { // 실패 시작
+        return false; // 알 수 없으면 바꾸지 않음
+    } // 실패 종료
+} // 함수 종료
 
 export interface StateRepository // 상태 저장 계약
 { // 구조 시작
@@ -43,12 +67,24 @@ const blockedMessage = "저장된 데이터를 읽지 못해 기본 상태로 �
 
 function describeStorageFailure(error: unknown, quotaMessage: string, fallback: string): string // 저장 실패 문구
 { // 함수 시작
-    return isStorageQuotaError(error) ? `${quotaMessage} ${quotaGuide}` : fallback; // 원인별 문구 반환
+    return isStorageQuotaError(error) ? `${quotaMessage} ${t(quotaGuide)}` : fallback; // 원인별 문구 반환(정리 안내도 화면 언어로)
+} // 함수 종료
+
+interface TimedAction // 시각을 붙인 동작
+{ // 구조 시작
+    action: AppAction; // 앱 동작
+    now: string; // 동작 시각(리듀서를 순수하게 유지)
+} // 구조 종료
+
+function storeReducer(state: AppState, entry: TimedAction): AppState // 저장소 리듀서(앱 리듀서 + 미션 진행 추적)
+{ // 함수 시작
+    return trackRewardProgress(state, appReducer(state, entry.action), entry.action, entry.now); // 동작 뒤 미션 진행 반영
 } // 함수 종료
 
 export function AppProvider({ children, initialState = createInitialState(), repository }: AppProviderProps) // 앱 공급자
 { // 함수 시작
-    const [state, dispatch] = useReducer(appReducer, initialState); // 상태 리듀서
+    const [state, dispatchTimed] = useReducer(storeReducer, initialState); // 상태 리듀서
+    const dispatch = useCallback<Dispatch<AppAction>>((action) => dispatchTimed({ action, now: new Date().toISOString() }), []); // 동작 전달(시각 붙임)
     const [storageError, setStorageError] = useState<string | null>(null); // 저장 오류 상태
     const [storageNotice, setStorageNotice] = useState<StorageNotice | null>(null); // 저장소 안내 상태
     const [restored, setRestored] = useState(repository !== undefined); // 저장 복원 상태
@@ -59,9 +95,11 @@ export function AppProvider({ children, initialState = createInitialState(), rep
         let cancelled = false; // 취소 표시
         hydrated.current = false; // 저장 대기
         let outcome: LoadResult | null = null; // 읽기 결과
+        const firstVisit = repository === undefined && isFirstVisit(); // 저장된 것이 없는 첫 방문(읽기 전에 확인)
         try // 읽기 시도
         { // 시도 시작
-            outcome = repository !== undefined ? { state: repository.load(), recovered: false, warning: null } : new LocalStorageGateway(window.localStorage).load(); // 저장 상태 읽기
+            outcome = repository !== undefined ? { state: repository.load(), recovered: false, warning: null } : new LocalStorageGateway(getAppStorage()).load(); // 저장 상태 읽기(로그인한 계정의 칸)
+            outcome = { ...outcome, state: closePanelsOnNarrowFirstVisit(outcome.state, firstVisit, window.innerWidth) }; // 휴대폰 첫 방문은 패널을 닫고 시작
         } // 시도 종료
         catch // 읽기 실패 처리
         { // 실패 시작
@@ -76,7 +114,7 @@ export function AppProvider({ children, initialState = createInitialState(), rep
             if (outcome === null) // 읽기 실패 판정
             { // 조건 시작
                 persistenceBlocked.current = true; // 기존 데이터 덮어쓰기 차단
-                setStorageError(blockedMessage); // 차단 안내
+                setStorageError(t(blockedMessage)); // 차단 안내(화면 언어로)
             } // 조건 종료
             else // 읽기 성공 처리
             { // 성공 시작
@@ -91,7 +129,7 @@ export function AppProvider({ children, initialState = createInitialState(), rep
         { // 정리 시작
             cancelled = true; // 예약 취소
         }; // 정리 종료
-    }, [repository]); // 저장소 변경 의존
+    }, [dispatch, repository]); // 저장소 변경 의존
     useEffect(() => // 상태 저장 효과
     { // 효과 시작
         if (!hydrated.current || persistenceBlocked.current) // 복원 전·차단 판정
@@ -106,13 +144,13 @@ export function AppProvider({ children, initialState = createInitialState(), rep
             } // 조건 종료
             else // 기본 저장소 선택
             { // 조건 시작
-                new LocalStorageGateway(window.localStorage).save(state); // 브라우저 저장
+                new LocalStorageGateway(getAppStorage()).save(state); // 브라우저 저장(로그인한 계정의 칸)
             } // 조건 종료
             queueMicrotask(() => setStorageError(null)); // 오류 해제 예약
         } // 시도 종료
         catch (error: unknown) // 저장 실패 처리
         { // 오류 시작
-            const message = describeStorageFailure(error, "브라우저 저장공간이 가득 차 최근 변경 내용을 저장하지 못했습니다.", "저장하지 못했습니다. 브라우저 저장공간을 확인해 주세요."); // 원인별 안내
+            const message = describeStorageFailure(error, t("브라우저 저장공간이 가득 차 최근 변경 내용을 저장하지 못했습니다."), t("저장하지 못했습니다. 브라우저 저장공간을 확인해 주세요.")); // 원인별 안내
             queueMicrotask(() => setStorageError(message)); // 오류 안내 예약
         } // 오류 종료
     }, [repository, state]); // 상태 변경 의존
@@ -120,7 +158,7 @@ export function AppProvider({ children, initialState = createInitialState(), rep
     { // 함수 시작
         if (persistenceBlocked.current) // 저장 차단 판정
         { // 차단 시작
-            setStorageError(blockedMessage); // 차단 안내
+            setStorageError(t(blockedMessage)); // 차단 안내(화면 언어로)
             return false; // 백업 실패 반환
         } // 차단 종료
         try // 백업 시도
@@ -131,14 +169,14 @@ export function AppProvider({ children, initialState = createInitialState(), rep
             } // 주입 백업 종료
             else // 기본 백업 선택
             { // 기본 백업 시작
-                new LocalStorageGateway(window.localStorage).createBackupFromState(state, reason); // 브라우저 상태 백업
+                new LocalStorageGateway(getAppStorage()).createBackupFromState(state, reason); // 브라우저 상태 백업(로그인한 계정의 칸)
             } // 기본 백업 종료
             setStorageError(null); // 백업 오류 해제
             return true; // 백업 성공 반환
         } // 시도 종료
         catch (error: unknown) // 백업 오류 처리
         { // 오류 시작
-            setStorageError(describeStorageFailure(error, "브라우저 저장공간이 가득 차 백업하지 못했습니다. 삭제를 중단했습니다.", "백업하지 못했습니다. 삭제를 중단했습니다.")); // 백업 오류 안내
+            setStorageError(describeStorageFailure(error, t("브라우저 저장공간이 가득 차 백업하지 못했습니다. 삭제를 중단했습니다."), t("백업하지 못했습니다. 삭제를 중단했습니다."))); // 백업 오류 안내
             return false; // 백업 실패 반환
         } // 오류 종료
     }, [repository, state]); // 함수 종료
@@ -146,7 +184,7 @@ export function AppProvider({ children, initialState = createInitialState(), rep
     { // 함수 시작
         if (persistenceBlocked.current) // 저장 차단 판정
         { // 차단 시작
-            setStorageError(blockedMessage); // 차단 안내
+            setStorageError(t(blockedMessage)); // 차단 안내(화면 언어로)
             return false; // 저장 실패 반환
         } // 차단 종료
         try // 저장 시도
@@ -157,7 +195,7 @@ export function AppProvider({ children, initialState = createInitialState(), rep
             } // 조건 종료
             else // 기본 저장소 선택
             { // 기본 시작
-                new LocalStorageGateway(window.localStorage).save(nextState); // 브라우저 저장 실행
+                new LocalStorageGateway(getAppStorage()).save(nextState); // 브라우저 저장 실행(로그인한 계정의 칸)
             } // 기본 종료
             hydrated.current = false; // 중복 저장 보류
             dispatch({ type: "replace-state", state: nextState }); // 메모리 상태 확정
@@ -170,13 +208,16 @@ export function AppProvider({ children, initialState = createInitialState(), rep
         } // 시도 종료
         catch (error: unknown) // 저장 실패 처리
         { // 실패 시작
-            setStorageError(describeStorageFailure(error, "브라우저 저장공간이 가득 차 변경 내용을 적용하지 않았습니다.", "저장하지 못해 변경 내용을 적용하지 않았습니다.")); // 저장 오류 안내
+            setStorageError(describeStorageFailure(error, t("브라우저 저장공간이 가득 차 변경 내용을 적용하지 않았습니다."), t("저장하지 못해 변경 내용을 적용하지 않았습니다."))); // 저장 오류 안내
             return false; // 저장 실패 반환
         } // 실패 종료
-    }, [repository]); // 함수 종료
+    }, [dispatch, repository]); // 함수 종료
     const dismissStorageNotice = useCallback(() => setStorageNotice(null), []); // 안내 닫기 함수
-    const value = useMemo(() => ({ state, dispatch, storageError, storageNotice, dismissStorageNotice, createBackup, commitState }), [commitState, createBackup, dismissStorageNotice, state, storageError, storageNotice]); // 문맥 값
-    return <AppContext.Provider value={value}>{restored ? children : <p role="status">로컬 대화를 불러오는 중입니다.</p>}</AppContext.Provider>; // 공급자 반환
+    const value = useMemo(() => ({ state, dispatch, storageError, storageNotice, dismissStorageNotice, createBackup, commitState }), [commitState, createBackup, dismissStorageNotice, dispatch, state, storageError, storageNotice]); // 문맥 값
+    const locale = restored ? resolveLocale(state.settings.language, typeof navigator === "undefined" ? undefined : navigator.language) : "ko"; // 화면 언어(저장된 설정을 읽은 뒤에 정함, 그 전에는 서버와 같은 한국어)
+    setActiveLocale(locale); // 아래 화면을 그리기 전에 언어를 정함
+    useDocumentLanguage(locale); // 문서 언어 표시와 브라우저 탭 제목을 화면 언어로
+    return <AppContext.Provider value={value}>{restored ? <Fragment key={locale}>{children}</Fragment> : <p role="status">{t("로컬 대화를 불러오는 중입니다.")}</p>}</AppContext.Provider>; // 공급자 반환(언어가 바뀌면 화면을 새로 그림)
 } // 함수 종료
 
 export function useAppStore(): AppStore // 앱 저장소 훅

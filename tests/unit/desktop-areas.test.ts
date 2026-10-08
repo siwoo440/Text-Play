@@ -35,6 +35,9 @@ describe("데스크톱 메뉴 영역", () => // 메뉴 영역 묶음
         expect(getDesktopAreaId({ kind: "settings", section: "tokens" })).toBe("settings"); // 설정 세부 확인
         expect(getDesktopAreaId({ kind: "support" })).toBe("support"); // 지원 확인
         expect(getDesktopAreaId({ kind: "images" })).toBe("images"); // 이미지 스튜디오 확인
+        expect(getDesktopAreaId({ kind: "rewards" })).toBe("settings"); // 출석과 미션은 설정 소속(설정 틀 안의 화면)
+        expect(getDesktopAreaId({ kind: "login" })).toBeNull(); // 로그인은 메뉴 소속 없음
+        expect(getDesktopAreaId({ kind: "invite", code: "abc" })).toBeNull(); // 친구 초대는 메뉴 소속 없음
         expect(getDesktopAreaId({ kind: "ai-models" })).toBe("ai-models"); // AI 모델 확인
         expect(getDesktopAreaId({ kind: "story-home" })).toBe("home"); // 스토리 홈은 메인 소속(메인의 모드 전환)
         expect(getDesktopAreaId({ kind: "story", id: "a" })).toBe("home"); // 스토리 상세 소속 확인

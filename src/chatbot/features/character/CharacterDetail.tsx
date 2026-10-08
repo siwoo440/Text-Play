@@ -19,6 +19,8 @@ import styles from "@chatbot/features/character/CharacterDetail.module.css"; // 
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 저장소
 import type { ReportReason } from "@chatbot/features/core/types"; // 신고 사유 타입
 import { getGenreKey } from "@chatbot/lib/theme/genre-theme"; // 장르 색 조회
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
+import { PageTitle } from "@chatbot/components/feedback/PageTitle"; // 탭 제목
 
 export function CharacterDetail({ characterId }: { characterId: string }) // 캐릭터 상세
 { // 함수 시작
@@ -26,7 +28,7 @@ export function CharacterDetail({ characterId }: { characterId: string }) // 캐
     const router = useRouter(); // 경로 이동기
     const character = state.characters.find((item) => item.id === characterId); // 캐릭터 조회
     const initialProfile = character === undefined ? null : getCharacterDetailProfile(character); // 초기 상세 프로필
-    const [selectedProfileId, setSelectedProfileId] = useState(state.profile.id); // 선택 프로필 상태
+    const [selectedProfileId, setSelectedProfileId] = useState(state.personas[0]?.id ?? ""); // 선택한 대화 프로필(처음은 기본 프로필)
     const [selectedPresetId, setSelectedPresetId] = useState(initialProfile?.startPresets[0]?.id ?? ""); // 선택 프리셋 상태
     const [creating, setCreating] = useState(false); // 대화 생성 상태
     const [shareStatus, setShareStatus] = useState(""); // 공유 상태
@@ -37,9 +39,9 @@ export function CharacterDetail({ characterId }: { characterId: string }) // 캐
     if (character === undefined || initialProfile === null) // 캐릭터 부재 판정
     { // 조건 시작
         return ( // 부재 화면 반환
-            <StatusScreen tone="not-found" label="CHARACTER NOT FOUND" title="캐릭터를 찾을 수 없습니다" description="주소가 잘못되었거나 이 브라우저에서 삭제된 캐릭터입니다."> {/* 부재 안내 */}
-                <Link href="/">메인으로 돌아가기</Link> {/* 메인 링크 */}
-                <Link href={"/library" as Route}>보관함 열기</Link> {/* 보관함 링크 */}
+            <StatusScreen tone="not-found" label="CHARACTER NOT FOUND" title={t("캐릭터를 찾을 수 없습니다")} description={t("주소가 잘못되었거나 이 브라우저에서 삭제된 캐릭터입니다.")}> {/* 부재 안내 */}
+                <Link href="/">{t("메인으로 돌아가기")}</Link> {/* 메인 링크 */}
+                <Link href={"/library" as Route}>{t("보관함 열기")}</Link> {/* 보관함 링크 */}
             </StatusScreen> // 부재 안내 종료
         ); // 반환 종료
     } // 조건 종료
@@ -71,7 +73,7 @@ export function CharacterDetail({ characterId }: { characterId: string }) // 캐
         } // 조건 종료
         creatingRef.current = true; // 생성 잠금 설정
         setCreating(true); // 생성 상태 설정
-        const result = createConversationFromPreset(state, character.id, selectedPreset.id); // 새 대화 생성
+        const result = createConversationFromPreset(state, character.id, selectedPreset.id, new Date().toISOString(), selectedProfileId); // 새 대화 생성(고른 대화 프로필로)
         dispatch({ type: "replace-state", state: result.state }); // 생성 상태 저장
         router.push(result.href as Route); // 대화 화면 이동
     }; // 함수 종료
@@ -84,11 +86,11 @@ export function CharacterDetail({ characterId }: { characterId: string }) // 캐
                 throw new Error("clipboard-unavailable"); // 클립보드 오류
             } // 조건 종료
             await navigator.clipboard.writeText(window.location.href); // 현재 링크 복사
-            setShareStatus("공유 링크를 복사했습니다."); // 성공 상태 설정
+            setShareStatus(t("공유 링크를 복사했습니다.")); // 성공 상태 설정
         } // 시도 종료
         catch // 복사 실패 처리
         { // 실패 시작
-            setShareStatus("공유 링크를 복사하지 못했습니다."); // 실패 상태 설정
+            setShareStatus(t("공유 링크를 복사하지 못했습니다.")); // 실패 상태 설정
         } // 실패 종료
     }; // 함수 종료
     const openReport = (trigger: HTMLButtonElement) => // 신고 창 열기
@@ -112,11 +114,12 @@ export function CharacterDetail({ characterId }: { characterId: string }) // 캐
     const pageStyle = { "--character-accent": profile.accentColor, "--character-image": `url("${character.coverImage}")` } as CSSProperties; // 캐릭터 테마
     return ( // 상세 반환
         <main className={styles.page} style={pageStyle} data-genre={getGenreKey(character.tags)} data-surface="light"> {/* 상세 본문 */}
+            <PageTitle title={character.name} /> {/* 탭 제목 */}
             <div className={styles.background} aria-hidden="true" /> {/* 흐림 배경 */}
             <div className={styles.content}> {/* 상세 내용 */}
-                <CharacterHero character={character} profile={profile} bookmarked={bookmarked} liked={liked} followed={followed} latestConversation={latestConversation} creating={creating} shareStatus={shareStatus} onBookmark={() => dispatch({ type: "toggle-bookmark", characterId: character.id })} onLike={() => dispatch({ type: "toggle-character-like", characterId: character.id })} onFollow={() => dispatch({ type: "toggle-creator-follow", creatorId: character.creatorId })} onShare={shareCharacter} onMore={openReport} onContinue={continueConversation} onStart={startConversation} /> {/* 히어로 */}
+                <CharacterHero character={character} profile={profile} bookmarked={bookmarked} liked={liked} followed={followed} own={character.creatorId === state.profile.id} latestConversation={latestConversation} creating={creating} shareStatus={shareStatus} onBookmark={() => dispatch({ type: "toggle-bookmark", characterId: character.id })} onLike={() => dispatch({ type: "toggle-character-like", characterId: character.id })} onFollow={() => dispatch({ type: "toggle-creator-follow", creatorId: character.creatorId })} onShare={shareCharacter} onReport={openReport} onContinue={continueConversation} onStart={startConversation} /> {/* 히어로 */}
                 <CharacterStoryInfo character={character} profile={profile} /> {/* 스토리 정보 */}
-                <ConversationSetup profile={state.profile} presets={profile.startPresets} selectedProfileId={selectedProfileId} selectedPresetId={selectedPreset?.id ?? ""} onProfileChange={setSelectedProfileId} onPresetChange={setSelectedPresetId} /> {/* 시작 설정 */}
+                <ConversationSetup personas={state.personas} presets={profile.startPresets} selectedProfileId={selectedProfileId} selectedPresetId={selectedPreset?.id ?? ""} onProfileChange={setSelectedProfileId} onPresetChange={setSelectedPresetId} /> {/* 시작 설정 */}
                 {selectedPrologue === undefined || selectedPreset === undefined ? null : <ProloguePreview key={selectedPrologue.id} prologue={selectedPrologue} presetName={selectedPreset.name} fallbackImage={character.coverImage} characterName={character.name} />} {/* 프롤로그 미리보기 */}
                 <CharacterDiscoverySections profile={profile} userProfile={state.profile} characters={visibleCharacters} relatedCharacters={relatedCharacters} /> {/* 업데이트와 탐색 */}
                 <CharacterActionBar latestConversation={latestConversation} creating={creating} onContinue={continueConversation} onStart={startConversation} /> {/* 대화 동작 */}

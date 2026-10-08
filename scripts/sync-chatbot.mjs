@@ -9,12 +9,16 @@ const targetSource = resolve(root, "src/chatbot"); // 소스 대상 폴더
 const targetTests = resolve(root, "tests/chatbot"); // 테스트 대상 폴더
 const sourceFolders = ["app", "components", "features", "lib", "mocks", "test"]; // 가져올 소스 폴더
 const testFolders = ["unit", "components", "integration"]; // 가져올 테스트 폴더
+const testScripts = ["scripts/i18n-keys.ts"]; // 테스트가 불러 쓰는 ChatBot 스크립트(tests/chatbot/scripts로 가져옴)
+const scriptSourceRoot = 'path.join(here, "..", "src")'; // 스크립트가 보는 ChatBot 소스 위치
+const scriptTargetRoot = 'path.join(here, "..", "..", "..", "src", "chatbot")'; // 사본에서 봐야 할 소스 위치
 const importRules = // 가져오기 경로 변환 규칙(순서 중요)
 [ // 규칙 시작
     [/(["'])@\//gu, "$1@chatbot/"], // ChatBot 별칭을 전용 별칭으로 변경
     [/(["'])next\/link\1/gu, "$1@/desktop/next-compat/link$1"], // 링크를 데스크톱 호환 모듈로 변경
     [/(["'])next\/image\1/gu, "$1@/desktop/next-compat/image$1"], // 이미지를 데스크톱 호환 모듈로 변경
     [/(["'])next\/navigation\1/gu, "$1@/desktop/next-compat/navigation$1"], // 경로 도구를 데스크톱 호환 모듈로 변경
+    [/(["'])\.\.\/\.\.\/scripts\//gu, "$1../scripts/"], // 테스트가 부르는 ChatBot 스크립트를 사본 위치로 변경
 ]; // 규칙 종료
 
 function fail(message) // 실패 처리기
@@ -68,6 +72,10 @@ function targetOf(path) // 원본 경로의 대상 경로
     { // 조건 시작
         return resolve(targetTests, folder, ...rest); // 테스트 대상 반환
     } // 조건 종료
+    if (testScripts.includes(path)) // 테스트용 스크립트 확인
+    { // 조건 시작
+        return resolve(targetTests, path); // 스크립트 대상 반환
+    } // 조건 종료
     return null; // 대상 아님
 } // 함수 종료
 
@@ -77,7 +85,7 @@ if (!existsSync(resolve(sourceRoot, ".git"))) // 원본 저장소 확인
 } // 조건 종료
 const commit = git(["rev-parse", "--verify", `${requestedRef}^{commit}`]).trim(); // 가져올 커밋 확정
 const subject = git(["log", "-1", "--format=%s", commit]).trim(); // 커밋 제목
-const files = git(["ls-tree", "-r", "-z", "--name-only", commit, "--", "src", "tests", "public"]).split("\0").filter((path) => path.length > 0); // 커밋 파일 목록
+const files = git(["ls-tree", "-r", "-z", "--name-only", commit, "--", "src", "tests", "public", ...testScripts]).split("\0").filter((path) => path.length > 0); // 커밋 파일 목록
 if (!files.includes("src/features/core/types.ts")) // ChatBot 구조 확인
 { // 조건 시작
     fail(`ChatBot 저장소가 아닙니다: ${sourceRoot}`); // 구조 오류
@@ -110,6 +118,16 @@ for (const path of files) // 커밋 파일 순회
         continue; // 다음 파일
     } // 조건 종료
     mkdirSync(dirname(target), { recursive: true }); // 대상 폴더 생성
+    if (testScripts.includes(path)) // 테스트용 스크립트 확인
+    { // 조건 시작
+        const script = content.toString("utf8"); // 스크립트 원문
+        if (!script.includes(scriptSourceRoot)) // 소스 위치 표현 확인
+        { // 조건 시작
+            fail(`스크립트의 소스 위치를 찾지 못했습니다(${path}). sync-chatbot.mjs의 scriptSourceRoot를 ChatBot에 맞게 고치세요.`); // 구조 변경 안내
+        } // 조건 종료
+        writeFileSync(target, rewriteImports(script.replace(scriptSourceRoot, scriptTargetRoot))); // src/chatbot을 보도록 바꿔 저장
+        continue; // 다음 파일
+    } // 조건 종료
     writeFileSync(target, /\.(?:ts|tsx)$/u.test(path) ? rewriteImports(content.toString("utf8")) : content); // 변환 후 저장
 } // 순회 종료
 
@@ -120,8 +138,8 @@ writeFileSync(resolve(targetSource, "SOURCE.md"), [ // 원본 기록 저장
     "이 폴더는 `scripts/sync-chatbot.mjs`가 [siwoo440/ChatBot](https://github.com/siwoo440/ChatBot)의 커밋에서 만든 소스 사본입니다. 작업 폴더의 커밋하지 않은 수정은 가져오지 않습니다. 직접 고치지 말고 ChatBot에서 고쳐 커밋한 뒤 다시 동기화합니다.", // 안내
     "", // 빈 줄
     `- 원본 커밋: \`${commit}\` (\`${subject}\`)`, // 커밋 기록
-    "- 범위: `src/app`·`components`·`features`·`lib`·`mocks`·`test`, `tests/unit`·`components`·`integration`, Text-Play에 없는 `public` 자산", // 범위 기록
-    "- 변환: `@/` → `@chatbot/`, `next/link`·`next/image`·`next/navigation`·`Route` 타입 → `@/desktop/next-compat/*`", // 변환 기록
+    "- 범위: `src/app`·`components`·`features`·`lib`·`mocks`·`test`, `tests/unit`·`components`·`integration`, 테스트가 쓰는 `scripts/i18n-keys.ts`(→ `tests/chatbot/scripts`), Text-Play에 없는 `public` 자산", // 범위 기록
+    "- 변환: `@/` → `@chatbot/`, `next/link`·`next/image`·`next/navigation`·`Route` 타입 → `@/desktop/next-compat/*`, 테스트의 `../../scripts/` → `../scripts/`", // 변환 기록
     "- 동기화: `node scripts/sync-chatbot.mjs <ChatBot 저장소 경로> [커밋, 기본 origin/main]`", // 실행 방법
     "", // 끝 줄
 ].join("\n")); // 기록 종료

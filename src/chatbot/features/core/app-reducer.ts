@@ -2,15 +2,21 @@ import { removeMessageFromVersion, removeVersionTree } from "@chatbot/features/c
 import { autoOrganizeConversations, CONVERSATION_PIN_LIMIT } from "@chatbot/features/conversation/conversation-list-model"; // 고정 한도·자동 정리
 import { DEFAULT_PERSONA_ID } from "@chatbot/features/core/defaults"; // 기본 대화 프로필
 import { isAdultVerified } from "@chatbot/features/adult/adult-access"; // 성인 인증 판정
-import type { AdultVerification, AppNotification, AppSettings, AppState, Character, CharacterMemory, CharacterReport, Conversation, ConversationFolder, ConversationSettings, ConversationVersion, GeneratedImage, Message, Persona, PublicationStatus, Story, TokenWallet, UserProfile } from "@chatbot/features/core/types"; // 상태 타입
+import type { AdultVerification, AppNotification, AppSettings, AppState, Character, CharacterMemory, CharacterReport, Conversation, ConversationFolder, ConversationSettings, ConversationVersion, GeneratedImage, Message, MissionId, WeeklyMissionId, Persona, PublicationStatus, Story, TokenRecord, TokenWallet, UserProfile } from "@chatbot/features/core/types"; // 상태 타입
+import { addTokenRecord, splitChatSpend } from "@chatbot/lib/story/token-ledger"; // 토큰 기록
+import { applyInviteConfirmations, createInviteCode, redeemInviteCode, type InviteConfirmation } from "@chatbot/features/rewards/referral-model"; // 친구 초대 규칙
+import { checkAttendance, claimMission, claimMissionBonus } from "@chatbot/features/rewards/reward-model"; // 출석·미션 규칙
 
 export const NOTIFICATION_LIMIT = 30; // 알림 보관 최대 수
 import { trySpend, type TokenAction } from "@chatbot/lib/story/token-policy"; // 토큰 정책
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
+import { claimWeeklyMission } from "@chatbot/features/rewards/weekly-model"; // 주간 미션
 
 export type AppAction = // 앱 동작
     | { type: "toggle-left-panel"; exclusive?: boolean } // 왼쪽 패널 전환
     | { type: "toggle-right-panel"; exclusive?: boolean } // 오른쪽 패널 전환
     | { type: "close-panels" } // 전체 패널 닫기
+    | { type: "end-local-session" } // 19+ 보기 끄기와 패널 닫기(사용자 패널의 버튼. 로그인이 생기면 로그아웃에서도 씀)
     | { type: "update-settings"; settings: Partial<AppSettings> } // 설정 변경
     | { type: "update-profile"; profile: Pick<UserProfile, "nickname" | "avatar"> } // 프로필 변경
     | { type: "verify-adult"; verification: AdultVerification; enableMatureContent: boolean } // 성인 인증 완료
@@ -42,6 +48,8 @@ export type AppAction = // 앱 동작
     | { type: "toggle-character-like"; characterId: string } // 좋아요 전환
     | { type: "toggle-creator-follow"; creatorId: string } // 제작자 팔로우 전환
     | { type: "add-character-report"; report: CharacterReport } // 캐릭터 신고 추가
+    | { type: "remove-character-report"; reportId: string } // 캐릭터 신고 취소
+    | { type: "toggle-message-bookmark"; messageId: string } // 답변 책갈피 전환
     | { type: "set-publication-status"; characterId: string; status: PublicationStatus } // 발행 상태 변경
     | { type: "select-conversation"; conversationId: string | null } // 대화 선택
     | { type: "select-conversation-version"; conversationId: string; versionId: string } // 대화 버전 선택
@@ -55,7 +63,32 @@ export type AppAction = // 앱 동작
     | { type: "toggle-conversation-pin"; conversationId: string } // 대화 고정 전환
     | { type: "merge-chat-state"; conversationId: string; state: AppState; allowCreate: boolean } // 채팅 화면 상태 병합
     | { type: "spend-token"; action: TokenAction } // 토큰 차감
+    | { type: "check-attendance"; now: string } // 출석하기
+    | { type: "claim-mission"; missionId: MissionId; now: string } // 미션 보상 받기
+    | { type: "claim-mission-bonus"; now: string } // 미션 모두 완료 보너스 받기
+    | { type: "claim-weekly-mission"; missionId: WeeklyMissionId; now: string } // 주간 미션 보상 받기
+    | { type: "create-invite-code"; code: string; now: string } // 내 초대 코드 만들기
+    | { type: "redeem-invite-code"; code: string; now: string } // 친구의 초대 코드로 환영 보너스 받기
+    | { type: "apply-invite-confirmations"; friends: InviteConfirmation[]; now: string } // 조건을 채운 친구 반영(서버 연결 뒤 사용)
     | { type: "replace-state"; state: AppState }; // 상태 복원
+
+function recordChatSpend(state: AppState, conversation: Conversation, after: TokenWallet, spent: number): TokenRecord[] // 채팅에서 쓴 토큰 기록(대화·장면 이미지를 나눠 한 건씩)
+{ // 함수 시작
+    const story = conversation.mode === "story" ? state.stories.find((item) => item.id === conversation.storyId) : undefined; // 연결 스토리
+    const work = story?.title ?? state.characters.find((item) => item.id === conversation.characterId)?.name ?? conversation.title; // 작품 이름
+    const parts = splitChatSpend(state.wallet, after, spent); // 대화·장면 이미지로 나눔
+    let records = state.tokenRecords; // 누적 기록
+    let balance = state.wallet.balance; // 기록 뒤 잔액
+    for (const [source, label, amount] of [["chat", t("대화"), parts.chat], ["scene-image", t("장면 이미지 만들기"), parts.image]] as const) // 종류 순회
+    { // 순회 시작
+        if (amount > 0) // 쓴 토큰 있음
+        { // 조건 시작
+            balance -= amount; // 잔액 차감
+            records = addTokenRecord(records, { id: `spend-${source}-${conversation.id}-${after.updatedAt}`, direction: "spend", source, label, work, amount, balance, createdAt: after.updatedAt }); // 기록 추가
+        } // 조건 종료
+    } // 순회 종료
+    return records; // 기록 반환
+} // 함수 종료
 
 export function appReducer(state: AppState, action: AppAction): AppState // 앱 리듀서
 { // 함수 시작
@@ -67,6 +100,8 @@ export function appReducer(state: AppState, action: AppAction): AppState // 앱 
             return { ...state, settings: { ...state.settings, rightPanelOpen: !state.settings.rightPanelOpen, leftPanelOpen: action.exclusive ? false : state.settings.leftPanelOpen } }; // 오른쪽 상태 반환
         case "close-panels": // 전체 닫기
             return { ...state, settings: { ...state.settings, leftPanelOpen: false, rightPanelOpen: false } }; // 닫힌 상태 반환
+        case "end-local-session": // 19+ 보기 끄기
+            return { ...state, settings: { ...state.settings, matureContentEnabled: false, leftPanelOpen: false, rightPanelOpen: false } }; // 19+ 보기를 끄고 패널을 닫음(캐릭터·대화·토큰은 그대로)
         case "update-settings": // 설정 변경
             return { ...state, settings: { ...state.settings, ...action.settings } }; // 병합 상태 반환
         case "update-profile": // 프로필 변경
@@ -144,7 +179,9 @@ export function appReducer(state: AppState, action: AppAction): AppState // 앱 
             { // 조건 시작
                 return state; // 변경 없음
             } // 조건 종료
-            return { ...state, images: [structuredClone(action.image), ...state.images], wallet: structuredClone(action.wallet) }; // 최근 순 추가와 지갑 반영
+            const cost = state.wallet.balance - action.wallet.balance; // 이미지에 쓴 토큰
+            const tokenRecords = cost > 0 ? addTokenRecord(state.tokenRecords, { id: `spend-studio-image-${action.image.id}`, direction: "spend", source: "studio-image", label: t("이미지 만들기"), work: action.image.prompt.slice(0, 40), amount: cost, balance: action.wallet.balance, createdAt: action.image.createdAt }) : state.tokenRecords; // 쓴 기록
+            return { ...state, images: [structuredClone(action.image), ...state.images], wallet: structuredClone(action.wallet), tokenRecords }; // 최근 순 추가와 지갑·기록 반영
         } // 추가 범위 종료
         case "toggle-image-favorite": // 이미지 즐겨찾기 전환
             return { ...state, images: state.images.map((image) => image.id === action.imageId ? { ...image, favorite: !image.favorite } : image) }; // 즐겨찾기 반영
@@ -195,12 +232,12 @@ export function appReducer(state: AppState, action: AppAction): AppState // 앱 
         } // 전환 범위 종료
         case "toggle-creator-follow": // 제작자 팔로우 전환
         { // 전환 범위 시작
-            const exists = state.characters.some((character) => character.creatorId === action.creatorId); // 제작자 존재 확인
-            if (!exists) // 제작자 부재 판정
-            { // 조건 시작
-                return state; // 기존 상태 반환
-            } // 조건 종료
             const followed = state.followedCreatorIds.includes(action.creatorId); // 기존 팔로우 확인
+            const exists = state.characters.some((character) => character.creatorId === action.creatorId) || state.stories.some((story) => story.creatorId === action.creatorId); // 제작자 존재 확인(캐릭터나 스토리가 있음)
+            if (!followed && !exists) // 작품이 없는 제작자를 새로 팔로우하려 함
+            { // 조건 시작
+                return state; // 기존 상태 반환(해제는 작품이 지워진 뒤에도 할 수 있어야 하므로 막지 않음)
+            } // 조건 종료
             const followedCreatorIds = followed ? state.followedCreatorIds.filter((id) => id !== action.creatorId) : [...state.followedCreatorIds, action.creatorId]; // 다음 팔로우 목록
             return { ...state, followedCreatorIds }; // 팔로우 상태 반환
         } // 전환 범위 종료
@@ -214,6 +251,26 @@ export function appReducer(state: AppState, action: AppAction): AppState // 앱 
             } // 조건 종료
             return { ...state, localReports: [...state.localReports, action.report] }; // 신고 상태 반환
         } // 추가 범위 종료
+        case "remove-character-report": // 캐릭터 신고 취소
+            return state.localReports.some((report) => report.id === action.reportId) ? { ...state, localReports: state.localReports.filter((report) => report.id !== action.reportId) } : state; // 그 신고만 제거(없으면 그대로)
+        case "toggle-message-bookmark": // 답변 책갈피 전환
+        { // 전환 범위 시작
+            const target = state.messages.find((message) => message.id === action.messageId); // 대상 메시지
+            if (target === undefined || target.role !== "assistant") // 없는 메시지·답변이 아닌 메시지
+            { // 조건 시작
+                return state; // 기존 상태 반환
+            } // 조건 종료
+            const messages = state.messages.map((message) => // 메시지 순회
+            { // 순회 시작
+                if (message.id !== action.messageId) // 다른 메시지
+                { // 조건 시작
+                    return message; // 그대로
+                } // 조건 종료
+                const { bookmarked, ...rest } = message; // 책갈피 표시 분리
+                return bookmarked === true ? rest : { ...rest, bookmarked: true }; // 빼면 항목을 없애고, 넣으면 표시
+            }); // 순회 종료
+            return { ...state, messages }; // 책갈피 상태 반환
+        } // 전환 범위 종료
         case "set-publication-status": // 발행 상태 변경
             return { ...state, characters: state.characters.map((character) => character.id === action.characterId ? { ...character, publicationStatus: action.status } : character) }; // 발행 상태 반환
         case "select-conversation": // 대화 선택
@@ -331,13 +388,30 @@ export function appReducer(state: AppState, action: AppAction): AppState // 앱 
             const conversations = existing === undefined ? [...state.conversations, conversation] : state.conversations.map((item) => item.id === conversation.id ? conversation : item); // 대화 목록 생성
             const conversationVersions = [...state.conversationVersions.filter((version) => version.conversationId !== action.conversationId), ...chat.conversationVersions.filter((version) => version.conversationId === action.conversationId)]; // 채팅 대화 버전 교체
             const messages = [...state.messages.filter((message) => message.conversationId !== action.conversationId), ...chat.messages.filter((message) => message.conversationId === action.conversationId)]; // 채팅 대화 메시지 교체
-            return { ...state, conversations, conversationVersions, messages, wallet: chat.wallet, selectedConversationId: chat.selectedConversationId }; // 채팅 소유 필드만 반영
+            const spent = chat.wallet.totalUsed - state.wallet.totalUsed; // 채팅이 그동안 쓴 토큰
+            const wallet = spent > 0 ? { ...chat.wallet, balance: state.wallet.balance - spent } : state.wallet; // 쓴 만큼만 차감(그 사이 다른 곳에서 받은 토큰은 유지)
+            const tokenRecords = spent > 0 ? recordChatSpend(state, conversation, chat.wallet, spent) : state.tokenRecords; // 쓴 토큰 기록
+            return { ...state, conversations, conversationVersions, messages, wallet, tokenRecords, selectedConversationId: chat.selectedConversationId }; // 채팅 소유 필드만 반영
         } // 병합 범위 종료
         case "spend-token": // 토큰 차감
         { // 차감 범위 시작
             const result = trySpend(state.wallet, action.action); // 차감 실행
             return result.ok ? { ...state, wallet: result.wallet } : state; // 원자적 결과 반환
         } // 차감 범위 종료
+        case "check-attendance": // 출석하기
+            return checkAttendance(state, action.now); // 도장과 보상
+        case "claim-mission": // 미션 보상 받기
+            return claimMission(state, action.missionId, action.now); // 보상 지급
+        case "claim-mission-bonus": // 모두 완료 보너스 받기
+            return claimMissionBonus(state, action.now); // 보너스 지급
+        case "claim-weekly-mission": // 주간 미션 보상 받기
+            return claimWeeklyMission(state, action.missionId, action.now); // 보상 지급
+        case "create-invite-code": // 내 초대 코드 만들기
+            return createInviteCode(state, action.code, action.now); // 코드 저장
+        case "redeem-invite-code": // 친구의 초대 코드로 환영 보너스 받기
+            return redeemInviteCode(state, action.code, action.now); // 보너스 지급
+        case "apply-invite-confirmations": // 조건을 채운 친구 반영
+            return applyInviteConfirmations(state, action.friends, action.now); // 친구 보상
         case "replace-state": // 상태 교체
             return structuredClone(action.state); // 복원 상태 반환
         default: // 기본 분기

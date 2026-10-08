@@ -1,3 +1,5 @@
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
+
 export type GenreKey = "healing" | "fantasy" | "modern" | "romance" | "mystery" | "sf" | "other"; // 장르 색 종류
 
 export const genreLabels: Readonly<Record<Exclude<GenreKey, "other">, string>> = // 장르 이름
@@ -33,5 +35,5 @@ export function getGenreKey(tags: readonly string[]): GenreKey // 태그로 대�
 export function getGenreLabel(tags: readonly string[]): string // 태그로 대표 장르 이름 조회
 { // 함수 시작
     const key = getGenreKey(tags); // 대표 장르 조회
-    return key === "other" ? tags[0] ?? "이야기" : genreLabels[key]; // 장르 이름 반환
+    return key === "other" ? tags[0] ?? t("이야기") : genreLabels[key]; // 장르 이름 반환
 } // 함수 종료

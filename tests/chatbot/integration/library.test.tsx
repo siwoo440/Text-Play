@@ -65,14 +65,14 @@ describe("로컬 보관함", () => // 보관함 묶음
         const { unmount } = renderWithApp(<LibraryScreen />, state, { load: () => state, save: () => undefined, createBackup: failingBackup }); // 실패 저장소 렌더
         await user.click(screen.getByRole("button", { name: "새벽 도서관의 리안 삭제" })); // 삭제 시작
         await user.click(screen.getByRole("button", { name: "삭제 확인" })); // 삭제 승인
-        expect(failingBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 12 }), "character-delete"); // 백업 시도 확인
+        expect(failingBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 18 }), "character-delete"); // 백업 시도 확인
         expect(screen.getByText("새벽 도서관의 리안")).toBeVisible(); // 캐릭터 유지 확인
         unmount(); // 화면 정리
         const backup = vi.fn(); // 성공 백업
         renderWithApp(<LibraryScreen />, state, { load: () => state, save: () => undefined, createBackup: backup }); // 성공 저장소 렌더
         await user.click(screen.getByRole("button", { name: "새벽 도서관의 리안 삭제" })); // 삭제 시작
         await user.click(screen.getByRole("button", { name: "삭제 확인" })); // 삭제 승인
-        expect(backup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 12 }), "character-delete"); // 백업 확인
+        expect(backup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 18 }), "character-delete"); // 백업 확인
         expect(screen.queryByText("새벽 도서관의 리안")).toBeNull(); // 카드 제거 확인
     }); // 검증 종료
 
@@ -95,7 +95,7 @@ describe("로컬 보관함", () => // 보관함 묶음
         await user.click(screen.getByRole("button", { name: "내 카페 이야기 삭제" })); // 삭제 시작
         expect(screen.getByRole("dialog", { name: "스토리 삭제" })).toHaveTextContent("이 스토리로 진행한 대화 1개도 함께 삭제됩니다."); // 삭제 안내
         await user.click(screen.getByRole("button", { name: "스토리 삭제 확인" })); // 삭제 승인
-        expect(failingBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 12 }), "story-delete"); // 백업 시도 확인
+        expect(failingBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 18 }), "story-delete"); // 백업 시도 확인
         expect(screen.getByRole("link", { name: "내 카페 이야기" })).toBeVisible(); // 실패 시 유지 확인
         unmount(); // 화면 정리
         const backup = vi.fn(); // 성공 백업
@@ -103,7 +103,7 @@ describe("로컬 보관함", () => // 보관함 묶음
         await user.click(screen.getByRole("tab", { name: "내 스토리" })); // 탭 이동
         await user.click(screen.getByRole("button", { name: "내 카페 이야기 삭제" })); // 삭제 시작
         await user.click(screen.getByRole("button", { name: "스토리 삭제 확인" })); // 삭제 승인
-        expect(backup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 12 }), "story-delete"); // 백업 확인
+        expect(backup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 18 }), "story-delete"); // 백업 확인
         expect(screen.queryByRole("link", { name: "내 카페 이야기" })).toBeNull(); // 삭제 확인
         expect(screen.getByLabelText("대화 개수")).toHaveTextContent(/^3:/); // 스토리 대화도 삭제 확인
         expect(screen.getByRole("link", { name: "＋ 새 스토리 만들기" })).toHaveAttribute("href", "/stories/new"); // 빈 화면 만들기 링크
@@ -160,7 +160,7 @@ describe("로컬 보관함", () => // 보관함 묶음
         await user.click(screen.getByRole("tab", { name: "진행 중인 대화" })); // 대화 탭 이동
         await user.click(screen.getByRole("button", { name: "새벽 도서관의 리안 삭제" })); // 삭제 시작
         await user.click(screen.getByRole("button", { name: "대화 삭제 확인" })); // 삭제 승인
-        expect(failingBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 12 }), "conversation-delete"); // 백업 시도 확인
+        expect(failingBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 18 }), "conversation-delete"); // 백업 시도 확인
         expect(screen.getByLabelText("대화 개수")).toHaveTextContent(`${state.conversations.length}:${state.messages.length}`); // 대화 유지 확인
     }); // 검증 종료
 
@@ -192,8 +192,28 @@ describe("로컬 보관함", () => // 보관함 묶음
         expect(await screen.findByRole("status")).toHaveTextContent("가져왔습니다"); // 성공 안내 확인
         expect(screen.getByLabelText("대화 개수")).toHaveTextContent(`${state.conversations.length + 1}:`); // 대화 추가 확인
         await user.upload(input, new File(["{not-json"], "broken.json", { type: "application/json" })); // 오류 파일 선택
-        expect(await screen.findByRole("status")).toHaveTextContent("가져오지 못했습니다"); // 실패 안내 확인
+        expect(await screen.findByRole("status")).toHaveTextContent("대화 파일을 가져오지 못했습니다. JSON 파일이 아니거나 내용이 깨져 있어요."); // 실패 이유 안내(파일 형식)
         expect(screen.getByLabelText("대화 개수")).toHaveTextContent(`${state.conversations.length + 1}:`); // 기존 상태 유지 확인
+        await user.upload(input, new File([JSON.stringify({ hello: "world" })], "other.json", { type: "application/json" })); // 대화 파일이 아닌 JSON
+        expect(await screen.findByRole("status")).toHaveTextContent("대화 파일을 가져오지 못했습니다. 지원하지 않는 대화 파일입니다."); // 실패 이유 안내(검증에서 알려 준 이유)
+        const gone = { ...exported, conversation: { ...exported.conversation, characterId: "no-such-character" } }; // 이 브라우저에 없는 캐릭터의 대화
+        await user.upload(input, new File([JSON.stringify(gone)], "gone.json", { type: "application/json" })); // 연결되지 않는 파일
+        expect(await screen.findByRole("status")).toHaveTextContent(/^대화 파일을 가져오지 못했습니다\. .+/); // 이유가 붙음
+        expect((await screen.findByRole("status")).textContent ?? "").not.toMatch(/undefined|Cannot|TypeError/); // 개발자용 오류 글은 보이지 않음
+        expect(screen.getByLabelText("대화 개수")).toHaveTextContent(`${state.conversations.length + 1}:`); // 기존 상태 유지 확인
+    }); // 검증 종료
+
+    it("링크 공개 캐릭터는 비공개가 아니라 링크 공개로 표시하고, 대화 탭의 숫자는 보관한 대화를 빼고 센다", async () => // 표시 검증
+    { // 검증 시작
+        const state = createInitialState(); // 초기 상태 생성
+        const base = state.characters[0]; // 본뜰 캐릭터
+        state.characters.push({ ...base, id: "my-unlisted", name: "링크로만 여는 메이트", creatorId: state.profile.id, visibility: "unlisted", publicationStatus: "published" }); // 링크 공개 내 캐릭터
+        state.conversations[0] = { ...state.conversations[0], archivedAt: "2026-10-05T00:00:00.000Z" }; // 대화 하나 보관
+        renderWithApp(<LibraryScreen />, state); // 보관함 렌더
+        const card = screen.getByRole("link", { name: "링크로만 여는 메이트 상세 보기" }).closest("article") as HTMLElement; // 캐릭터 카드
+        expect(card).toHaveTextContent("링크 공개"); // 링크 공개 표시
+        expect(card).not.toHaveTextContent("비공개"); // 비공개 아님
+        expect(screen.getByRole("tab", { name: "진행 중인 대화" })).toHaveTextContent(String(state.conversations.length - 1)); // 보관한 대화는 세지 않음
     }); // 검증 종료
 
     it("같은 캐릭터의 여러 대화에 제목과 시작 설정과 최근 시각을 구분해 표시한다", async () => // 다중 대화 표시 검증

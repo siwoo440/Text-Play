@@ -1,7 +1,9 @@
 "use client"; // 클라이언트 컴포넌트
 
 import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from "react"; // 리액트 도구
+import { createPortal } from "react-dom"; // 문서 끝에 그리기(닫힌·움직이는 패널 안에서도 보이게)
 import styles from "@chatbot/features/chat/ChatDialog.module.css"; // 대화상자 스타일
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
 
 interface ChatDialogProps // 대화상자 속성
 { // 구조 시작
@@ -50,17 +52,22 @@ export function ChatDialog({ title, description, onClose, footer, children, wide
             first?.focus(); // 처음으로
         } // 조건 종료
     }; // 함수 종료
-    return ( // 대화상자 반환
+    if (typeof document === "undefined") // 서버 그리기
+    { // 조건 시작
+        return null; // 그리지 않음
+    } // 조건 종료
+    return createPortal( // 대화상자 반환(문서 끝)
         <div className={styles.backdrop} onMouseDown={(event) => { if (event.target === event.currentTarget) { onClose(); } }}> {/* 배경(누르면 닫기) */}
             <section ref={panelRef} className={styles.dialog} data-wide={wide ? "true" : undefined} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} onKeyDown={handleKey}> {/* 대화상자 */}
                 <header className={styles.header}> {/* 머리말 */}
                     <h2 id={titleId}>{title}</h2> {/* 제목 */}
-                    <button type="button" className={styles.close} data-dialog-close="" aria-label={`${title} 닫기`} onClick={onClose}>×</button> {/* 닫기 */}
+                    <button type="button" className={styles.close} data-dialog-close="" aria-label={t("{0} 닫기", [title])} onClick={onClose}>×</button> {/* 닫기 */}
                 </header> {/* 머리말 종료 */}
                 {description === undefined ? null : <p className={styles.description}>{description}</p>} {/* 설명 */}
                 <div className={styles.body}>{children}</div> {/* 내용 */}
                 {footer === undefined ? null : <footer className={styles.footer}>{footer}</footer>} {/* 아래 버튼 */}
             </section> {/* 대화상자 종료 */}
-        </div> // 배경 종료
+        </div>, // 배경 종료
+        document.body, // 문서 끝
     ); // 반환 종료
 } // 함수 종료

@@ -5,7 +5,7 @@ import Image from "@/desktop/next-compat/image"; // 최적화 이미지
 import Link from "@/desktop/next-compat/link"; // 내부 경로 링크
 import { usePathname, useRouter, useSearchParams } from "@/desktop/next-compat/navigation"; // 경로 도구
 import { Suspense, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react"; // 리액트 도구
-import { autoOrganizeConversations, buildConversationListItems, CONVERSATION_PIN_LIMIT, conversationFilterOptions, conversationSortOptions, filterConversationItems, formatConversationStatus, formatConversationTime, groupConversationItems, matchesConversationQuery, type ConversationListItem } from "@chatbot/features/conversation/conversation-list-model"; // 대화 목록 계산
+import { autoOrganizeConversations, buildConversationListItems, CONVERSATION_PIN_LIMIT, conversationFilterOptions, conversationSortOptions, filterConversationItems, formatConversationStatus, formatConversationTime, groupConversationItems, findConversationMatch, type ConversationListItem } from "@chatbot/features/conversation/conversation-list-model"; // 대화 목록 계산
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 저장소
 import type { ConversationSort } from "@chatbot/features/core/types"; // 정렬 타입
 
@@ -17,6 +17,7 @@ function createFolderId(): string // 새 폴더 식별자
 } // 함수 종료
 import { createSessionHref, summarizeStoryContent } from "@chatbot/features/story/story-model"; // 스토리 주소·미리보기
 import { getGenreKey } from "@chatbot/lib/theme/genre-theme"; // 장르 색 조회
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
 
 interface ConversationPanelProps // 패널 속성
 { // 구조 시작
@@ -150,7 +151,8 @@ function ConversationPanelView({ open, onNavigate, activeConversationId }: Conve
     }, [menuFor]); // 메뉴 의존
     const items = buildConversationListItems(state, now); // 진행 중인 대화
     const filter = state.settings.conversationFilter; // 대화 종류 탭
-    const visibleItems = filterConversationItems(items, filter).filter((item) => matchesConversationQuery(item, query)); // 종류·검색 결과
+    const matches = new Map(items.map((item) => [item.conversation.id, findConversationMatch(item, query, state.messages)])); // 대화방별 검색 결과(대화 전체 내용 포함)
+    const visibleItems = filterConversationItems(items, filter).filter((item) => matches.get(item.conversation.id) !== null); // 종류·검색 결과
     const groups = groupConversationItems(visibleItems, state.settings.conversationSort, state.pinnedConversationIds, now, state.conversationFolders, query.length === 0 && filter === "all"); // 화면 묶음(고정 → 폴더 → 날짜)
     const filterCounts = { all: items.length, character: items.filter((item) => item.conversation.mode === "character").length, story: items.filter((item) => item.conversation.mode === "story").length }; // 탭별 개수
     const archivedCount = state.conversations.filter((conversation) => conversation.archivedAt !== null).length; // 보관 대화 수
@@ -173,7 +175,7 @@ function ConversationPanelView({ open, onNavigate, activeConversationId }: Conve
         if (folderForm.mode === "rename") // 이름 변경
         { // 조건 시작
             dispatch({ type: "rename-folder", folderId: folderForm.folderId, name }); // 이름 반영
-            setNotice({ message: `폴더 이름을 ‘${name.slice(0, 30)}’(으)로 바꿨습니다.`, undoConversationId: null }); // 안내
+            setNotice({ message: t("폴더 이름을 ‘{0}’(으)로 바꿨습니다.", [name.slice(0, 30)]), undoConversationId: null }); // 안내
         } // 조건 종료
         else // 새 폴더
         { // 분기 시작
@@ -183,14 +185,14 @@ function ConversationPanelView({ open, onNavigate, activeConversationId }: Conve
             { // 조건 시작
                 dispatch({ type: "move-conversation-to-folder", conversationId: folderForm.moveConversationId, folderId }); // 대화 이동
             } // 조건 종료
-            setNotice({ message: `‘${name.slice(0, 30)}’ 폴더를 만들었습니다.`, undoConversationId: null }); // 안내
+            setNotice({ message: t("‘{0}’ 폴더를 만들었습니다.", [name.slice(0, 30)]), undoConversationId: null }); // 안내
         } // 분기 종료
         setFolderForm(null); // 입력 닫기
     }; // 함수 종료
     const deleteFolder = (folderId: string, name: string) => // 폴더 지우기(대화는 목록으로)
     { // 함수 시작
         dispatch({ type: "delete-folder", folderId }); // 삭제
-        setNotice({ message: `‘${name}’ 폴더를 지웠습니다. 안의 대화는 목록으로 돌아갔어요.`, undoConversationId: null }); // 안내
+        setNotice({ message: t("‘{0}’ 폴더를 지웠습니다. 안의 대화는 목록으로 돌아갔어요.", [name]), undoConversationId: null }); // 안내
         noticeFocus.current = "close"; // 안내에 초점
     }; // 함수 종료
     const toggleFolder = (folderId: string) => setCollapsed((current) => // 폴더 접고 펴기
@@ -211,7 +213,7 @@ function ConversationPanelView({ open, onNavigate, activeConversationId }: Conve
         closeMenu(item.conversation.id); // 메뉴 닫기
         dispatch({ type: "move-conversation-to-folder", conversationId: item.conversation.id, folderId }); // 이동
         const folderName = state.conversationFolders.find((folder) => folder.id === folderId)?.name; // 폴더 이름
-        setNotice({ message: folderName === undefined ? `‘${item.conversation.title}’ 대화를 폴더에서 뺐습니다.` : `‘${item.conversation.title}’ 대화를 ‘${folderName}’ 폴더로 옮겼습니다.`, undoConversationId: null }); // 안내
+        setNotice({ message: folderName === undefined ? t("‘{0}’ 대화를 폴더에서 뺐습니다.", [item.conversation.title]) : t("‘{0}’ 대화를 ‘{1}’ 폴더로 옮겼습니다.", [item.conversation.title, folderName]), undoConversationId: null }); // 안내
     }; // 함수 종료
     const setFilterAll = () => // 전체 탭으로
     { // 함수 시작
@@ -227,12 +229,12 @@ function ConversationPanelView({ open, onNavigate, activeConversationId }: Conve
         const moved = next.conversations.filter((conversation, index) => conversation.folderId !== state.conversations[index]?.folderId).length; // 옮겨질 대화 수
         if (moved === 0) // 정리할 대화 없음
         { // 조건 시작
-            setNotice({ message: "같은 작품 대화가 두 개 이상이면 작품 이름 폴더로 묶어요. 지금은 정리할 대화가 없습니다.", undoConversationId: null }); // 안내
+            setNotice({ message: t("같은 작품 대화가 두 개 이상이면 작품 이름 폴더로 묶어요. 지금은 정리할 대화가 없습니다."), undoConversationId: null }); // 안내
             return; // 중단
         } // 조건 종료
         dispatch({ type: "auto-organize-conversations", now: nowIso }); // 정리 실행
         setFilterAll(); // 폴더가 보이도록 전체 탭
-        setNotice({ message: `대화 ${moved}개를 작품별 폴더로 정리했습니다.`, undoConversationId: null }); // 안내
+        setNotice({ message: t("대화 {0}개를 작품별 폴더로 정리했습니다.", [moved]), undoConversationId: null }); // 안내
     }; // 함수 종료
     const closeMenu = (conversationId: string) => // 메뉴 닫고 초점 복귀
     { // 함수 시작
@@ -245,7 +247,7 @@ function ConversationPanelView({ open, onNavigate, activeConversationId }: Conve
         closeMenu(item.conversation.id); // 메뉴 닫기
         if (!item.pinned && pinnedCount >= CONVERSATION_PIN_LIMIT) // 한도 판정
         { // 조건 시작
-            setNotice({ message: `대화방은 ${CONVERSATION_PIN_LIMIT}개까지 고정할 수 있습니다.`, undoConversationId: null }); // 한도 안내
+            setNotice({ message: t("대화방은 {0}개까지 고정할 수 있습니다.", [CONVERSATION_PIN_LIMIT]), undoConversationId: null }); // 한도 안내
             return; // 고정 중단
         } // 조건 종료
         dispatch({ type: "toggle-conversation-pin", conversationId: item.conversation.id }); // 고정 전환
@@ -277,7 +279,7 @@ function ConversationPanelView({ open, onNavigate, activeConversationId }: Conve
     { // 함수 시작
         setMenuFor(null); // 메뉴 닫기
         dispatch({ type: "archive-conversation", conversationId: item.conversation.id, archivedAt: new Date().toISOString() }); // 보관 실행
-        setNotice({ message: `‘${item.conversation.title}’ 대화를 보관했습니다.`, undoConversationId: item.conversation.id }); // 되돌리기 안내
+        setNotice({ message: t("‘{0}’ 대화를 보관했습니다.", [item.conversation.title]), undoConversationId: item.conversation.id }); // 되돌리기 안내
         noticeFocus.current = "undo"; // 사라진 카드 대신 되돌리기에 초점
     }; // 함수 종료
     const undoArchive = (conversationId: string) => // 보관 되돌리기
@@ -305,7 +307,7 @@ function ConversationPanelView({ open, onNavigate, activeConversationId }: Conve
             router.push((item.story === null ? `/characters/${encodeURIComponent(item.character.id)}` : `/stories/${encodeURIComponent(item.story.id)}`) as Route); // 캐릭터·스토리 상세로 이동
         } // 조건 종료
         dispatch({ type: "delete-conversation", conversationId: item.conversation.id }); // 대화 삭제
-        setNotice({ message: `‘${item.conversation.title}’ 대화를 삭제했습니다.`, undoConversationId: null }); // 삭제 안내
+        setNotice({ message: t("‘{0}’ 대화를 삭제했습니다.", [item.conversation.title]), undoConversationId: null }); // 삭제 안내
         noticeFocus.current = "close"; // 사라진 카드 대신 안내에 초점
     }; // 함수 종료
     const handleSearchKey = (event: KeyboardEvent<HTMLInputElement>) => // 검색 키 처리
@@ -360,66 +362,66 @@ function ConversationPanelView({ open, onNavigate, activeConversationId }: Conve
     }; // 함수 종료
     const cardOrder = new Map(groups.flatMap((group) => group.items).map((item, index) => [item.conversation.id, index])); // 카드 번호(대비 교차용)
     return ( // 패널 반환
-        <aside id="conversation-panel" className="conversation-panel" role="complementary" aria-label="진행 중인 대화방" aria-hidden={!open}> {/* 대화 패널 */}
+        <aside id="conversation-panel" className="conversation-panel" role="complementary" aria-label={t("진행 중인 대화방")} aria-hidden={!open}> {/* 대화 패널 */}
             <div className="conversation-panel-heading"> {/* 제목 영역 */}
                 <div className="conversation-panel-title"> {/* 제목 묶음 */}
                     <span>MY CHATS</span> {/* 제목 표제 */}
-                    <div><h2>대화방</h2><span className="conversation-panel-count">{items.length}</span></div> {/* 제목과 개수 */}
+                    <div><h2>{t("대화방")}</h2><span className="conversation-panel-count">{items.length}</span></div> {/* 제목과 개수 */}
                 </div> {/* 제목 묶음 종료 */}
                 {items.length === 0 ? null : ( // 정렬 표시 판정
-                    <select className="conversation-sort" aria-label="대화방 정렬" value={state.settings.conversationSort} onChange={(event) => dispatch({ type: "update-settings", settings: { conversationSort: event.target.value as ConversationSort } })}> {/* 정렬 선택 */}
-                        {conversationSortOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)} {/* 정렬 선택지 */}
+                    <select className="conversation-sort" aria-label={t("대화방 정렬")} value={state.settings.conversationSort} onChange={(event) => dispatch({ type: "update-settings", settings: { conversationSort: event.target.value as ConversationSort } })}> {/* 정렬 선택 */}
+                        {conversationSortOptions.map((option) => <option key={option.id} value={option.id}>{t(option.label)}</option>)} {/* 정렬 선택지 */}
                     </select> // 정렬 종료
                 )} {/* 정렬 판정 종료 */}
             </div> {/* 제목 영역 종료 */}
-            <Link href={"/characters/new" as Route} className="conversation-create" onClick={onNavigate}>＋ 새 캐릭터 만들기</Link> {/* 제작 링크 */}
+            <Link href={"/characters/new" as Route} className="conversation-create" onClick={onNavigate}>{t("＋ 새 캐릭터 만들기")}</Link> {/* 제작 링크 */}
             {items.length === 0 ? null : ( // 검색 표시 판정
                 <div className="conversation-search" role="search"> {/* 검색 영역 */}
                     <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" strokeWidth="2" /><path d="m16 16 4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg> {/* 검색 아이콘 */}
-                    <input type="search" aria-label="대화방 검색" placeholder="대화방·캐릭터·메시지 검색" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={handleSearchKey} /> {/* 검색 입력 */}
+                    <input type="search" aria-label={t("대화방 검색")} placeholder={t("대화방·캐릭터·메시지 검색")} value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={handleSearchKey} /> {/* 검색 입력 */}
                 </div> // 검색 영역 종료
             )} {/* 검색 판정 종료 */}
             {items.length === 0 ? null : ( // 탭·폴더 도구 판정
                 <div className="conversation-tools"> {/* 탭·폴더 도구 */}
-                    <div className="conversation-filter" role="group" aria-label="대화 종류"> {/* 종류 탭 */}
-                        {conversationFilterOptions.map((option) => <button key={option.id} type="button" aria-pressed={filter === option.id} onClick={() => dispatch({ type: "update-settings", settings: { conversationFilter: option.id } })}>{option.label}<small>{filterCounts[option.id]}</small></button>)} {/* 탭 */}
+                    <div className="conversation-filter" role="group" aria-label={t("대화 종류")}> {/* 종류 탭 */}
+                        {conversationFilterOptions.map((option) => <button key={option.id} type="button" aria-pressed={filter === option.id} onClick={() => dispatch({ type: "update-settings", settings: { conversationFilter: option.id } })}>{t(option.label)}<small>{filterCounts[option.id]}</small></button>)} {/* 탭 */}
                     </div> {/* 종류 탭 종료 */}
                     <div className="conversation-folder-tools"> {/* 폴더 도구 */}
-                        <button type="button" onClick={() => openFolderForm({ mode: "create", moveConversationId: null })}>＋ 폴더</button> {/* 폴더 만들기 */}
-                        <button type="button" title="같은 작품 대화 두 개 이상을 작품 이름 폴더로 묶어요" onClick={autoOrganize}>자동 정리</button> {/* 자동 정리 */}
+                        <button type="button" onClick={() => openFolderForm({ mode: "create", moveConversationId: null })}>{t("＋ 폴더")}</button> {/* 폴더 만들기 */}
+                        <button type="button" title={t("같은 작품 대화 두 개 이상을 작품 이름 폴더로 묶어요")} onClick={autoOrganize}>{t("자동 정리")}</button> {/* 자동 정리 */}
                     </div> {/* 폴더 도구 종료 */}
                 </div> // 도구 종료
             )} {/* 도구 판정 종료 */}
             {folderForm === null ? null : ( // 폴더 입력 판정
                 <form className="conversation-folder-form" onSubmit={saveFolder}> {/* 폴더 입력 */}
-                    <input ref={folderInputRef} aria-label="폴더 이름" placeholder="폴더 이름" value={folderDraft} maxLength={30} required onChange={(event) => setFolderDraft(event.target.value)} onKeyDown={handleFolderKey} /> {/* 이름 입력 */}
-                    <div><button type="submit">{folderForm.mode === "create" ? "만들기" : "저장"}</button><button type="button" onClick={() => setFolderForm(null)}>취소</button></div> {/* 폴더 동작 */}
+                    <input ref={folderInputRef} aria-label={t("폴더 이름")} placeholder={t("폴더 이름")} value={folderDraft} maxLength={30} required onChange={(event) => setFolderDraft(event.target.value)} onKeyDown={handleFolderKey} /> {/* 이름 입력 */}
+                    <div><button type="submit">{folderForm.mode === "create" ? t("만들기") : t("저장")}</button><button type="button" onClick={() => setFolderForm(null)}>{t("취소")}</button></div> {/* 폴더 동작 */}
                 </form> // 폴더 입력 종료
             )} {/* 폴더 입력 판정 종료 */}
             {notice === null ? null : ( // 안내 표시 판정
                 <div className="conversation-notice" role="status"> {/* 패널 안내 */}
-                    <p>{notice.message}</p> {/* 안내 문구 */}
-                    {notice.undoConversationId === null ? null : <button ref={undoButtonRef} type="button" onClick={() => undoArchive(notice.undoConversationId as string)}>되돌리기</button>} {/* 되돌리기 */}
-                    <button ref={closeNoticeRef} type="button" className="conversation-notice-close" aria-label="안내 닫기" onClick={() => setNotice(null)}>×</button> {/* 안내 닫기 */}
+                    <p>{t(notice.message)}</p> {/* 안내 문구 */}
+                    {notice.undoConversationId === null ? null : <button ref={undoButtonRef} type="button" onClick={() => undoArchive(notice.undoConversationId as string)}>{t("되돌리기")}</button>} {/* 되돌리기 */}
+                    <button ref={closeNoticeRef} type="button" className="conversation-notice-close" aria-label={t("안내 닫기")} onClick={() => setNotice(null)}>×</button> {/* 안내 닫기 */}
                 </div> // 안내 종료
             )} {/* 안내 판정 종료 */}
             {items.length === 0 ? ( // 빈 목록 판정
                 <div className="conversation-empty"> {/* 빈 안내 */}
-                    <strong>진행 중인 대화가 없습니다.</strong> {/* 빈 제목 */}
-                    <p>마음에 드는 캐릭터를 골라 첫 대화를 시작해 보세요.</p> {/* 빈 설명 */}
-                    <Link href={"/explore" as Route} onClick={onNavigate}>캐릭터 탐색하기</Link> {/* 탐색 링크 */}
+                    <strong>{t("진행 중인 대화가 없습니다.")}</strong> {/* 빈 제목 */}
+                    <p>{t("마음에 드는 캐릭터를 골라 첫 대화를 시작해 보세요.")}</p> {/* 빈 설명 */}
+                    <Link href={"/explore" as Route} onClick={onNavigate}>{t("캐릭터 탐색하기")}</Link> {/* 탐색 링크 */}
                 </div> // 빈 안내 종료
-            ) : visibleItems.length === 0 ? <p className="conversation-empty-search">{query.length > 0 ? `‘${query}’에 맞는 대화방이 없습니다.` : `${conversationFilterOptions.find((option) => option.id === filter)?.label ?? ""} 대화가 아직 없습니다.`}</p> : null} {/* 결과 없음 */}
+            ) : visibleItems.length === 0 ? <p className="conversation-empty-search">{query.length > 0 ? t("‘{0}’에 맞는 대화방이 없습니다.", [query]) : t("{0} 대화가 아직 없습니다.", [conversationFilterOptions.find((option) => option.id === filter)?.label ?? ""])}</p> : null} {/* 결과 없음 */}
             {groups.map((group) => ( // 묶음 순회
                 <section key={group.id} className="conversation-group" aria-labelledby={`conversation-group-${group.id}`} data-folder={group.folderId === undefined ? undefined : "true"}> {/* 대화 묶음 */}
-                    {group.folderId === undefined ? <h3 id={`conversation-group-${group.id}`} className="conversation-group-title" data-group={group.id}>{group.id === "pinned" ? <PinIcon /> : null}{group.label}</h3> : ( // 일반·폴더 제목
+                    {group.folderId === undefined ? <h3 id={`conversation-group-${group.id}`} className="conversation-group-title" data-group={group.id}>{group.id === "pinned" ? <PinIcon /> : null}{t(group.label)}</h3> : ( // 일반·폴더 제목
                         <div className="conversation-folder-head"> {/* 폴더 제목 줄 */}
-                            <h3 id={`conversation-group-${group.id}`} className="conversation-group-title" data-group="folder"><button type="button" aria-expanded={!collapsed.has(group.folderId)} onClick={() => toggleFolder(group.folderId as string)}><svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6l2 2h8.4A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z" fill="currentColor" /></svg>{group.label}<small><span className="sr-only">, 대화 </span>{group.items.length}<span className="sr-only">개</span></small></button></h3> {/* 폴더 제목(접기) */}
-                            <button type="button" aria-label={`${group.label} 폴더 이름 변경`} onClick={() => openFolderForm({ mode: "rename", folderId: group.folderId as string })}>이름</button> {/* 이름 변경 */}
-                            <button type="button" aria-label={`${group.label} 폴더 삭제`} onClick={() => deleteFolder(group.folderId as string, group.label)}>삭제</button> {/* 폴더 삭제 */}
+                            <h3 id={`conversation-group-${group.id}`} className="conversation-group-title" data-group="folder"><button type="button" aria-expanded={!collapsed.has(group.folderId)} onClick={() => toggleFolder(group.folderId as string)}><svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6l2 2h8.4A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z" fill="currentColor" /></svg>{t(group.label)}<small><span className="sr-only">{t(", 대화")} </span>{group.items.length}<span className="sr-only">{t("개")}</span></small></button></h3> {/* 폴더 제목(접기) */}
+                            <button type="button" aria-label={t("{0} 폴더 이름 변경", [group.label])} onClick={() => openFolderForm({ mode: "rename", folderId: group.folderId as string })}>{t("이름")}</button> {/* 이름 변경 */}
+                            <button type="button" aria-label={t("{0} 폴더 삭제", [group.label])} onClick={() => deleteFolder(group.folderId as string, group.label)}>{t("삭제")}</button> {/* 폴더 삭제 */}
                         </div> // 폴더 제목 줄 종료
                     )} {/* 제목 판정 종료 */}
-                    {group.folderId !== undefined && collapsed.has(group.folderId) ? null : group.items.length === 0 ? <p className="conversation-folder-empty">빈 폴더예요. 대화 더보기의 ‘폴더로 이동’으로 넣어 보세요.</p> : ( // 접힘·빈 폴더 판정
+                    {group.folderId !== undefined && collapsed.has(group.folderId) ? null : group.items.length === 0 ? <p className="conversation-folder-empty">{t("빈 폴더예요. 대화 더보기의 ‘폴더로 이동’으로 넣어 보세요.")}</p> : ( // 접힘·빈 폴더 판정
                     <ul className="conversation-list"> {/* 대화 목록 */}
                         {group.items.map((item) => // 대화 순회
                         { // 순회 시작
@@ -427,43 +429,45 @@ function ConversationPanelView({ open, onNavigate, activeConversationId }: Conve
                             const statusLine = item.locked ? "" : formatConversationStatus(item.latestStatus); // 마지막 상태창 줄
                             const tone = (cardOrder.get(conversation.id) ?? 0) % 2 === 0 ? "primary" : "secondary"; // 대비 교차
                             const active = conversation.id === activeConversationId; // 현재 대화 여부
+                            const found = matches.get(conversation.id)?.message ?? null; // 대화 내용에서 찾은 말
+                            const foundText = found === null ? "" : (story === null ? found.content : summarizeStoryContent(found.content, conversation.storyCast)).replace(/\s+/g, " ").trim().slice(0, 80); // 찾은 말 짧게
                             return ( // 카드 반환
                                 <li key={conversation.id} className="conversation-card" data-mode={conversation.mode} data-tone={tone} data-genre={getGenreKey(story?.tags ?? character.tags)} data-locked={item.locked ? "true" : undefined} data-active={active ? "true" : undefined}> {/* 대화 카드 */}
                                     <div className="conversation-card-main"> {/* 링크·더보기 영역 */}
-                                        <Link href={createSessionHref(conversation) as Route} className="conversation-card-link" aria-current={active ? "page" : undefined} onClick={onNavigate}> {/* 대화 링크 */}
+                                        <Link href={(found === null ? createSessionHref(conversation) : `${createSessionHref(conversation)}&message=${encodeURIComponent(found.id)}`) as Route} className="conversation-card-link" aria-current={active ? "page" : undefined} onClick={onNavigate}> {/* 대화 링크 */}
                                             <span className="conversation-card-avatar"><Image src={story?.coverImage ?? character.coverImage} alt="" width={88} height={88} /></span> {/* 캐릭터 얼굴·스토리 표지 */}
                                             <span className="conversation-card-body"> {/* 카드 본문 */}
-                                                <span className="conversation-card-heading">{item.pinned ? <PinIcon label="고정한 대화" /> : null}{story === null ? null : <span className="conversation-card-mode">스토리</span>}<strong className="conversation-card-title">{conversation.title}</strong></span> {/* 대화 제목 */}
-                                                <span className="conversation-card-message">{item.locked ? "19+ 잠금 · 19+를 켜면 대화를 볼 수 있습니다." : story === null ? summary.lastMessage : summarizeStoryContent(summary.lastMessage, conversation.storyCast)}</span> {/* 최근 메시지 */}
-                                                {statusLine.length === 0 ? null : <span className="conversation-card-status"><svg aria-hidden="true" viewBox="0 0 24 24" width="11" height="11"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" fill="currentColor" /></svg><span className="sr-only">마지막 상태 </span>{statusLine}</span>} {/* 마지막 상태창 장소·시간 */}
+                                                <span className="conversation-card-heading">{item.pinned ? <PinIcon label={t("고정한 대화")} /> : null}{story === null ? null : <span className="conversation-card-mode">{t("스토리")}</span>}<strong className="conversation-card-title">{t(conversation.title)}</strong></span> {/* 대화 제목 */}
+                                                <span className="conversation-card-message" data-found={found === null ? undefined : "true"}>{found !== null ? <><b>{t("찾은 말")}</b> {foundText}</> : item.locked ? t("19+ 잠금 · 19+를 켜면 대화를 볼 수 있습니다.") : story === null ? summary.lastMessage : summarizeStoryContent(summary.lastMessage, conversation.storyCast)}</span> {/* 최근 메시지(검색 중에는 찾은 말) */}
+                                                {statusLine.length === 0 ? null : <span className="conversation-card-status"><svg aria-hidden="true" viewBox="0 0 24 24" width="11" height="11"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" fill="currentColor" /></svg><span className="sr-only">{t("마지막 상태")} </span>{statusLine}</span>} {/* 마지막 상태창 장소·시간 */}
                                                 <span className="conversation-card-relation"> {/* 관계 정보 */}
-                                                    <span className="conversation-card-stage">{story === null ? summary.relationshipStage : `등장인물 ${conversation.storyCast.length}명`} · {summary.emotion}</span> {/* 관계 단계·인물 수·감정 */}
-                                                    {story === null ? <span className="conversation-card-meter" role="meter" aria-label="관계 수치" aria-valuemin={0} aria-valuemax={100} aria-valuenow={summary.relationshipLevel}><span style={{ width: `${summary.relationshipLevel}%` }} /></span> : null} {/* 관계 막대(캐릭터 대화만) */}
+                                                    <span className="conversation-card-stage">{story === null ? `${t(summary.relationshipStage)} · ${t(summary.emotion)}` : item.relationLead === null ? t("등장인물 {0}명 · {1}", [conversation.storyCast.length, summary.emotion]) : t("등장인물 {0}명 · {1} {2}", [conversation.storyCast.length, item.relationLead, summary.relationshipStage])}</span> {/* 관계 단계·감정(스토리는 인물 수와 대표 인물의 관계) */}
+                                                    {story === null || item.relationLead !== null ? <span className="conversation-card-meter" role="meter" aria-label={story === null ? t("관계 수치") : t("{0} 관계 수치", [item.relationLead])} aria-valuemin={0} aria-valuemax={100} aria-valuenow={summary.relationshipLevel}><span style={{ width: `${summary.relationshipLevel}%` }} /></span> : null} {/* 관계 막대(스토리는 대표 인물) */}
                                                 </span> {/* 관계 정보 종료 */}
                                             </span> {/* 카드 본문 종료 */}
                                             <span className="conversation-card-meta"> {/* 오른쪽 정보 */}
                                                 <time dateTime={item.lastActivityAt}>{formatConversationTime(item.lastActivityAt, now)}</time> {/* 마지막 활동 */}
-                                                <span className="conversation-card-turns">{item.turnCount}턴</span> {/* 진행한 턴 */}
+                                                <span className="conversation-card-turns">{item.turnCount}{t("턴")}</span> {/* 진행한 턴 */}
                                             </span> {/* 오른쪽 정보 종료 */}
                                         </Link> {/* 링크 종료 */}
-                                        <button type="button" className="conversation-card-more" aria-label={`${conversation.title} 더보기`} aria-haspopup="menu" aria-expanded={menuFor === conversation.id} ref={(element) => { if (element === null) { moreButtons.current.delete(conversation.id); } else { moreButtons.current.set(conversation.id, element); } }} onClick={() => { setMoveFor(null); setMenuFor(menuFor === conversation.id ? null : conversation.id); }}><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><circle cx="5" cy="12" r="1.8" fill="currentColor" /><circle cx="12" cy="12" r="1.8" fill="currentColor" /><circle cx="19" cy="12" r="1.8" fill="currentColor" /></svg></button> {/* 더보기 버튼 */}
+                                        <button type="button" className="conversation-card-more" aria-label={t("{0} 더보기", [conversation.title])} aria-haspopup="menu" aria-expanded={menuFor === conversation.id} ref={(element) => { if (element === null) { moreButtons.current.delete(conversation.id); } else { moreButtons.current.set(conversation.id, element); } }} onClick={() => { setMoveFor(null); setMenuFor(menuFor === conversation.id ? null : conversation.id); }}><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><circle cx="5" cy="12" r="1.8" fill="currentColor" /><circle cx="12" cy="12" r="1.8" fill="currentColor" /><circle cx="19" cy="12" r="1.8" fill="currentColor" /></svg></button> {/* 더보기 버튼 */}
                                         {menuFor !== conversation.id ? null : ( // 메뉴 표시 판정
-                                            <div ref={menuRef} className="conversation-menu" role="menu" aria-label={moveFor === conversation.id ? `${conversation.title} 옮길 폴더` : `${conversation.title} 메뉴`} onKeyDown={(event) => handleMenuKey(event, conversation.id)}> {/* 대화 메뉴 */}
+                                            <div ref={menuRef} className="conversation-menu" role="menu" aria-label={moveFor === conversation.id ? t("{0} 옮길 폴더", [conversation.title]) : t("{0} 메뉴", [conversation.title])} onKeyDown={(event) => handleMenuKey(event, conversation.id)}> {/* 대화 메뉴 */}
                                                 {moveFor === conversation.id ? ( // 폴더 고르기 판정
                                                     <> {/* 폴더 고르기 */}
-                                                        <button type="button" role="menuitem" tabIndex={-1} className="conversation-menu-back" onClick={() => setMoveFor(null)}>‹ 뒤로</button> {/* 뒤로 */}
+                                                        <button type="button" role="menuitem" tabIndex={-1} className="conversation-menu-back" onClick={() => setMoveFor(null)}>{t("‹ 뒤로")}</button> {/* 뒤로 */}
                                                         {state.conversationFolders.filter((folder) => folder.id !== conversation.folderId).map((folder) => <button key={folder.id} type="button" role="menuitem" tabIndex={-1} onClick={() => moveToFolder(item, folder.id)}>{folder.name}</button>)} {/* 폴더 목록 */}
-                                                        {conversation.folderId === null ? null : <button type="button" role="menuitem" tabIndex={-1} onClick={() => moveToFolder(item, null)}>폴더에서 빼기</button>} {/* 폴더에서 빼기 */}
-                                                        <button type="button" role="menuitem" tabIndex={-1} onClick={() => openFolderForm({ mode: "create", moveConversationId: conversation.id })}>＋ 새 폴더에 넣기</button> {/* 새 폴더 */}
+                                                        {conversation.folderId === null ? null : <button type="button" role="menuitem" tabIndex={-1} onClick={() => moveToFolder(item, null)}>{t("폴더에서 빼기")}</button>} {/* 폴더에서 빼기 */}
+                                                        <button type="button" role="menuitem" tabIndex={-1} onClick={() => openFolderForm({ mode: "create", moveConversationId: conversation.id })}>{t("＋ 새 폴더에 넣기")}</button> {/* 새 폴더 */}
                                                     </> // 폴더 고르기 종료
                                                 ) : ( // 기본 메뉴
                                                 <> {/* 기본 메뉴 */}
-                                                <button type="button" role="menuitem" tabIndex={-1} onClick={() => togglePin(item)}>{item.pinned ? "고정 해제" : "고정"}</button> {/* 고정 전환 */}
-                                                <button type="button" role="menuitem" tabIndex={-1} onClick={() => startRename(item)}>이름 변경</button> {/* 이름 변경 */}
-                                                <button type="button" role="menuitem" tabIndex={-1} aria-haspopup="menu" onClick={() => setMoveFor(conversation.id)}>폴더로 이동</button> {/* 폴더로 이동 */}
-                                                <Link href={(story === null ? `/characters/${character.id}` : `/stories/${story.id}`) as Route} role="menuitem" tabIndex={-1} onClick={() => { setMenuFor(null); onNavigate(); }}>{story === null ? "캐릭터 보기" : "스토리 보기"}</Link> {/* 캐릭터·스토리 상세 */}
-                                                <button type="button" role="menuitem" tabIndex={-1} onClick={() => archive(item)}>보관</button> {/* 보관 */}
-                                                <button type="button" role="menuitem" tabIndex={-1} className="conversation-menu-danger" onClick={() => startDelete(item)}>삭제</button> {/* 삭제 */}
+                                                <button type="button" role="menuitem" tabIndex={-1} onClick={() => togglePin(item)}>{item.pinned ? t("고정 해제") : t("고정")}</button> {/* 고정 전환 */}
+                                                <button type="button" role="menuitem" tabIndex={-1} onClick={() => startRename(item)}>{t("이름 변경")}</button> {/* 이름 변경 */}
+                                                <button type="button" role="menuitem" tabIndex={-1} aria-haspopup="menu" onClick={() => setMoveFor(conversation.id)}>{t("폴더로 이동")}</button> {/* 폴더로 이동 */}
+                                                <Link href={(story === null ? `/characters/${character.id}` : `/stories/${story.id}`) as Route} role="menuitem" tabIndex={-1} onClick={() => { setMenuFor(null); onNavigate(); }}>{story === null ? t("캐릭터 보기") : t("스토리 보기")}</Link> {/* 캐릭터·스토리 상세 */}
+                                                <button type="button" role="menuitem" tabIndex={-1} onClick={() => archive(item)}>{t("보관")}</button> {/* 보관 */}
+                                                <button type="button" role="menuitem" tabIndex={-1} className="conversation-menu-danger" onClick={() => startDelete(item)}>{t("삭제")}</button> {/* 삭제 */}
                                                 </> // 기본 메뉴 종료
                                                 )} {/* 메뉴 판정 종료 */}
                                             </div> // 메뉴 종료
@@ -471,14 +475,14 @@ function ConversationPanelView({ open, onNavigate, activeConversationId }: Conve
                                     </div> {/* 링크·더보기 영역 종료 */}
                                     {renameFor !== conversation.id ? null : ( // 이름 변경 판정
                                         <form className="conversation-rename" onSubmit={(event) => saveRename(event, conversation.id)}> {/* 이름 변경 */}
-                                            <input ref={renameInputRef} aria-label="대화방 이름" value={renameDraft} maxLength={60} required onChange={(event) => setRenameDraft(event.target.value)} onKeyDown={(event) => handleRenameKey(event, conversation.id)} /> {/* 이름 입력 */}
-                                            <div><button type="submit">저장</button><button type="button" onClick={() => finishRename(conversation.id)}>취소</button></div> {/* 이름 동작 */}
+                                            <input ref={renameInputRef} aria-label={t("대화방 이름")} value={renameDraft} maxLength={60} required onChange={(event) => setRenameDraft(event.target.value)} onKeyDown={(event) => handleRenameKey(event, conversation.id)} /> {/* 이름 입력 */}
+                                            <div><button type="submit">{t("저장")}</button><button type="button" onClick={() => finishRename(conversation.id)}>{t("취소")}</button></div> {/* 이름 동작 */}
                                         </form> // 이름 변경 종료
                                     )} {/* 이름 변경 판정 종료 */}
                                     {deleteFor !== conversation.id ? null : ( // 삭제 확인 판정
-                                        <div className="conversation-delete" role="group" aria-label="대화 삭제 확인"> {/* 삭제 확인 */}
-                                            <p>‘{conversation.title}’ 대화와 메시지 {state.messages.filter((message) => message.conversationId === conversation.id).length}개를 삭제할까요? 삭제 전에 백업을 만듭니다.</p> {/* 삭제 안내 */}
-                                            <div><button ref={cancelDeleteRef} type="button" onClick={() => { setDeleteFor(null); pendingFocus.current = conversation.id; }}>취소</button><button type="button" className="conversation-delete-confirm" onClick={() => confirmDelete(item)}>대화 삭제 확인</button></div> {/* 삭제 동작 */}
+                                        <div className="conversation-delete" role="group" aria-label={t("대화 삭제 확인")}> {/* 삭제 확인 */}
+                                            <p>‘{t(conversation.title)}{t("’ 대화와 메시지")} {state.messages.filter((message) => message.conversationId === conversation.id).length}{t("개를 삭제할까요? 삭제 전에 백업을 만듭니다.")}</p> {/* 삭제 안내 */}
+                                            <div><button ref={cancelDeleteRef} type="button" onClick={() => { setDeleteFor(null); pendingFocus.current = conversation.id; }}>{t("취소")}</button><button type="button" className="conversation-delete-confirm" onClick={() => confirmDelete(item)}>{t("대화 삭제 확인")}</button></div> {/* 삭제 동작 */}
                                         </div> // 삭제 확인 종료
                                     )} {/* 삭제 확인 판정 종료 */}
                                 </li> // 카드 종료
@@ -488,7 +492,7 @@ function ConversationPanelView({ open, onNavigate, activeConversationId }: Conve
                     )} {/* 접힘 판정 종료 */}
                 </section> // 묶음 종료
             ))} {/* 묶음 순회 종료 */}
-            <Link href={"/library" as Route} className="conversation-library" onClick={onNavigate}><span>보관함</span>{archivedCount === 0 ? null : <small>보관한 대화 {archivedCount}</small>}</Link> {/* 보관함 링크 */}
+            <Link href={"/library" as Route} className="conversation-library" onClick={onNavigate}><span>{t("보관함")}</span>{archivedCount === 0 ? null : <small>{t("보관한 대화")} {archivedCount}</small>}</Link> {/* 보관함 링크 */}
         </aside> // 패널 종료
     ); // 반환 종료
 } // 함수 종료

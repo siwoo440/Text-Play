@@ -339,6 +339,7 @@ describe("채팅 흐름", () => // 채팅 묶음
     it("실패와 재시도 비용을 각각 차감하고 스토리는 성공 시 한 번 반영한다", async () => // 재시도 비용 검증
     { // 검증 시작
         const state = createInitialState(); // 초기 상태 생성
+        state.characters[0].statusTemplate.stats[0] = { ...state.characters[0].statusTemplate.stats[0], mode: "rule", perTurn: 1, rules: [] }; // 관계 스탯(호감도)을 매 턴 +1 규칙으로
         const initialBalance = state.wallet.balance; // 초기 잔액 저장
         const conversation = state.conversations.find((item) => item.id === "conversation-rian"); // 초기 대화 조회
         const initialRelationship = state.conversationVersions.find((item) => item.id === conversation?.currentVersionId)?.relationshipLevel ?? 0; // 초기 관계 저장
@@ -420,6 +421,7 @@ describe("채팅 흐름", () => // 채팅 묶음
     it("과거 메시지 수정은 시작 상태부터 분기 시점 관계와 장면을 복원한다", async () => // 분기 시점 검증
     { // 검증 시작
         const state = createInitialState(); // 초기 상태 생성
+        state.characters[0].statusTemplate.stats[0] = { ...state.characters[0].statusTemplate.stats[0], mode: "rule", perTurn: 1, rules: [] }; // 관계 스탯(호감도)을 매 턴 +1 규칙으로
         const conversation = state.conversations[0]; // 기준 대화 조회
         const version = state.conversationVersions.find((item) => item.id === conversation.currentVersionId)!; // 기준 버전 조회
         version.relationshipLevel = 90; // 이후 관계 상태 적용
@@ -538,7 +540,7 @@ describe("채팅 흐름", () => // 채팅 묶음
         } // 조건 종료
         await user.click(within(targetItem).getByRole("button", { name: "삭제" })); // 메시지 삭제 실행
         expect(confirm).toHaveBeenCalled(); // 삭제 확인 호출
-        expect(localStorage.getItem("mateverse:v1:backup")).not.toBeNull(); // 선행 백업 확인
+        expect(localStorage.getItem("mateverse:v1:backup-history")).toContain("message-delete"); // 선행 백업 확인(백업 이력)
         expect(screen.queryByText("오늘 기록할 이야기가 많아.")).toBeNull(); // 현재 버전 삭제 확인
         confirm.mockRestore(); // 확인 함수 복원
     }); // 검증 종료
@@ -655,7 +657,7 @@ describe("채팅 흐름", () => // 채팅 묶음
         expect(screen.getByText("오늘 기록할 이야기가 많아.")).toBeVisible(); // 메시지 유지 확인
     }); // 검증 종료
 
-    it("내 이미지를 고르면 토큰 없이 현재 장면을 바꾸고 작품 등급보다 높은 이미지는 보이지 않는다", async () => // 내 이미지 장면 검증
+    it("내 이미지를 고르면 토큰 없이 마지막 응답 아래 장면 그림으로 붙고 작품 등급보다 높은 이미지는 보이지 않는다", async () => // 내 이미지 장면 검증
     { // 검증 시작
         const user = userEvent.setup(); // 사용자 도구 생성
         const state = createInitialState(); // 초기 상태
@@ -666,7 +668,8 @@ describe("채팅 흐름", () => // 채팅 묶음
         const panel = screen.getByRole("region", { name: "내 이미지로 장면 바꾸기" }); // 내 이미지 패널
         expect(within(panel).queryByRole("button", { name: "비 오는 교실의 긴장 장면으로" })).toBeNull(); // 15세 이미지 제외
         await user.click(within(panel).getByRole("button", { name: "새벽 도서관 창가 장면으로" })); // 장면 바꾸기
-        expect(screen.getByRole("img", { name: "새벽 도서관의 리안의 현재 장면" })).toHaveAttribute("src", plain.src); // 장면 반영
+        expect(screen.getByRole("img", { name: "이 장면의 상황 이미지" })).toHaveAttribute("src", plain.src); // 마지막 응답 아래 장면 그림
+        expect(within(panel).getByRole("button", { name: "새벽 도서관 창가 장면으로" })).toHaveAttribute("data-current", "true"); // 지금 장면 표시
         expect(screen.getByLabelText("리안 버전 상태")).toHaveTextContent(`:${state.wallet.balance}`); // 토큰 차감 없음
         expect(screen.getByText("내 이미지로 장면을 바꿨습니다.")).toBeVisible(); // 안내 확인
     }); // 검증 종료

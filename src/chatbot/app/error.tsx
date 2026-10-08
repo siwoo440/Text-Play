@@ -3,6 +3,7 @@
 import Link from "@/desktop/next-compat/link"; // 내부 경로 링크
 import { useEffect } from "react"; // 리액트 효과
 import { StatusScreen } from "@chatbot/components/feedback/StatusScreen"; // 공통 상태 화면
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
 
 interface ErrorPageProps // 오류 화면 속성
 { // 구조 시작
@@ -17,9 +18,9 @@ export default function ErrorPage({ error, retry }: ErrorPageProps) // 화면 �
         console.error(error); // 개발 도구 기록
     }, [error]); // 오류 변경 의존
     return ( // 화면 반환
-        <StatusScreen tone="error" label="ERROR" title="화면을 표시하지 못했습니다" description="일시적인 문제로 이 화면을 그리지 못했습니다. 브라우저에 저장된 캐릭터와 대화는 그대로 남아 있습니다."> {/* 오류 화면 */}
-            <button type="button" onClick={() => retry()}>다시 시도</button> {/* 재시도 버튼 */}
-            <Link href="/">메인으로 이동</Link> {/* 메인 링크 */}
+        <StatusScreen tone="error" label="ERROR" title={t("화면을 표시하지 못했습니다")} description={t("일시적인 문제로 이 화면을 그리지 못했습니다. 브라우저에 저장된 캐릭터와 대화는 그대로 남아 있습니다.")}> {/* 오류 화면 */}
+            <button type="button" onClick={() => retry()}>{t("다시 시도")}</button> {/* 재시도 버튼 */}
+            <Link href="/">{t("메인으로 이동")}</Link> {/* 메인 링크 */}
         </StatusScreen> // 오류 화면 종료
     ); // 반환 종료
 } // 함수 종료

@@ -1,0 +1,55 @@
+.search /* 목록 검색창 */
+{ /* 검색창 시작 */
+    display: flex; /* 가로 배치 */
+    gap: 10px; /* 요소 간격 */
+    align-items: center; /* 세로 가운데 */
+    width: min(100%, 520px); /* 검색창 너비 */
+    min-height: 48px; /* 누르는 높이 */
+    padding: 0 16px; /* 안쪽 여백 */
+    border: 1px solid var(--mv-line); /* 경계 */
+    border-radius: 999px; /* 알약 모양 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 배경 */
+    color: var(--mv-muted); /* 아이콘 색 */
+} /* 검색창 종료 */
+
+.search:focus-within /* 입력 중 */
+{ /* 초점 시작 */
+    border-color: var(--mv-focus); /* 초점 경계 */
+    outline: 3px solid var(--mv-focus); /* 초점 외곽선 */
+    outline-offset: 2px; /* 외곽선 간격 */
+} /* 초점 종료 */
+
+.search svg /* 검색 아이콘 */
+{ /* 아이콘 시작 */
+    flex: 0 0 auto; /* 크기 고정 */
+} /* 아이콘 종료 */
+
+.search input /* 검색 입력 */
+{ /* 입력 시작 */
+    flex: 1 1 auto; /* 남는 너비 */
+    min-width: 0; /* 줄어들 수 있음 */
+    min-height: 44px; /* 입력 높이 */
+    padding: 0; /* 여백 제거 */
+    border: 0; /* 경계 제거 */
+    outline: 0; /* 외곽선은 바깥 틀에 표시 */
+    background: transparent; /* 배경 없음 */
+    color: var(--mv-ink); /* 글자 */
+    font: inherit; /* 글꼴 상속 */
+    font-size: 1rem; /* 크기(휴대폰에서 확대되지 않게) */
+    font-weight: 600; /* 굵기 */
+} /* 입력 종료 */
+
+.search input::placeholder /* 안내 글 */
+{ /* 안내 시작 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-weight: 500; /* 굵기 */
+} /* 안내 종료 */
+
+.count /* 찾은 수 */
+{ /* 수 시작 */
+    flex: 0 0 auto; /* 크기 고정 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-size: .84rem; /* 크기 */
+    font-weight: 750; /* 굵기 */
+    white-space: nowrap; /* 한 줄 */
+} /* 수 종료 */

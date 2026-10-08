@@ -19,6 +19,7 @@ describe("캐릭터 편집기", () => // 편집기 묶음
     { // 검증 시작
         const user = userEvent.setup(); // 사용자 생성
         renderWithApp(<><CharacterEditor /><CharacterStateProbe /></>); // 편집기 렌더
+        await user.click(screen.getByRole("button", { name: "전체 펼쳐 보기" })); // 모든 단계를 한 화면에서 입력(기본은 단계별 보기)
         await user.type(screen.getByLabelText("캐릭터 이름"), "밤 기차의 루미"); // 이름 입력
         await user.type(screen.getByLabelText("한 줄 소개"), "자정 열차의 안내자"); // 소개 입력
         await user.type(screen.getByLabelText("성격"), "차분하고 다정함"); // 성격 입력
@@ -34,6 +35,7 @@ describe("캐릭터 편집기", () => // 편집기 묶음
     { // 검증 시작
         const user = userEvent.setup(); // 사용자 생성
         renderWithApp(<CharacterEditor />); // 편집기 렌더
+        await user.click(screen.getByRole("button", { name: "전체 펼쳐 보기" })); // 모든 단계를 한 화면에서 입력(기본은 단계별 보기)
         await user.click(screen.getByRole("button", { name: "공개 저장" })); // 저장 시도
         expect(screen.getAllByRole("alert")).toHaveLength(4); // 필수 오류 확인
         expect(screen.getByText("캐릭터 이름을 입력해 주세요.")).toBeVisible(); // 이름 오류 확인
@@ -65,6 +67,7 @@ describe("캐릭터 편집기", () => // 편집기 묶음
         const user = userEvent.setup(); // 사용자 생성
         const confirm = vi.spyOn(window, "confirm").mockReturnValue(false); // 이동 취소 설정
         renderWithApp(<CharacterEditor />); // 편집기 렌더
+        await user.click(screen.getByRole("button", { name: "전체 펼쳐 보기" })); // 모든 단계를 한 화면에서 입력(기본은 단계별 보기)
         await user.type(screen.getByLabelText("캐릭터 이름"), "작성 중"); // 변경 입력
         await user.click(screen.getByRole("link", { name: "보관함 보기" })); // 내부 이동 시도
         expect(confirm).toHaveBeenCalledWith("저장하지 않은 변경 사항이 있습니다. 페이지를 이동하시겠습니까?"); // 확인 호출 검증

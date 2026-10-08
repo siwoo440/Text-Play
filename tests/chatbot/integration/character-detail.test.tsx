@@ -21,6 +21,13 @@ function CharacterConversationProbe({ characterId }: { characterId: string }) //
     return <output aria-label={`${characterId} 대화 식별자`}>{conversations.map((conversation) => conversation.id).join("|")}</output>; // 식별자 출력
 } // 함수 종료
 
+function PersonaProbe({ characterId }: { characterId: string }) // 새 대화의 대화 프로필 확인 요소
+{ // 함수 시작
+    const { state } = useAppStore(); // 앱 상태 조회
+    const latest = state.conversations.filter((conversation) => conversation.characterId === characterId).at(-1); // 가장 나중에 만든 대화
+    return <output aria-label={`${characterId} 새 대화 프로필`}>{latest?.settings.personaId ?? "기본"}</output>; // 대화 프로필 출력
+} // 함수 종료
+
 function CharacterReportProbe({ characterId }: { characterId: string }) // 신고 확인 요소
 { // 함수 시작
     const { state } = useAppStore(); // 앱 상태 조회
@@ -231,7 +238,8 @@ describe("캐릭터 상세 대화 시작", () => // 상세 묶음
     { // 검증 시작
         const user = userEvent.setup(); // 사용자 도구 생성
         renderWithApp(<><CharacterDetail characterId="harin" /><CharacterReportProbe characterId="harin" /></>); // 상세 화면 렌더
-        const more = screen.getByRole("button", { name: "퇴근길 카페의 하린 더보기" }); // 더보기 버튼 조회
+        expect(screen.queryByRole("button", { name: "퇴근길 카페의 하린 더보기" })).toBeNull(); // 메뉴 없는 더보기 버튼은 없음
+        const more = screen.getByRole("button", { name: "퇴근길 카페의 하린 신고" }); // 신고 버튼 조회(하는 일 그대로의 이름)
         await user.click(more); // 신고 창 열기
         const dialog = screen.getByRole("dialog", { name: "캐릭터 신고" }); // 신고 창 조회
         expect(dialog).toBeVisible(); // 신고 창 표시 확인
@@ -240,5 +248,34 @@ describe("캐릭터 상세 대화 시작", () => // 상세 묶음
         expect(screen.queryByRole("dialog", { name: "캐릭터 신고" })).toBeNull(); // 신고 창 닫힘 확인
         expect(screen.getByLabelText("harin 신고 개수")).toHaveTextContent("1"); // 신고 저장 확인
         expect(more).toHaveFocus(); // 초점 복귀 확인
+    }); // 검증 종료
+
+    it("내가 만든 캐릭터는 팔로우와 신고 대신 수정으로 가는 링크를 보여 준다", () => // 내 캐릭터 검증
+    { // 검증 시작
+        const state = createInitialState(); // 초기 상태
+        const harin = state.characters.find((character) => character.id === "harin"); // 본뜰 캐릭터
+        if (harin === undefined) // 캐릭터 없음
+        { // 조건 시작
+            throw new Error("하린을 찾지 못했습니다."); // 준비 오류
+        } // 조건 종료
+        state.characters.push({ ...harin, id: "my-mate", name: "내가 만든 메이트", creatorId: state.profile.id, creatorName: state.profile.nickname }); // 내 캐릭터
+        renderWithApp(<CharacterDetail characterId="my-mate" />, state); // 상세 화면 렌더
+        expect(screen.getByRole("link", { name: "내가 만든 메이트 수정" })).toHaveAttribute("href", "/characters/my-mate/edit"); // 수정 링크
+        expect(screen.queryByRole("button", { name: /제작자 팔로우/ })).toBeNull(); // 나를 팔로우하는 버튼 없음
+        expect(screen.queryByRole("button", { name: "내가 만든 메이트 신고" })).toBeNull(); // 내 캐릭터 신고 없음
+        expect(screen.getByText("내가 만든 캐릭터")).toBeVisible(); // 내 캐릭터 표시
+    }); // 검증 종료
+
+    it("대화 프로필 목록에서 고른 프로필로 새 대화를 시작한다", async () => // 대화 프로필 적용 검증
+    { // 검증 시작
+        const user = userEvent.setup(); // 사용자 도구 생성
+        const state = createInitialState(); // 초기 상태
+        state.personas.push({ id: "persona-traveler", name: "여행자 소하", description: "먼 길을 걷는 사람", createdAt: "2026-10-05T00:00:00.000Z", updatedAt: "2026-10-05T00:00:00.000Z" }); // 추가 대화 프로필
+        renderWithApp(<><CharacterDetail characterId="harin" /><PersonaProbe characterId="harin" /></>, state); // 상세 화면 렌더
+        const select = screen.getByRole("combobox", { name: /대화 프로필/ }); // 대화 프로필 선택
+        expect(within(select).getAllByRole("option")).toHaveLength(state.personas.length); // 만들어 둔 프로필이 모두 나옴
+        await user.selectOptions(select, "persona-traveler"); // 프로필 고르기
+        await user.click(screen.getByRole("button", { name: "히어로 새 대화 시작" })); // 새 대화 시작
+        expect(screen.getByLabelText("harin 새 대화 프로필")).toHaveTextContent("persona-traveler"); // 고른 프로필로 시작
     }); // 검증 종료
 }); // 묶음 종료

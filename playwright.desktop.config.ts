@@ -10,6 +10,7 @@ export default defineConfig( // 데스크톱 종단 설정
     { // 공통 설정 시작
         baseURL: "http://127.0.0.1:1420", // 데스크톱 미리보기 주소
         trace: "on-first-retry", // 재시도 추적
+        locale: "ko-KR", // 화면 언어를 한국어로 고정(ChatBot의 자동 언어는 브라우저 언어를 따름)
     }, // 공통 설정 종료
     projects: // 브라우저 목록
     [ // 목록 시작

@@ -6,8 +6,9 @@ import { useEffect, useRef, useState } from "react"; // 리액트 도구
 import { formatConversationTime } from "@chatbot/features/conversation/conversation-list-model"; // 상대 시간
 import { useAppStore } from "@chatbot/features/core/AppProvider"; // 앱 저장소
 import type { NotificationKind } from "@chatbot/features/core/types"; // 알림 종류
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
 
-const kindLabels: Record<NotificationKind, string> = { notice: "공지", image: "이미지", memory: "메모리" }; // 종류 이름
+const kindLabels: Record<NotificationKind, string> = { notice: "공지", image: "이미지", memory: "메모리", reward: "보상", event: "이벤트" }; // 종류 이름
 
 function BellIcon() // 종 아이콘
 { // 함수 시작
@@ -78,26 +79,26 @@ export function NotificationBell({ onNavigate }: { onNavigate(): void }) // 헤�
     const now = new Date(); // 현재 시각
     return ( // 알림함 반환
         <div className="app-notifications"> {/* 알림함 */}
-            <button ref={buttonRef} type="button" aria-label={unread === 0 ? "알림함" : `알림함, 안 읽은 알림 ${unread}개`} aria-expanded={open} aria-controls="notification-popover" onClick={() => (open ? close(false) : setOpen(true))}> {/* 종 버튼 */}
+            <button ref={buttonRef} type="button" aria-label={unread === 0 ? t("알림함") : t("알림함, 안 읽은 알림 {0}개", [unread])} aria-expanded={open} aria-controls="notification-popover" onClick={() => (open ? close(false) : setOpen(true))}> {/* 종 버튼 */}
                 <BellIcon /> {/* 종 */}
                 {unread === 0 ? null : <span className="app-notifications-badge" aria-hidden="true">{unread > 9 ? "9+" : unread}</span>} {/* 안 읽은 수 */}
             </button> {/* 종 버튼 종료 */}
             {!open ? null : ( // 목록 판정
-                <div ref={popoverRef} id="notification-popover" className="app-notifications-popover" role="dialog" aria-label="알림함"> {/* 알림 목록 */}
+                <div ref={popoverRef} id="notification-popover" className="app-notifications-popover" role="dialog" aria-label={t("알림함")}> {/* 알림 목록 */}
                     <div className="app-notifications-head"> {/* 머리 */}
-                        <strong>알림</strong> {/* 제목 */}
-                        <button type="button" disabled={unread === 0} onClick={() => dispatch({ type: "mark-notifications-read" })}>모두 읽음</button> {/* 모두 읽음 */}
-                        <button type="button" disabled={notifications.length === 0} onClick={() => dispatch({ type: "clear-notifications" })}>비우기</button> {/* 비우기 */}
+                        <strong>{t("알림")}</strong> {/* 제목 */}
+                        <button type="button" disabled={unread === 0} onClick={() => dispatch({ type: "mark-notifications-read" })}>{t("모두 읽음")}</button> {/* 모두 읽음 */}
+                        <button type="button" disabled={notifications.length === 0} onClick={() => dispatch({ type: "clear-notifications" })}>{t("비우기")}</button> {/* 비우기 */}
                     </div> {/* 머리 종료 */}
-                    {notifications.length === 0 ? <p className="app-notifications-empty">새 알림이 없어요. 이미지 완성·요약 메모리 추가 같은 소식이 여기에 모여요.</p> : ( // 빈 판정
+                    {notifications.length === 0 ? <p className="app-notifications-empty">{t("새 알림이 없어요. 이미지 완성·요약 메모리 추가 같은 소식이 여기에 모여요.")}</p> : ( // 빈 판정
                         <ul> {/* 알림 목록 */}
                             {notifications.map((item) => // 알림 순회
                             { // 순회 시작
                                 const body = ( // 알림 내용
                                     <> {/* 내용 묶음 */}
-                                        <span className="app-notifications-kind" data-kind={item.kind}>{kindLabels[item.kind]}</span> {/* 종류 */}
-                                        <strong>{item.title}</strong> {/* 제목 */}
-                                        {item.body.length === 0 ? null : <small>{item.body}</small>} {/* 내용 */}
+                                        <span className="app-notifications-kind" data-kind={item.kind}>{t(kindLabels[item.kind])}</span> {/* 종류 */}
+                                        <strong>{t(item.title)}</strong> {/* 제목 */}
+                                        {item.body.length === 0 ? null : <small>{t(item.body)}</small>} {/* 내용 */}
                                         <time dateTime={item.createdAt}>{formatConversationTime(item.createdAt, now)}</time> {/* 시각 */}
                                     </> // 내용 묶음 종료
                                 ); // 내용 종료

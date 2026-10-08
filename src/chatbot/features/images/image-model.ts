@@ -1,5 +1,6 @@
 import type { ContentRating, GeneratedImage, ImageAspect, ImageExposure, ImageStyle } from "@chatbot/features/core/types"; // 도메인 타입
 import { getRegionPolicy, type ServiceRegion } from "@chatbot/lib/config/service-region"; // 지역 정책
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
 
 export const IMAGE_PROMPT_LIMIT = 400; // 장면 설명 최대 글자 수
 export const GENERATED_IMAGE_SOURCE_LIMIT = 60_000; // 생성 이미지 데이터 최대 길이
@@ -114,15 +115,15 @@ export function checkImageRequest(input: Pick<ImageRequest, "prompt" | "contentR
     const prompt = input.prompt.trim(); // 설명 정리
     if (prompt.length === 0 || prompt.length > IMAGE_PROMPT_LIMIT) // 길이 판정
     { // 조건 시작
-        return { ok: false, category: "invalid", message: `장면 설명을 1~${IMAGE_PROMPT_LIMIT}자로 적어 주세요.` }; // 길이 오류
+        return { ok: false, category: "invalid", message: t("장면 설명을 1~{0}자로 적어 주세요.", [IMAGE_PROMPT_LIMIT]) }; // 길이 오류
     } // 조건 종료
     if (realPersonPattern.test(prompt)) // 실존 인물 판정(모든 등급)
     { // 조건 시작
-        return { ok: false, category: "real-person", message: "실존 인물을 그리거나 합성하는 이미지는 만들 수 없어요." }; // 실존 인물 거부
+        return { ok: false, category: "real-person", message: t("실존 인물을 그리거나 합성하는 이미지는 만들 수 없어요.") }; // 실존 인물 거부
     } // 조건 종료
     if (input.contentRating === "mature" && minorPattern.test(prompt)) // 미성년자 19세 판정
     { // 조건 시작
-        return { ok: false, category: "minor", message: "미성년자로 보이는 인물은 19세 이미지로 만들 수 없어요." }; // 미성년자 거부
+        return { ok: false, category: "minor", message: t("미성년자로 보이는 인물은 19세 이미지로 만들 수 없어요.") }; // 미성년자 거부
     } // 조건 종료
     return { ok: true }; // 통과
 } // 함수 종료

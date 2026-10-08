@@ -37,7 +37,7 @@ export const characterDetailProfiles: Record<string, CharacterDetailProfile> = /
         startPresets: // 시작 프리셋
         [ // 프리셋 목록 시작
             { id: "after-work-comfort", name: "퇴근 후의 위로", description: "비에 젖은 퇴근길, 하린이 오늘의 표정을 먼저 알아본다.", relationshipStage: "아는 사이", relationshipLevel: 18, emotion: "걱정", scene: "비 오는 저녁 골목 카페의 창가", greeting: "오늘은 평소보다 조금 지쳐 보여. 따뜻한 걸로 준비해도 될까?", prologueId: "harin-after-work" }, // 기본 프리셋
-            { id: "closing-time", name: "마감 뒤의 한 잔", description: "문을 닫은 카페에서 둘만 남아 하루를 정리한다.", relationshipStage: "가까운 사이", relationshipLevel: 46, emotion: "편안함", scene: "불을 낮춘 카페의 마지막 테이블", greeting: "오늘 마지막 잔은 네 거야. 천천히 마시면서 이야기해 줘.", prologueId: "harin-closing-time" }, // 친밀 프리셋
+            { id: "closing-time", name: "마감 뒤의 한 잔", description: "문을 닫은 카페에서 둘만 남아 하루를 정리한다.", relationshipStage: "가까운 사이", relationshipLevel: 52, emotion: "편안함", scene: "불을 낮춘 카페의 마지막 테이블", greeting: "오늘 마지막 잔은 네 거야. 천천히 마시면서 이야기해 줘.", prologueId: "harin-closing-time" }, // 친밀 프리셋
         ], // 프리셋 목록 종료
         prologues: // 프롤로그 목록
         [ // 프롤로그 목록 시작
@@ -83,7 +83,7 @@ export const characterDetailProfiles: Record<string, CharacterDetailProfile> = /
         startPresets: // 시작 프리셋
         [ // 프리셋 목록 시작
             { id: "new-route", name: "새 항로", description: "감정에 반응하는 별자리 지도에서 미지의 신호를 찾는다.", relationshipStage: "첫 만남", relationshipLevel: 0, emotion: "흥분", scene: "성간선의 파노라마 관측실", greeting: "새 항로가 열렸어. 이번 좌표는 네가 골라 보겠어?", prologueId: "kyle-new-route" }, // 기본 프리셋
-            { id: "lost-constellation", name: "사라진 별자리", description: "카일의 고향과 닮은 신호를 따라 위험 구역으로 향한다.", relationshipStage: "가까운 사이", relationshipLevel: 41, emotion: "결심", scene: "경보등이 켜진 항법 갑판", greeting: "이 신호를 놓치면 다시는 못 찾아. 그래도 네 선택을 먼저 들을게.", prologueId: "kyle-lost-constellation" }, // 심화 프리셋
+            { id: "lost-constellation", name: "사라진 별자리", description: "카일의 고향과 닮은 신호를 따라 위험 구역으로 향한다.", relationshipStage: "가까운 사이", relationshipLevel: 50, emotion: "결심", scene: "경보등이 켜진 항법 갑판", greeting: "이 신호를 놓치면 다시는 못 찾아. 그래도 네 선택을 먼저 들을게.", prologueId: "kyle-lost-constellation" }, // 심화 프리셋
         ], // 프리셋 목록 종료
         prologues: // 프롤로그 목록
         [ // 프롤로그 목록 시작
@@ -129,7 +129,7 @@ export const characterDetailProfiles: Record<string, CharacterDetailProfile> = /
         startPresets: // 시작 프리셋
         [ // 프리셋 목록 시작
             { id: "glowing-herb", name: "빛나는 약초", description: "처음 보는 약초가 방문자의 감정에 맞춰 빛을 바꾼다.", relationshipStage: "첫 만남", relationshipLevel: 0, emotion: "반가움", scene: "이슬 맺힌 숲속 유리 온실", greeting: "이 아이가 네가 오자마자 빛났어. 가까이에서 함께 볼래?", prologueId: "miel-glowing-herb" }, // 기본 프리셋
-            { id: "night-bloom", name: "밤에 피는 꽃", description: "한 계절에 한 번 피는 꽃을 기다리며 온실을 지킨다.", relationshipStage: "가까운 사이", relationshipLevel: 38, emotion: "설렘", scene: "달빛이 흐르는 야간 온실", greeting: "조금만 더 기다리면 피어날 거야. 이번에는 네가 먼저 봤으면 해.", prologueId: "miel-night-bloom" }, // 친밀 프리셋
+            { id: "night-bloom", name: "밤에 피는 꽃", description: "한 계절에 한 번 피는 꽃을 기다리며 온실을 지킨다.", relationshipStage: "가까운 사이", relationshipLevel: 50, emotion: "설렘", scene: "달빛이 흐르는 야간 온실", greeting: "조금만 더 기다리면 피어날 거야. 이번에는 네가 먼저 봤으면 해.", prologueId: "miel-night-bloom" }, // 친밀 프리셋
         ], // 프리셋 목록 종료
         prologues: // 프롤로그 목록
         [ // 프롤로그 목록 시작
@@ -152,7 +152,7 @@ export const characterDetailProfiles: Record<string, CharacterDetailProfile> = /
         startPresets: // 시작 프리셋
         [ // 프리셋 목록 시작
             { id: "unfinished-song", name: "미완성 노래", description: "노을이 지는 옥상에서 마지막 한 줄의 가사를 함께 찾는다.", relationshipStage: "첫 만남", relationshipLevel: 0, emotion: "기대", scene: "해 질 무렵 옥상 연습실", greeting: "마지막 한 줄이 계속 비어 있어. 네가 떠올린 말을 빌려줄래?", prologueId: "yuna-unfinished-song" }, // 기본 프리셋
-            { id: "encore-night", name: "앙코르 뒤의 밤", description: "작은 공연이 끝난 뒤 둘만 남아 새 멜로디를 기록한다.", relationshipStage: "가까운 사이", relationshipLevel: 44, emotion: "벅참", scene: "공연 조명이 남은 밤의 옥상", greeting: "아까 네가 웃던 순간에 멜로디가 생겼어. 잊기 전에 같이 적자.", prologueId: "yuna-encore-night" }, // 공연 프리셋
+            { id: "encore-night", name: "앙코르 뒤의 밤", description: "작은 공연이 끝난 뒤 둘만 남아 새 멜로디를 기록한다.", relationshipStage: "가까운 사이", relationshipLevel: 52, emotion: "벅참", scene: "공연 조명이 남은 밤의 옥상", greeting: "아까 네가 웃던 순간에 멜로디가 생겼어. 잊기 전에 같이 적자.", prologueId: "yuna-encore-night" }, // 공연 프리셋
         ], // 프리셋 목록 종료
         prologues: // 프롤로그 목록
         [ // 프롤로그 목록 시작

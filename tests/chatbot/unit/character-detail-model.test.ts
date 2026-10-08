@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"; // 테스트 도구
 import { createConversationFromPreset, getCharacterDetailProfile, getLatestActiveConversation, getRelatedCharacters } from "@chatbot/features/character/character-detail-model"; // 상세 선택 함수
 import { createInitialState } from "@chatbot/features/core/initial-state"; // 초기 상태 함수
+import { resolveRelationshipStage } from "@chatbot/lib/story/story-engine"; // 관계 단계 기준
 
 describe("캐릭터 상세 모델", () => // 상세 모델 묶음
 { // 묶음 시작
@@ -61,6 +62,43 @@ describe("캐릭터 상세 모델", () => // 상세 모델 묶음
         expect(getLatestActiveConversation([archived], "rian")).toBeNull(); // 빈 결과 확인
     }); // 검증 종료
 
+    it("기본 캐릭터의 시작 설정은 관계 수치와 관계 단계가 같은 기준을 따른다", () => // 시작 관계 기준 검증
+    { // 검증 시작
+        for (const character of createInitialState().characters) // 기본 캐릭터 순회
+        { // 순회 시작
+            for (const preset of getCharacterDetailProfile(character).startPresets) // 시작 설정 순회
+            { // 순회 시작
+                expect(`${character.id}/${preset.id}: ${resolveRelationshipStage(preset.relationshipLevel)}`).toBe(`${character.id}/${preset.id}: ${preset.relationshipStage}`); // 수치로 정한 단계와 적어 둔 단계가 같음
+            } // 순회 종료
+        } // 순회 종료
+    }); // 검증 종료
+
+    it("상세에서 고른 대화 프로필이 새 대화의 설정에 들어가고, 기본 프로필이면 비워 둔다", () => // 대화 프로필 검증
+    { // 검증 시작
+        const state = createInitialState(); // 초기 상태 생성
+        state.personas.push({ id: "persona-traveler", name: "여행자 소하", description: "먼 길을 걷는 사람", createdAt: "2026-10-05T00:00:00.000Z", updatedAt: "2026-10-05T00:00:00.000Z" }); // 추가 대화 프로필
+        const chosen = createConversationFromPreset(state, "harin", "closing-time", "2026-10-05T09:00:00.000Z", "persona-traveler"); // 고른 프로필로 시작
+        expect(chosen.conversation.settings.personaId).toBe("persona-traveler"); // 고른 프로필 적용
+        const basic = createConversationFromPreset(state, "harin", "closing-time", "2026-10-05T09:01:00.000Z", state.personas[0].id); // 기본 프로필로 시작
+        expect(basic.conversation.settings.personaId).toBeNull(); // 기본 프로필은 비워 둠(기본을 따름)
+        const missing = createConversationFromPreset(state, "harin", "closing-time", "2026-10-05T09:02:00.000Z", "persona-gone"); // 없는 프로필
+        expect(missing.conversation.settings.personaId).toBeNull(); // 없는 프로필은 기본으로
+    }); // 검증 종료
+
+    it("편집기에서 적은 업데이트 기록이 상세의 업데이트 정보 맨 앞에 최근 순으로 나온다", () => // 업데이트 기록 검증
+    { // 검증 시작
+        const harin = createInitialState().characters.find((character) => character.id === "harin"); // 하린
+        if (harin === undefined) // 캐릭터 없음
+        { // 조건 시작
+            throw new Error("하린을 찾지 못했습니다."); // 준비 오류
+        } // 조건 종료
+        const edited = { ...harin, updates: [{ id: "update-1", version: "V1.3", date: "2026-10-01", note: "첫 인사를 다듬었어요." }, { id: "update-2", version: "1.4", date: "2026-10-04", note: "비 오는 날 장면을 더했어요." }] }; // 제작자가 적은 기록
+        const notes = getCharacterDetailProfile(edited).releaseNotes; // 업데이트 정보
+        expect(notes.slice(0, 2)).toEqual([{ version: "1.4", date: "2026-10-04", title: "", changes: ["비 오는 날 장면을 더했어요."] }, { version: "1.3", date: "2026-10-01", title: "", changes: ["첫 인사를 다듬었어요."] }]); // 최근 순, 버전 앞의 V는 뺌
+        expect(notes[2]?.version).toBe("1.2.0"); // 기본 기록은 그 뒤에
+        expect(getCharacterDetailProfile(harin).releaseNotes).toHaveLength(1); // 적은 기록이 없으면 그대로
+    }); // 검증 종료
+
     it("선택한 시작 프리셋으로 독립 대화와 첫 메시지를 만든다", () => // 프리셋 생성 검증
     { // 검증 시작
         const state = createInitialState(); // 초기 상태 생성
@@ -72,7 +110,7 @@ describe("캐릭터 상세 모델", () => // 상세 모델 묶음
         expect(result.conversation.startSettings.presetId).toBe("closing-time"); // 프리셋 식별자 확인
         expect(result.conversation.currentVersionId).toBe(`${result.conversation.id}-version-1`); // 현재 버전 확인
         expect(result.version.relationshipStage).toBe("가까운 사이"); // 관계 단계 확인
-        expect(result.version.relationshipLevel).toBe(46); // 관계 수치 확인
+        expect(result.version.relationshipLevel).toBe(52); // 관계 수치 확인(가까운 사이 기준 50 이상)
         expect(result.version.currentScene).toBe("/images/characters/prologues/harin-prologue-v1.png"); // 표시 이미지 확인
         expect(result.conversation.startSettings.scene).toBe("/images/characters/prologues/harin-prologue-v1.png"); // 저장 이미지 확인
         expect(result.message.content).toBe("오늘 마지막 잔은 네 거야. 천천히 마시면서 이야기해 줘."); // 첫 대사 확인

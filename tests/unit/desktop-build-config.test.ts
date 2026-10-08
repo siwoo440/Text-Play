@@ -17,5 +17,6 @@ describe("데스크톱 빌드 설정", () => // 빌드 설정 묶음
         const configModule = await import("../../vite.desktop.config"); // 설정 모듈 조회
         const config = configModule.default as UserConfig; // 설정 객체 변환
         expect(config.define?.["process.env.NEXT_PUBLIC_SERVICE_REGION"]).toBe(JSON.stringify(process.env.NEXT_PUBLIC_SERVICE_REGION ?? "kr")); // 서비스 지역 값(없으면 한국)
+        expect(config.define?.["process.env"]).toBe("{}"); // 그 밖의 환경 값은 빈 값(새 값이 생겨도 화면이 깨지지 않고, 로그인은 연습용으로 동작)
     }); // 테스트 종료
 }); // 묶음 종료

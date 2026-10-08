@@ -1,0 +1,149 @@
+.bar /* 대화 다시 보기 */
+{ /* 막대 시작 */
+    position: sticky; /* 대화를 내려도 보이게 */
+    top: 72px; /* 위쪽 머리말 아래 */
+    z-index: 3; /* 메시지 위 */
+    display: grid; /* 세로 배치 */
+    gap: 8px; /* 간격 */
+    margin-top: 12px; /* 위 여백 */
+    padding: 10px 12px; /* 안쪽 여백 */
+    border: 1px solid color-mix(in srgb, var(--genre) 30%, var(--mv-line)); /* 테두리 */
+    border-radius: 14px; /* 모서리 */
+    background: var(--mv-surface); /* 배경 */
+    box-shadow: 0 10px 24px light-dark(rgb(31 26 46 / 10%), rgb(0 0 0 / 34%)); /* 그림자 */
+} /* 막대 종료 */
+
+.row /* 검색 줄 */
+{ /* 줄 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 좁으면 줄바꿈 */
+    align-items: center; /* 세로 중앙 */
+    gap: 6px; /* 간격 */
+} /* 줄 종료 */
+
+.search /* 검색어 묶음 */
+{ /* 묶음 시작 */
+    flex: 1 1 160px; /* 남는 너비 */
+    min-width: 0; /* 줄임 허용 */
+} /* 묶음 종료 */
+
+.search input /* 검색어 */
+{ /* 입력 시작 */
+    width: 100%; /* 전체 너비 */
+    min-height: 40px; /* 높이 */
+    padding: 0 12px; /* 여백 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 10px; /* 모서리 */
+    background: light-dark(#faf8fd, #120d19); /* 배경 */
+    color: var(--mv-ink); /* 글자 */
+    font: inherit; /* 글꼴 상속 */
+    font-size: .9rem; /* 크기 */
+} /* 입력 종료 */
+
+.count /* 찾은 수 */
+{ /* 수 시작 */
+    min-width: 3.2em; /* 자리 고정 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-size: .82rem; /* 크기 */
+    font-weight: 750; /* 굵기 */
+    font-variant-numeric: tabular-nums; /* 숫자 폭 고정 */
+    text-align: center; /* 가운데 */
+    white-space: nowrap; /* 한 줄 */
+} /* 수 종료 */
+
+.row button /* 다시 보기 버튼 */
+{ /* 버튼 시작 */
+    min-width: 40px; /* 누르기 쉬운 너비 */
+    min-height: 40px; /* 누르기 쉬운 높이 */
+    padding: 0 10px; /* 여백 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 10px; /* 모서리 */
+    background: var(--mv-surface); /* 배경 */
+    color: var(--mv-ink); /* 글자 */
+    font: inherit; /* 글꼴 상속 */
+    font-size: .88rem; /* 크기 */
+    font-weight: 800; /* 굵기 */
+    cursor: pointer; /* 커서 */
+} /* 버튼 종료 */
+
+.row button:disabled /* 쓸 수 없는 버튼 */
+{ /* 비활성 시작 */
+    color: var(--mv-muted); /* 흐린 글자 */
+    cursor: not-allowed; /* 커서 */
+    opacity: .55; /* 흐리게 */
+} /* 비활성 종료 */
+
+.row .bookmarkToggle[aria-expanded="true"] /* 열린 책갈피 */
+{ /* 열림 시작 */
+    border-color: color-mix(in srgb, var(--genre) 45%, var(--mv-line)); /* 장르 테두리 */
+    background: var(--genre-soft); /* 장르 배경 */
+    color: var(--genre-strong); /* 장르 글자 */
+} /* 열림 종료 */
+
+.search input:focus-visible, /* 검색어 초점 */
+.row button:focus-visible, /* 버튼 초점 */
+.bookmarks button:focus-visible /* 책갈피 초점 */
+{ /* 초점 시작 */
+    outline: 3px solid var(--mv-focus); /* 초점 외곽선 */
+    outline-offset: 2px; /* 간격 */
+} /* 초점 종료 */
+
+.bookmarks /* 책갈피 목록 영역 */
+{ /* 영역 시작 */
+    max-height: 190px; /* 높이 제한 */
+    overflow-y: auto; /* 세로 스크롤 */
+} /* 영역 종료 */
+
+.bookmarks p /* 빈 안내 */
+{ /* 안내 시작 */
+    margin: 0; /* 여백 제거 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-size: .86rem; /* 크기 */
+    line-height: 1.55; /* 줄 높이 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 안내 종료 */
+
+.bookmarks ul /* 책갈피 목록 */
+{ /* 목록 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 6px; /* 간격 */
+    margin: 0; /* 여백 제거 */
+    padding: 0; /* 여백 제거 */
+    list-style: none; /* 점 제거 */
+} /* 목록 종료 */
+
+.bookmarks button /* 책갈피 항목 */
+{ /* 항목 시작 */
+    width: 100%; /* 전체 너비 */
+    min-height: 40px; /* 높이 */
+    padding: 8px 12px; /* 여백 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 10px; /* 모서리 */
+    background: light-dark(#faf8fd, #120d19); /* 배경 */
+    color: var(--mv-ink); /* 글자 */
+    font: inherit; /* 글꼴 상속 */
+    font-size: .88rem; /* 크기 */
+    line-height: 1.5; /* 줄 높이 */
+    text-align: left; /* 왼쪽 정렬 */
+    overflow-wrap: anywhere; /* 긴 글 줄바꿈 */
+    cursor: pointer; /* 커서 */
+} /* 항목 종료 */
+
+.bookmarks button:hover /* 책갈피 올림 */
+{ /* 올림 시작 */
+    border-color: color-mix(in srgb, var(--genre) 45%, var(--mv-line)); /* 장르 테두리 */
+} /* 올림 종료 */
+
+@media (max-width: 520px) /* 좁은 화면 */
+{ /* 좁은 시작 */
+    .search /* 검색어 묶음 */
+    { /* 묶음 시작 */
+        flex-basis: 100%; /* 검색어는 한 줄을 다 쓰고 버튼은 아랫줄에 */
+    } /* 묶음 종료 */
+
+    .count /* 찾은 수 */
+    { /* 수 시작 */
+        margin-right: auto; /* 버튼을 오른쪽으로 */
+        text-align: left; /* 왼쪽 정렬 */
+    } /* 수 종료 */
+} /* 좁은 종료 */

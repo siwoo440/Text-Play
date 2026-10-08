@@ -115,17 +115,45 @@ export const rankingContentWarnings: Record<string, string[]> = Object.fromEntri
 const placeholderImages = ["rian", "harin", "sera", "kyle", "noah", "miel", "yuna"].map((id) => `/images/characters/${id}.webp`); // 임시 이미지 목록
 const personalities = ["차분하고 세심하며 상대의 선택을 존중한다.", "활기차고 솔직하며 위기에서도 유머를 잃지 않는다.", "신비롭고 관찰력이 좋으며 천천히 신뢰를 쌓는다.", "다정하고 현실적이며 작은 변화를 잘 알아챈다.", "대담하고 호기심이 많으며 새로운 모험을 즐긴다."]; // 성격 목록
 
+export const RANKING_LAB_CREATOR_ID = "creator-ranking-lab"; // 예전 제작자(랭킹 캐릭터 93개를 한 명이 갖고 있었음, 저장된 예전 데이터를 바꿀 때 씀)
+
+interface RankingCreator // 랭킹 캐릭터 제작자
+{ // 구조 시작
+    id: string; // 제작자 식별자
+    name: string; // 제작자 이름
+    themes: string[]; // 맡는 주제(콘셉트의 첫 태그)
+} // 구조 종료
+
+const rankingCreators: readonly RankingCreator[] = [ // 주제별 제작자(한 명에게 몰리지 않게 나눔)
+    { id: "creator-starlit", name: "별무리 공방", themes: ["판타지"] }, // 판타지
+    { id: "creator-alley", name: "골목길 필름", themes: ["현대", "예술", "여행"] }, // 현대 일상
+    { id: "creator-compass", name: "나침반 원정대", themes: ["모험", "시간", "연금술"] }, // 모험
+    { id: "creator-brass", name: "황동 톱니 공작소", themes: ["스팀펑크"] }, // 스팀펑크
+    { id: "creator-neon", name: "네온 시그널", themes: ["SF"] }, // SF(공상 과학)
+    { id: "creator-cozy", name: "포근한 오후", themes: ["힐링"] }, // 힐링
+    { id: "creator-ink", name: "먹빛 화실", themes: ["동양풍"] }, // 동양풍
+    { id: "creator-midnight", name: "자정 서고", themes: ["고딕", "미스터리"] }, // 고딕·미스터리
+]; // 목록 종료
+
+export const rankingCreatorIds: readonly string[] = rankingCreators.map((creator) => creator.id); // 랭킹 캐릭터 제작자 식별자
+
+function getRankingCreator(tags: readonly string[]): RankingCreator // 콘셉트의 첫 태그로 제작자 정하기(모르는 주제는 첫 제작자)
+{ // 함수 시작
+    return rankingCreators.find((creator) => creator.themes.includes(tags[0] ?? "")) ?? rankingCreators[0]; // 제작자 반환
+} // 함수 종료
+
 export const generatedRankingCharacters: Character[] = rankingCharacterConcepts.map((concept, index) => // 임시 캐릭터 변환
 { // 변환 시작
     const rank = index + 8; // 랭킹 번호
     const rankText = String(rank).padStart(3, "0"); // 랭킹 문자열
     const generatedImage = `/images/characters/rank-${rankText}.webp`; // 생성 이미지 경로
     const coverImage = rank <= 50 ? generatedImage : placeholderImages[index % placeholderImages.length]; // 현재 대표 이미지
+    const creator = getRankingCreator(concept.tags); // 주제에 맞는 제작자
     return withWorkDefaults( // 캐릭터 반환(기본 필드 채움)
     { // 캐릭터 시작
         id: `rank-${rankText}`, // 캐릭터 식별자
-        creatorId: "creator-ranking-lab", // 제작자 식별자
-        creatorName: "메이트버스 랭킹 연구소", // 제작자 이름
+        creatorId: creator.id, // 제작자 식별자
+        creatorName: creator.name, // 제작자 이름
         name: `${concept.setting}의 ${concept.name}`, // 캐릭터 이름
         summary: `${concept.signature}와 함께 새로운 이야기를 여는 ${concept.role}`, // 한 줄 소개
         description: `${concept.setting}에서 활동하는 ${concept.role}. ${concept.signature}에 얽힌 비밀을 사용자의 선택과 함께 풀어 간다.`, // 상세 설명

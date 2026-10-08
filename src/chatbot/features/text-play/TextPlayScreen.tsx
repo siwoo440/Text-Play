@@ -1,9 +1,12 @@
+"use client"; // 클라이언트 컴포넌트(화면 언어에 맞춰 글자를 바꾸려면 브라우저에서 그려야 함)
+
 import Image from "@/desktop/next-compat/image"; // 이미지 최적화
 import Link from "@/desktop/next-compat/link"; // 내부 경로 링크
 import type { ReactNode } from "react"; // 자식 요소 타입
 import { DownloadAction } from "@chatbot/features/text-play/DownloadAction"; // 다운로드 동작
 import { getDistributionLabel, textPlayRelease } from "@chatbot/features/text-play/release-config"; // 배포 정보 도구
 import styles from "@chatbot/features/text-play/TextPlayScreen.module.css"; // 화면 스타일
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
 
 type IconName = "play" | "branch" | "save" | "memory" | "model" | "update"; // 아이콘 종류
 
@@ -89,29 +92,29 @@ function LauncherMockup() // 런처 화면 예시
             <div className={styles.titleBar}> {/* 제목 표시줄 */}
                 <span className={styles.windowDots}><i /><i /><i /></span> {/* 창 버튼 */}
                 <strong>MATE Text-Play</strong> {/* 프로그램 이름 */}
-                <span>황혼 우체국 · 1장</span> {/* 작품 이름 */}
+                <span>{t("황혼 우체국 · 1장")}</span> {/* 작품 이름 */}
             </div> {/* 제목 표시줄 종료 */}
             <div className={styles.windowBody}> {/* 창 본문 */}
                 <div className={styles.storyColumn}> {/* 이야기 영역 */}
                     <div className={styles.sceneArt}> {/* 장면 그림 */}
                         <Image src="/images/text-play/twilight-post-office.svg" alt="" width={1200} height={760} priority unoptimized /> {/* 장면 이미지 */}
                     </div> {/* 장면 그림 종료 */}
-                    <p className={styles.narration}>마지막 배차가 떠난 뒤, 애린이 금빛 봉인이 찍힌 편지를 내밀었다.</p> {/* 장면 묘사 */}
-                    <p className={styles.dialogue}><b>애린</b> “이 편지는 내일 아침의 당신에게서 왔어요.”</p> {/* 캐릭터 대사 */}
+                    <p className={styles.narration}>{t("마지막 배차가 떠난 뒤, 애린이 금빛 봉인이 찍힌 편지를 내밀었다.")}</p> {/* 장면 묘사 */}
+                    <p className={styles.dialogue}><b>{t("애린")}</b> {t("“이 편지는 내일 아침의 당신에게서 왔어요.”")}</p> {/* 캐릭터 대사 */}
                     <ol className={styles.choices}> {/* 선택지 */}
-                        <li><span>1</span>봉인을 바로 뜯어 본다</li> {/* 첫 선택 */}
-                        <li><span>2</span>보낸 사람이 누구인지 묻는다</li> {/* 둘째 선택 */}
+                        <li><span>1</span>{t("봉인을 바로 뜯어 본다")}</li> {/* 첫 선택 */}
+                        <li><span>2</span>{t("보낸 사람이 누구인지 묻는다")}</li> {/* 둘째 선택 */}
                     </ol> {/* 선택지 종료 */}
-                    <div className={styles.freeInput}><span>직접 입력</span>편지를 노을빛에 비춰 본다<i /></div> {/* 자유 입력 */}
+                    <div className={styles.freeInput}><span>{t("직접 입력")}</span>{t("편지를 노을빛에 비춰 본다")}<i /></div> {/* 자유 입력 */}
                 </div> {/* 이야기 영역 종료 */}
                 <div className={styles.sideColumn}> {/* 상태 영역 */}
-                    <div className={styles.sideCard}><small>세이브</small><strong>슬롯 1 · 우체국 앞</strong></div> {/* 세이브 카드 */}
-                    <div className={styles.sideCard}><small>장기 기억</small><strong>애린은 약속을 지키는 사람을 믿는다</strong></div> {/* 기억 카드 */}
-                    <div className={styles.sideCard}><small>관계</small><strong className={styles.meter}><i style={{ width: "62%" }} /></strong></div> {/* 관계 카드 */}
+                    <div className={styles.sideCard}><small>{t("세이브")}</small><strong>{t("슬롯 1 · 우체국 앞")}</strong></div> {/* 세이브 카드 */}
+                    <div className={styles.sideCard}><small>{t("장기 기억")}</small><strong>{t("애린은 약속을 지키는 사람을 믿는다")}</strong></div> {/* 기억 카드 */}
+                    <div className={styles.sideCard}><small>{t("관계")}</small><strong className={styles.meter}><i style={{ width: "62%" }} /></strong></div> {/* 관계 카드 */}
                 </div> {/* 상태 영역 종료 */}
             </div> {/* 창 본문 종료 */}
-            <span className={`${styles.floatingTag} ${styles.tagSave}`}>자동 저장됨</span> {/* 저장 표시 */}
-            <span className={`${styles.floatingTag} ${styles.tagMemory}`}>기억 +1</span> {/* 기억 표시 */}
+            <span className={`${styles.floatingTag} ${styles.tagSave}`}>{t("자동 저장됨")}</span> {/* 저장 표시 */}
+            <span className={`${styles.floatingTag} ${styles.tagMemory}`}>{t("기억 +1")}</span> {/* 기억 표시 */}
         </div> // 예시 창 종료
     ); // 반환 종료
 } // 함수 종료
@@ -124,81 +127,81 @@ export function TextPlayScreen() // Text-Play 통합 화면
             <section className={styles.hero} aria-labelledby="text-play-title"> {/* 상단 소개 */}
                 <div className={styles.heroCopy}> {/* 소개 문구 */}
                     <p className={styles.eyebrow}><span aria-hidden="true" />MATE TEXT-PLAY · FOR WINDOWS</p> {/* 상단 표제 */}
-                    <h1 id="text-play-title">이야기를 읽는 순간에서<br /><span className={styles.highlight}>직접 움직이는 순간으로</span></h1> {/* 화면 제목 */}
-                    <p className={styles.lead}>MATE Text-Play는 선택지와 자유 입력으로 텍스트 게임을 플레이하고, 작품·세이브·장기 기억을 한곳에서 관리하는 Windows 프로그램입니다.</p> {/* 화면 설명 */}
+                    <h1 id="text-play-title">{t("이야기를 읽는 순간에서")}<br /><span className={styles.highlight}>{t("직접 움직이는 순간으로")}</span></h1> {/* 화면 제목 */}
+                    <p className={styles.lead}>{t("MATE Text-Play는 선택지와 자유 입력으로 텍스트 게임을 플레이하고, 작품·세이브·장기 기억을 한곳에서 관리하는 Windows 프로그램입니다.")}</p> {/* 화면 설명 */}
                     <div className={styles.badges}> {/* 상태 배지 */}
-                        <span className={styles.platformBadge}>Windows용 프로그램</span> {/* 플랫폼 배지 */}
+                        <span className={styles.platformBadge}>{t("Windows용 프로그램")}</span> {/* 플랫폼 배지 */}
                         <span className={styles.statusBadge} data-status={textPlayRelease.status}>{statusLabel}</span> {/* 배포 상태 */}
                     </div> {/* 상태 배지 종료 */}
                     <div id="text-play-download" className={styles.heroDownload}> {/* 상단 다운로드 */}
                         <DownloadAction release={textPlayRelease} /> {/* 다운로드 동작 */}
-                        {textPlayRelease.status === "beta" ? <p className={styles.betaWarning} role="note">베타 버전은 예기치 않은 오류와 데이터 형식 변경이 발생할 수 있습니다.</p> : null} {/* 베타 경고 */}
+                        {textPlayRelease.status === "beta" ? <p className={styles.betaWarning} role="note">{t("베타 버전은 예기치 않은 오류와 데이터 형식 변경이 발생할 수 있습니다.")}</p> : null} {/* 베타 경고 */}
                     </div> {/* 상단 다운로드 종료 */}
                 </div> {/* 소개 문구 종료 */}
                 <figure className={styles.heroVisual} aria-labelledby="text-play-visual-caption"> {/* 화면 예시 */}
                     <LauncherMockup /> {/* 런처 예시 */}
-                    <figcaption id="text-play-visual-caption">출시 전 화면 구성 예시 · 작품 「황혼 우체국」 1장</figcaption> {/* 예시 설명 */}
+                    <figcaption id="text-play-visual-caption">{t("출시 전 화면 구성 예시 · 작품 「황혼 우체국」 1장")}</figcaption> {/* 예시 설명 */}
                 </figure> {/* 화면 예시 종료 */}
             </section> {/* 상단 소개 종료 */}
 
-            <ul className={styles.highlights} aria-label="Text-Play 한눈에 보기"> {/* 핵심 요약 */}
-                {highlights.map((item) => <li key={item.value}><strong>{item.value}</strong><span>{item.label}</span></li>)} {/* 요약 항목 */}
+            <ul className={styles.highlights} aria-label={t("Text-Play 한눈에 보기")}> {/* 핵심 요약 */}
+                {highlights.map((item) => <li key={item.value}><strong>{t(item.value)}</strong><span>{t(item.label)}</span></li>)} {/* 요약 항목 */}
             </ul> {/* 핵심 요약 종료 */}
 
             <section className={styles.section} aria-labelledby="play-flow-title"> {/* 플레이 흐름 */}
-                <SectionHeading id="play-flow-title" kicker="HOW IT PLAYS" title="한 장면은 이렇게 진행됩니다" description="읽기, 선택, 기억이 하나의 흐름으로 이어집니다." /> {/* 흐름 제목 */}
-                <ol className={styles.flow}>{playSteps.map((step, index) => <li key={step.title}><span className={styles.flowNumber}>{index + 1}</span><h3>{step.title}</h3><p>{step.description}</p></li>)}</ol> {/* 흐름 단계 */}
+                <SectionHeading id="play-flow-title" kicker="HOW IT PLAYS" title={t("한 장면은 이렇게 진행됩니다")} description={t("읽기, 선택, 기억이 하나의 흐름으로 이어집니다.")} /> {/* 흐름 제목 */}
+                <ol className={styles.flow}>{playSteps.map((step, index) => <li key={step.title}><span className={styles.flowNumber}>{index + 1}</span><h3>{t(step.title)}</h3><p>{t(step.description)}</p></li>)}</ol> {/* 흐름 단계 */}
             </section> {/* 플레이 흐름 종료 */}
 
             <section className={styles.section} aria-labelledby="feature-title"> {/* 기능 안내 */}
-                <SectionHeading id="feature-title" kicker="PLAY SYSTEM" title="주요 기능" /> {/* 기능 제목 */}
-                <div className={styles.featureGrid}>{features.map((feature) => <article key={feature.title}><FeatureIcon name={feature.icon} /><h3>{feature.title}</h3><p>{feature.description}</p></article>)}</div> {/* 기능 그리드 */}
+                <SectionHeading id="feature-title" kicker="PLAY SYSTEM" title={t("주요 기능")} /> {/* 기능 제목 */}
+                <div className={styles.featureGrid}>{features.map((feature) => <article key={feature.title}><FeatureIcon name={feature.icon} /><h3>{t(feature.title)}</h3><p>{t(feature.description)}</p></article>)}</div> {/* 기능 그리드 */}
             </section> {/* 기능 안내 종료 */}
 
             <section className={styles.section} aria-labelledby="compare-title"> {/* 서비스 비교 */}
-                <SectionHeading id="compare-title" kicker="WEB & WINDOWS" title="Character Chat과 무엇이 다른가요?" /> {/* 비교 제목 */}
+                <SectionHeading id="compare-title" kicker="WEB & WINDOWS" title={t("Character Chat과 무엇이 다른가요?")} /> {/* 비교 제목 */}
                 <div className={styles.compare}> {/* 비교 카드 */}
                     <article> {/* 웹 카드 */}
-                        <p className={styles.compareLabel}>웹 · 지금 이용 가능</p> {/* 웹 표제 */}
+                        <p className={styles.compareLabel}>{t("웹 · 지금 이용 가능")}</p> {/* 웹 표제 */}
                         <h3>Character Chat</h3> {/* 웹 제목 */}
-                        <p>브라우저에서 캐릭터와 자유롭게 대화하는 경험입니다. 설치 없이 바로 시작할 수 있습니다.</p> {/* 웹 설명 */}
+                        <p>{t("브라우저에서 캐릭터와 자유롭게 대화하는 경험입니다. 설치 없이 바로 시작할 수 있습니다.")}</p> {/* 웹 설명 */}
                     </article> {/* 웹 카드 종료 */}
                     <article data-accent="true"> {/* 윈도우 카드 */}
                         <p className={styles.compareLabel}>Windows · {statusLabel}</p> {/* 윈도우 표제 */}
                         <h3>Text-Play</h3> {/* 윈도우 제목 */}
-                        <p>내려받은 텍스트 게임 작품을 실행하고, 세이브와 장기 기억 같은 로컬 상태를 함께 관리하는 프로그램입니다.</p> {/* 윈도우 설명 */}
+                        <p>{t("내려받은 텍스트 게임 작품을 실행하고, 세이브와 장기 기억 같은 로컬 상태를 함께 관리하는 프로그램입니다.")}</p> {/* 윈도우 설명 */}
                     </article> {/* 윈도우 카드 종료 */}
                 </div> {/* 비교 카드 종료 */}
             </section> {/* 서비스 비교 종료 */}
 
             <section className={styles.section} aria-labelledby="install-title"> {/* 설치 안내 */}
-                <SectionHeading id="install-title" kicker="GET STARTED" title="설치 순서" /> {/* 설치 제목 */}
-                <ol className={styles.stepList}>{installationSteps.map((step, index) => <li key={step}><span>{String(index + 1).padStart(2, "0")}</span><strong>{step}</strong></li>)}</ol> {/* 설치 단계 목록 */}
+                <SectionHeading id="install-title" kicker="GET STARTED" title={t("설치 순서")} /> {/* 설치 제목 */}
+                <ol className={styles.stepList}>{installationSteps.map((step, index) => <li key={step}><span>{String(index + 1).padStart(2, "0")}</span><strong>{t(step)}</strong></li>)}</ol> {/* 설치 단계 목록 */}
             </section> {/* 설치 안내 종료 */}
 
             <section className={styles.section} aria-labelledby="faq-title"> {/* 자주 묻는 질문 */}
-                <SectionHeading id="faq-title" kicker="FAQ" title="자주 묻는 질문" /> {/* 질문 제목 */}
-                <div className={styles.faqList}>{faqs.map((faq) => <details key={faq.question}><summary>{faq.question}</summary><p>{faq.answer}</p></details>)}</div> {/* 질문 목록 */}
+                <SectionHeading id="faq-title" kicker="FAQ" title={t("자주 묻는 질문")} /> {/* 질문 제목 */}
+                <div className={styles.faqList}>{faqs.map((faq) => <details key={faq.question}><summary>{t(faq.question)}</summary><p>{t(faq.answer)}</p></details>)}</div> {/* 질문 목록 */}
             </section> {/* 자주 묻는 질문 종료 */}
 
             <section className={styles.ctaBand} aria-labelledby="cta-title"> {/* 마무리 안내 */}
                 <div> {/* 안내 문구 */}
-                    <h2 id="cta-title">이야기의 다음 장은 직접 쓰세요</h2> {/* 안내 제목 */}
-                    <p>설치 파일이 등록되면 상단의 다운로드 버튼이 바로 활성화됩니다. 그동안 웹에서 Character Chat을 먼저 만나 보세요.</p> {/* 안내 설명 */}
+                    <h2 id="cta-title">{t("이야기의 다음 장은 직접 쓰세요")}</h2> {/* 안내 제목 */}
+                    <p>{t("설치 파일이 등록되면 상단의 다운로드 버튼이 바로 활성화됩니다. 그동안 웹에서 Character Chat을 먼저 만나 보세요.")}</p> {/* 안내 설명 */}
                 </div> {/* 안내 문구 종료 */}
                 <div className={styles.ctaLinks}> {/* 안내 동작 */}
-                    <a href="#text-play-download">다운로드 버튼으로 이동</a> {/* 다운로드 앵커 */}
-                    <Link href="/">Character Chat 체험하기</Link> {/* 챗봇 링크 */}
+                    <a href="#text-play-download">{t("다운로드 버튼으로 이동")}</a> {/* 다운로드 앵커 */}
+                    <Link href="/">{t("Character Chat 체험하기")}</Link> {/* 챗봇 링크 */}
                 </div> {/* 안내 동작 종료 */}
             </section> {/* 마무리 안내 종료 */}
 
             <footer className={styles.footer}> {/* 하단 이동 */}
                 <p>MATE Text-Play</p> {/* 하단 브랜드 */}
-                <nav aria-label="Text-Play 관련 메뉴"> {/* 하단 메뉴 */}
+                <nav aria-label={t("Text-Play 관련 메뉴")}> {/* 하단 메뉴 */}
                     <Link href="/">Character Chat</Link> {/* 챗봇 링크 */}
-                    <span aria-disabled="true">개인정보처리방침 · 준비 중</span> {/* 개인정보 준비 상태 */}
-                    <span aria-disabled="true">이용약관 · 준비 중</span> {/* 약관 준비 상태 */}
-                    <span aria-disabled="true">고객지원 · 준비 중</span> {/* 지원 준비 상태 */}
+                    <span aria-disabled="true">{t("개인정보처리방침 · 준비 중")}</span> {/* 개인정보 준비 상태 */}
+                    <span aria-disabled="true">{t("이용약관 · 준비 중")}</span> {/* 약관 준비 상태 */}
+                    <span aria-disabled="true">{t("고객지원 · 준비 중")}</span> {/* 지원 준비 상태 */}
                 </nav> {/* 하단 메뉴 종료 */}
             </footer> {/* 하단 이동 종료 */}
         </main> // 화면 종료

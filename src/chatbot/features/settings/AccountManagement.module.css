@@ -1,0 +1,133 @@
+.backdrop /* 확인 창의 배경 */
+{ /* 배경 시작 */
+    position: fixed; /* 화면 고정 */
+    z-index: 60; /* 가장 위 */
+    inset: 0; /* 전체 화면 */
+    display: grid; /* 가운데 배치 */
+    place-items: center; /* 가운데 정렬 */
+    padding: 20px; /* 여백 */
+    background: rgb(31 26 46 / 42%); /* 반투명 배경 */
+    backdrop-filter: blur(3px); /* 뒤 흐림 */
+} /* 배경 종료 */
+
+.dialog /* 확인 창 */
+{ /* 창 시작 */
+    width: min(100%, 480px); /* 반응형 너비 */
+    max-height: calc(100dvh - 40px); /* 화면보다 길어지지 않게 */
+    overflow-y: auto; /* 길면 안에서 스크롤 */
+    padding: 28px; /* 여백 */
+    border: 1px solid var(--mv-line); /* 경계 */
+    border-top: 5px solid light-dark(#e11d48, #f27997); /* 위험 색 띠 */
+    border-radius: 22px; /* 모서리 */
+    color: var(--mv-ink); /* 글자 */
+    background: var(--mv-surface); /* 배경 */
+    box-shadow: 0 30px 80px light-dark(rgb(31 26 46 / 24%), rgb(0 0 0 / 52.8%)); /* 그림자 */
+} /* 창 종료 */
+
+.dialog > span /* 표시 */
+{ /* 표시 시작 */
+    display: inline-flex; /* 알약 배치 */
+    padding: 6px 14px; /* 표시 여백 */
+    border-radius: 999px; /* 알약 모양 */
+    color: light-dark(#be123c, #f27997); /* 표시 글자 */
+    font-size: 0.76rem; /* 표시 크기 */
+    font-weight: 850; /* 표시 굵기 */
+    letter-spacing: 0.14em; /* 표시 자간 */
+    background: light-dark(#fff1f2, #361215); /* 표시 배경 */
+} /* 표시 종료 */
+
+.dialog h2 /* 제목 */
+{ /* 제목 시작 */
+    margin: 14px 0 8px; /* 제목 여백 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 제목 종료 */
+
+.dialog p /* 설명 */
+{ /* 설명 시작 */
+    margin: 0 0 8px; /* 설명 여백 */
+    color: var(--mv-muted); /* 설명 색 */
+    line-height: 1.7; /* 줄 높이 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+    overflow-wrap: anywhere; /* 긴 계정 이름은 줄바꿈 */
+} /* 설명 종료 */
+
+.dialog .warning /* 경고·실패 안내 */
+{ /* 경고 시작 */
+    margin-top: 12px; /* 위 여백 */
+    padding: 12px 14px; /* 안내 여백 */
+    border: 1px solid light-dark(#fecdd3, #5d282e); /* 경고 경계 */
+    border-radius: 12px; /* 안내 모서리 */
+    color: light-dark(#be123c, #f27997); /* 경고 글자 */
+    font-weight: 700; /* 경고 굵기 */
+    background: light-dark(#fff1f2, #361215); /* 경고 배경 */
+} /* 경고 종료 */
+
+.check /* 확인 줄 */
+{ /* 확인 시작 */
+    display: flex; /* 가로 배치 */
+    gap: 10px; /* 요소 간격 */
+    align-items: center; /* 세로 중앙 */
+    min-height: 44px; /* 누르는 높이 */
+    margin-top: 12px; /* 위 여백 */
+    color: var(--mv-ink); /* 글자 */
+    font-weight: 750; /* 굵기 */
+    cursor: pointer; /* 선택 커서 */
+} /* 확인 종료 */
+
+.check input /* 확인 상자 */
+{ /* 상자 시작 */
+    flex: none; /* 줄어들지 않음 */
+    width: 20px; /* 너비 */
+    height: 20px; /* 높이 */
+    margin: 0; /* 기본 여백 제거 */
+    accent-color: light-dark(#e11d48, #f27997); /* 체크 색 */
+} /* 상자 종료 */
+
+.dialog div /* 선택 버튼 묶음 */
+{ /* 묶음 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 좁으면 줄바꿈 */
+    justify-content: end; /* 오른쪽 정렬 */
+    gap: 10px; /* 버튼 간격 */
+    margin-top: 20px; /* 위 여백 */
+} /* 묶음 종료 */
+
+.dialog button /* 선택 버튼 */
+{ /* 버튼 시작 */
+    min-height: 44px; /* 조작 높이 */
+    padding: 0 16px; /* 버튼 여백 */
+    border: 1px solid var(--mv-line); /* 버튼 경계 */
+    border-radius: 12px; /* 버튼 모서리 */
+    color: var(--mv-ink); /* 버튼 글자 */
+    font: inherit; /* 글꼴 상속 */
+    font-weight: 800; /* 버튼 굵기 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 버튼 배경 */
+    cursor: pointer; /* 선택 커서 */
+} /* 버튼 종료 */
+
+.dialog button:hover /* 선택 버튼 올림 */
+{ /* 올림 시작 */
+    border-color: light-dark(#e11d48, #f27997); /* 강조 경계 */
+} /* 올림 종료 */
+
+.dialog button.danger /* 지우기 버튼 */
+{ /* 지우기 시작 */
+    border-color: light-dark(#be123c, #f27997); /* 위험 경계 */
+    color: #ffffff; /* 흰 글자 */
+    background: light-dark(#be123c, #9f1239); /* 위험 배경 */
+} /* 지우기 종료 */
+
+.dialog button:disabled /* 누를 수 없는 버튼 */
+{ /* 비활성 시작 */
+    border: 1px dashed var(--mv-line); /* 비활성 경계 */
+    color: var(--mv-muted); /* 비활성 글자 */
+    background: light-dark(#f6f4fa, #221d2c); /* 비활성 배경 */
+    cursor: not-allowed; /* 비활성 커서 */
+} /* 비활성 종료 */
+
+.dialog button:focus-visible, /* 버튼 초점 */
+.check input:focus-visible /* 확인 상자 초점 */
+{ /* 초점 시작 */
+    outline: 3px solid var(--mv-focus); /* 초점 외곽선 */
+    outline-offset: 3px; /* 외곽선 간격 */
+} /* 초점 종료 */

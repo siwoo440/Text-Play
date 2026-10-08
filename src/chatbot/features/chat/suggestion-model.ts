@@ -1,4 +1,5 @@
 import type { WritingStyle } from "@chatbot/features/core/types"; // 문체 타입
+import { getActiveLocale, t } from "@chatbot/lib/i18n"; // 화면 글자 번역·화면 언어
 
 export interface SuggestionInput // 추천 답변 입력
 { // 구조 시작
@@ -20,8 +21,8 @@ function hash(text: string): number // 결정 해시
 export function createSuggestedReplies(input: SuggestionInput): string[] // 추천 답변 3개(행동·질문·감정)
 { // 함수 시작
     const key = hash(`${input.seed}|${input.turn}|${input.emotion}`); // 결정 키
-    const name = input.names[key % Math.max(input.names.length, 1)] ?? "너"; // 말 걸 상대
-    return [actions[key % actions.length], questions[(key >>> 3) % questions.length].replace("{name}", name), feelings[(key >>> 5) % feelings.length]]; // 3개 반환
+    const name = input.names[key % Math.max(input.names.length, 1)] ?? t("너"); // 말 걸 상대
+    return [t(actions[key % actions.length]), t(questions[(key >>> 3) % questions.length]).replace("{name}", name), t(feelings[(key >>> 5) % feelings.length])]; // 3개 반환(화면 언어로)
 } // 함수 종료
 
 export const writingStyles: Array<{ id: WritingStyle; label: string; description: string }> = // 문체 목록
@@ -35,6 +36,18 @@ export const writingStyles: Array<{ id: WritingStyle; label: string; description
 
 export function getStyleSample(style: WritingStyle, name: string): string[] // 문체 미리보기 문장
 { // 함수 시작
+    if (getActiveLocale() === "en") // 영어 화면
+    { // 조건 시작
+        const english: Record<WritingStyle, string[]> = // 문체별 영어 예시(이름이 문장 속에 들어가 통째로 따로 씀)
+        { // 예시 시작
+            default: [`${name} hesitated for a moment, then caught your sleeve.`, `${name} | Don't go…`], // 기본
+            romance: [`${name}'s fingertips trembled. The wish not to lose you spread before it could be hidden.`, `${name} | …Stay a little longer.`], // 로맨스
+            hardboiled: [`${name} grabbed your sleeve. A short breath. No time.`, `${name} | Don't move. Not now.`], // 하드보일드
+            comic: [`${name} grabbed your sleeve and slipped. Neither of you spoke for a moment.`, `${name} | …Pretend you didn't see that!`], // 코믹
+            literary: [`The light outside the window tilted. ${name}'s hand followed it down to the edge of your sleeve.`, `${name} | Don't go, not yet.`], // 문학적
+        }; // 예시 종료
+        return english[style]; // 영어 예시 반환
+    } // 조건 종료
     const samples: Record<WritingStyle, string[]> = // 문체별 예시
     { // 예시 시작
         default: [`${name}가 잠시 망설이다 네 소매를 붙잡았다.`, `${name} | 가지 마…`], // 기본

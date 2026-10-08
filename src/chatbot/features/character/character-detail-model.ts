@@ -2,6 +2,7 @@ import { characterDetailProfiles } from "@chatbot/features/character/character-d
 import { createDefaultConversationSettings } from "@chatbot/features/core/defaults"; // 대화방 기본 설정
 import { rankingContentWarnings } from "@chatbot/mocks/ranking-character-concepts"; // 랭킹 캐릭터 주의 목록
 import type { AppState, Character, CharacterDetailProfile, CharacterReport, Conversation, ConversationVersion, Message, ReportReason } from "@chatbot/features/core/types"; // 도메인 타입
+import { resolveStartRelation } from "@chatbot/features/chat/relation-model"; // 시작 관계
 
 export interface ConversationStartResult // 대화 시작 결과
 { // 구조 시작
@@ -79,7 +80,8 @@ export function getCharacterDetailProfile(character: Character): CharacterDetail
 { // 함수 시작
     const profile = characterDetailProfiles[character.id]; // 정적 프로필 조회
     const detail = structuredClone(profile ?? createFallbackProfile(character)); // 독립 프로필 복사
-    return { ...detail, contentRating: character.contentRating }; // 저장된 이용 등급 우선
+    const written = [...(character.updates ?? [])].sort((left, right) => right.date.localeCompare(left.date)).map((update) => ({ version: update.version.replace(/^v/i, ""), date: update.date, title: "", changes: [update.note] })); // 제작자가 편집기에서 적은 기록(최근 순, 화면이 v를 붙이므로 앞의 V는 뺌)
+    return { ...detail, releaseNotes: [...written, ...detail.releaseNotes], contentRating: character.contentRating }; // 적은 기록을 앞에, 저장된 이용 등급 우선
 } // 함수 종료
 
 function collectWorldKeywords(value: string): Set<string> // 세계관 키워드 수집
@@ -131,7 +133,7 @@ export function createUniqueConversationId(state: AppState, sourceId: string, no
     return `${baseId}-${suffix}`; // 고유 식별자 반환
 } // 함수 종료
 
-export function createConversationFromPreset(state: AppState, characterId: string, presetId: string, now = new Date().toISOString()): ConversationStartResult // 프리셋 대화 생성
+export function createConversationFromPreset(state: AppState, characterId: string, presetId: string, now = new Date().toISOString(), personaId: string | null = null): ConversationStartResult // 프리셋 대화 생성(고른 대화 프로필을 함께 받음)
 { // 함수 시작
     const character = state.characters.find((item) => item.id === characterId); // 캐릭터 조회
     if (character === undefined) // 캐릭터 부재 확인
@@ -146,15 +148,17 @@ export function createConversationFromPreset(state: AppState, characterId: strin
     } // 조건 종료
     const prologue = profile.prologues.find((item) => item.id === preset.prologueId) ?? profile.prologues[0]; // 연결 프롤로그 조회
     const sceneImage = prologue?.image ?? character.coverImage; // 표시 이미지 선택
+    const startRelation = resolveStartRelation(character.statusTemplate, { presetId: preset.id, relationshipLevel: preset.relationshipLevel, relationshipStage: preset.relationshipStage }); // 시작 관계(정해 둔 시작 설정 우선, 자동 설정은 관계 스탯 초기값)
     const conversationId = createUniqueConversationId(state, characterId, now); // 대화 식별자 생성
     const versionId = `${conversationId}-version-1`; // 최초 버전 식별자
+    const chosenPersonaId = personaId !== null && personaId !== state.personas[0]?.id && state.personas.some((persona) => persona.id === personaId) ? personaId : null; // 고른 대화 프로필(기본 프로필이거나 없는 프로필이면 비워 기본을 따름)
     const conversation: Conversation = // 새 대화 정의
     { // 대화 시작
         id: conversationId, // 대화 식별자
         characterId, // 캐릭터 식별자
         userId: state.profile.id, // 사용자 식별자
         title: `${character.name} · ${preset.name}`, // 대화 제목
-        startSettings: { profileId: state.profile.id, presetId: preset.id, relationshipStage: preset.relationshipStage, relationshipLevel: preset.relationshipLevel, emotion: preset.emotion, scene: sceneImage, greeting: preset.greeting }, // 시작 설정
+        startSettings: { profileId: state.profile.id, presetId: preset.id, relationshipStage: startRelation.relationshipStage, relationshipLevel: startRelation.relationshipLevel, emotion: preset.emotion, scene: sceneImage, greeting: preset.greeting }, // 시작 설정
         currentVersionId: versionId, // 현재 버전 식별자
         archivedAt: null, // 보관 시각
         createdAt: now, // 생성 시각
@@ -162,10 +166,10 @@ export function createConversationFromPreset(state: AppState, characterId: strin
         mode: "character", // 캐릭터 모드
         storyId: null, // 연결 스토리 없음
         storyCast: [], // 등장인물 묶음 없음
-        settings: createDefaultConversationSettings(), // 대화방 기본 설정
+        settings: { ...createDefaultConversationSettings(), personaId: chosenPersonaId }, // 대화방 기본 설정 + 고른 대화 프로필
         folderId: null, // 폴더 없음
     }; // 대화 종료
-    const version: ConversationVersion = { id: versionId, conversationId, parentVersionId: null, forkRootVersionId: null, forkedFromMessageId: null, ordinal: 1, relationshipLevel: preset.relationshipLevel, relationshipStage: preset.relationshipStage, emotion: preset.emotion, currentScene: sceneImage, lastMessage: preset.greeting, createdAt: now, updatedAt: now }; // 최초 버전 생성
+    const version: ConversationVersion = { id: versionId, conversationId, parentVersionId: null, forkRootVersionId: null, forkedFromMessageId: null, ordinal: 1, relationshipLevel: startRelation.relationshipLevel, relationshipStage: startRelation.relationshipStage, emotion: preset.emotion, currentScene: sceneImage, lastMessage: preset.greeting, createdAt: now, updatedAt: now }; // 최초 버전 생성
     const message: Message = { id: `${conversationId}-message-1`, conversationId, versionId, sourceMessageId: null, role: "assistant", content: preset.greeting, emotion: preset.emotion, sceneEvent: null, createdAt: now }; // 첫 메시지 생성
     const nextState: AppState = { ...state, conversations: [...state.conversations, conversation], conversationVersions: [...state.conversationVersions, version], messages: [...state.messages, message], selectedConversationId: conversationId }; // 다음 상태 생성
     return { state: nextState, conversation, version, message, href: createConversationHref(characterId, conversation.id, version.id) }; // 생성 결과 반환

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"; // 자식 요소 타입
 import styles from "@chatbot/components/feedback/StatusScreen.module.css"; // 상태 화면 스타일
 
-export type StatusTone = "not-found" | "error" | "restricted"; // 상태 종류
+export type StatusTone = "not-found" | "error" | "restricted" | "invite"; // 상태 종류(invite: 친구 초대)
 
 interface StatusScreenProps // 상태 화면 속성
 { // 구조 시작
@@ -12,7 +12,7 @@ interface StatusScreenProps // 상태 화면 속성
     children?: ReactNode; // 이동·복구 동작
 } // 구조 종료
 
-const symbols: Record<StatusTone, string> = { "not-found": "?", error: "!", restricted: "×" }; // 상태 기호
+const symbols: Record<StatusTone, string> = { "not-found": "?", error: "!", restricted: "×", invite: "🎁" }; // 상태 기호
 
 export function StatusScreen({ tone, label, title, description, children }: StatusScreenProps) // 공통 상태 화면
 { // 함수 시작

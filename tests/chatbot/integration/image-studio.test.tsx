@@ -112,14 +112,14 @@ describe("이미지 스튜디오", () => // 스튜디오 묶음
         expect(within(gallery).getAllByRole("article")).toHaveLength(1); // 필터 확인
         await user.click(within(gallery).getByRole("button", { name: "숲속 정원 삭제" })); // 삭제 시작
         await user.click(screen.getByRole("button", { name: "이미지 삭제 확인" })); // 삭제 승인
-        expect(failingBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 12 }), "image-delete"); // 백업 시도
+        expect(failingBackup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 18 }), "image-delete"); // 백업 시도
         expect(screen.getByLabelText("이미지 상태")).toHaveTextContent(":2"); // 실패 시 유지
         unmount(); // 정리
         const backup = vi.fn(); // 성공 백업
         renderWithApp(<><ImageStudio /><Probe /></>, state, { load: () => state, save: () => undefined, createBackup: backup }); // 성공 저장소
         await user.click(screen.getByRole("button", { name: "숲속 정원 삭제" })); // 삭제 시작
         await user.click(screen.getByRole("button", { name: "이미지 삭제 확인" })); // 삭제 승인
-        expect(backup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 12 }), "image-delete"); // 백업 확인
+        expect(backup).toHaveBeenCalledWith(expect.objectContaining({ schemaVersion: 18 }), "image-delete"); // 백업 확인
         expect(screen.getByLabelText("이미지 상태")).toHaveTextContent(":1"); // 삭제 확인
     }); // 검증 종료
 }); // 묶음 종료

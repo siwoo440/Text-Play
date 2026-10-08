@@ -3,9 +3,8 @@
     min-height: calc(100vh - 64px); /* 화면 높이 */
     overflow-x: clip; /* 장식 가로 넘침 자르기 */
     padding: clamp(28px, 4vw, 52px) clamp(16px, 4vw, 64px) 96px; /* 화면 여백(캐릭터 모드 메인과 같게) */
-    background: radial-gradient(circle at 6% 0%, rgb(240 171 252 / 36%), transparent 30%), radial-gradient(circle at 94% 6%, rgb(196 181 253 / 40%), transparent 28%), radial-gradient(circle at 60% 60%, rgb(254 215 170 / 26%), transparent 34%), var(--mv-canvas); /* 여러 색 배경 */
+    background: radial-gradient(circle at 6% 0%, rgb(240 171 252 / 36%), transparent 30%), radial-gradient(circle at 94% 6%, light-dark(rgb(196 181 253 / 40%), rgb(28 25 38 / 40%)), transparent 28%), radial-gradient(circle at 60% 60%, rgb(254 215 170 / 26%), transparent 34%), var(--mv-canvas); /* 여러 색 배경 */
     color: var(--mv-ink); /* 기본 글자 */
-    color-scheme: light; /* 밝은 입력 요소 */
 } /* 화면 종료 */
 
 .page > * /* 화면 구역 */
@@ -34,8 +33,8 @@
     padding: 6px; /* 내부 여백 */
     border: 1px solid var(--mv-line); /* 테두리 */
     border-radius: 18px; /* 모서리 */
-    background: rgb(255 255 255 / 82%); /* 반투명 흰 배경 */
-    box-shadow: 0 10px 26px rgb(76 29 149 / 8%); /* 그림자 */
+    background: light-dark(rgb(255 255 255 / 82%), rgb(28 25 38 / 82%)); /* 반투명 흰 배경 */
+    box-shadow: 0 10px 26px light-dark(rgb(76 29 149 / 8%), rgb(0 0 0 / 17.6%)); /* 그림자 */
 } /* 전환 종료 */
 
 .modeSwitch a /* 모드 칸 */
@@ -63,7 +62,7 @@
 
 .modeSwitch a:hover /* 모드 올림 */
 { /* 올림 시작 */
-    background: #faf5ff; /* 연한 보라 */
+    background: light-dark(#faf5ff, #130d19); /* 연한 보라 */
 } /* 올림 종료 */
 
 .modeSwitch a[aria-current="page"][data-mode="character"] /* 현재 캐릭터 모드 */
@@ -115,8 +114,8 @@
     display: inline-flex; /* 알약 배치 */
     padding: 6px 14px; /* 내부 여백 */
     border-radius: 999px; /* 알약 모양 */
-    background: linear-gradient(100deg, #fae8ff, #ede9fe); /* 연한 배경 */
-    color: #86198f; /* 진한 자홍 */
+    background: linear-gradient(100deg, light-dark(#fae8ff, #311339), light-dark(#ede9fe, #1a1339)); /* 연한 배경 */
+    color: light-dark(#86198f, #e48eeb); /* 진한 자홍 */
     font-size: .82rem; /* 글자 크기 */
     font-weight: 800; /* 글자 굵기 */
 } /* 표제 종료 */
@@ -200,9 +199,9 @@
 .empty /* 빈 목록 */
 { /* 빈 시작 */
     padding: 22px; /* 내부 여백 */
-    border: 1px dashed #e9d5ff; /* 점선 */
+    border: 1px dashed light-dark(#e9d5ff, #40275b); /* 점선 */
     border-radius: 16px; /* 모서리 */
-    background: #ffffff; /* 흰 배경 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 흰 배경 */
     color: var(--mv-muted); /* 보조 글자 */
 } /* 빈 종료 */
 
@@ -211,8 +210,8 @@
     overflow: hidden; /* 모서리 자르기 */
     border: 1px solid var(--mv-line); /* 테두리 */
     border-radius: 20px; /* 모서리 */
-    background: #ffffff; /* 흰 배경 */
-    box-shadow: 0 14px 30px rgb(76 29 149 / 8%); /* 그림자 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 흰 배경 */
+    box-shadow: 0 14px 30px light-dark(rgb(76 29 149 / 8%), rgb(0 0 0 / 17.6%)); /* 그림자 */
     transition: transform 150ms ease, box-shadow 150ms ease; /* 전환 */
 } /* 카드 종료 */
 
@@ -236,7 +235,7 @@
     display: block; /* 블록 */
     aspect-ratio: 16 / 9; /* 이미지 비율 */
     overflow: hidden; /* 자르기 */
-    background: #f5f3ff; /* 이미지 전 배경 */
+    background: light-dark(#f5f3ff, #0f0d19); /* 이미지 전 배경 */
 } /* 이미지 종료 */
 
 .cardMedia img /* 카드 그림 */
@@ -317,10 +316,10 @@
     height: 32px; /* 높이 */
     margin-left: -8px; /* 겹치기 */
     overflow: hidden; /* 원형 자르기 */
-    border: 2px solid #ffffff; /* 흰 테 */
+    border: 2px solid light-dark(#ffffff, var(--mv-surface)); /* 흰 테 */
     border-radius: 50%; /* 원형 */
-    background: #f3e8ff; /* 배경 */
-    color: #86198f; /* 글자 */
+    background: light-dark(#f3e8ff, #251339); /* 배경 */
+    color: light-dark(#86198f, #e48eeb); /* 글자 */
     font-size: .74rem; /* 글자 크기 */
     font-weight: 800; /* 굵은 글자 */
     place-items: center; /* 가운데 정렬 */
@@ -342,7 +341,7 @@
 .castNames /* 등장인물 이름 */
 { /* 이름 시작 */
     overflow: hidden; /* 넘침 숨김 */
-    color: #6b21a8; /* 보라 글자 */
+    color: light-dark(#6b21a8, #bc86e7); /* 보라 글자 */
     font-size: .84rem; /* 글자 크기 */
     font-weight: 800; /* 굵은 글자 */
     text-overflow: ellipsis; /* 말줄임 */
@@ -362,8 +361,8 @@
 { /* 인물 수 시작 */
     padding: 2px 8px; /* 내부 여백 */
     border-radius: 999px; /* 알약 모양 */
-    background: #fae8ff; /* 연한 자홍 */
-    color: #86198f; /* 진한 자홍 */
+    background: light-dark(#fae8ff, #311339); /* 연한 자홍 */
+    color: light-dark(#86198f, #e48eeb); /* 진한 자홍 */
     font-weight: 800; /* 굵은 글자 */
 } /* 인물 수 종료 */
 
@@ -379,9 +378,9 @@
 .detailMedia /* 상세 이미지 */
 { /* 이미지 시작 */
     overflow: hidden; /* 모서리 자르기 */
-    border: 6px solid #ffffff; /* 흰 액자 */
+    border: 6px solid light-dark(#ffffff, var(--mv-surface)); /* 흰 액자 */
     border-radius: 26px; /* 모서리 */
-    background: #f5f3ff; /* 배경 */
+    background: light-dark(#f5f3ff, #0f0d19); /* 배경 */
     box-shadow: 0 22px 48px rgb(134 25 143 / 18%); /* 그림자 */
 } /* 이미지 종료 */
 
@@ -422,15 +421,15 @@
 { /* 등급 시작 */
     padding: 2px 10px; /* 내부 여백 */
     border-radius: 999px; /* 알약 모양 */
-    background: #ede9fe; /* 연한 보라 */
-    color: #5b21b6; /* 진한 보라 */
+    background: light-dark(#ede9fe, #1a1339); /* 연한 보라 */
+    color: light-dark(#5b21b6, #a981e8); /* 진한 보라 */
     font-weight: 800; /* 굵은 글자 */
 } /* 등급 종료 */
 
 .ratingInline[data-rating="mature"] /* 19세 등급 */
 { /* 19세 시작 */
-    background: #ffe4e6; /* 연한 빨강 */
-    color: #9f1239; /* 진한 빨강 */
+    background: light-dark(#ffe4e6, #3b1417); /* 연한 빨강 */
+    color: light-dark(#9f1239, #f185a3); /* 진한 빨강 */
 } /* 19세 종료 */
 
 .tagLine /* 태그 줄 */
@@ -439,7 +438,7 @@
     flex-wrap: wrap; /* 줄바꿈 */
     gap: 6px; /* 간격 */
     margin: 0; /* 여백 제거 */
-    color: #86198f; /* 자홍 글자 */
+    color: light-dark(#86198f, #e48eeb); /* 자홍 글자 */
     font-size: .82rem; /* 글자 크기 */
     font-weight: 700; /* 글자 굵기 */
 } /* 태그 종료 */
@@ -477,9 +476,9 @@
 
 .secondaryButton /* 보조 버튼 */
 { /* 보조 시작 */
-    border-color: #e9d5ff; /* 연한 테두리 */
-    background: #ffffff; /* 흰 배경 */
-    color: #6b21a8; /* 보라 글자 */
+    border-color: light-dark(#e9d5ff, #40275b); /* 연한 테두리 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 흰 배경 */
+    color: light-dark(#6b21a8, #bc86e7); /* 보라 글자 */
 } /* 보조 종료 */
 
 .detailGrid /* 상세 구역 */
@@ -495,7 +494,7 @@
     border: 1px solid var(--mv-line); /* 테두리 */
     border-top: 4px solid #d946ef; /* 자홍 윗선 */
     border-radius: 20px; /* 모서리 */
-    background: #ffffff; /* 흰 배경 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 흰 배경 */
 } /* 카드 종료 */
 
 .detailCard:nth-child(2) /* 시작 장면 카드 */
@@ -517,7 +516,7 @@
 .detailCard p /* 카드 문장 */
 { /* 문장 시작 */
     margin: 0; /* 여백 제거 */
-    color: #3f3a4f; /* 본문 글자 */
+    color: light-dark(#3f3a4f, #c2becf); /* 본문 글자 */
     line-height: 1.75; /* 행간 */
     word-break: keep-all; /* 한글 줄바꿈 */
 } /* 문장 종료 */
@@ -527,7 +526,7 @@
     padding: 10px 14px; /* 내부 여백 */
     border-left: 3px solid #8b5cf6; /* 보라 띠 */
     border-radius: 0 12px 12px 0; /* 오른쪽 모서리 */
-    background: #faf5ff; /* 연한 보라 */
+    background: light-dark(#faf5ff, #130d19); /* 연한 보라 */
     font-style: italic; /* 기울임 */
 } /* 내레이션 종료 */
 
@@ -545,13 +544,13 @@
     display: grid; /* 두 열 */
     grid-template-columns: 52px minmax(0, 1fr); /* 이름·대사 */
     gap: 8px; /* 열 간격 */
-    color: #3f3a4f; /* 글자 */
+    color: light-dark(#3f3a4f, #c2becf); /* 글자 */
     line-height: 1.6; /* 행간 */
 } /* 대사 종료 */
 
 .firstLines strong /* 첫 대사 이름 */
 { /* 이름 시작 */
-    color: #86198f; /* 자홍 글자 */
+    color: light-dark(#86198f, #e48eeb); /* 자홍 글자 */
 } /* 이름 종료 */
 
 .castCard /* 등장인물 카드 */
@@ -575,9 +574,9 @@
     display: grid; /* 세로 배치 */
     gap: 8px; /* 간격 */
     padding: 14px; /* 내부 여백 */
-    border: 1px solid #f3e8ff; /* 연한 테두리 */
+    border: 1px solid light-dark(#f3e8ff, #3d2557); /* 연한 테두리 */
     border-radius: 16px; /* 모서리 */
-    background: #fdfaff; /* 연한 배경 */
+    background: light-dark(#fdfaff, #140d19); /* 연한 배경 */
 } /* 항목 종료 */
 
 .castList p /* 역할 설명 */
@@ -600,7 +599,7 @@
 .castMissing strong /* 삭제 인물 이름 */
 { /* 이름 시작 */
     display: block; /* 줄 분리 */
-    color: #6b21a8; /* 보라 글자 */
+    color: light-dark(#6b21a8, #bc86e7); /* 보라 글자 */
 } /* 이름 종료 */
 
 .castLink span span, /* 캐릭터 이름 */
@@ -618,7 +617,7 @@
     width: 48px; /* 너비 */
     height: 48px; /* 높이 */
     overflow: hidden; /* 원형 자르기 */
-    border: 2px solid #f0abfc; /* 자홍 테 */
+    border: 2px solid light-dark(#f0abfc, #5c2b65); /* 자홍 테 */
     border-radius: 50%; /* 원형 */
 } /* 얼굴 종료 */
 
@@ -661,3 +660,9 @@
         transition: none; /* 전환 제거 */
     } /* 전환 종료 */
 } /* 축소 종료 */
+
+.searchRow /* 스토리 검색 줄 */
+{ /* 줄 시작 */
+    display: flex; /* 가로 배치 */
+    margin-top: 18px; /* 위쪽 여백(좌우는 화면 구역 규칙을 따름) */
+} /* 줄 종료 */

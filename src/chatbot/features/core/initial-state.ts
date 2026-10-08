@@ -1,13 +1,14 @@
-import { createDefaultPersona } from "@chatbot/features/core/defaults"; // 기본 대화 프로필
+import { createDefaultPersona, createDefaultReferralState, createDefaultRewardState } from "@chatbot/features/core/defaults"; // 기본 대화 프로필·출석 미션·친구 초대
 import type { AppState } from "@chatbot/features/core/types"; // 앱 상태 타입
 import { mockCharacters, mockConversations, mockConversationVersions, mockMessages, mockProfile } from "@chatbot/mocks/fixtures"; // Mock 기준값
 import { mockStories } from "@chatbot/mocks/story-fixtures"; // 예시 스토리
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
 
 export function createInitialState(): AppState // 초기 상태 생성 함수
 { // 함수 시작
     return ( // 초기 상태 반환
     { // 상태 시작
-        schemaVersion: 12, // 스키마 버전
+        schemaVersion: 18, // 스키마 버전
         providerMode: "mock", // Mock 공급자
         profile: structuredClone(mockProfile), // 사용자 복사본
         characters: structuredClone(mockCharacters), // 캐릭터 복사본
@@ -15,7 +16,7 @@ export function createInitialState(): AppState // 초기 상태 생성 함수
         images: [], // 생성 이미지 갤러리
         personas: [createDefaultPersona(mockProfile, "2026-09-22T00:00:00.000Z")], // 기본 대화 프로필
         conversationFolders: [], // 대화 폴더
-        notifications: [{ id: "notice-welcome", kind: "notice", title: "Mate Verse에 오신 걸 환영해요", body: "대화 오른쪽 패널에서 대화 프로필·유저 노트·요약 메모리를 설정할 수 있어요.", href: null, read: false, createdAt: "2026-09-22T00:00:00.000Z" }], // 알림
+        notifications: [{ id: "notice-welcome", kind: "notice", title: t("Mate Verse에 오신 걸 환영해요"), body: t("대화 오른쪽 패널에서 대화 프로필·유저 노트·요약 메모리를 설정할 수 있어요."), href: null, read: false, createdAt: "2026-09-22T00:00:00.000Z" }], // 알림
         conversations: structuredClone(mockConversations), // 대화방 복사본
         conversationVersions: structuredClone(mockConversationVersions), // 대화 버전 복사본
         messages: structuredClone(mockMessages), // 메시지 복사본
@@ -27,6 +28,9 @@ export function createInitialState(): AppState // 초기 상태 생성 함수
             dailyImageUsed: 0, // 일일 이미지 사용량
             updatedAt: "2026-09-22T00:00:00.000Z", // 수정 시각
         }, // 지갑 종료
+        rewards: createDefaultRewardState(), // 출석·미션
+        referral: createDefaultReferralState(), // 친구 초대
+        tokenRecords: [], // 토큰 기록
         settings: // 앱 설정
         { // 설정 시작
             platformMode: "auto", // 자동 플랫폼
@@ -43,9 +47,10 @@ export function createInitialState(): AppState // 초기 상태 생성 함수
             conversationFilter: "all", // 모든 대화 종류
             chatFont: "default", // 기본 글꼴
             chatFontSize: "medium", // 보통 글자 크기
-            chatTheme: "light", // 밝은 채팅
+            theme: "light", // 밝은 화면(헤더 다크 모드 스위치)
             showSceneImages: true, // 상황 이미지 보기
             statusPanelOpen: true, // 상태창 펼침
+            chatPanelOpen: true, // 채팅방 설정 펼침(넓은 화면)
         }, // 설정 종료
         bookmarkedCharacterIds: [], // 보관 캐릭터
         memories: [], // 장기 기억 목록

@@ -9,7 +9,7 @@
 - 저장소: [siwoo440/Text-Play](https://github.com/siwoo440/Text-Play)
 - 작업 브랜치: `main` 하나만 사용
 - 기준 소스 커밋: `2115f42e214409f4b37f2758bab8561f0807244c` (`기능: exe에 최신 ChatBot 전체 기능과 왼쪽 사이드바 데스크톱 화면 추가`)
-- 포함한 ChatBot 커밋: `dd8fddb` (`src/chatbot/SOURCE.md`, 확인은 `pnpm chatbot:status`)
+- 포함한 ChatBot 커밋: `03da2e4` (`src/chatbot/SOURCE.md`, 확인은 `pnpm chatbot:status`)
 - 현재 커밋 확인: `git rev-parse HEAD`
 - 원격 동기화 확인: `git status --short --branch`
 - 확인 기준 화면: **Windows 실행 파일(exe)**. 웹 화면은 보조로 확인합니다.
@@ -58,7 +58,7 @@
 
 - exe는 **최신 ChatBot 전체 기능 + Text-Play**를 하나의 프로그램으로 제공합니다. 웹 화면(`src/app`)은 예전 챗봇 코드를 그대로 둡니다.
 - ChatBot 기능: 메인(검색·장르·오늘의 추천·랭킹), 탐색(태그), 캐릭터 상세·만들기·수정, 대화(버전 분기·다시 생성·내보내기), 보관함, 설정 5쪽(프로필·토큰·화면·알림·개인정보), 고객 지원, 19+ 성인 인증
-- ChatBot 소스는 `src/chatbot`에 ChatBot 커밋 그대로 복사합니다(`pnpm chatbot:sync`, 현재 기준 `dd8fddb` `크랙 참고 채팅방 기능 18종, 고정 INFO 상태창, 대화 폴더, 알림함 추가`, 기록은 `src/chatbot/SOURCE.md`). 직접 고치지 않고 ChatBot에서 고쳐 커밋한 뒤 다시 동기화합니다. ChatBot 앱 상태 버전이 오르면 exe에 저장된 ChatBot 데이터도 ChatBot 변환 규칙으로 자동 갱신됩니다(예: 9 → 10). ChatBot에 새 화면 주소가 생기면 `src/desktop/router/desktop-routes.ts`·`desktop-areas.ts`·`DesktopRoutes.tsx`에도 추가합니다(예: 스토리 모드 `/stories`, 이미지 스튜디오 `/images`). ChatBot 코드가 Next 공개 환경 값(`process.env.NEXT_PUBLIC_*`)을 새로 읽으면 Vite에는 `process`가 없어 화면이 깨지므로 `vite.desktop.config.ts`의 `define`에 같은 이름을 추가합니다(예: `NEXT_PUBLIC_SERVICE_REGION`, 기본 `kr`). ChatBot 머리 메뉴에 생긴 요소(예: 알림함)는 데스크톱 상단 바에도 둡니다. ChatBot 셸 안에서만 적용되는 스타일은 `AppShell.module.css`의 `.shell`로 감싸고 높이·바탕만 끕니다(`DesktopShell.module.css` `.bellHost`).
+- ChatBot 소스는 `src/chatbot`에 ChatBot 커밋 그대로 복사합니다(`pnpm chatbot:sync`, 현재 기준 `03da2e4` `개인정보처리방침과 이용약관 초안 추가`(2026-10-08, 커밋 66개: 다크 모드, 관계 스탯, 출석과 미션, 친구 초대, 한국어/영어, 실제 AI 통로, 로그인 틀 등), 기록은 `src/chatbot/SOURCE.md`). 직접 고치지 않고 ChatBot에서 고쳐 커밋한 뒤 다시 동기화합니다. ChatBot 앱 상태 버전이 오르면 exe에 저장된 ChatBot 데이터도 ChatBot 변환 규칙으로 자동 갱신됩니다(예: 9 → 10). ChatBot에 새 화면 주소가 생기면 `src/desktop/router/desktop-routes.ts`·`desktop-areas.ts`·`DesktopRoutes.tsx`에도 추가합니다(예: 스토리 모드 `/stories`, 이미지 스튜디오 `/images`). ChatBot 코드가 Next 공개 환경 값(`process.env.NEXT_PUBLIC_*`)을 새로 읽으면 Vite에는 `process`가 없어 화면이 깨지므로 `vite.desktop.config.ts`의 `define`에 같은 이름을 추가합니다(예: `NEXT_PUBLIC_SERVICE_REGION`, 기본 `kr`). ChatBot 머리 메뉴에 생긴 요소(예: 알림함)는 데스크톱 상단 바에도 둡니다. ChatBot 셸 안에서만 적용되는 스타일은 `AppShell.module.css`의 `.shell`로 감싸고 높이·바탕만 끕니다(`DesktopShell.module.css` `.chatbotHost`). ChatBot 셸(`AppShell.tsx`)이 하는 일은 exe 틀(`DesktopShell.tsx`)에도 똑같이 둡니다: 테마 적용(`data-theme`·`mateverse:theme` 저장)과 다크 모드 스위치, 이용 시간 알림, 19+ 보기 끔 안내, 받을 보상 점, 사용자 패널의 출석·미션 카드·로그아웃·19+ 보기 끄기, 계정 맞추기(`AccountSync`). exe에는 Next 서버가 없어 ChatBot의 `/api/chat`(실제 AI 통로)은 닿지 않고(보안 규칙이 막음) 연습용 AI로 답합니다. 계정 서비스 환경 값도 비워 두어 로그인은 연습용으로만 동작합니다. ChatBot 테스트 준비 파일(`src/chatbot/test/setup.ts`)은 `src/test/setup.ts`가 브라우저 환경일 때 불러오고, 데스크톱 통합 테스트는 브라우저 언어를 한국어로 고정합니다(ChatBot 자동 언어).
 - 디자인: ChatBot과 같은 밝은 다채색·장르색을 쓰되, 웹 상단 헤더 대신 **왼쪽 사이드바(320px)**와 **상단 바**를 둡니다. 사이드바 오른쪽에 ChatBot 헤더의 여러 색 띠를 세로로 둡니다.
   - 사이드바 위→아래: 로고와 주황 `Text-Play` 표시 → 주요 메뉴(메인·탐색·내 작품·Text-Play) → **ChatBot 대화방**(ChatBot 왼쪽 창 목록 그대로: 검색·정렬·고정·묶음·턴 수·더보기 메뉴, 아래에 `ChatBot 기록 가져오기`) → **Text-Play 대화방**(Text-Play 저장 기록, 누르면 그 슬롯에서 이어하기, `＋ Text-Play 작품 고르기`) → 프로그램 메뉴(설정·고객 지원)
   - ChatBot 대화방 목록과 사용자 패널의 안쪽 모양은 ChatBot `AppShell.module.css`의 `.grid` 스타일을 그대로 쓰고, 서랍 위치·폭·그림자만 `DesktopShell.module.css`에서 덮어씁니다. ChatBot이 목록을 바꾸면 동기화만으로 모양까지 따라옵니다.

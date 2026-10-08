@@ -1,13 +1,19 @@
 import { CHAT_MESSAGE_MAX_LENGTH, CHAT_VERSION_LIMIT, createVersionFork, getConversationVersion, getMessageVersionGroup, getVersionMessages, type VersionStateInput } from "@chatbot/features/conversation/conversation-versioning"; // 버전 도메인 함수
-import type { AppState, Character, Conversation, ConversationVersion, Message, StatusSnapshot } from "@chatbot/features/core/types"; // 앱 타입
+import type { AppState, Character, Conversation, ConversationVersion, Message, StatusSnapshot, StatusTemplate, TokenWallet, TriggeredEvent } from "@chatbot/features/core/types"; // 앱 타입
 import type { ImageGenerationAdapter } from "@chatbot/lib/adapters/image-generation-adapter"; // 이미지 계약
 import type { LLMAdapter, LLMInput } from "@chatbot/lib/adapters/llm-adapter"; // 대화 계약
-import { evaluateStory } from "@chatbot/lib/story/story-engine"; // 스토리 판정
+import { evaluateStory, resolveRelationshipStage } from "@chatbot/lib/story/story-engine"; // 스토리 판정·관계 단계
 import { trySpend, trySpendAmount } from "@chatbot/lib/story/token-policy"; // 토큰 정책
 import { buildChatContext, type ChatContext } from "@chatbot/features/chat/chat-context"; // 대화 맥락
-import { getMessageCost } from "@chatbot/features/chat/chat-tiers"; // 메시지 비용
-import { composeStatus } from "@chatbot/features/chat/status-model"; // 상태창 계산
+import { matchLore, toExamplePrompt, toLorePrompt } from "@chatbot/features/chat/lore-model"; // 설정집·예시 대화
+import { getActiveLocale } from "@chatbot/lib/i18n"; // 화면 언어
+import { evaluateEvents, getFiredKeys } from "@chatbot/features/chat/event-model"; // 스탯 조건 이벤트
+import { getMessageCost, normalizeTierOption } from "@chatbot/features/chat/chat-tiers"; // 메시지 비용·등급 설정 정리
+import { fromRelationLevel, getRelationStat, readRelationLevel, toRelationLevel, type RelationBinding } from "@chatbot/features/chat/relation-model"; // 관계 스탯
+import { buildStatJudgeInput, currentStatValues, type StatBaseline, type StatChange } from "@chatbot/features/chat/stat-model"; // 스탯 계산
+import { composeStatus, getStatusPeople } from "@chatbot/features/chat/status-model"; // 상태창 계산
 import { deriveDisplayName } from "@chatbot/features/story/story-model"; // 짧은 이름
+import { getTierOption } from "@chatbot/features/chat/chat-tiers"; // 등급별 설정 읽기
 
 export type SendResult = { ok: true } | { ok: false; reason: "empty" | "too-long" | "busy" | "cancelled" | "insufficient-token" | "missing-conversation" | "missing-message" }; // 전송 결과
 export type EditMessageResult = { ok: true; versionId: string } | { ok: false; reason: "empty" | "unchanged" | "too-long" | "busy" | "cancelled" | "insufficient-token" | "missing-message" | "version-limit" | "storage-failed" }; // 수정 결과
@@ -32,7 +38,7 @@ interface ChatAttempt // 채팅 요청 정보
     status: AttemptStatus; // 요청 상태
 } // 구조 종료
 
-function replayForkState(conversation: Conversation, baseVersion: ConversationVersion, messages: Message[]): VersionStateInput // 분기 시점 상태 복원
+function replayForkState(conversation: Conversation, baseVersion: ConversationVersion, messages: Message[], relation: RelationBinding | null = null): VersionStateInput // 분기 시점 상태 복원(관계 스탯이 있으면 그 시점 상태창 값)
 { // 함수 시작
     let replayVersion: ConversationVersion = { ...baseVersion, relationshipLevel: conversation.startSettings.relationshipLevel, relationshipStage: conversation.startSettings.relationshipStage, emotion: conversation.startSettings.emotion, currentScene: conversation.startSettings.scene, lastMessage: conversation.startSettings.greeting }; // 시작 상태 생성
     let userMessageCount = 0; // 사용자 메시지 수
@@ -45,7 +51,8 @@ function replayForkState(conversation: Conversation, baseVersion: ConversationVe
             replayVersion = { ...replayVersion, relationshipLevel: story.relationshipLevel, relationshipStage: story.relationshipStage, emotion: story.emotion, lastMessage: message.content }; // 관계 상태 반영
             return; // 다음 메시지 이동
         } // 사용자 종료
-        replayVersion = { ...replayVersion, emotion: message.emotion ?? replayVersion.emotion, currentScene: message.scenePath ?? replayVersion.currentScene, lastMessage: message.content }; // 응답 상태 반영
+        const relationLevel = relation === null ? null : readRelationLevel(message.status, relation.stat, relation.lead); // 그 응답의 관계 스탯 값
+        replayVersion = { ...replayVersion, ...(relationLevel === null ? {} : { relationshipLevel: relationLevel, relationshipStage: resolveRelationshipStage(relationLevel) }), emotion: message.emotion ?? replayVersion.emotion, currentScene: message.scenePath ?? replayVersion.currentScene, lastMessage: message.content }; // 응답 상태 반영
     }); // 순회 종료
     return { relationshipLevel: replayVersion.relationshipLevel, relationshipStage: replayVersion.relationshipStage, emotion: replayVersion.emotion, currentScene: replayVersion.currentScene, lastMessage: replayVersion.lastMessage }; // 분기 상태 반환
 } // 함수 종료
@@ -73,6 +80,14 @@ export class ChatController // 채팅 제어기
         this.context = buildChatContext(options.state, options.conversationId); // 시작 맥락
     } // 생성자 종료
 
+    public syncWallet(wallet: TokenWallet): void // 요청 직전 전역 지갑 반영(출석·미션으로 받은 토큰)
+    { // 함수 시작
+        if (!this.busy) // 응답 중이 아닐 때만
+        { // 조건 시작
+            this.state = { ...this.state, wallet: structuredClone(wallet) }; // 지갑 교체
+        } // 조건 종료
+    } // 함수 종료
+
     public setContext(context: ChatContext): void // 요청 직전 최신 맥락 반영(오른쪽 패널 설정)
     { // 함수 시작
         this.context = structuredClone(context); // 맥락 교체
@@ -83,18 +98,77 @@ export class ChatController // 채팅 제어기
         return trySpendAmount(this.state.wallet, getMessageCost(this.context.settings), "chat"); // 차감 결과
     } // 함수 종료
 
-    private composeTurnStatus(conversation: Conversation, character: Character, messages: Message[], relationshipLevel: number, emotion: string): StatusSnapshot | null // 이번 턴 상태창
+    private statusTemplateFor(conversation: Conversation, character: Character): StatusTemplate | undefined // 작품 상태창 형식(스토리는 스토리 기준)
     { // 함수 시작
         const story = conversation.mode === "story" ? this.state.stories.find((item) => item.id === conversation.storyId) : undefined; // 연결 스토리
-        const template = story?.statusTemplate ?? character.statusTemplate; // 상태창 형식
+        return story?.statusTemplate ?? character.statusTemplate; // 형식 반환
+    } // 함수 종료
+
+    private previousStatus(messages: Message[]): StatusSnapshot | null // 직전 상태창
+    { // 함수 시작
+        return [...messages].reverse().find((message) => message.role === "assistant" && message.status !== undefined && message.status !== null)?.status ?? null; // 마지막 상태창
+    } // 함수 종료
+
+    private relationBinding(conversation: Conversation, character: Character): RelationBinding | null // 대화의 관계 스탯 연결(없으면 예전 관계 수치 방식)
+    { // 함수 시작
+        const stat = getRelationStat(this.statusTemplateFor(conversation, character)); // 관계 스탯
+        const lead = getStatusPeople(conversation, deriveDisplayName(character.name))[0]; // 대표 인물
+        return stat === null || lead === undefined ? null : { stat, lead }; // 연결 반환
+    } // 함수 종료
+
+    private relationBaselines(conversation: Conversation, character: Character, messages: Message[], levelBeforeTurn: number): StatBaseline[] // 직전 상태창에 관계 스탯 값이 없을 때 이어받을 시작 값
+    { // 함수 시작
+        const relation = this.relationBinding(conversation, character); // 관계 연결
+        if (relation === null || readRelationLevel(this.previousStatus(messages), relation.stat, relation.lead) !== null) // 관계 스탯 없음·직전 값 있음
+        { // 조건 시작
+            return []; // 기준선 불필요
+        } // 조건 종료
+        return [{ statId: relation.stat.id, target: relation.lead, value: fromRelationLevel(relation.stat, levelBeforeTurn) }]; // 이번 턴 전 관계 수치에서 시작
+    } // 함수 종료
+
+    private async judgeTurnStats(conversation: Conversation, character: Character, messages: Message[], userMessage: string, reply: string, emotion: string, signal: AbortSignal, baselines: StatBaseline[]): Promise<StatChange[]> // AI가 정하는 스탯 변화(실패해도 응답은 유지)
+    { // 함수 시작
+        const input = buildStatJudgeInput(this.statusTemplateFor(conversation, character), getStatusPeople(conversation, deriveDisplayName(character.name)), this.previousStatus(messages), userMessage, reply, emotion, baselines); // 판단 입력
+        if (input.stats.length === 0 || this.options.llm.judgeStats === undefined) // 판단할 스탯 없음
+        { // 조건 시작
+            return []; // 변화 없음
+        } // 조건 종료
+        try // 판단 시도
+        { // 시도 시작
+            const story = conversation.mode === "story" ? this.state.stories.find((item) => item.id === conversation.storyId) : undefined; // 연결 스토리
+            const context = { tier: this.context.settings.tier, contentRating: story?.contentRating ?? character.contentRating, userName: this.context.persona?.name ?? "사용자", speakerName: conversation.mode === "story" ? "이야기" : deriveDisplayName(character.name) }; // 실제 AI에 맡길 때 쓰는 문맥
+            return await this.options.llm.judgeStats({ ...input, context }, signal); // AI 판단
+        } // 시도 종료
+        catch // 판단 실패
+        { // 실패 시작
+            return []; // 규칙만 적용
+        } // 실패 종료
+    } // 함수 종료
+
+    private composeTurnStatus(conversation: Conversation, character: Character, messages: Message[], userMessage: string, aiChanges: StatChange[], emotion: string, baselines: StatBaseline[]): StatusSnapshot | null // 이번 턴 상태창
+    { // 함수 시작
+        const story = conversation.mode === "story" ? this.state.stories.find((item) => item.id === conversation.storyId) : undefined; // 연결 스토리
+        const template = this.statusTemplateFor(conversation, character); // 상태창 형식
         if (template === undefined || !template.enabled) // 상태창 끔 판정
         { // 조건 시작
             return null; // 상태창 없음
         } // 조건 종료
-        const people = conversation.mode === "story" ? conversation.storyCast.map((member, index) => ({ name: member.displayName, offset: index === 0 ? 0 : ([...member.characterId].reduce((total, letter) => total + (letter.codePointAt(0) ?? 0), 0) % 17) - 8 })) : [{ name: deriveDisplayName(character.name), offset: 0 }]; // 인물
-        const previous = [...messages].reverse().find((message) => message.role === "assistant" && message.status !== undefined && message.status !== null)?.status ?? null; // 직전 상태창
+        const people = getStatusPeople(conversation, deriveDisplayName(character.name)); // 인물
         const turn = messages.filter((message) => message.role === "user").length; // 턴 번호
-        return composeStatus({ template, people, previous, turn, relationshipLevel, emotion, tags: story?.tags ?? character.tags, startedAt: conversation.createdAt, seed: conversation.id }); // 상태창 반환
+        return composeStatus({ template, people, previous: this.previousStatus(messages), turn, userMessage, aiChanges, baselines, emotion, tags: story?.tags ?? character.tags, startedAt: conversation.createdAt, seed: conversation.id }); // 상태창 반환
+    } // 함수 종료
+
+    private withTurnEvents(conversation: Conversation, character: Character, messages: Message[], status: StatusSnapshot | null): { status: StatusSnapshot | null; events: TriggeredEvent[] } // 이번 턴에 일어난 이벤트를 상태창에 기록(조건이 처음 맞는 턴에 한 번)
+    { // 함수 시작
+        if (status === null) // 상태창 없음
+        { // 조건 시작
+            return { status, events: [] }; // 이벤트 없음
+        } // 조건 종료
+        const story = conversation.mode === "story" ? this.state.stories.find((item) => item.id === conversation.storyId) : undefined; // 연결 스토리
+        const people = getStatusPeople(conversation, deriveDisplayName(character.name)); // 인물
+        const fired = getFiredKeys(messages.flatMap((message) => message.role === "assistant" && message.status !== undefined && message.status !== null ? [message.status] : [])); // 이 버전에서 이미 일어난 이벤트
+        const events = evaluateEvents({ events: (story ?? character).events, stats: this.statusTemplateFor(conversation, character)?.stats ?? [], values: status.stats, turn: status.turn, fired, lead: people[0] ?? deriveDisplayName(character.name) }); // 이벤트 판정
+        return { status: events.length === 0 ? status : { ...status, events }, events }; // 기록한 상태창
     } // 함수 종료
 
     private attachSceneToLatestReply(versionId: string, path: string): void // 현재 버전 마지막 응답에 상황 이미지 붙이기
@@ -122,23 +196,31 @@ export class ChatController // 채팅 제어기
         return this.busy; // 응답 상태 반환
     } // 함수 종료
 
-    private nextId(role: "user" | "assistant"): string // 메시지 식별자 생성
+    private nextId(role: "user" | "assistant"): string // 메시지 식별자 생성(화면을 새로 열면 순서가 1부터 다시 시작하므로, 이미 저장된 메시지와 겹치는 번호는 건너뜀)
     { // 함수 시작
-        this.sequence += 1; // 순서 증가
-        return `${this.options.conversationId}-${role}-${this.sequence}`; // 식별자 반환
+        const used = new Set(this.state.messages.map((message) => message.id)); // 이미 쓰고 있는 식별자
+        let id = ""; // 새 식별자
+        do // 겹치지 않을 때까지 다음 번호로
+        { // 반복 시작
+            this.sequence += 1; // 순서 증가
+            id = `${this.options.conversationId}-${role}-${this.sequence}`; // 후보 식별자
+        } // 반복 종료
+        while (used.has(id)); // 겹침 확인
+        return id; // 식별자 반환
     } // 함수 종료
 
     private createLLMInput(character: Character, conversation: Conversation, version: ConversationVersion, messages: Message[]): LLMInput // 응답 입력 생성
     { // 함수 시작
         const settings = this.context.settings; // 대화방 설정
-        const tierOption = settings.tierOptions[settings.tier]; // 등급별 길이·생각
-        const options = { tier: settings.tier, length: tierOption.length, thinking: tierOption.thinking, writingStyle: settings.writingStyle, preventImpersonation: settings.preventImpersonation, persona: this.context.persona, userNote: settings.userNote, memories: this.context.memories, playGuide: this.context.playGuide }; // 응답 조건
+        const tierOption = normalizeTierOption(getTierOption(settings.tierOptions, settings.tier)); // 등급별 길이·생각(쓸 수 없는 생각 깊이는 끔)
+        const stats = currentStatValues(this.statusTemplateFor(conversation, character), getStatusPeople(conversation, deriveDisplayName(character.name)), this.previousStatus(messages), this.relationBaselines(conversation, character, messages, version.relationshipLevel)).map((item) => ({ name: item.name, target: item.target, value: item.value, min: item.min, max: item.max })); // 지금 스탯 값
+        const options = { tier: settings.tier, length: tierOption.length, thinking: tierOption.thinking, writingStyle: settings.writingStyle, preventImpersonation: settings.preventImpersonation, persona: this.context.persona, userNote: settings.userNote, memories: this.context.memories, playGuide: this.context.playGuide, stats, lore: toLorePrompt(matchLore(this.context.lorebook, messages)), examples: toExamplePrompt(this.context.examples), language: getActiveLocale() }; // 응답 조건(설정집은 최근 대화에 키워드가 나온 것만, 답변 언어는 화면 언어)
         if (conversation.mode !== "story") // 캐릭터 모드 판정
         { // 조건 시작
-            return { character, conversation, version, messages, options }; // 캐릭터 입력 반환
+            return { character, conversation, version, messages, options, contentRating: character.contentRating }; // 캐릭터 입력 반환
         } // 조건 종료
         const story = this.state.stories.find((item) => item.id === conversation.storyId); // 연결 스토리
-        return { character, conversation, version, messages, options, story: { title: story?.title ?? conversation.title, synopsis: story?.synopsis ?? "", userRole: story?.userRole ?? "", cast: conversation.storyCast } }; // 스토리 입력 반환(등장인물은 시작 시점 묶음)
+        return { character, conversation, version, messages, options, contentRating: story?.contentRating ?? character.contentRating, story: { title: story?.title ?? conversation.title, synopsis: story?.synopsis ?? "", userRole: story?.userRole ?? "", cast: conversation.storyCast, castNotes: conversation.storyCast.map((member) => { const linked = this.state.characters.find((item) => item.id === member.characterId); return { displayName: member.displayName, personality: linked?.personality ?? "", sample: (member.firstLine.length > 0 ? member.firstLine : linked?.greeting ?? "").slice(0, 160) }; }) } }; // 스토리 입력 반환(등장인물은 시작 시점 묶음, 성격과 말투 예는 연결된 캐릭터에서)
     } // 함수 종료
 
     private reportProgress(handler: ChatProgressHandler | undefined, phase: ChatProgressPhase, messageId: string): void // 진행 상태 전달
@@ -261,27 +343,37 @@ export class ChatController // 채팅 제어기
             relationshipLevel = story.relationshipLevel; // 관계 수치 반영
             relationshipStage = story.relationshipStage; // 관계 단계 반영
             emotion = story.emotion; // 감정 반영
-            sceneEvent = null; // 장면 사건 초기화
-            if (story.importantEvent) // 중요 사건 판정
-            { // 중요 사건 시작
-                const imageSpending = trySpend(this.state.wallet, "auto-image"); // 이미지 토큰 차감
-                if (imageSpending.ok) // 이미지 생성 가능
-                { // 가능 시작
-                    const scene = await this.options.images.generateScene({ sceneId: story.sceneId }); // Mock 장면 생성
-                    if (abortController.signal.aborted) // 이미지 생성 중 중단 판정
-                    { // 조건 시작
-                        this.lastAttempt = { userMessageId: userMessage.id, assistantMessageId, status: "cancelled" }; // 중단 상태 기록
-                        return { ok: false, reason: "cancelled" }; // 중단 결과 반환
-                    } // 조건 종료
-                    this.state = { ...this.state, wallet: imageSpending.wallet }; // 이미지 토큰 반영
-                    currentScene = scene.path; // 장면 경로 반영
-                    sceneEvent = story.sceneId; // 사건 기록
-                    sceneImage = scene.path; // 응답 아래 상황 이미지
-                } // 가능 종료
-            } // 중요 사건 종료
         } // 조건 종료
         const createdAt = new Date().toISOString(); // 완료 시각
-        const status = this.composeTurnStatus(conversation, character, promptMessages, relationshipLevel, emotion); // 이번 턴 상태창
+        const relation = this.relationBinding(conversation, character); // 관계 스탯 연결
+        const replacedEntry = relation === null ? undefined : previousAssistant?.status?.stats.find((item) => item.statId === relation.stat.id && item.target === relation.lead); // 다시 생성하는 응답의 관계 스탯 값
+        const levelBeforeTurn = applyStory || relation === null ? version.relationshipLevel : replacedEntry !== undefined ? toRelationLevel(relation.stat, replacedEntry.value - replacedEntry.delta) : replayForkState(conversation, version, promptMessages.slice(0, -1), relation).relationshipLevel; // 이번 턴 전 관계 수치(다시 생성은 그 응답이 더하기 전 값)
+        const baselines = this.relationBaselines(conversation, character, promptMessages, levelBeforeTurn); // 관계 스탯 시작 값
+        const aiChanges = await this.judgeTurnStats(conversation, character, promptMessages, userMessage.content, reply, emotion, abortController.signal, baselines); // AI 스탯 판단
+        if (abortController.signal.aborted) // 판단 중 중단
+        { // 조건 시작
+            this.lastAttempt = { userMessageId: userMessage.id, assistantMessageId, status: "cancelled" }; // 중단 상태 기록
+            return { ok: false, reason: "cancelled" }; // 중단 결과 반환
+        } // 조건 종료
+        const turn = this.withTurnEvents(conversation, character, promptMessages, this.composeTurnStatus(conversation, character, promptMessages, userMessage.content, aiChanges, emotion, baselines)); // 이번 턴 상태창과 이벤트
+        const status = turn.status; // 이벤트를 기록한 상태창
+        const eventScene = turn.events.find((item) => item.scene !== null)?.scene ?? null; // 이벤트의 특별 장면 그림(토큰 없음)
+        if (eventScene !== null) // 특별 장면 판정
+        { // 조건 시작
+            currentScene = eventScene; // 장면 반영
+            sceneImage = eventScene; // 응답 아래 그림
+        } // 조건 종료
+        else if (previousAssistant?.status?.events?.some((item) => item.scene !== null && item.scene === sceneImage) === true) // 다시 생성으로 이벤트가 사라짐
+        { // 조건 시작
+            sceneImage = null; // 그 이벤트의 그림도 뗌
+        } // 조건 종료
+        sceneEvent = turn.events[0]?.eventId ?? null; // 이 턴의 첫 이벤트
+        const relationLevel = relation === null ? null : readRelationLevel(status, relation.stat, relation.lead); // 대표 인물의 관계 스탯 값
+        if (relationLevel !== null) // 관계 스탯 판정
+        { // 조건 시작
+            relationshipLevel = relationLevel; // 대화의 관계 수치는 관계 스탯 값을 따름
+            relationshipStage = resolveRelationshipStage(relationLevel); // 관계 단계도 같은 값으로
+        } // 조건 종료
         const assistantMessage: Message = { id: assistantMessageId, conversationId: conversation.id, versionId: version.id, sourceMessageId: null, role: "assistant", content: reply, emotion, sceneEvent, scenePath: currentScene, status, sceneImage, createdAt }; // 캐릭터 메시지
         const updatedVersion = { ...version, relationshipLevel, relationshipStage, emotion, currentScene, lastMessage: reply, updatedAt: createdAt }; // 버전 갱신
         this.state = { ...this.state, messages: this.state.messages.map((message) => message.id === assistantMessageId ? assistantMessage : message), conversationVersions: this.state.conversationVersions.map((item) => item.id === version.id ? updatedVersion : item) }; // 응답 상태 반영
@@ -343,7 +435,8 @@ export class ChatController // 채팅 제어기
         const originalState = this.snapshot(); // 원본 상태 보존
         const baseMessages = getVersionMessages(originalState, conversation.id, version.id); // 기준 메시지 조회
         const targetIndex = baseMessages.findIndex((message) => message.id === target.id); // 수정 위치 조회
-        const forkBaseState = replayForkState(conversation, version, baseMessages.slice(0, targetIndex)); // 분기 시점 상태 복원
+        const relation = this.relationBinding(conversation, character); // 관계 스탯 연결
+        const forkBaseState = replayForkState(conversation, version, baseMessages.slice(0, targetIndex), relation); // 분기 시점 상태 복원
         const forkBaseVersion = { ...version, ...forkBaseState }; // 분기 기준 버전 생성
         const editedMessage = { ...target, content }; // 수정 입력 메시지 생성
         const promptMessages = [...baseMessages.slice(0, targetIndex), editedMessage]; // 수정 문맥 생성
@@ -377,8 +470,19 @@ export class ChatController // 채팅 제어기
             } // 조건 종료
             const userMessageCount = promptMessages.filter((message) => message.role === "user").length; // 사용자 메시지 수 계산
             const story = evaluateStory({ conversation, version: forkBaseVersion, userMessage: content, userMessageCount }); // 수정 스토리 판정
-            const forkStatus = this.composeTurnStatus(conversation, character, promptMessages, story.relationshipLevel, story.emotion); // 수정 턴 상태창
-            const fork = createVersionFork(originalState, { conversationId: conversation.id, baseVersionId: version.id, targetMessageId: target.id, content, assistantMessage: { id: assistantMessageId, role: "assistant", content: reply, emotion: story.emotion, sceneEvent: null, scenePath: forkBaseState.currentScene, status: forkStatus, sceneImage: null, createdAt: now }, versionState: { relationshipLevel: story.relationshipLevel, relationshipStage: story.relationshipStage, emotion: story.emotion, currentScene: forkBaseState.currentScene, lastMessage: reply }, now }); // 최종 분기 생성
+            const forkBaselines = this.relationBaselines(conversation, character, promptMessages, forkBaseState.relationshipLevel); // 분기 시점 관계에서 시작
+            const forkChanges = await this.judgeTurnStats(conversation, character, promptMessages, content, reply, story.emotion, abortController.signal, forkBaselines); // AI 스탯 판단
+            if (abortController.signal.aborted) // 판단 중 중단
+            { // 조건 시작
+                return { ok: false, reason: "cancelled" }; // 중단 결과 반환
+            } // 조건 종료
+            const forkTurn = this.withTurnEvents(conversation, character, promptMessages, this.composeTurnStatus(conversation, character, promptMessages, content, forkChanges, story.emotion, forkBaselines)); // 수정 턴 상태창과 이벤트
+            const forkStatus = forkTurn.status; // 이벤트를 기록한 상태창
+            const forkScene = forkTurn.events.find((item) => item.scene !== null)?.scene ?? null; // 이벤트의 특별 장면 그림
+            const forkRelationLevel = relation === null ? null : readRelationLevel(forkStatus, relation.stat, relation.lead); // 분기 응답의 관계 스탯 값
+            const forkLevel = forkRelationLevel ?? story.relationshipLevel; // 관계 스탯이 있으면 그 값
+            const forkStage = forkRelationLevel === null ? story.relationshipStage : resolveRelationshipStage(forkRelationLevel); // 관계 단계
+            const fork = createVersionFork(originalState, { conversationId: conversation.id, baseVersionId: version.id, targetMessageId: target.id, content, assistantMessage: { id: assistantMessageId, role: "assistant", content: reply, emotion: story.emotion, sceneEvent: forkTurn.events[0]?.eventId ?? null, scenePath: forkScene ?? forkBaseState.currentScene, status: forkStatus, sceneImage: forkScene, createdAt: now }, versionState: { relationshipLevel: forkLevel, relationshipStage: forkStage, emotion: story.emotion, currentScene: forkScene ?? forkBaseState.currentScene, lastMessage: reply }, now }); // 최종 분기 생성
             this.state = { ...fork.state, wallet: spending.wallet }; // 원자적 수정 확정
             this.reportProgress(onProgress, "complete", assistantMessageId); // 완료 상태 전달
             return { ok: true, versionId: fork.version.id }; // 성공 결과 반환

@@ -154,12 +154,12 @@ describe("왼쪽 대화방 목록 계산", () => // 목록 계산 묶음
         { // 조건 시작
             throw new Error("리안 응답이 필요합니다."); // 준비 오류
         } // 조건 종료
-        state.messages = state.messages.map((message) => message.id === reply.id ? { ...message, status: { turn: 3, location: "새벽 도서관", time: "목요일 20:18", tip: null, affection: [], thoughts: [], custom: [] } } : message); // 상태 부착
+        state.messages = state.messages.map((message) => message.id === reply.id ? { ...message, status: { turn: 3, location: "새벽 도서관", time: "목요일 20:18", tip: null, stats: [], thoughts: [], custom: [] } } : message); // 상태 부착
         const rian = buildConversationListItems(state, now).find((item) => item.conversation.id === "conversation-rian"); // 리안 항목
         expect(rian?.latestStatus?.turn).toBe(3); // 마지막 상태
         expect(formatConversationStatus(rian?.latestStatus ?? null)).toBe("새벽 도서관 · 목요일 20:18"); // 짧은 표시
         expect(formatConversationStatus(null)).toBe(""); // 없음
-        expect(formatConversationStatus({ turn: 1, location: null, time: null, tip: null, affection: [], thoughts: [], custom: [] })).toBe(""); // 장소·시간 끔
+        expect(formatConversationStatus({ turn: 1, location: null, time: null, tip: null, stats: [], thoughts: [], custom: [] })).toBe(""); // 장소·시간 끔
     }); // 검증 종료
 
     it("대화방 고정은 최대 5개다", () => // 고정 한도 검증

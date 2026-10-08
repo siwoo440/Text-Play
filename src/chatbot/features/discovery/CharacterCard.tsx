@@ -4,6 +4,7 @@ import Link from "@/desktop/next-compat/link"; // 내부 경로 링크
 import type { Character } from "@chatbot/features/core/types"; // 캐릭터 타입
 import styles from "@chatbot/features/discovery/DiscoveryHome.module.css"; // 탐색 스타일
 import { getGenreKey, getGenreLabel } from "@chatbot/lib/theme/genre-theme"; // 장르 색 조회
+import { tc } from "@chatbot/lib/i18n"; // 화면 글자 번역
 
 export function CharacterCard({ character }: { character: Character }) // 캐릭터 카드
 { // 함수 시작
@@ -17,7 +18,7 @@ export function CharacterCard({ character }: { character: Character }) // 캐릭
             <div> {/* 카드 설명 */}
                 <h3>{character.name}</h3> {/* 캐릭터 이름 */}
                 <p>{character.summary}</p> {/* 한 줄 소개 */}
-                <span>{character.popularity.toLocaleString()} 대화</span> {/* 인기도 */}
+                <span>{character.popularity.toLocaleString()} {tc("count", "대화")}</span> {/* 인기도 */}
             </div> {/* 설명 종료 */}
         </Link> // 링크 종료
     ); // 반환 종료

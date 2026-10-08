@@ -2,18 +2,19 @@ import Image from "@/desktop/next-compat/image"; // 이미지 도구
 import { contentRatingLabels } from "@chatbot/features/adult/adult-access"; // 등급 문구
 import type { CharacterDraft } from "@chatbot/features/core/types"; // 초안 타입
 import styles from "@chatbot/features/character/CharacterEditor.module.css"; // 편집기 스타일
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
 
 export function CharacterPreview({ draft }: { draft: CharacterDraft }) // 캐릭터 미리보기
 { // 함수 시작
-    const name = draft.name.trim() || "이름 없는 캐릭터"; // 표시 이름
-    const summary = draft.summary.trim() || "한 줄 소개가 여기에 표시됩니다."; // 표시 소개
-    const greeting = draft.greeting.trim() || "첫 인사를 입력하면 대화 미리보기가 완성됩니다."; // 표시 인사
+    const name = draft.name.trim() || t("이름 없는 캐릭터"); // 표시 이름
+    const summary = draft.summary.trim() || t("한 줄 소개가 여기에 표시됩니다."); // 표시 소개
+    const greeting = draft.greeting.trim() || t("첫 인사를 입력하면 대화 미리보기가 완성됩니다."); // 표시 인사
     return ( // 미리보기 반환
-        <aside className={styles.preview} data-testid="character-preview" aria-label="캐릭터 미리보기"> {/* 미리보기 영역 */}
+        <aside className={styles.preview} data-testid="character-preview" aria-label={t("캐릭터 미리보기")}> {/* 미리보기 영역 */}
             <span className={styles.previewLabel}>LIVE PREVIEW</span> {/* 미리보기 표시 */}
-            <Image src={draft.coverImage} alt={`${name} 대표 이미지`} width={420} height={560} priority /> {/* 대표 이미지 */}
+            <Image src={draft.coverImage} alt={t("{0} 대표 이미지", [name])} width={420} height={560} priority /> {/* 대표 이미지 */}
             <div className={styles.previewBody}> {/* 미리보기 본문 */}
-                <span className={styles.ratingTag} data-rating={draft.contentRating}>{contentRatingLabels[draft.contentRating]}</span> {/* 이용 등급 */}
+                <span className={styles.ratingTag} data-rating={draft.contentRating}>{t(contentRatingLabels[draft.contentRating])}</span> {/* 이용 등급 */}
                 <h2>{name}</h2> {/* 캐릭터 이름 */}
                 <p>{summary}</p> {/* 한 줄 소개 */}
                 <div className={styles.tags}> {/* 태그 목록 */}

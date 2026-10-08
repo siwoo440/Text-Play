@@ -1,5 +1,6 @@
 import type { Message, StoryCastMember } from "@chatbot/features/core/types"; // 도메인 타입
 import { formatStoryLine, getMentionedCastMember, STORY_CONTINUE_TEXT, STORY_NARRATOR_LABEL } from "@chatbot/features/story/story-model"; // 스토리 형식
+import { translateTo, type Locale } from "@chatbot/lib/i18n"; // 답변 언어로 바꾸기
 
 export interface StoryPromptContext // 스토리 응답 문맥(실제 LLM 연결 때 프롬프트로 사용)
 { // 구조 시작
@@ -7,6 +8,7 @@ export interface StoryPromptContext // 스토리 응답 문맥(실제 LLM 연결
     synopsis: string; // 줄거리·세계관
     userRole: string; // 사용자 역할
     cast: StoryCastMember[]; // 등장인물
+    castNotes?: Array<{ displayName: string; personality: string; sample?: string }>; // 등장인물의 성격과 말투, 말투를 보여 주는 대사 한 줄(연결된 캐릭터에서 가져옴. 실제 AI 지시문에 씀)
 } // 구조 종료
 
 export interface StoryReplyInput // Mock 스토리 응답 입력
@@ -14,6 +16,7 @@ export interface StoryReplyInput // Mock 스토리 응답 입력
     story: StoryPromptContext; // 스토리 문맥
     messages: Message[]; // 지금까지의 메시지
     seed: number; // 결정 시드
+    language?: Locale; // 답변 언어(없으면 한국어)
 } // 구조 종료
 
 const narrations = // 내레이션 문장
@@ -64,22 +67,23 @@ function pick<T>(items: readonly T[], key: number): T // 결정적 선택
 export function composeStoryReply(input: StoryReplyInput): string // Mock 스토리 응답 만들기
 { // 함수 시작
     const { cast } = input.story; // 등장인물
+    const say = (text: string) => translateTo(input.language ?? "ko", text); // 답변 언어로 바꾸기
     if (cast.length === 0) // 등장인물 부재 판정
     { // 조건 시작
-        return formatStoryLine(STORY_NARRATOR_LABEL, pick(narrations, input.seed)); // 내레이션만 반환
+        return formatStoryLine(STORY_NARRATOR_LABEL, say(pick(narrations, input.seed))); // 내레이션만 반환
     } // 조건 종료
     const lastUser = [...input.messages].reverse().find((message) => message.role === "user")?.content.trim() ?? ""; // 마지막 사용자 입력
     const continuing = lastUser === STORY_CONTINUE_TEXT; // 이야기 진행 판정
     const key = hash(`${input.story.title}|${lastUser}|${input.messages.length}|${input.seed}`); // 결정 키
     const mentioned = getMentionedCastMember(lastUser, cast); // 지목 인물
     const first = mentioned ?? pick(cast, key); // 먼저 말할 인물
-    const lines = [formatStoryLine(STORY_NARRATOR_LABEL, pick(continuing ? continueNarrations : narrations, key >>> 2))]; // 내레이션
-    lines.push(formatStoryLine(first.displayName, mentioned === null ? pick(characterLines, key >>> 4) : pick(addressedLines, key >>> 4))); // 첫 대사
+    const lines = [formatStoryLine(STORY_NARRATOR_LABEL, say(pick(continuing ? continueNarrations : narrations, key >>> 2)))]; // 내레이션
+    lines.push(formatStoryLine(first.displayName, say(mentioned === null ? pick(characterLines, key >>> 4) : pick(addressedLines, key >>> 4)))); // 첫 대사
     const others = cast.filter((member) => member.characterId !== first.characterId); // 다른 인물
     if (others.length > 0 && (continuing || (key >>> 6) % 2 === 0)) // 둘째 화자 판정
     { // 조건 시작
         const second = pick(others, key >>> 8); // 둘째 인물
-        const reply = (key >>> 10) % 2 === 0 ? `${first.displayName}, 너는 어떻게 생각해?` : pick(characterLines, (key >>> 12) + 1); // 둘째 대사
+        const reply = (key >>> 10) % 2 === 0 ? say("{0}, 너는 어떻게 생각해?").replace("{0}", first.displayName) : say(pick(characterLines, (key >>> 12) + 1)); // 둘째 대사
         lines.push(formatStoryLine(second.displayName, reply)); // 둘째 대사 추가
     } // 조건 종료
     return lines.join("\n"); // 응답 반환

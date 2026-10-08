@@ -12,10 +12,9 @@ describe("스토리 엔진", () => // 스토리 묶음
         expect(update.emotion).toBe("기쁨"); // 감정 변화
     }); // 검증 종료
 
-    it("세 번째 사용자 메시지를 중요 사건으로 판정한다", () => // 사건 검증
+    it("세 번째 사용자 메시지에도 자동 장면 사건을 만들지 않는다(장면은 스탯 조건 이벤트가 정함)", () => // 자동 장면 제거 검증
     { // 검증 시작
         const update = evaluateStory({ conversation: mockConversations[0], version: mockConversationVersions[0], userMessage: "계속 이야기해 줘", userMessageCount: 3 }); // 판정 실행
-        expect(update.importantEvent).toBe(true); // 사건 확인
-        expect(update.sceneId).toBe("dawn"); // 장면 확인
+        expect(Object.keys(update).sort()).toEqual(["emotion", "relationshipLevel", "relationshipStage"]); // 관계와 감정만 정함
     }); // 검증 종료
 }); // 묶음 종료

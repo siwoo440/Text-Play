@@ -1,3 +1,4 @@
+import type { LanguageSetting } from "@chatbot/lib/i18n"; // 언어 설정
 export type ProviderMode = "mock"; // 공급자 모드
 export type MessageRole = "user" | "assistant" | "system"; // 메시지 역할
 export type PlatformMode = "auto" | "mobile" | "tablet" | "desktop"; // 플랫폼 모드
@@ -11,15 +12,54 @@ export type MemoryCategory = "long" | "short" | "relation" | "goal"; // 요약 �
 export type ReportReason = "incorrect-rating" | "harmful-content" | "copyright" | "spam" | "other"; // 신고 사유
 export type AdultVerificationMethod = "mock"; // 성인 인증 방식
 export type ConversationSort = "recent" | "relationship" | "turns" | "title"; // 대화방 정렬 기준
-export type ChatTierId = "basic" | "plus" | "premium"; // 채팅 모델 등급
+export type ChatTierId = "open" | "basic" | "smart" | "balance" | "plus" | "premium" | "master"; // 채팅 모델 등급(오픈: 내 컴퓨터의 공개 모델, 베이직·스마트: Gemini, 밸런스: GPT, 플러스·프리미엄·마스터: Claude)
 export type LengthMultiplier = 1 | 1.5 | 3 | 5; // 답변 최대 길이 배수
 export type ThinkingDepth = "off" | "basic" | "deep" | "deeper"; // 생각 깊이
 export type WritingStyle = "default" | "romance" | "hardboiled" | "comic" | "literary"; // 문체
 export type ChatFont = "default" | "nanum-myeongjo" | "gowun-batang" | "noto-serif"; // 채팅 글꼴
 export type ChatFontSize = "small" | "medium" | "large"; // 채팅 글자 크기
-export type ChatTheme = "light" | "dark"; // 채팅 테마
+export type ColorTheme = "light" | "dark"; // 사이트 색 테마(밝게·어둡게)
 export type ConversationFilter = "all" | "character" | "story"; // 왼쪽 창 대화 종류 탭
-export type NotificationKind = "notice" | "image" | "memory"; // 알림 종류
+export type NotificationKind = "notice" | "image" | "memory" | "reward" | "event"; // 알림 종류(reward: 출석·미션 보상, event: 스탯 조건 이벤트)
+export type StoryEventCondition = "stat-min" | "stat-max" | "turn"; // 이벤트 조건(스탯 이상·스탯 이하·턴)
+export type MissionId = "send-messages" | "start-conversation" | "favorite-work"; // 오늘의 미션 식별자
+export type WeeklyMissionId = "weekly-messages" | "weekly-attendance" | "weekly-conversations"; // 주간 미션 식별자
+export type TokenRecordSource = "attendance" | "mission" | "mission-bonus" | "invite-welcome" | "invite-friend" | "chat" | "scene-image" | "studio-image"; // 토큰 기록 출처(받음: 출석·미션·친구 초대, 사용: 대화·장면 이미지·이미지 스튜디오)
+export type StatMode = "rule" | "ai" | "both"; // 스탯 수치를 정하는 방법(규칙·AI 판단·둘 다)
+export type StatScope = "each" | "shared"; // 스탯 적용 대상(인물마다 따로·하나만)
+
+export interface StatRule // 스탯 낱말 규칙
+{ // 구조 시작
+    keyword: string; // 사용자 메시지에 들어 있으면
+    delta: number; // 이만큼 바뀜
+} // 구조 종료
+
+export interface StatDefinition // 제작자가 정한 스탯
+{ // 구조 시작
+    id: string; // 스탯 식별자
+    name: string; // 이름(예: 호감도)
+    icon: string; // 아이콘(예: ❤️)
+    initial: number; // 초기값
+    min: number; // 최솟값
+    max: number; // 최댓값
+    mode: StatMode; // 정하는 방법
+    perTurn: number; // 규칙: 매 턴 변화
+    rules: StatRule[]; // 규칙: 낱말 규칙
+    aiMaxChange: number; // AI: 한 턴 최대 변화
+    scope: StatScope; // 적용 대상
+} // 구조 종료
+
+export interface StatValue // 한 턴의 스탯 값
+{ // 구조 시작
+    statId: string; // 스탯 식별자
+    name: string; // 이름(그 턴 기준)
+    icon: string; // 아이콘
+    target: string | null; // 인물 이름(하나만 적용이면 null)
+    value: number; // 값
+    delta: number; // 직전 턴 대비 변화
+    min: number; // 최솟값
+    max: number; // 최댓값
+} // 구조 종료
 
 export interface TierOption // 등급별 답변 설정
 { // 구조 시작
@@ -30,12 +70,53 @@ export interface TierOption // 등급별 답변 설정
 export interface ConversationSettings // 대화방별 설정
 { // 구조 시작
     tier: ChatTierId; // 채팅 모델 등급
-    tierOptions: Record<ChatTierId, TierOption>; // 등급별 답변 길이·생각 깊이
+    tierOptions: Partial<Record<ChatTierId, TierOption>>; // 등급별 답변 길이·생각 깊이(없는 등급은 기본값, 예전 데이터에는 세 등급만 있음)
     personaId: string | null; // 대화 프로필(null이면 기본 프로필)
     userNote: string; // 유저 노트
     userNoteExtended: boolean; // 유저 노트 2000자 확장
     writingStyle: WritingStyle; // 문체
     preventImpersonation: boolean; // 유저 사칭 방지
+} // 구조 종료
+
+export interface StoryEvent // 제작자가 정한 스탯 조건 이벤트
+{ // 구조 시작
+    id: string; // 이벤트 식별자
+    name: string; // 이벤트 이름
+    condition: StoryEventCondition; // 조건 종류
+    statId: string | null; // 조건 스탯(턴 조건이면 없음)
+    value: number; // 기준 값(스탯 값 또는 턴 번호)
+    narration: string; // 내레이션({이름}은 인물 이름으로 바뀜)
+    scene: string | null; // 특별 장면 그림(응답 아래에 표시, 토큰 없음)
+    title: string; // 칭호
+    ending: boolean; // 엔딩 표시(대화는 계속할 수 있음)
+    notify: boolean; // 알림함에 알리기
+} // 구조 종료
+
+export interface TriggeredEvent // 한 턴에 일어난 이벤트(그 응답의 상태창에 기록)
+{ // 구조 시작
+    eventId: string; // 이벤트 식별자
+    name: string; // 이벤트 이름
+    target: string | null; // 조건을 채운 인물(공통 스탯·턴 조건이면 없음)
+    narration: string; // 내레이션(이름을 넣은 문장)
+    scene: string | null; // 특별 장면 그림
+    title: string; // 칭호
+    ending: boolean; // 엔딩 표시
+    notify: boolean; // 알림함에 알리기
+} // 구조 종료
+
+export interface LoreEntry // 키워드 설정집 항목(대화에 키워드가 나오면 AI에게만 넘기는 배경 설정)
+{ // 구조 시작
+    id: string; // 항목 식별자
+    title: string; // 설정 이름
+    keywords: string[]; // 키워드(최근 대화에 나오면 이 설정을 넘김)
+    content: string; // 설정 내용
+} // 구조 종료
+
+export interface ExampleDialogue // 예시 대화(말투를 보여 주는 한 쌍)
+{ // 구조 시작
+    id: string; // 예시 식별자
+    user: string; // 사용자 말
+    reply: string; // 작품의 답
 } // 구조 종료
 
 export interface StatusTemplate // 상태창 형식
@@ -44,9 +125,10 @@ export interface StatusTemplate // 상태창 형식
     location: boolean; // 장소
     time: boolean; // 작품 속 시간
     tip: boolean; // 진행 팁
-    affection: boolean; // 호감도
     thought: boolean; // 속마음
     customLabels: string[]; // 직접 정한 항목(최대 2개)
+    stats: StatDefinition[]; // 제작자가 정한 스탯(최대 6개)
+    relationStatId: string | null; // 관계 스탯(관계 단계·왼쪽 카드 막대·정렬이 이 스탯 값을 씀, 없으면 예전 관계 수치)
 } // 구조 종료
 
 export interface StatusSnapshot // 한 턴의 상태창 값
@@ -55,9 +137,10 @@ export interface StatusSnapshot // 한 턴의 상태창 값
     location: string | null; // 장소
     time: string | null; // 작품 속 시간
     tip: string | null; // 진행 팁
-    affection: Array<{ name: string; value: number; delta: number }>; // 인물별 호감도와 변화
+    stats: StatValue[]; // 스탯 값과 변화
     thoughts: Array<{ name: string; text: string }>; // 인물별 속마음
     custom: Array<{ label: string; value: string }>; // 직접 정한 항목 값
+    events?: TriggeredEvent[]; // 이 턴에 일어난 이벤트(없으면 생략)
 } // 구조 종료
 
 export interface WorkUpdate // 작품 업데이트 기록
@@ -124,6 +207,9 @@ export interface Story // 스토리(여러 인물 또는 한 명과 펼치는 �
     playGuide: string; // 플레이 가이드
     statusTemplate: StatusTemplate; // 상태창 형식
     updates: WorkUpdate[]; // 업데이트 기록
+    events: StoryEvent[]; // 스탯 조건 이벤트
+    lorebook: LoreEntry[]; // 키워드 설정집
+    examples: ExampleDialogue[]; // 예시 대화
     createdAt: string; // 생성 시각
     updatedAt: string; // 수정 시각
 } // 구조 종료
@@ -166,6 +252,9 @@ export interface Character // 캐릭터 구조
     playGuide: string; // 플레이 가이드
     statusTemplate: StatusTemplate; // 상태창 형식
     updates: WorkUpdate[]; // 업데이트 기록
+    events: StoryEvent[]; // 스탯 조건 이벤트
+    lorebook: LoreEntry[]; // 키워드 설정집
+    examples: ExampleDialogue[]; // 예시 대화
     createdAt: string; // 생성 시각
     updatedAt: string; // 수정 시각
 } // 구조 종료
@@ -186,6 +275,9 @@ export interface CharacterDraft // 캐릭터 초안 구조
     playGuide: string; // 플레이 가이드
     statusTemplate: StatusTemplate; // 상태창 형식
     updates: WorkUpdate[]; // 업데이트 기록
+    events: StoryEvent[]; // 스탯 조건 이벤트
+    lorebook: LoreEntry[]; // 키워드 설정집
+    examples: ExampleDialogue[]; // 예시 대화
 } // 구조 종료
 
 export interface Conversation // 대화방 구조
@@ -324,6 +416,7 @@ export interface Message // 메시지 구조
     scenePath?: string | null; // 장면 경로 기록
     status?: StatusSnapshot | null; // 이 응답 턴의 상태창
     sceneImage?: string | null; // 이 응답에 붙은 상황 이미지
+    bookmarked?: boolean; // 책갈피한 답변(없으면 생략)
     createdAt: string; // 생성 시각
 } // 구조 종료
 
@@ -334,6 +427,66 @@ export interface TokenWallet // 토큰 지갑 구조
     dailyChatUsed: number; // 일일 대화 사용량
     dailyImageUsed: number; // 일일 이미지 사용량
     updatedAt: string; // 수정 시각
+} // 구조 종료
+
+export interface AttendanceState // 출석 상태
+{ // 구조 시작
+    lastDate: string | null; // 마지막 출석 날짜(한국 시간 연-월-일)
+    cycleDay: number; // 이번 도장판에서 찍은 칸(0~7)
+    totalDays: number; // 누적 출석일
+} // 구조 종료
+
+export interface DailyMissionState // 오늘의 미션 상태
+{ // 구조 시작
+    dateKey: string | null; // 기록한 날짜(바뀌면 처음부터)
+    progress: Record<string, number>; // 미션별 진행(없으면 0)
+    claimed: string[]; // 보상을 받은 미션
+    bonusClaimed: boolean; // 모두 완료 보너스 받음
+} // 구조 종료
+
+export interface WeeklyMissionState // 주간 미션 상태
+{ // 구조 시작
+    weekKey: string | null; // 기록한 주의 월요일(한국 시간 연-월-일, 바뀌면 처음부터)
+    progress: Record<string, number>; // 미션별 진행(없으면 0)
+    claimed: string[]; // 보상을 받은 미션
+} // 구조 종료
+
+export interface RewardState // 출석·미션 상태
+{ // 구조 시작
+    attendance: AttendanceState; // 출석
+    missions: DailyMissionState; // 오늘의 미션
+    weekly?: WeeklyMissionState; // 주간 미션(없으면 이번 주를 빈 상태로 봄)
+    totalEarned: number; // 지금까지 받은 토큰
+} // 구조 종료
+
+export interface InvitedFriend // 내 초대로 들어와 조건을 채운 친구
+{ // 구조 시작
+    id: string; // 친구 식별자(서버가 정함)
+    nickname: string; // 표시 이름
+    qualifiedAt: string; // 조건(메시지 5번)을 채운 시각
+    rewardedAt: string | null; // 보상을 받은 시각(한 달 한도를 넘으면 없음)
+} // 구조 종료
+
+export interface ReferralState // 친구 초대 상태
+{ // 구조 시작
+    code: string | null; // 내 초대 코드(만들기 전에는 없음)
+    createdAt: string | null; // 코드를 만든 시각
+    redeemedCode: string | null; // 내가 입력한 친구의 초대 코드(한 번만)
+    redeemedAt: string | null; // 환영 보너스를 받은 시각
+    qualifyingMessages: number; // 초대받은 뒤 보낸 메시지(0~5, 초대해 준 친구의 보상 조건)
+    friends: InvitedFriend[]; // 초대한 친구(최근 순)
+} // 구조 종료
+
+export interface TokenRecord // 토큰 기록(받음·사용, 최근 순)
+{ // 구조 시작
+    id: string; // 기록 식별자
+    direction: "earn" | "spend"; // 받음·사용
+    source: TokenRecordSource; // 출처
+    label: string; // 표시 이름
+    work?: string; // 쓴 곳(작품 이름·이미지 설명, 받은 기록에는 없음)
+    amount: number; // 토큰 수
+    balance: number; // 기록 뒤 잔액
+    createdAt: string; // 기록 시각
 } // 구조 종료
 
 export interface AppSettings // 앱 설정 구조
@@ -352,9 +505,11 @@ export interface AppSettings // 앱 설정 구조
     conversationFilter: ConversationFilter; // 왼쪽 대화방 종류 탭
     chatFont: ChatFont; // 채팅 글꼴
     chatFontSize: ChatFontSize; // 채팅 글자 크기
-    chatTheme: ChatTheme; // 채팅 테마
+    theme: ColorTheme; // 사이트 색 테마(헤더 다크 모드 스위치)
     showSceneImages: boolean; // 대화 속 상황 이미지 보기
     statusPanelOpen: boolean; // 고정 상태창 펼침
+    chatPanelOpen: boolean; // 채팅방 설정 패널 펼침(넓은 화면)
+    language?: LanguageSetting; // 화면 언어(없으면 자동: 브라우저 언어를 따름)
 } // 구조 종료
 
 export type ImageStyle = "anime" | "illustration" | "watercolor" | "cinematic"; // 이미지 그림체
@@ -377,7 +532,7 @@ export interface GeneratedImage // 이미지 스튜디오 생성 이미지
 
 export interface AppState // 앱 상태 구조
 { // 구조 시작
-    schemaVersion: 12; // 스키마 버전
+    schemaVersion: 18; // 스키마 버전
     providerMode: ProviderMode; // 공급자 설정
     profile: UserProfile; // 사용자 프로필
     characters: Character[]; // 캐릭터 목록
@@ -390,6 +545,9 @@ export interface AppState // 앱 상태 구조
     conversationVersions: ConversationVersion[]; // 대화 버전 목록
     messages: Message[]; // 메시지 목록
     wallet: TokenWallet; // 토큰 지갑
+    rewards: RewardState; // 출석·미션
+    referral: ReferralState; // 친구 초대
+    tokenRecords: TokenRecord[]; // 토큰 기록(최근 순)
     settings: AppSettings; // 사용자 설정
     bookmarkedCharacterIds: string[]; // 보관 캐릭터
     memories: CharacterMemory[]; // 장기 기억 목록

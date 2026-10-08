@@ -165,7 +165,7 @@ export const mockConversations: Conversation[] = // 대화방 기준값
         characterId: "rian", // 캐릭터 식별자
         userId: "user-demo", // 사용자 식별자
         title: "새벽 도서관의 리안", // 대화방 이름
-        startSettings: { profileId: "user-demo", presetId: "legacy-default", relationshipStage: "아는 사이", relationshipLevel: 34, emotion: "기대", scene: "/images/scenes/dawn-letter.svg", greeting: "기다리고 있었어. 오늘은 어떤 기억을 이곳에 남길까?" }, // 시작 설정
+        startSettings: { profileId: "user-demo", presetId: "legacy-default", relationshipStage: "아는 사이", relationshipLevel: 34, emotion: "기대", scene: "/images/scenes/dawn-letter.webp", greeting: "기다리고 있었어. 오늘은 어떤 기억을 이곳에 남길까?" }, // 시작 설정
         currentVersionId: "conversation-rian-version-1", // 현재 버전 식별자
         archivedAt: null, // 보관 시각
         createdAt: "2026-09-18T20:00:00.000Z", // 생성 시각
@@ -181,7 +181,7 @@ export const mockConversations: Conversation[] = // 대화방 기준값
         characterId: "sera", // 캐릭터 식별자
         userId: "user-demo", // 사용자 식별자
         title: "비 오는 교실, 세라", // 대화방 이름
-        startSettings: { profileId: "user-demo", presetId: "legacy-default", relationshipStage: "아는 사이", relationshipLevel: 18, emotion: "안도", scene: "/images/scenes/rainy-classroom.svg", greeting: "비가 그칠 때까지 여기 있어도 괜찮아. 책 한 권 같이 읽을래?" }, // 시작 설정
+        startSettings: { profileId: "user-demo", presetId: "legacy-default", relationshipStage: "아는 사이", relationshipLevel: 18, emotion: "안도", scene: "/images/scenes/rainy-classroom.webp", greeting: "비가 그칠 때까지 여기 있어도 괜찮아. 책 한 권 같이 읽을래?" }, // 시작 설정
         currentVersionId: "conversation-sera-version-1", // 현재 버전 식별자
         archivedAt: null, // 보관 시각
         createdAt: "2026-09-19T19:00:00.000Z", // 생성 시각
@@ -197,7 +197,7 @@ export const mockConversations: Conversation[] = // 대화방 기준값
         characterId: "noah", // 캐릭터 식별자
         userId: "user-demo", // 사용자 식별자
         title: "달빛 기록관의 노아", // 대화방 이름
-        startSettings: { profileId: "user-demo", presetId: "legacy-default", relationshipStage: "첫 만남", relationshipLevel: 7, emotion: "호기심", scene: "/images/scenes/moon-library.svg", greeting: "그 문장은 아직 끝나지 않았어." }, // 시작 설정
+        startSettings: { profileId: "user-demo", presetId: "legacy-default", relationshipStage: "첫 만남", relationshipLevel: 7, emotion: "호기심", scene: "/images/scenes/moon-library.webp", greeting: "그 문장은 아직 끝나지 않았어." }, // 시작 설정
         currentVersionId: "conversation-noah-version-1", // 현재 버전 식별자
         archivedAt: null, // 보관 시각
         createdAt: "2026-09-20T21:00:00.000Z", // 생성 시각
@@ -212,9 +212,9 @@ export const mockConversations: Conversation[] = // 대화방 기준값
 
 export const mockConversationVersions: ConversationVersion[] = // 대화 버전 기준값
 [ // 버전 목록 시작
-    { id: "conversation-rian-version-1", conversationId: "conversation-rian", parentVersionId: null, forkRootVersionId: null, forkedFromMessageId: null, ordinal: 1, relationshipLevel: 34, relationshipStage: "아는 사이", emotion: "기대", currentScene: "/images/scenes/dawn-letter.svg", lastMessage: "오늘도 네 자리를 남겨뒀어.", createdAt: "2026-09-18T20:00:00.000Z", updatedAt: "2026-09-22T06:20:00.000Z" }, // 리안 원본 버전
-    { id: "conversation-sera-version-1", conversationId: "conversation-sera", parentVersionId: null, forkRootVersionId: null, forkedFromMessageId: null, ordinal: 1, relationshipLevel: 18, relationshipStage: "아는 사이", emotion: "안도", currentScene: "/images/scenes/rainy-classroom.svg", lastMessage: "우산 하나로 충분할까?", createdAt: "2026-09-19T19:00:00.000Z", updatedAt: "2026-09-22T06:12:00.000Z" }, // 세라 원본 버전
-    { id: "conversation-noah-version-1", conversationId: "conversation-noah", parentVersionId: null, forkRootVersionId: null, forkedFromMessageId: null, ordinal: 1, relationshipLevel: 7, relationshipStage: "첫 만남", emotion: "호기심", currentScene: "/images/scenes/moon-library.svg", lastMessage: "그 문장은 아직 끝나지 않았어.", createdAt: "2026-09-20T21:00:00.000Z", updatedAt: "2026-09-21T23:40:00.000Z" }, // 노아 원본 버전
+    { id: "conversation-rian-version-1", conversationId: "conversation-rian", parentVersionId: null, forkRootVersionId: null, forkedFromMessageId: null, ordinal: 1, relationshipLevel: 34, relationshipStage: "아는 사이", emotion: "기대", currentScene: "/images/scenes/dawn-letter.webp", lastMessage: "오늘도 네 자리를 남겨뒀어.", createdAt: "2026-09-18T20:00:00.000Z", updatedAt: "2026-09-22T06:20:00.000Z" }, // 리안 원본 버전
+    { id: "conversation-sera-version-1", conversationId: "conversation-sera", parentVersionId: null, forkRootVersionId: null, forkedFromMessageId: null, ordinal: 1, relationshipLevel: 18, relationshipStage: "아는 사이", emotion: "안도", currentScene: "/images/scenes/rainy-classroom.webp", lastMessage: "우산 하나로 충분할까?", createdAt: "2026-09-19T19:00:00.000Z", updatedAt: "2026-09-22T06:12:00.000Z" }, // 세라 원본 버전
+    { id: "conversation-noah-version-1", conversationId: "conversation-noah", parentVersionId: null, forkRootVersionId: null, forkedFromMessageId: null, ordinal: 1, relationshipLevel: 7, relationshipStage: "첫 만남", emotion: "호기심", currentScene: "/images/scenes/moon-library.webp", lastMessage: "그 문장은 아직 끝나지 않았어.", createdAt: "2026-09-20T21:00:00.000Z", updatedAt: "2026-09-21T23:40:00.000Z" }, // 노아 원본 버전
 ]; // 버전 목록 종료
 
 export const mockMessages: Message[] = // 메시지 기준값
@@ -237,10 +237,13 @@ export const validCharacterDraft: CharacterDraft = // 유효 초안 기준값
     worldSetting: "감정에 따라 목적지가 바뀌는 자정의 순환 열차다.", // 세계관 설명
     prompt: "성인 안내자로서 안전하고 따뜻한 관계 중심 대화를 제공한다.", // 제작자 프롬프트
     tags: ["힐링", "판타지", "여행"], // 검색 태그
-    coverImage: "/images/scenes/fallback-scene.svg", // 대표 이미지
+    coverImage: "/images/scenes/fallback-scene.webp", // 대표 이미지
     visibility: "private", // 공개 범위
     contentRating: "all", // 이용 등급
     playGuide: "", // 플레이 가이드
     statusTemplate: createDefaultStatusTemplate(true), // 상태창 형식
     updates: [], // 업데이트 기록
+    events: [], // 스탯 조건 이벤트
+    lorebook: [], // 키워드 설정집
+    examples: [], // 예시 대화
 }; // 초안 종료

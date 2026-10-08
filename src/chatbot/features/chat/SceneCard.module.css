@@ -1,0 +1,140 @@
+.layout /* 미리보기와 입력 */
+{ /* 묶음 시작 */
+    display: grid; /* 격자 배치 */
+    grid-template-columns: minmax(0, 240px) minmax(0, 1fr); /* 카드·입력 */
+    gap: 18px; /* 간격 */
+    align-items: start; /* 위 정렬 */
+} /* 묶음 종료 */
+
+.card /* 카드 미리보기 */
+{ /* 카드 시작 */
+    position: relative; /* 어둠 기준 */
+    overflow: hidden; /* 넘침 숨김 */
+    aspect-ratio: 4 / 5; /* 저장 이미지와 같은 비율 */
+    margin: 0; /* 기본 여백 제거 */
+    border-radius: 16px; /* 모서리 */
+    background: linear-gradient(135deg, #2a1f4d, #0f172a) center / cover no-repeat; /* 기본 배경(그림이 없을 때) */
+    background-position: center; /* 가운데 */
+    background-size: cover; /* 가득 채움 */
+    box-shadow: 0 14px 30px light-dark(rgb(31 26 46 / 22%), rgb(0 0 0 / 50%)); /* 그림자 */
+} /* 카드 종료 */
+
+.cardShade /* 글자 뒤 어둠 */
+{ /* 어둠 시작 */
+    position: absolute; /* 카드 전체 */
+    inset: 0; /* 전체 */
+    display: flex; /* 세로 배치 */
+    flex-direction: column; /* 세로 방향 */
+    justify-content: flex-end; /* 아래 정렬 */
+    gap: 6px; /* 간격 */
+    padding: 16px; /* 여백 */
+    background: linear-gradient(180deg, rgb(10 8 20 / 0%) 28%, rgb(10 8 20 / 78%) 68%, rgb(10 8 20 / 94%) 100%); /* 아래로 갈수록 어둡게 */
+    color: #ffffff; /* 흰 글자 */
+} /* 어둠 종료 */
+
+.cardShade strong /* 인물 */
+{ /* 인물 시작 */
+    color: #d8ccff; /* 연보라 */
+    font-size: .74rem; /* 크기 */
+    font-weight: 800; /* 굵기 */
+} /* 인물 종료 */
+
+.cardShade p /* 대사 */
+{ /* 대사 시작 */
+    display: -webkit-box; /* 줄 수 제한 */
+    overflow: hidden; /* 넘침 숨김 */
+    margin: 0; /* 여백 제거 */
+    font-size: .86rem; /* 크기 */
+    font-weight: 600; /* 굵기 */
+    line-height: 1.5; /* 줄 높이 */
+    overflow-wrap: anywhere; /* 긴 글 줄바꿈 */
+    -webkit-box-orient: vertical; /* 세로 방향 */
+    -webkit-line-clamp: 9; /* 저장 이미지와 같은 줄 수 */
+    line-clamp: 9; /* 줄 수 제한 */
+} /* 대사 종료 */
+
+.cardShade figcaption /* 작품과 서비스 이름 */
+{ /* 이름 시작 */
+    display: flex; /* 가로 배치 */
+    justify-content: space-between; /* 양끝 */
+    gap: 8px; /* 간격 */
+    margin-top: 6px; /* 위 여백 */
+    padding-top: 8px; /* 선과 간격 */
+    border-top: 1px solid rgb(255 255 255 / 28%); /* 구분선 */
+    font-size: .68rem; /* 작은 글자 */
+} /* 이름 종료 */
+
+.cardShade figcaption span /* 작품 이름 */
+{ /* 작품 시작 */
+    overflow: hidden; /* 넘침 숨김 */
+    text-overflow: ellipsis; /* 말줄임 */
+    white-space: nowrap; /* 한 줄 */
+} /* 작품 종료 */
+
+.cardShade figcaption b /* 서비스 이름 */
+{ /* 서비스 시작 */
+    flex: 0 0 auto; /* 줄어들지 않음 */
+    font-weight: 800; /* 굵기 */
+} /* 서비스 종료 */
+
+.side /* 입력 영역 */
+{ /* 입력 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 8px; /* 간격 */
+    min-width: 0; /* 줄임 허용 */
+} /* 입력 종료 */
+
+.field /* 글 입력 묶음 */
+{ /* 묶음 시작 */
+    display: grid; /* 세로 배치 */
+    gap: 8px; /* 간격 */
+    color: var(--mv-ink); /* 글자 */
+    font-size: .9rem; /* 크기 */
+    font-weight: 750; /* 굵기 */
+} /* 묶음 종료 */
+
+.field textarea /* 글 입력 */
+{ /* 입력 시작 */
+    width: 100%; /* 전체 너비 */
+    padding: 12px 14px; /* 여백 */
+    border: 1px solid var(--mv-line); /* 테두리 */
+    border-radius: 12px; /* 모서리 */
+    background: var(--mv-surface); /* 배경 */
+    color: var(--mv-ink); /* 글자 */
+    font: inherit; /* 글꼴 상속 */
+    font-weight: 500; /* 굵기 */
+    line-height: 1.6; /* 줄 높이 */
+    resize: vertical; /* 세로 조절 */
+} /* 입력 종료 */
+
+.count /* 글자 수 */
+{ /* 글자 수 시작 */
+    margin: 0; /* 여백 제거 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-size: .8rem; /* 작은 글자 */
+    font-weight: 700; /* 굵기 */
+    font-variant-numeric: tabular-nums; /* 숫자 폭 고정 */
+} /* 글자 수 종료 */
+
+.status /* 안내 */
+{ /* 안내 시작 */
+    margin: 0; /* 여백 제거 */
+    color: var(--genre-strong, light-dark(#5b21b6, #c4b5fd)); /* 강조 글자 */
+    font-size: .86rem; /* 크기 */
+    font-weight: 750; /* 굵기 */
+    word-break: keep-all; /* 한글 단어 단위 줄바꿈 */
+} /* 안내 종료 */
+
+@media (max-width: 560px) /* 좁은 화면 */
+{ /* 좁은 시작 */
+    .layout /* 묶음 */
+    { /* 묶음 시작 */
+        grid-template-columns: minmax(0, 1fr); /* 한 칸 */
+    } /* 묶음 종료 */
+
+    .card /* 카드 */
+    { /* 카드 시작 */
+        justify-self: center; /* 가운데 */
+        width: min(100%, 220px); /* 작게 */
+    } /* 카드 종료 */
+} /* 좁은 종료 */

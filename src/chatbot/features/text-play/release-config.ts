@@ -1,3 +1,5 @@
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
+
 export type TextPlayDistributionStatus = "preparing" | "beta" | "stable"; // 배포 상태 종류
 
 export interface TextPlayRelease // 배포 정보 구조
@@ -61,18 +63,18 @@ export function isTextPlayDownloadAvailable(release: TextPlayRelease): boolean /
 
 export function displayReleaseValue(value: string | null): string // 배포 값 표시
 { // 함수 시작
-    return value === null || value.trim() === "" ? "확인 필요" : value; // 미확정 대체
+    return value === null || value.trim() === "" ? t("확인 필요") : value; // 미확정 대체
 } // 함수 종료
 
 export function getDistributionLabel(status: TextPlayDistributionStatus): string // 배포 상태 표시
 { // 함수 시작
     if (status === "stable") // 정식 상태 검사
     { // 조건 시작
-        return "정식 배포"; // 정식 문구
+        return t("정식 배포"); // 정식 문구
     } // 조건 종료
     if (status === "beta") // 베타 상태 검사
     { // 조건 시작
-        return "베타 배포"; // 베타 문구
+        return t("베타 배포"); // 베타 문구
     } // 조건 종료
-    return "다운로드 준비 중"; // 준비 문구
+    return t("다운로드 준비 중"); // 준비 문구
 } // 함수 종료

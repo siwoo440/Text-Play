@@ -3,9 +3,8 @@
     min-height: calc(100vh - 64px); /* 화면 높이 */
     overflow-x: clip; /* 장식 가로 넘침 자르기 */
     padding: clamp(28px, 4vw, 52px) clamp(16px, 4vw, 64px) 96px; /* 화면 여백 */
-    background: radial-gradient(circle at 6% 2%, rgb(125 211 252 / 40%), transparent 30%), radial-gradient(circle at 94% 6%, rgb(190 242 100 / 30%), transparent 28%), radial-gradient(circle at 80% 60%, rgb(253 186 116 / 24%), transparent 32%), radial-gradient(circle at 10% 70%, rgb(216 180 254 / 26%), transparent 30%), #f8fbff; /* 여러 색 배경 */
+    background: radial-gradient(circle at 6% 2%, rgb(125 211 252 / 40%), transparent 30%), radial-gradient(circle at 94% 6%, rgb(190 242 100 / 30%), transparent 28%), radial-gradient(circle at 80% 60%, rgb(253 186 116 / 24%), transparent 32%), radial-gradient(circle at 10% 70%, light-dark(rgb(216 180 254 / 26%), rgb(28 25 38 / 26%)), transparent 30%), light-dark(#f8fbff, #0d1219); /* 여러 색 배경 */
     color: var(--mv-ink); /* 기본 글자 */
-    color-scheme: light; /* 밝은 입력 요소 */
 } /* 화면 종료 */
 
 .page > * /* 화면 구역 */
@@ -28,8 +27,8 @@
     margin: 0; /* 기본 여백 제거 */
     padding: 6px 14px; /* 표제 여백 */
     border-radius: 999px; /* 알약 모양 */
-    background: linear-gradient(100deg, #e0f2fe, #ecfccb); /* 표제 배경 */
-    color: #075985; /* 표제 글자 */
+    background: linear-gradient(100deg, light-dark(#e0f2fe, #142d3d), light-dark(#ecfccb, #364518)); /* 표제 배경 */
+    color: light-dark(#075985, #8dd1f6); /* 표제 글자 */
     font-size: .8rem; /* 표제 크기 */
     font-weight: 850; /* 표제 굵기 */
     letter-spacing: .08em; /* 표제 자간 */
@@ -73,7 +72,7 @@
     position: absolute; /* 입력 안 배치 */
     top: 50%; /* 세로 중앙 */
     left: 22px; /* 왼쪽 위치 */
-    color: #0369a1; /* 기호 색상 */
+    color: light-dark(#0369a1, #86cef5); /* 기호 색상 */
     font-size: 1.3rem; /* 기호 크기 */
     font-weight: 900; /* 기호 굵기 */
     transform: translateY(-50%); /* 중앙 보정 */
@@ -87,7 +86,7 @@
     padding: 0 22px 0 48px; /* 기호 공간 */
     border: 2px solid transparent; /* 테두리 공간 */
     border-radius: 999px; /* 둥근 모양 */
-    background: linear-gradient(#ffffff, #ffffff) padding-box, linear-gradient(100deg, #38bdf8, #2dd4bf, #a3e635, #fb923c) border-box; /* 여러 색 테두리 */
+    background: linear-gradient(light-dark(#ffffff, var(--mv-surface)), light-dark(#ffffff, var(--mv-surface))) padding-box, linear-gradient(100deg, #38bdf8, #2dd4bf, #a3e635, #fb923c) border-box; /* 여러 색 테두리 */
     color: var(--mv-ink); /* 입력 글자 */
     box-shadow: 0 14px 34px rgb(3 105 161 / 14%); /* 입력 그림자 */
     font-size: 1.02rem; /* 입력 크기 */
@@ -95,7 +94,7 @@
 
 .searchBox input::placeholder /* 검색 안내 */
 { /* 안내 시작 */
-    color: #6b7a8c; /* 안내 색상 */
+    color: light-dark(#6b7a8c, #a3adb9); /* 안내 색상 */
 } /* 안내 종료 */
 
 .suggestions /* 태그 제안 */
@@ -118,37 +117,37 @@
 { /* 줄 시작 */
     margin-top: clamp(24px, 3vw, 36px); /* 줄 간격 */
     padding: clamp(20px, 3vw, 32px); /* 줄 여백 */
-    border: 1px solid var(--row-line, #e2e8f0); /* 줄 테두리 */
+    border: 1px solid var(--row-line, light-dark(#e2e8f0, #38404b)); /* 줄 테두리 */
     border-radius: 30px; /* 줄 모서리 */
-    background: var(--row-bg, rgb(255 255 255 / 88%)); /* 줄 배경 */
-    box-shadow: 0 18px 46px rgb(15 23 42 / 6%); /* 줄 그림자 */
+    background: var(--row-bg, light-dark(rgb(255 255 255 / 88%), rgb(28 25 38 / 88%))); /* 줄 배경 */
+    box-shadow: 0 18px 46px light-dark(rgb(15 23 42 / 6%), rgb(0 0 0 / 13.2%)); /* 줄 그림자 */
 } /* 줄 종료 */
 
 .row[data-row="works"] /* 작품 줄 */
 { /* 작품 줄 시작 */
-    --row-line: #e9d5ff; /* 작품 테두리 */
-    --row-bg: linear-gradient(135deg, rgb(250 245 255 / 94%), rgb(253 242 248 / 94%)); /* 작품 배경 */
+    --row-line: light-dark(#e9d5ff, #40275b); /* 작품 테두리 */
+    --row-bg: linear-gradient(135deg, light-dark(rgb(250 245 255 / 94%), rgb(28 25 38 / 94%)), light-dark(rgb(253 242 248 / 94%), rgb(28 25 38 / 94%))); /* 작품 배경 */
     --row-accent: #7e22ce; /* 작품 강조 */
 } /* 작품 줄 종료 */
 
 .row[data-row="creators"] /* 제작자 줄 */
 { /* 제작자 줄 시작 */
-    --row-line: #99f6e4; /* 제작자 테두리 */
-    --row-bg: linear-gradient(135deg, rgb(240 253 250 / 94%), rgb(236 253 245 / 94%)); /* 제작자 배경 */
+    --row-line: light-dark(#99f6e4, #1e5a52); /* 제작자 테두리 */
+    --row-bg: linear-gradient(135deg, light-dark(rgb(240 253 250 / 94%), rgb(28 25 38 / 94%)), light-dark(rgb(236 253 245 / 94%), rgb(28 25 38 / 94%))); /* 제작자 배경 */
     --row-accent: #0f766e; /* 제작자 강조 */
 } /* 제작자 줄 종료 */
 
 .row[data-row="tags"] /* 태그 줄 */
 { /* 태그 줄 시작 */
-    --row-line: #fde68a; /* 태그 테두리 */
-    --row-bg: linear-gradient(135deg, rgb(255 251 235 / 94%), rgb(255 247 237 / 94%)); /* 태그 배경 */
+    --row-line: light-dark(#fde68a, #5c4a17); /* 태그 테두리 */
+    --row-bg: linear-gradient(135deg, light-dark(rgb(255 251 235 / 94%), rgb(28 25 38 / 94%)), light-dark(rgb(255 247 237 / 94%), rgb(28 25 38 / 94%))); /* 태그 배경 */
     --row-accent: #b45309; /* 태그 강조 */
 } /* 태그 줄 종료 */
 
 .results /* 태그 결과 */
 { /* 결과 시작 */
-    --row-line: #7dd3fc; /* 결과 테두리 */
-    --row-bg: #ffffff; /* 결과 배경 */
+    --row-line: light-dark(#7dd3fc, #1d4e66); /* 결과 테두리 */
+    --row-bg: light-dark(#ffffff, var(--mv-surface)); /* 결과 배경 */
     --row-accent: #0369a1; /* 결과 강조 */
     border-width: 2px; /* 강조 테두리 */
     scroll-margin-top: 88px; /* 앵커 이동 시 헤더 공간 */
@@ -168,7 +167,7 @@
 .kicker /* 영문 표제 */
 { /* 표제 시작 */
     margin: 0 0 6px; /* 표제 여백 */
-    color: var(--row-accent, #0369a1); /* 표제 색상 */
+    color: light-dark(var(--row-accent, #0369a1), color-mix(in srgb, var(--row-accent, #0369a1) 55%, white)); /* 표제 색상 */
     font-size: .74rem; /* 표제 크기 */
     font-weight: 850; /* 표제 굵기 */
     letter-spacing: .14em; /* 표제 자간 */
@@ -207,10 +206,10 @@
 { /* 보조 버튼 시작 */
     min-height: 42px; /* 버튼 높이 */
     padding: 0 18px; /* 버튼 여백 */
-    border: 1px solid var(--row-line, #cbd5e1); /* 버튼 테두리 */
+    border: 1px solid var(--row-line, light-dark(#cbd5e1, #3f4650)); /* 버튼 테두리 */
     border-radius: 999px; /* 알약 모양 */
-    background: #ffffff; /* 버튼 배경 */
-    color: var(--row-accent, #0369a1); /* 버튼 글자 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 버튼 배경 */
+    color: light-dark(var(--row-accent, #0369a1), color-mix(in srgb, var(--row-accent, #0369a1) 55%, white)); /* 버튼 글자 */
     cursor: pointer; /* 선택 커서 */
     font-weight: 800; /* 버튼 굵기 */
 } /* 보조 버튼 종료 */
@@ -232,7 +231,7 @@
 { /* 안내 시작 */
     margin: 0; /* 기본 여백 제거 */
     padding: 24px; /* 안내 여백 */
-    border: 2px dashed #bae6fd; /* 점선 테두리 */
+    border: 2px dashed light-dark(#bae6fd, #2a4e61); /* 점선 테두리 */
     border-radius: 20px; /* 안내 모서리 */
     color: var(--mv-muted); /* 안내 글자 */
     text-align: center; /* 가운데 정렬 */
@@ -247,7 +246,7 @@
     overflow-x: auto; /* 가로 스크롤 */
     padding: 4px 4px 14px; /* 목록 여백 */
     scroll-snap-type: x proximity; /* 스크롤 맞춤 */
-    scrollbar-color: color-mix(in srgb, var(--row-accent, #64748b) 45%, white) transparent; /* 스크롤 막대 색 */
+    scrollbar-color: color-mix(in srgb, var(--row-accent, #64748b) 45%, var(--mv-surface)) transparent; /* 스크롤 막대 색 */
 } /* 목록 종료 */
 
 .row[data-row="creators"] .rail /* 제작자 목록 */
@@ -267,11 +266,11 @@
     align-content: start; /* 위쪽 정렬 */
     gap: 14px; /* 요소 간격 */
     padding: 18px; /* 카드 여백 */
-    border: 1px solid color-mix(in srgb, var(--genre) 22%, white); /* 카드 테두리 */
+    border: 1px solid color-mix(in srgb, var(--genre) 22%, var(--mv-surface)); /* 카드 테두리 */
     border-top: 5px solid var(--genre); /* 장르 색 띠 */
     border-radius: 22px; /* 카드 모서리 */
-    background: #ffffff; /* 카드 배경 */
-    box-shadow: 0 10px 26px rgb(15 23 42 / 7%); /* 카드 그림자 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 카드 배경 */
+    box-shadow: 0 10px 26px light-dark(rgb(15 23 42 / 7%), rgb(0 0 0 / 15.4%)); /* 카드 그림자 */
 } /* 카드 종료 */
 
 .creatorHead /* 제작자 머리말 */
@@ -354,7 +353,7 @@
     min-height: 42px; /* 버튼 높이 */
     border: 1px solid var(--genre); /* 버튼 테두리 */
     border-radius: 14px; /* 버튼 모서리 */
-    background: #ffffff; /* 버튼 배경 */
+    background: light-dark(#ffffff, var(--mv-surface)); /* 버튼 배경 */
     color: var(--genre-strong); /* 버튼 글자 */
     cursor: pointer; /* 선택 커서 */
     font-weight: 800; /* 버튼 굵기 */
@@ -381,10 +380,10 @@
     align-items: center; /* 세로 중앙 */
     min-height: 38px; /* 칩 높이 */
     padding: 0 14px; /* 칩 여백 */
-    border: 1px solid color-mix(in srgb, var(--genre, #475569) 30%, white); /* 칩 테두리 */
+    border: 1px solid color-mix(in srgb, var(--genre, #475569) 30%, var(--mv-surface)); /* 칩 테두리 */
     border-radius: 999px; /* 알약 모양 */
-    background: var(--genre-soft, #eef2f7); /* 칩 배경 */
-    color: var(--genre-strong, #334155); /* 칩 글자 */
+    background: var(--genre-soft, light-dark(#eef2f7, #1f262e)); /* 칩 배경 */
+    color: var(--genre-strong, light-dark(#334155, #b3c0d1)); /* 칩 글자 */
     cursor: pointer; /* 선택 커서 */
     font-weight: 750; /* 칩 굵기 */
     transition: background 150ms ease, color 150ms ease, transform 150ms ease; /* 칩 전환 */
@@ -394,7 +393,7 @@
 { /* 개수 시작 */
     padding: 1px 7px; /* 개수 여백 */
     border-radius: 999px; /* 알약 모양 */
-    background: rgb(255 255 255 / 75%); /* 개수 배경 */
+    background: light-dark(rgb(255 255 255 / 75%), rgb(28 25 38 / 75%)); /* 개수 배경 */
     font-size: .74rem; /* 개수 크기 */
     font-weight: 800; /* 개수 굵기 */
 } /* 개수 종료 */
@@ -413,17 +412,17 @@
 
 .tagChip[aria-pressed="true"] small /* 선택 개수 */
 { /* 선택 개수 시작 */
-    background: rgb(255 255 255 / 24%); /* 개수 배경 */
+    background: light-dark(rgb(255 255 255 / 24%), rgb(28 25 38 / 24%)); /* 개수 배경 */
 } /* 선택 개수 종료 */
 
-.tagChip[data-hue="0"] { --genre: #b45309; --genre-soft: #fef3c7; --genre-strong: #78350f; } /* 호박색 태그 */
-.tagChip[data-hue="1"] { --genre: #0f766e; --genre-soft: #ccfbf1; --genre-strong: #134e4a; } /* 청록 태그 */
-.tagChip[data-hue="2"] { --genre: #a21caf; --genre-soft: #fae8ff; --genre-strong: #701a75; } /* 자홍 태그 */
-.tagChip[data-hue="3"] { --genre: #1d4ed8; --genre-soft: #dbeafe; --genre-strong: #1e3a8a; } /* 파랑 태그 */
-.tagChip[data-hue="4"] { --genre: #4d7c0f; --genre-soft: #ecfccb; --genre-strong: #365314; } /* 연두 태그 */
-.tagChip[data-hue="5"] { --genre: #b91c1c; --genre-soft: #fee2e2; --genre-strong: #7f1d1d; } /* 빨강 태그 */
-.tagChip[data-hue="6"] { --genre: #0369a1; --genre-soft: #e0f2fe; --genre-strong: #0c4a6e; } /* 하늘 태그 */
-.tagChip[data-hue="7"] { --genre: #6d28d9; --genre-soft: #ede9fe; --genre-strong: #4c1d95; } /* 보라 태그 */
+.tagChip[data-hue="0"] { --genre: #b45309; --genre-soft: light-dark(#fef3c7, #463d17); --genre-strong: light-dark(#78350f, #f2b593); } /* 호박색 태그 */
+.tagChip[data-hue="1"] { --genre: #0f766e; --genre-soft: light-dark(#ccfbf1, #19443b); --genre-strong: light-dark(#134e4a, #a8eae5); } /* 청록 태그 */
+.tagChip[data-hue="2"] { --genre: #a21caf; --genre-soft: light-dark(#fae8ff, #311339); --genre-strong: light-dark(#701a75, #e49ae8); } /* 자홍 태그 */
+.tagChip[data-hue="3"] { --genre: #1d4ed8; --genre-soft: light-dark(#dbeafe, #15273f); --genre-strong: light-dark(#1e3a8a, #92a8e7); } /* 파랑 태그 */
+.tagChip[data-hue="4"] { --genre: #4d7c0f; --genre-soft: light-dark(#ecfccb, #364518); --genre-strong: light-dark(#365314, #cbeaa6); } /* 연두 태그 */
+.tagChip[data-hue="5"] { --genre: #b91c1c; --genre-soft: light-dark(#fee2e2, #3c1414); --genre-strong: light-dark(#7f1d1d, #e79696); } /* 빨강 태그 */
+.tagChip[data-hue="6"] { --genre: #0369a1; --genre-soft: light-dark(#e0f2fe, #142d3d); --genre-strong: light-dark(#0c4a6e, #96d1f4); } /* 하늘 태그 */
+.tagChip[data-hue="7"] { --genre: #6d28d9; --genre-soft: light-dark(#ede9fe, #1a1339); --genre-strong: light-dark(#4c1d95, #b18de9); } /* 보라 태그 */
 
 .tagChip:focus-visible, /* 칩 초점 */
 .clearButton:focus-visible, /* 해제 초점 */
@@ -470,3 +469,60 @@
         transition: none; /* 전환 제거 */
     } /* 전환 대상 종료 */
 } /* 동작 축소 종료 */
+
+.chosenTags, /* 고른 태그 줄 */
+.narrowTags /* 이어서 좁힐 태그 줄 */
+{ /* 줄 시작 */
+    display: flex; /* 가로 배치 */
+    flex-wrap: wrap; /* 줄바꿈 허용 */
+    gap: 8px; /* 칩 간격 */
+    align-items: center; /* 세로 가운데 */
+    margin-bottom: 14px; /* 하단 여백 */
+} /* 줄 종료 */
+
+.chosenTags small /* 좁히기 안내 */
+{ /* 안내 시작 */
+    color: var(--mv-muted); /* 보조 글자 */
+    font-size: .84rem; /* 크기 */
+    font-weight: 600; /* 굵기 */
+} /* 안내 종료 */
+
+.chosenTag /* 고른 태그(누르면 빠짐) */
+{ /* 칩 시작 */
+    display: inline-flex; /* 가로 배치 */
+    gap: 8px; /* 이름과 × 사이 */
+    align-items: center; /* 세로 가운데 */
+    min-height: 40px; /* 누르는 높이 */
+    padding: 0 14px; /* 안쪽 여백 */
+    border: 1px solid transparent; /* 테두리 자리 */
+    border-radius: 999px; /* 알약 모양 */
+    background: light-dark(#0369a1, #7dd3fc); /* 고른 색 */
+    color: light-dark(#ffffff, #082f49); /* 글자 */
+    font: inherit; /* 글꼴 상속 */
+    font-size: .9rem; /* 크기 */
+    font-weight: 800; /* 굵기 */
+    cursor: pointer; /* 누를 수 있음 */
+} /* 칩 종료 */
+
+.chosenTag:hover /* 고른 태그 올림 */
+{ /* 올림 시작 */
+    background: light-dark(#075985, #bae6fd); /* 진한 색 */
+} /* 올림 종료 */
+
+.chosenTag:focus-visible /* 고른 태그 초점 */
+{ /* 초점 시작 */
+    outline: 3px solid var(--mv-focus); /* 초점 외곽선 */
+    outline-offset: 2px; /* 외곽선 간격 */
+} /* 초점 종료 */
+
+.creatorCard /* 제작자 카드(태그 줄 수가 달라도 팔로우 버튼을 같은 높이에) */
+{ /* 카드 시작 */
+    grid-template-rows: auto auto 1fr auto; /* 머리말·작품·태그(남는 높이)·버튼 */
+    align-content: stretch; /* 카드 높이를 다 씀 */
+} /* 카드 종료 */
+
+.creatorTags /* 자주 쓴 태그(남는 높이의 위쪽에 붙임) */
+{ /* 태그 시작 */
+    align-content: flex-start; /* 위쪽부터 채움 */
+    align-self: start; /* 위쪽 정렬 */
+} /* 태그 종료 */

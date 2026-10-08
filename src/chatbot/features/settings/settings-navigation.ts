@@ -24,6 +24,7 @@ export const settingsNavigation: SettingsNavigationGroup[] = // 오른쪽 패널
             { href: "/settings/profile", label: "프로필 관리", description: "닉네임과 프로필 표시" }, // 프로필 항목
             { href: "/library", label: "내 캐릭터와 작품", description: "보관함에서 만든 캐릭터와 대화 관리" }, // 작품 항목
             { href: "/settings/tokens", label: "토큰 이용 내역", description: "잔액과 사용 비용" }, // 토큰 항목
+            { href: "/rewards", label: "출석과 미션", description: "매일 출석하고 미션으로 토큰 받기" }, // 출석·미션 항목
         ], // 항목 종료
     }, // 계정 묶음 종료
     { // 설정 묶음 시작
@@ -31,7 +32,7 @@ export const settingsNavigation: SettingsNavigationGroup[] = // 오른쪽 패널
         label: "설정", // 설정 이름
         items: // 설정 항목
         [ // 항목 시작
-            { href: "/settings/display", label: "화면 레이아웃", description: "기기 모드와 채팅 배치" }, // 화면 항목
+            { href: "/settings/display", label: "화면 레이아웃", description: "언어와 채팅 배치" }, // 화면 항목
             { href: "/settings/notifications", label: "알림과 선제 메시지", description: "허용 시간과 하루 횟수" }, // 알림 항목
         ], // 항목 종료
     }, // 설정 묶음 종료

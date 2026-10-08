@@ -11,7 +11,7 @@ export default defineConfig( // 설정 내보내기
     test: // 테스트 설정
     { // 테스트 설정 시작
         environment: "jsdom", // 브라우저 환경
-        setupFiles: ["./src/test/setup.ts"], // 초기 설정 파일
+        setupFiles: ["./src/test/setup.ts"], // 초기 설정 파일(브라우저 환경이면 ChatBot 사본의 준비도 불러옴)
         include: // 수집 경로
         [ // 수집 목록 시작
             "tests/unit/**/*.test.{ts,tsx}", // 단위 테스트 수집

@@ -1,4 +1,5 @@
 import type { CharacterMemory, MemoryCategory } from "@chatbot/features/core/types"; // 도메인 타입
+import { t } from "@chatbot/lib/i18n"; // 화면 글자 번역
 
 export const MEMORY_SUMMARY_INTERVAL = 5; // 단기 기억을 만드는 턴 간격
 export const MEMORY_LONG_INTERVAL = 15; // 장기 기억으로 묶는 턴 간격
@@ -47,7 +48,7 @@ export function buildAutoMemories(input: AutoMemoryInput): CharacterMemory[] // 
     } // 조건 종료
     const result: CharacterMemory[] = []; // 결과
     const base = { conversationId: input.conversationId, characterId: input.characterId, editedByUser: false, now: input.now }; // 공통 값
-    result.push(createMemory({ ...base, id: `${input.conversationId}-short-${input.turn}`, category: "short", content: `${input.turn}턴까지: ${input.summary}`, sourceMessageIds: [input.userMessageId] })); // 단기 기억
+    result.push(createMemory({ ...base, id: `${input.conversationId}-short-${input.turn}`, category: "short", content: t("{0}턴까지: {1}", [input.turn, input.summary]), sourceMessageIds: [input.userMessageId] })); // 단기 기억
     for (const person of input.people) // 관계도 순회
     { // 순회 시작
         const id = `${input.conversationId}-relation-${person.name}`; // 인물별 고정 식별자
@@ -56,13 +57,13 @@ export function buildAutoMemories(input: AutoMemoryInput): CharacterMemory[] // 
         { // 조건 시작
             continue; // 사용자 내용 유지
         } // 조건 종료
-        const memory = createMemory({ ...base, id, category: "relation", content: `${person.name} · ${person.stage} · ${person.emotion} (호감도 ${person.level})`, sourceMessageIds: [input.userMessageId] }); // 관계도
+        const memory = createMemory({ ...base, id, category: "relation", content: t("{0} · {1} · {2} (호감도 {3})", [person.name, person.stage, person.emotion, person.level]), sourceMessageIds: [input.userMessageId] }); // 관계도
         result.push(previous === undefined ? memory : { ...memory, createdAt: previous.createdAt }); // 생성 시각 유지
     } // 순회 종료
     if (input.turn % MEMORY_LONG_INTERVAL === 0) // 장기 기억 간격 판정
     { // 조건 시작
-        const shorts = [...input.existing.filter((memory) => memory.category === "short"), result[0]].slice(-3).map((memory) => memory.content.replace(/^\d+턴까지: /, "")); // 최근 단기 기억 3개
-        result.push(createMemory({ ...base, id: `${input.conversationId}-long-${input.turn}`, category: "long", content: `${input.turn}턴 요약: ${shorts.join(" / ")}`, sourceMessageIds: [input.userMessageId] })); // 장기 기억
+        const shorts = [...input.existing.filter((memory) => memory.category === "short"), result[0]].slice(-3).map((memory) => memory.content.replace(/^(?:\d+턴까지: |Up to turn \d+: )/, "")); // 최근 단기 기억 3개(한국어·영어 화면에서 붙인 머리말을 뺌)
+        result.push(createMemory({ ...base, id: `${input.conversationId}-long-${input.turn}`, category: "long", content: t("{0}턴 요약: {1}", [input.turn, shorts.join(" / ")]), sourceMessageIds: [input.userMessageId] })); // 장기 기억
     } // 조건 종료
     return result; // 기억 반환
 } // 함수 종료

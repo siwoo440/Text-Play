@@ -101,11 +101,11 @@ export const TEXT_PLAY_UI_TEXT = defineText( // Text-Play 플레이 화면 글�
             title: "게임 화면 설정", // 제목
             description: "화면 분위기와 EXE 창 크기를 선택합니다.", // 설명
             themeTitle: "UI 테마", // 테마 제목
-            themeHint: "선택 즉시 플레이 화면에 적용됩니다.", // 테마 안내
+            themeHint: "선택 즉시 플레이 화면에 적용됩니다. 밝기는 앱의 다크 모드 스위치를 따릅니다.", // 테마 안내
             themeLabel: (theme: string) => `${theme} 테마`, // 테마 입력 이름
             themes: // 테마 이름
             { // 테마 시작
-                "dark-fantasy": { label: "다크 판타지 글래스", summary: "보랏빛 유리와 금속성 룬" }, // 판타지
+                "dark-fantasy": { label: "판타지 글래스", summary: "보랏빛 유리와 금속성 룬" }, // 판타지
                 "sci-fi": { label: "미니멀 SF HUD", summary: "청록 신호선과 각진 프레임" }, // SF
                 "classic-novel": { label: "클래식 비주얼 노벨", summary: "따뜻한 장식과 부드러운 대화창" }, // 노벨
             }, // 테마 종료
@@ -266,11 +266,11 @@ export const TEXT_PLAY_UI_TEXT = defineText( // Text-Play 플레이 화면 글�
             title: "Game screen settings", // 제목
             description: "Choose the screen style and the EXE window size.", // 설명
             themeTitle: "UI theme", // 테마 제목
-            themeHint: "Applied to the play screen right away.", // 테마 안내
+            themeHint: "Applied to the play screen right away. Brightness follows the app dark mode switch.", // 테마 안내
             themeLabel: (theme: string) => `${theme} theme`, // 테마 입력 이름
             themes: // 테마 이름
             { // 테마 시작
-                "dark-fantasy": { label: "Dark Fantasy Glass", summary: "Violet glass and metallic runes" }, // 판타지
+                "dark-fantasy": { label: "Fantasy Glass", summary: "Violet glass and metallic runes" }, // 판타지
                 "sci-fi": { label: "Minimal SF HUD", summary: "Teal signal lines and angular frames" }, // SF
                 "classic-novel": { label: "Classic Visual Novel", summary: "Warm ornaments and soft dialogue boxes" }, // 노벨
             }, // 테마 종료

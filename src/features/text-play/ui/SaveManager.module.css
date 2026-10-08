@@ -5,7 +5,7 @@
 
 .header span /* 영문 표제 */
 { /* 표제 시작 */
-    color: #bfa9ff; /* 표제 색상 */
+    color: light-dark(#7c3aed, #bfa9ff); /* 표제 색상 */
     font-size: .72rem; /* 표제 크기 */
     font-weight: 900; /* 표제 굵기 */
     letter-spacing: .18em; /* 표제 자간 */
@@ -20,7 +20,7 @@
 .header p /* 저장 설명 */
 { /* 설명 시작 */
     margin: 0; /* 기본 여백 제거 */
-    color: #aca6b9; /* 설명 색상 */
+    color: light-dark(#5f5873, #aca6b9); /* 설명 색상 */
 } /* 설명 종료 */
 
 .grid /* 슬롯 격자 */
@@ -37,21 +37,21 @@
     flex-direction: column; /* 세로 방향 */
     min-height: 210px; /* 카드 높이 */
     padding: 18px; /* 카드 여백 */
-    border: 1px solid rgb(139 122 190 / 42%); /* 카드 테두리 */
+    border: 1px solid light-dark(#e3daf5, rgb(139 122 190 / 42%)); /* 카드 테두리 */
     border-radius: 17px; /* 카드 모서리 */
-    background: linear-gradient(145deg, rgb(37 31 53 / 90%), rgb(16 18 28 / 94%)); /* 카드 배경 */
+    background: linear-gradient(145deg, light-dark(#ffffff, rgb(37 31 53 / 90%)), light-dark(#f7f3ff, rgb(16 18 28 / 94%))); /* 카드 배경 */
 } /* 카드 종료 */
 
 .slot[data-state="empty"] /* 빈 카드 */
 { /* 빈 카드 시작 */
     border-style: dashed; /* 점선 테두리 */
-    background: rgb(14 16 25 / 62%); /* 빈 배경 */
+    background: light-dark(#f6f3fb, rgb(14 16 25 / 62%)); /* 빈 배경 */
 } /* 빈 카드 종료 */
 
 .slot[data-state="error"] /* 손상 카드 */
 { /* 카드 시작 */
-    border-color: #9f5664; /* 오류 테두리 */
-    background: rgb(54 25 34 / 76%); /* 오류 배경 */
+    border-color: light-dark(#fda4af, #9f5664); /* 오류 테두리 */
+    background: light-dark(#fff1f2, rgb(54 25 34 / 76%)); /* 오류 배경 */
 } /* 카드 종료 */
 
 .slotHeading /* 슬롯 머리말 */
@@ -64,7 +64,7 @@
 
 .slotHeading span /* 슬롯 상태 */
 { /* 상태 시작 */
-    color: #9d8fc5; /* 상태 색상 */
+    color: light-dark(#7c5cc4, #9d8fc5); /* 상태 색상 */
     font-size: .62rem; /* 상태 크기 */
     font-weight: 900; /* 상태 굵기 */
     letter-spacing: .12em; /* 상태 자간 */
@@ -73,14 +73,14 @@
 .empty /* 빈 슬롯 안내 */
 { /* 안내 시작 */
     margin: auto 0; /* 세로 중앙 */
-    color: #777383; /* 안내 색상 */
+    color: light-dark(#7b7590, #777383); /* 안내 색상 */
     text-align: center; /* 중앙 정렬 */
 } /* 안내 종료 */
 
 .error /* 손상 슬롯 안내 */
 { /* 안내 시작 */
     margin: auto 0; /* 세로 중앙 */
-    color: #ffb7c2; /* 오류 글자 */
+    color: light-dark(#9f1239, #ffb7c2); /* 오류 글자 */
     text-align: center; /* 중앙 정렬 */
 } /* 안내 종료 */
 
@@ -96,7 +96,7 @@
     display: -webkit-box; /* 여러 줄 말줄임 */
     overflow: hidden; /* 넘침 숨김 */
     margin: 2px 0 7px; /* 내용 여백 */
-    color: #c8c1d4; /* 내용 색상 */
+    color: light-dark(#3b3550, #c8c1d4); /* 내용 색상 */
     font-size: .78rem; /* 내용 크기 */
     line-height: 1.45; /* 내용 행간 */
     -webkit-box-orient: vertical; /* 세로 말줄임 */
@@ -105,7 +105,7 @@
 
 .meta span /* 보조 정보 */
 { /* 정보 시작 */
-    color: #8f899b; /* 정보 색상 */
+    color: light-dark(#6b6480, #8f899b); /* 정보 색상 */
     font-size: .7rem; /* 정보 크기 */
 } /* 정보 종료 */
 
@@ -120,9 +120,9 @@
 { /* 버튼 시작 */
     min-height: 40px; /* 버튼 높이 */
     flex: 1; /* 남은 공간 */
-    border: 1px solid #7360a9; /* 버튼 테두리 */
+    border: 1px solid light-dark(#6d28d9, #7360a9); /* 버튼 테두리 */
     border-radius: 10px; /* 버튼 모서리 */
-    background: #6f52bd; /* 버튼 배경 */
+    background: light-dark(#7c3aed, #6f52bd); /* 버튼 배경 */
     color: #fff; /* 버튼 글자 */
     cursor: pointer; /* 선택 커서 */
     font-weight: 800; /* 버튼 굵기 */
@@ -130,18 +130,18 @@
 
 .actions button:disabled /* 비활성 버튼 */
 { /* 버튼 시작 */
-    border-color: #3a3743; /* 비활성 테두리 */
-    background: #25242b; /* 비활성 배경 */
-    color: #77747d; /* 비활성 글자 */
+    border-color: light-dark(#e2deea, #3a3743); /* 비활성 테두리 */
+    background: light-dark(#f1eef6, #25242b); /* 비활성 배경 */
+    color: light-dark(#9a94aa, #77747d); /* 비활성 글자 */
     cursor: not-allowed; /* 비활성 커서 */
 } /* 버튼 종료 */
 
 .actions .delete /* 삭제 버튼 */
 { /* 삭제 시작 */
     max-width: 64px; /* 삭제 너비 */
-    border-color: #83505a; /* 삭제 테두리 */
-    background: #3d252c; /* 삭제 배경 */
-    color: #ffd9df; /* 삭제 글자 */
+    border-color: light-dark(#fda4af, #83505a); /* 삭제 테두리 */
+    background: light-dark(#fff1f2, #3d252c); /* 삭제 배경 */
+    color: light-dark(#9f1239, #ffd9df); /* 삭제 글자 */
 } /* 삭제 종료 */
 
 @media (max-width: 820px) /* 중간 화면 */

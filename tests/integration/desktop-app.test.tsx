@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react"; // 렌더 도구
+import { render, screen, waitFor, within } from "@testing-library/react"; // 렌더 도구
 import userEvent, { type UserEvent } from "@testing-library/user-event"; // 사용자 동작
 import { beforeEach, describe, expect, it, vi } from "vitest"; // 테스트 도구
 import { THEME_STORAGE_KEY } from "@chatbot/lib/theme/stored-theme"; // ChatBot 테마 저장 키
@@ -237,6 +237,19 @@ describe("데스크톱 앱 틀", () => // 데스크톱 틀 묶음
         expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("dark"); // 다음 실행용 기억 확인
         await user.click(screen.getByRole("switch", { name: "다크 모드" })); // 다시 밝게
         expect(document.documentElement.dataset.theme).toBe("light"); // 밝은 테마 복귀 확인
+    }); // 테스트 종료
+
+    it("다크 모드를 켜 둔 채 플레이 화면에서 바로 시작해도 앱 테마를 적용한다", async () => // 플레이 화면 테마 검증
+    { // 테스트 시작
+        const user = userEvent.setup(); // 사용자 동작 준비
+        const first = render(<DesktopApp createRepository={() => new MemoryTextPlaySaveRepository()} />); // 첫 실행
+        await user.click(await screen.findByRole("switch", { name: "다크 모드" })); // 다크 모드 켜기(ChatBot 설정에 저장)
+        first.unmount(); // 앱 종료
+        document.documentElement.dataset.theme = "light"; // 문서 표시 초기화(다음 실행이 직접 적용하는지 확인)
+        window.history.replaceState(null, "", "/#/text-play/play?mode=new"); // 사이드바 틀이 없는 플레이 화면으로 시작
+        render(<DesktopApp createRepository={() => new MemoryTextPlaySaveRepository()} />); // 다시 실행
+        expect(await screen.findByRole("region", { name: "장면 무대" })).toBeInTheDocument(); // 플레이 화면 확인
+        await waitFor(() => expect(document.documentElement.dataset.theme).toBe("dark")); // 틀 없이도 테마 적용 확인
     }); // 테스트 종료
 
     it("사용자 패널의 출석·미션 카드로 출석과 미션 화면을 열고 설정 메뉴 소속으로 표시한다", async () => // 출석과 미션 검증

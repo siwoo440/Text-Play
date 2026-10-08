@@ -5,7 +5,7 @@
 
 .header > span /* 영문 표제 */
 { /* 표제 시작 */
-    color: #bca8ff; /* 표제 색상 */
+    color: light-dark(#7c3aed, #bca8ff); /* 표제 색상 */
     font-size: .72rem; /* 표제 크기 */
     font-weight: 900; /* 표제 굵기 */
     letter-spacing: .16em; /* 표제 자간 */
@@ -21,7 +21,7 @@
 .section p /* 영역 설명 */
 { /* 설명 시작 */
     margin: 0; /* 기본 여백 제거 */
-    color: #aaa4b6; /* 설명 색상 */
+    color: light-dark(#5f5873, #aaa4b6); /* 설명 색상 */
     font-size: .82rem; /* 설명 크기 */
 } /* 설명 종료 */
 
@@ -31,9 +31,9 @@
     gap: 16px; /* 항목 간격 */
     margin-top: 26px; /* 위쪽 간격 */
     padding: 18px; /* 영역 여백 */
-    border: 1px solid rgb(139 122 190 / 34%); /* 영역 테두리 */
+    border: 1px solid light-dark(#e3daf5, rgb(139 122 190 / 34%)); /* 영역 테두리 */
     border-radius: 16px; /* 영역 모서리 */
-    background: rgb(16 17 27 / 60%); /* 영역 배경 */
+    background: light-dark(#faf8ff, rgb(16 17 27 / 60%)); /* 영역 배경 */
 } /* 영역 종료 */
 
 .sectionTitle /* 영역 제목 */
@@ -41,13 +41,13 @@
     display: flex; /* 가로 배치 */
     gap: 12px; /* 항목 간격 */
     align-items: center; /* 세로 중앙 */
-    color: #c6b5fb; /* 아이콘 색상 */
+    color: light-dark(#7c3aed, #c6b5fb); /* 아이콘 색상 */
 } /* 제목 종료 */
 
 .sectionTitle h3 /* 제목 문구 */
 { /* 문구 시작 */
     margin: 0 0 4px; /* 문구 여백 */
-    color: #f6f2ff; /* 문구 색상 */
+    color: light-dark(#1f1a2e, #f6f2ff); /* 문구 색상 */
     font-size: 1rem; /* 문구 크기 */
 } /* 문구 종료 */
 
@@ -66,17 +66,17 @@
     min-height: 142px; /* 카드 높이 */
     padding: 28px 18px 16px; /* 카드 여백 */
     overflow: hidden; /* 장식 정리 */
-    border: 1px solid #3e394e; /* 카드 테두리 */
+    border: 1px solid light-dark(#e3daf5, #3e394e); /* 카드 테두리 */
     border-radius: 14px; /* 카드 모서리 */
-    background: linear-gradient(145deg, #252033, #151721); /* 카드 배경 */
-    color: #bca9f5; /* 아이콘 색상 */
+    background: linear-gradient(145deg, light-dark(#ffffff, #252033), light-dark(#f5f0ff, #151721)); /* 카드 배경 */
+    color: light-dark(#7c3aed, #bca9f5); /* 아이콘 색상 */
     cursor: pointer; /* 선택 커서 */
 } /* 카드 종료 */
 
 .themeCard[data-selected="true"] /* 선택 카드 */
 { /* 카드 시작 */
-    border-color: #b399ff; /* 선택 테두리 */
-    box-shadow: 0 0 0 2px rgb(167 137 255 / 18%); /* 선택 강조 */
+    border-color: light-dark(#7c3aed, #b399ff); /* 선택 테두리 */
+    box-shadow: 0 0 0 2px light-dark(rgb(124 58 237 / 16%), rgb(167 137 255 / 18%)); /* 선택 강조 */
 } /* 카드 종료 */
 
 .themeCard input /* 테마 입력 */
@@ -105,13 +105,13 @@
 
 .themeCard strong /* 테마 이름 */
 { /* 이름 시작 */
-    color: #f4efff; /* 이름 색상 */
+    color: light-dark(#1f1a2e, #f4efff); /* 이름 색상 */
     font-size: .9rem; /* 이름 크기 */
 } /* 이름 종료 */
 
 .themeCard > span /* 테마 설명 */
 { /* 설명 시작 */
-    color: #9992a8; /* 설명 색상 */
+    color: light-dark(#6b6480, #9992a8); /* 설명 색상 */
     font-size: .72rem; /* 설명 크기 */
     line-height: 1.5; /* 설명 행간 */
 } /* 설명 종료 */
@@ -127,7 +127,7 @@
 { /* 필드 시작 */
     display: grid; /* 세로 배치 */
     gap: 8px; /* 입력 간격 */
-    color: #d8d1e4; /* 표제 색상 */
+    color: light-dark(#3b3550, #d8d1e4); /* 표제 색상 */
     font-size: .8rem; /* 표제 크기 */
     font-weight: 800; /* 표제 굵기 */
 } /* 필드 종료 */
@@ -136,20 +136,20 @@
 { /* 입력 시작 */
     min-height: 46px; /* 입력 높이 */
     padding: 0 12px; /* 입력 여백 */
-    border: 1px solid #4a425c; /* 입력 테두리 */
+    border: 1px solid light-dark(#d9d0ec, #4a425c); /* 입력 테두리 */
     border-radius: 10px; /* 입력 모서리 */
-    background: #10131c; /* 입력 배경 */
-    color: #f5f1fc; /* 입력 글자 */
+    background: light-dark(#ffffff, #10131c); /* 입력 배경 */
+    color: light-dark(#1f1a2e, #f5f1fc); /* 입력 글자 */
     font: inherit; /* 글꼴 상속 */
 } /* 입력 종료 */
 
 .scanButton /* 모델 검색 버튼 */
 { /* 버튼 시작 */
     min-height: 42px; /* 버튼 높이 */
-    border: 1px solid #7661a4; /* 버튼 테두리 */
+    border: 1px solid light-dark(#c4b5fd, #7661a4); /* 버튼 테두리 */
     border-radius: 10px; /* 버튼 모서리 */
-    background: rgb(111 82 176 / 22%); /* 버튼 배경 */
-    color: #e9ddff; /* 버튼 글자 */
+    background: light-dark(#f3edff, rgb(111 82 176 / 22%)); /* 버튼 배경 */
+    color: light-dark(#5b21b6, #e9ddff); /* 버튼 글자 */
     font: inherit; /* 글꼴 상속 */
     font-weight: 800; /* 버튼 굵기 */
     cursor: pointer; /* 클릭 커서 */
@@ -166,15 +166,15 @@
 { /* 상태 시작 */
     padding: 10px 12px; /* 상태 여백 */
     border-radius: 10px; /* 상태 모서리 */
-    background: rgb(22 25 39 / 82%); /* 상태 배경 */
-    color: #c9c0d8; /* 상태 글자 */
+    background: light-dark(#f6f3fb, rgb(22 25 39 / 82%)); /* 상태 배경 */
+    color: light-dark(#4a4460, #c9c0d8); /* 상태 글자 */
     line-height: 1.5; /* 상태 행간 */
 } /* 상태 종료 */
 
 .memoryStatus /* 메모리 상태 강조 */
 { /* 강조 시작 */
-    border: 1px solid rgb(100 207 178 / 34%); /* 상태 테두리 */
-    color: #9fe3cf; /* 상태 강조색 */
+    border: 1px solid light-dark(#99e0cc, rgb(100 207 178 / 34%)); /* 상태 테두리 */
+    color: light-dark(#0f766e, #9fe3cf); /* 상태 강조색 */
 } /* 강조 종료 */
 
 @media (max-width: 760px) /* 작은 화면 */

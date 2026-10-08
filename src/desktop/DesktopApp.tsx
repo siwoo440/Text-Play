@@ -7,6 +7,7 @@ import { createTauriModelStoreClient } from "@/desktop/ai-models/tauri-model-sto
 import { DesktopLanguageBridge } from "@/desktop/DesktopLanguageBridge"; // 언어 연결 다리
 import { DesktopPlatformProvider } from "@/desktop/DesktopPlatformProvider"; // 데스크톱 플랫폼 공급자
 import { DesktopPlayRoute, DesktopRoutes } from "@/desktop/DesktopRoutes"; // 데스크톱 경로 화면
+import { DesktopThemeSync } from "@/desktop/DesktopThemeSync"; // 앱 테마 적용
 import { DesktopRouterProvider } from "@/desktop/router/DesktopRouter"; // 데스크톱 경로 공급자
 import { createTauriOllamaClient } from "@/desktop/tauri-ollama-client"; // 올라마 통신기 생성기
 import { TextPlayPreferencesProvider } from "@/features/text-play/preferences/TextPlayPreferencesProvider"; // 게임 설정 공급자
@@ -34,6 +35,7 @@ export function DesktopApp({ createRepository = createBrowserTextPlaySaveReposit
                     <TextPlayWindowResolutionSync /> {/* 저장 해상도 적용 */}
                     <DesktopPlayRoute repository={repository} localAIClient={localAIClient} /> {/* Text-Play 플레이 화면(ChatBot 앱 상태 밖: 언어가 바뀌어도 게임 유지) */}
                     <AppProvider> {/* ChatBot 앱 상태(화면 언어가 바뀌면 이 아래를 새로 그림) */}
+                        <DesktopThemeSync /> {/* 앱 테마(밝게·어둡게) 문서 적용 */}
                         <DesktopLanguageBridge /> {/* Text-Play 설정 언어와 ChatBot 화면 언어 맞추기 */}
                         <DesktopRoutes repository={repository} modelStoreClient={modelStoreClient} /> {/* 그 밖의 화면 출력 */}
                     </AppProvider> {/* 앱 상태 종료 */}

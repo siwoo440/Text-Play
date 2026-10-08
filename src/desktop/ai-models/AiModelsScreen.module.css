@@ -1,7 +1,7 @@
 .page /* AI 모델 화면 */
 {
     --accent: var(--page-settings, #1d4ed8); /* 대표색 */
-    --accent-soft: #e8efff; /* 연한 대표색 */
+    --accent-soft: light-dark(#e8efff, #16223d); /* 연한 대표색 */
     display: grid; /* 세로 배치 */
     align-content: start; /* 위에서부터 배치 */
     gap: 20px; /* 묶음 간격 */
@@ -105,10 +105,10 @@
 }
 
 .fitness { font-weight: 700; } /* 적합도 굵게 */
-.fitness[data-fitness="recommended"] { color: #15803d; } /* 권장 초록 */
-.fitness[data-fitness="possible"] { color: #1d4ed8; } /* 가능 파랑 */
-.fitness[data-fitness="slow"] { color: #b45309; } /* 느릴 수 있음 주황 */
-.fitness[data-fitness="insufficient"], .warning { color: #b91c1c; } /* 부족 빨강 */
+.fitness[data-fitness="recommended"] { color: light-dark(#15803d, #4ade80); } /* 권장 초록 */
+.fitness[data-fitness="possible"] { color: light-dark(#1d4ed8, #7aa2ff); } /* 가능 파랑 */
+.fitness[data-fitness="slow"] { color: light-dark(#b45309, #fbbf24); } /* 느릴 수 있음 주황 */
+.fitness[data-fitness="insufficient"], .warning { color: light-dark(#b91c1c, #fca5a5); } /* 부족 빨강 */
 
 .active /* 사용 중 표시 */
 {
@@ -166,9 +166,9 @@
 }
 
 .primary { border: 0; background: var(--card-tone, var(--accent)); color: #ffffff; } /* 주요 버튼 */
-.secondary { border: 1px solid var(--mv-line, #e9e3f3); background: #ffffff; color: var(--mv-ink, #1f1a2e); } /* 보조 버튼 */
+.secondary { border: 1px solid var(--mv-line, #e9e3f3); background: var(--mv-surface, #ffffff); color: var(--mv-ink, #1f1a2e); } /* 보조 버튼 */
 .danger { border: 0; background: #b91c1c; color: #ffffff; } /* 삭제 버튼 */
-.primary:disabled { cursor: not-allowed; background: #c9c3d6; } /* 막힌 버튼 */
+.primary:disabled { cursor: not-allowed; background: light-dark(#c9c3d6, #4a4560); } /* 막힌 버튼 */
 .primary:focus-visible, .secondary:focus-visible, .danger:focus-visible { outline: 3px solid var(--mv-focus, #1d4ed8); outline-offset: 2px; } /* 키보드 초점 */
 
 .notice, .alert /* 안내 */
@@ -179,4 +179,4 @@
     background: var(--accent-soft); /* 연한 대표색 */
 }
 
-.alert { background: #fee2e2; color: #7f1d1d; } /* 실패 안내 */
+.alert { background: light-dark(#fee2e2, #361215); color: light-dark(#7f1d1d, #fca5a5); } /* 실패 안내 */

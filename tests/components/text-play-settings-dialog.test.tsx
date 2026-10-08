@@ -32,7 +32,7 @@ describe("Text-Play 설정 대화상자", () => // 설정 대화상자 묶음
         const platform: TextPlayPlatform = { applyWindowResolution: async () => undefined, navigate: vi.fn(), renderSceneImage: () => null }; // 테스트 플랫폼
         render(<TextPlayPlatformProvider value={platform}><TextPlayPreferencesProvider><TextPlaySettingsDialog open onClose={vi.fn()} /></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 설정 화면 렌더
         expect(screen.getAllByRole("radio", { name: /테마/u })).toHaveLength(3); // 테마 개수 확인
-        expect(screen.getByRole("radio", { name: "다크 판타지 글래스 테마" })).toHaveFocus(); // 초기 초점 확인
+        expect(screen.getByRole("radio", { name: "판타지 글래스 테마" })).toHaveFocus(); // 초기 초점 확인
         await user.click(screen.getByRole("radio", { name: "클래식 비주얼 노벨 테마" })); // 클래식 테마 선택
         expect(loadTextPlayPreferences(window.localStorage).themeId).toBe("classic-novel"); // 테마 저장 확인
     }); // 테스트 종료

@@ -1,15 +1,15 @@
 .page /* 플레이 화면 */
 { /* 화면 시작 */
-    --accent: #af91ff; /* 강조 색상 */
-    --accent-strong: #7a57d1; /* 강한 강조 */
-    --accent-soft: rgb(174 143 255 / 18%); /* 약한 강조 */
-    --page-bg: #080a11; /* 화면 배경 */
-    --bar-bg: rgb(12 14 22 / 96%); /* 상단바 배경 */
-    --panel-bg: rgb(15 17 27 / 94%); /* 패널 배경 */
-    --panel-line: rgb(158 136 219 / 30%); /* 패널 구분선 */
-    --dialog-bg: linear-gradient(135deg, rgb(24 20 34 / 84%), rgb(11 13 21 / 76%)); /* 대화 배경 */
-    --main-text: #f6f2ff; /* 주요 글자 */
-    --muted-text: #a7a1b4; /* 보조 글자 */
+    --accent: light-dark(#7c3aed, #af91ff); /* 강조 색상 */
+    --accent-strong: light-dark(#6d28d9, #7a57d1); /* 강한 강조 */
+    --accent-soft: light-dark(rgb(124 58 237 / 10%), rgb(174 143 255 / 18%)); /* 약한 강조 */
+    --page-bg: light-dark(#fbf9ff, #080a11); /* 화면 배경 */
+    --bar-bg: light-dark(rgb(255 255 255 / 94%), rgb(12 14 22 / 96%)); /* 상단바 배경 */
+    --panel-bg: light-dark(rgb(255 255 255 / 96%), rgb(15 17 27 / 94%)); /* 패널 배경 */
+    --panel-line: light-dark(#e3daf5, rgb(158 136 219 / 30%)); /* 패널 구분선 */
+    --dialog-bg: linear-gradient(135deg, light-dark(rgb(255 255 255 / 92%), rgb(24 20 34 / 84%)), light-dark(rgb(250 247 255 / 86%), rgb(11 13 21 / 76%))); /* 대화 배경 */
+    --main-text: light-dark(#1f1a2e, #f6f2ff); /* 주요 글자 */
+    --muted-text: light-dark(#5f5873, #a7a1b4); /* 보조 글자 */
     display: grid; /* 화면 배치 */
     grid-template-rows: 74px minmax(0, 1fr); /* 세로 구획 */
     width: 100%; /* 전체 너비 */
@@ -27,30 +27,30 @@
 
 .page[data-theme="sci-fi"] /* SF 테마 */
 { /* 테마 시작 */
-    --accent: #63e6e2; /* 강조 색상 */
-    --accent-strong: #138e9d; /* 강한 강조 */
-    --accent-soft: rgb(62 224 222 / 16%); /* 약한 강조 */
-    --page-bg: #041014; /* 화면 배경 */
-    --bar-bg: rgb(4 20 25 / 96%); /* 상단바 배경 */
-    --panel-bg: rgb(6 24 29 / 94%); /* 패널 배경 */
-    --panel-line: rgb(93 226 224 / 32%); /* 패널 구분선 */
-    --dialog-bg: linear-gradient(135deg, rgb(3 24 29 / 82%), rgb(4 14 20 / 76%)); /* 대화 배경 */
-    --main-text: #eaffff; /* 주요 글자 */
-    --muted-text: #91b9bd; /* 보조 글자 */
+    --accent: light-dark(#0e7490, #63e6e2); /* 강조 색상 */
+    --accent-strong: light-dark(#0f766e, #138e9d); /* 강한 강조 */
+    --accent-soft: light-dark(rgb(14 116 144 / 10%), rgb(62 224 222 / 16%)); /* 약한 강조 */
+    --page-bg: light-dark(#f3fbfc, #041014); /* 화면 배경 */
+    --bar-bg: light-dark(rgb(255 255 255 / 94%), rgb(4 20 25 / 96%)); /* 상단바 배경 */
+    --panel-bg: light-dark(rgb(255 255 255 / 96%), rgb(6 24 29 / 94%)); /* 패널 배경 */
+    --panel-line: light-dark(#c6e4e8, rgb(93 226 224 / 32%)); /* 패널 구분선 */
+    --dialog-bg: linear-gradient(135deg, light-dark(rgb(255 255 255 / 92%), rgb(3 24 29 / 82%)), light-dark(rgb(240 250 251 / 86%), rgb(4 14 20 / 76%))); /* 대화 배경 */
+    --main-text: light-dark(#0f2a30, #eaffff); /* 주요 글자 */
+    --muted-text: light-dark(#4a686d, #91b9bd); /* 보조 글자 */
 } /* 테마 종료 */
 
 .page[data-theme="classic-novel"] /* 비주얼 노벨 테마 */
 { /* 테마 시작 */
-    --accent: #f1b5bc; /* 강조 색상 */
-    --accent-strong: #a95f74; /* 강한 강조 */
-    --accent-soft: rgb(238 174 184 / 17%); /* 약한 강조 */
-    --page-bg: #171013; /* 화면 배경 */
-    --bar-bg: rgb(31 21 25 / 96%); /* 상단바 배경 */
-    --panel-bg: rgb(35 24 29 / 94%); /* 패널 배경 */
-    --panel-line: rgb(235 175 184 / 30%); /* 패널 구분선 */
-    --dialog-bg: linear-gradient(135deg, rgb(46 29 34 / 84%), rgb(25 17 22 / 76%)); /* 대화 배경 */
-    --main-text: #fff4ee; /* 주요 글자 */
-    --muted-text: #c5aaa9; /* 보조 글자 */
+    --accent: light-dark(#a8415c, #f1b5bc); /* 강조 색상 */
+    --accent-strong: light-dark(#9f3a55, #a95f74); /* 강한 강조 */
+    --accent-soft: light-dark(rgb(168 65 92 / 10%), rgb(238 174 184 / 17%)); /* 약한 강조 */
+    --page-bg: light-dark(#fff8f5, #171013); /* 화면 배경 */
+    --bar-bg: light-dark(rgb(255 255 255 / 94%), rgb(31 21 25 / 96%)); /* 상단바 배경 */
+    --panel-bg: light-dark(rgb(255 255 255 / 96%), rgb(35 24 29 / 94%)); /* 패널 배경 */
+    --panel-line: light-dark(#f0d8d8, rgb(235 175 184 / 30%)); /* 패널 구분선 */
+    --dialog-bg: linear-gradient(135deg, light-dark(rgb(255 255 255 / 92%), rgb(46 29 34 / 84%)), light-dark(rgb(255 246 243 / 86%), rgb(25 17 22 / 76%))); /* 대화 배경 */
+    --main-text: light-dark(#2e1a1f, #fff4ee); /* 주요 글자 */
+    --muted-text: light-dark(#775a5f, #c5aaa9); /* 보조 글자 */
 } /* 테마 종료 */
 
 .topbar /* 상단 표시줄 */
@@ -221,9 +221,9 @@
     z-index: 10; /* 내용 위 배치 */
     margin: 0; /* 기본 여백 제거 */
     padding: 8px 20px; /* 경고 여백 */
-    border-bottom: 1px solid #8a6840; /* 경고 구분선 */
-    background: #2a2117; /* 경고 배경 */
-    color: #f2d8ae; /* 경고 글자 */
+    border-bottom: 1px solid light-dark(#fcd34d, #8a6840); /* 경고 구분선 */
+    background: light-dark(#fffbeb, #2a2117); /* 경고 배경 */
+    color: light-dark(#78350f, #f2d8ae); /* 경고 글자 */
     font-size: .76rem; /* 경고 크기 */
 } /* 경고 종료 */
 
@@ -241,7 +241,7 @@
     min-width: 0; /* 축소 허용 */
     min-height: 0; /* 축소 허용 */
     overflow: hidden; /* 이미지 정리 */
-    background: #10131b; /* 이미지 대체 배경 */
+    background: light-dark(#ece6f7, #10131b); /* 이미지 대체 배경 */
 } /* 무대 종료 */
 
 .sceneImage /* 장면 이미지 */
@@ -261,7 +261,7 @@
 { /* 음영 시작 */
     position: absolute; /* 전체 배치 */
     inset: 0; /* 전체 채움 */
-    background: linear-gradient(180deg, rgb(3 5 10 / 8%) 20%, rgb(3 5 10 / 22%) 55%, rgb(3 5 10 / 82%) 100%); /* 하단 음영 */
+    background: linear-gradient(180deg, light-dark(rgb(251 249 255 / 0%), rgb(3 5 10 / 8%)) 20%, light-dark(rgb(251 249 255 / 18%), rgb(3 5 10 / 22%)) 55%, light-dark(rgb(251 249 255 / 86%), rgb(3 5 10 / 82%)) 100%); /* 하단 음영 */
     pointer-events: none; /* 조작 통과 */
 } /* 음영 종료 */
 
@@ -273,7 +273,7 @@
     z-index: 2; /* 이미지 위 배치 */
     padding: 10px 14px; /* 표제 여백 */
     border-left: 2px solid var(--accent); /* 강조선 */
-    background: rgb(5 7 12 / 52%); /* 표제 배경 */
+    background: light-dark(rgb(255 255 255 / 86%), rgb(5 7 12 / 52%)); /* 표제 배경 */
     backdrop-filter: blur(8px); /* 배경 흐림 */
 } /* 표제 종료 */
 
@@ -291,7 +291,7 @@
 { /* 제목 시작 */
     margin: 4px 0 0; /* 제목 여백 */
     font-size: clamp(1.15rem, 2.2vw, 2rem); /* 제목 크기 */
-    text-shadow: 0 2px 14px rgb(0 0 0 / 70%); /* 제목 그림자 */
+    text-shadow: 0 2px 14px light-dark(rgb(0 0 0 / 0%), rgb(0 0 0 / 70%)); /* 제목 그림자 */
 } /* 제목 종료 */
 
 .storyBox /* 스토리 상자 */
@@ -308,7 +308,7 @@
     border: 1px solid var(--panel-line); /* 상자 테두리 */
     border-radius: 20px; /* 상자 모서리 */
     background: var(--dialog-bg); /* 반투명 배경 */
-    box-shadow: 0 22px 70px rgb(0 0 0 / 46%); /* 상자 그림자 */
+    box-shadow: 0 22px 70px light-dark(rgb(31 26 46 / 16%), rgb(0 0 0 / 46%)); /* 상자 그림자 */
     backdrop-filter: blur(17px) saturate(125%); /* 배경 흐림 */
 } /* 상자 종료 */
 
@@ -357,8 +357,8 @@
     padding: 0 11px; /* 배지 여백 */
     border: 1px solid var(--panel-line); /* 배지 테두리 */
     border-radius: 999px; /* 둥근 배지 */
-    background: rgb(6 8 14 / 72%); /* 배지 배경 */
-    box-shadow: 0 6px 18px rgb(0 0 0 / 24%); /* 배지 그림자 */
+    background: light-dark(rgb(255 255 255 / 90%), rgb(6 8 14 / 72%)); /* 배지 배경 */
+    box-shadow: 0 6px 18px light-dark(rgb(31 26 46 / 10%), rgb(0 0 0 / 24%)); /* 배지 그림자 */
     backdrop-filter: blur(10px); /* 배경 흐림 */
 } /* 배지 종료 */
 
@@ -386,7 +386,7 @@
     height: 58px; /* 버튼 높이 */
     border: 1px solid var(--panel-line); /* 버튼 테두리 */
     border-radius: 14px; /* 둥근 버튼 */
-    background: rgb(7 9 15 / 70%); /* 버튼 배경 */
+    background: light-dark(rgb(255 255 255 / 90%), rgb(7 9 15 / 70%)); /* 버튼 배경 */
     color: var(--accent); /* 화살표 색상 */
     cursor: pointer; /* 선택 커서 */
     font-size: 2rem; /* 화살표 크기 */
@@ -465,7 +465,7 @@
     color: var(--main-text); /* 문구 색상 */
     font-size: clamp(.88rem, 1.2vw, 1.02rem); /* 문구 크기 */
     line-height: 1.7; /* 문구 행간 */
-    text-shadow: 0 1px 8px rgb(0 0 0 / 70%); /* 문구 그림자 */
+    text-shadow: 0 1px 8px light-dark(rgb(0 0 0 / 0%), rgb(0 0 0 / 70%)); /* 문구 그림자 */
 } /* 문구 종료 */
 
 .storyBox article strong /* 발화자 */
@@ -504,7 +504,7 @@
     padding: 8px 12px; /* 카드 여백 */
     border: 1px solid var(--panel-line); /* 카드 테두리 */
     border-radius: 16px; /* 카드 모서리 */
-    background: rgb(7 9 15 / 56%); /* 카드 배경 */
+    background: light-dark(#ffffff, rgb(7 9 15 / 56%)); /* 카드 배경 */
     transition: border-color .18s ease; /* 테두리 전환 */
 } /* 카드 종료 */
 
@@ -594,7 +594,7 @@
     padding: 12px 14px 12px 38px; /* 버튼 여백 */
     border: 1px solid var(--panel-line); /* 버튼 테두리 */
     border-radius: 12px; /* 버튼 모서리 */
-    background: linear-gradient(135deg, var(--accent-soft), rgb(14 16 25 / 76%)); /* 버튼 배경 */
+    background: linear-gradient(135deg, var(--accent-soft), light-dark(#ffffff, rgb(14 16 25 / 76%))); /* 버튼 배경 */
     color: var(--main-text); /* 버튼 글자 */
     cursor: pointer; /* 선택 커서 */
     font-size: .84rem; /* 버튼 크기 */
@@ -639,7 +639,7 @@
     padding: 10px 12px; /* 카드 여백 */
     border: 1px solid var(--panel-line); /* 카드 테두리 */
     border-radius: 16px; /* 카드 모서리 */
-    background: rgb(7 9 15 / 56%); /* 카드 배경 */
+    background: light-dark(#ffffff, rgb(7 9 15 / 56%)); /* 카드 배경 */
     transition: border-color .18s ease; /* 테두리 전환 */
 } /* 카드 종료 */
 
@@ -667,7 +667,7 @@
     padding: 12px; /* 입력 여백 */
     border: 1px solid var(--panel-line); /* 입력 테두리 */
     border-radius: 11px; /* 입력 모서리 */
-    background: rgb(6 8 13 / 74%); /* 입력 배경 */
+    background: light-dark(#ffffff, rgb(6 8 13 / 74%)); /* 입력 배경 */
     color: var(--main-text); /* 입력 글자 */
     line-height: 1.5; /* 입력 행간 */
     outline: none; /* 기본 외곽선 제거 */
@@ -744,7 +744,7 @@
     inset: 0; /* 전체 채움 */
     width: 100%; /* 전체 너비 */
     border: 0; /* 테두리 제거 */
-    background: rgb(2 4 8 / 48%); /* 어두운 배경 */
+    background: light-dark(rgb(31 26 46 / 28%), rgb(2 4 8 / 48%)); /* 어두운 배경 */
     backdrop-filter: blur(5px); /* 배경 흐림 */
     cursor: pointer; /* 닫기 커서 */
 } /* 배경 종료 */
@@ -761,7 +761,7 @@
     border: 1px solid var(--panel-line); /* 팝업 테두리 */
     border-radius: 17px; /* 팝업 모서리 */
     background: var(--panel-bg); /* 팝업 배경 */
-    box-shadow: 0 24px 70px rgb(0 0 0 / 55%); /* 팝업 그림자 */
+    box-shadow: 0 24px 70px light-dark(rgb(31 26 46 / 20%), rgb(0 0 0 / 55%)); /* 팝업 그림자 */
 } /* 팝업 종료 */
 
 .statePopover aside /* 상태 내용 */

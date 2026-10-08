@@ -14,7 +14,6 @@ import { getClaimableCount } from "@chatbot/features/rewards/reward-model"; // C
 import { formatUsageDuration } from "@chatbot/features/safety/usage-time"; // ChatBot 이용 시간 표시
 import { useUsageReminder } from "@chatbot/features/safety/useUsageReminder"; // ChatBot 이용 시간 알림
 import { t } from "@chatbot/lib/i18n"; // ChatBot 화면 글자 번역(ChatBot과 같은 문구는 그 사전을 씀)
-import { THEME_STORAGE_KEY } from "@chatbot/lib/theme/stored-theme"; // ChatBot 테마 저장 키
 import { DESKTOP_UI_TEXT } from "@/desktop/desktop-ui-text"; // 언어별 틀 글자
 import Image from "@/desktop/next-compat/image"; // 데스크톱 이미지
 import Link from "@/desktop/next-compat/link"; // 데스크톱 링크
@@ -84,19 +83,6 @@ export function DesktopShell({ pathname, area, title, repository, children }: De
     const usageReminder = useUsageReminder(); // 이용 시간 알림(ChatBot 셸과 같음)
     const [matureHidden, setMatureHidden] = useState(false); // 19+ 보기를 껐다는 안내 표시
     const rewardCount = getClaimableCount(state.rewards, new Date()); // 받을 보상 수
-    const theme = state.settings.theme; // 앱 테마(밝게·어둡게)
-    useEffect(() => // 테마 적용(ChatBot 셸과 같은 방식: 문서 루트 표시와 다음 실행 첫 화면용 저장)
-    { // 효과 시작
-        document.documentElement.dataset.theme = theme; // 루트 표시
-        try // 저장 시도
-        { // 시도 시작
-            window.localStorage.setItem(THEME_STORAGE_KEY, theme); // 테마 저장
-        } // 시도 종료
-        catch // 저장 실패 처리
-        { // 실패 시작
-            void theme; // 화면 적용만 유지
-        } // 실패 종료
-    }, [theme]); // 테마 의존
     const hideMature = () => // 19+ 보기 끄기(사용자 패널의 버튼, ChatBot 셸과 같음)
     { // 함수 시작
         if (!window.confirm(t("19+ 보기를 끌까요? 캐릭터와 대화, 토큰은 그대로 남아요."))) // 확인 취소

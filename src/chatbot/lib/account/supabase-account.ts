@@ -1,7 +1,7 @@
 // Supabase 연결: 로그인 계약(AuthAdapter)과 서버 저장 계약(SnapshotStore)의 실제 구현. Supabase가 여는 주소(로그인 /auth/v1, 표 /rest/v1)를 그대로 부른다. 스위치를 켜기 전에는 쓰이지 않는다.
 import type { AccountProvider, AccountSession } from "@chatbot/lib/account/account-session"; // 계정 세션
 import type { AuthAdapter, AuthFailure, AuthResult, SignInInput, SocialProvider } from "@chatbot/lib/account/auth-adapter"; // 로그인 계약
-import { SignedOutError, type PushResult, type RemoteSnapshot, type SnapshotStore } from "@chatbot/lib/account/snapshot-store"; // 서버 저장 계약·로그인이 끝났다는 표시
+import { createPartedSnapshotStore, SignedOutError, type ManifestRow, type SnapshotBackend, type SnapshotHead, type SnapshotStore } from "@chatbot/lib/account/snapshot-store"; // 서버 저장 계약·조각으로 나눠 두는 구현·로그인이 끝났다는 표시
 
 export interface SupabaseConfig // 연결 설정
 { // 구조 시작
@@ -31,6 +31,10 @@ export const SUPABASE_VERIFIER_KEY = "mateverse:v1:auth-verifier"; // 간편 로
 export const PASSWORD_MIN_LENGTH = 8; // 비밀번호 최소 길이
 const SNAPSHOT_TABLE = "mv_snapshots"; // 저장본 표 이름
 const DELETE_ACCOUNT_FUNCTION = "mv_delete_account"; // 계정 지우기 함수 이름(데이터베이스 설정 파일이 만듦)
+const BLOB_TABLE = "mv_blobs"; // 조각 표 이름
+const SWEEP_BLOBS_FUNCTION = "mv_sweep_blobs"; // 버려진 조각 청소 함수 이름(데이터베이스 설정 파일이 만듦)
+const BLOB_READ_CHUNK = 40; // 한 번에 읽거나 지우는 조각 수(주소가 너무 길어지지 않게)
+const BLOB_WRITE_CHARS = 2_000_000; // 한 번에 올리는 조각의 글자 수
 const REFRESH_MARGIN_MS = 60_000; // 출입증이 이만큼 남으면 새로 받음
 const supportedProviders: readonly SocialProvider[] = ["google", "kakao"]; // 앱이 받는 간편 로그인
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // 이메일 모양
@@ -344,47 +348,130 @@ export function createSupabaseAuthAdapter(config: SupabaseConfig, options: Supab
     }; // 구현 반환
 } // 함수 종료
 
-function toSnapshot(row: unknown): RemoteSnapshot | null // 표의 줄을 저장본으로
+function toManifestRow(row: unknown): ManifestRow | null // 표의 줄을 목록 줄로
 { // 함수 시작
     const record = row as { revision?: unknown; state?: unknown; updated_at?: unknown; device_id?: unknown } | null; // 줄
-    return record !== null && typeof record === "object" && typeof record.state === "string" && Number.isInteger(Number(record.revision)) ? { revision: Number(record.revision), state: record.state, updatedAt: typeof record.updated_at === "string" ? record.updated_at : "", deviceId: typeof record.device_id === "string" ? record.device_id : "" } : null; // 저장본 반환
+    return record !== null && typeof record === "object" && typeof record.state === "string" && Number.isInteger(Number(record.revision)) ? { revision: Number(record.revision), body: record.state, updatedAt: typeof record.updated_at === "string" ? record.updated_at : "", deviceId: typeof record.device_id === "string" ? record.device_id : "" } : null; // 번호가 숫자이고 내용이 글일 때만
 } // 함수 종료
 
-export function createSupabaseSnapshotStore(config: SupabaseConfig, options: SupabaseOptions): SnapshotStore // Supabase 저장본 구현(표 mv_snapshots에 계정마다 한 줄)
+function toHead(row: unknown): SnapshotHead | null // 표의 줄을 머리로(내용 없이 번호만)
+{ // 함수 시작
+    const record = row as { revision?: unknown; updated_at?: unknown; device_id?: unknown } | null; // 줄
+    return record !== null && typeof record === "object" && Number.isInteger(Number(record.revision)) ? { revision: Number(record.revision), updatedAt: typeof record.updated_at === "string" ? record.updated_at : "", deviceId: typeof record.device_id === "string" ? record.device_id : "" } : null; // 번호가 숫자일 때만
+} // 함수 종료
+
+function chunk<T>(items: T[], size: number): T[][] // 목록을 정해진 수씩 나누기(주소가 너무 길어지지 않게)
+{ // 함수 시작
+    return Array.from({ length: Math.ceil(items.length / size) }, (_item, index) => items.slice(index * size, (index + 1) * size)); // 나눈 목록
+} // 함수 종료
+
+export function createSupabaseBackend(config: SupabaseConfig, options: SupabaseOptions): SnapshotBackend // Supabase에 조각을 두는 구현(조각 목록은 표 mv_snapshots에 계정마다 한 줄, 조각은 표 mv_blobs에 지문마다 한 줄)
 { // 함수 시작
     const client = createClient(config, options); // 요청 도구
-    const request = client.authed; // 출입증을 붙인 요청
-    const pull = async (accountId: string): Promise<RemoteSnapshot | null> => // 저장본 받기
+    const request = client.authed; // 출입증을 붙인 요청(로그인이 끝났으면 SignedOutError)
+    const mine = (accountId: string) => `user_id=eq.${encodeURIComponent(accountId)}`; // 내 줄만 고르는 조건
+    const readRow = async (accountId: string, columns: string): Promise<unknown> => // 목록 줄 읽기(없으면 undefined)
     { // 함수 시작
-        const result = await request(`/rest/v1/${SNAPSHOT_TABLE}?select=revision,state,updated_at,device_id&user_id=eq.${encodeURIComponent(accountId)}&limit=1`); // 내 줄 읽기
+        const result = await request(`/rest/v1/${SNAPSHOT_TABLE}?select=${columns}&${mine(accountId)}&limit=1`); // 내 줄 읽기
         if (result.status !== 200 || !Array.isArray(result.body)) // 읽지 못함
         { // 조건 시작
-            throw new Error(`snapshot pull failed: ${result.status}`); // 맞추기 도구가 연결 실패로 처리
+            throw new Error(`snapshot read failed: ${result.status}`); // 맞추기 도구가 연결 실패로 처리
         } // 조건 종료
-        return result.body.length === 0 ? null : toSnapshot(result.body[0]); // 없으면 null
+        return result.body[0]; // 첫 줄(없으면 undefined)
     }; // 함수 종료
-    const conflict = async (accountId: string): Promise<PushResult> => ({ ok: false, reason: "conflict", remote: await pull(accountId).catch(() => null) }); // 겹침(서버 것을 함께 알림)
-    return { // 서버 저장 계약 구현
+    return { // 조각을 두는 곳 구현
         mode: "live", // 실제 서비스
-        pull, // 받기
-        push: async (accountId, state, expectedRevision, deviceId) => // 올리기
+        readHead: async (accountId) => { const row = await readRow(accountId, "revision,updated_at,device_id"); return row === undefined ? null : toHead(row); }, // 번호만(내용은 받지 않음)
+        readManifest: async (accountId) => { const row = await readRow(accountId, "revision,state,updated_at,device_id"); return row === undefined ? null : toManifestRow(row); }, // 목록 줄
+        writeManifest: async (accountId, body, expectedRevision, deviceId) => // 목록 줄 쓰기(돌려받는 것은 번호와 시각뿐)
         { // 함수 시작
             try // 요청 시도
             { // 시도 시작
                 const result = expectedRevision === null // 처음인지
-                    ? await request(`/rest/v1/${SNAPSHOT_TABLE}`, { method: "POST", prefer: "return=representation", body: { user_id: accountId, revision: 1, state, device_id: deviceId } }) // 새 줄 만들기(이미 있으면 서버가 거절)
-                    : await request(`/rest/v1/${SNAPSHOT_TABLE}?user_id=eq.${encodeURIComponent(accountId)}&revision=eq.${expectedRevision}`, { method: "PATCH", prefer: "return=representation", body: { revision: expectedRevision + 1, state, device_id: deviceId } }); // 내가 본 번호일 때만 고치기
-                const saved = Array.isArray(result.body) ? toSnapshot(result.body[0]) : null; // 저장된 줄
+                    ? await request(`/rest/v1/${SNAPSHOT_TABLE}?select=revision,updated_at,device_id`, { method: "POST", prefer: "return=representation", body: { user_id: accountId, revision: 1, state: body, device_id: deviceId } }) // 새 줄 만들기(이미 있으면 서버가 거절)
+                    : await request(`/rest/v1/${SNAPSHOT_TABLE}?${mine(accountId)}&revision=eq.${expectedRevision}&select=revision,updated_at,device_id`, { method: "PATCH", prefer: "return=representation", body: { revision: expectedRevision + 1, state: body, device_id: deviceId } }); // 내가 본 번호일 때만 고치기
+                const saved = Array.isArray(result.body) ? toHead(result.body[0]) : null; // 저장된 줄의 머리
                 if (result.status >= 200 && result.status < 300 && saved !== null) // 저장됨
                 { // 조건 시작
                     return { ok: true, revision: saved.revision, updatedAt: saved.updatedAt }; // 새 번호
                 } // 조건 종료
-                return result.status === 409 || (result.status === 200 && Array.isArray(result.body) && result.body.length === 0) ? conflict(accountId) : { ok: false, reason: "unavailable" }; // 번호가 달라 바뀐 줄이 없으면 겹침
+                return result.status === 409 || (result.status === 200 && Array.isArray(result.body) && result.body.length === 0) ? { ok: false, reason: "conflict" } : { ok: false, reason: "unavailable" }; // 번호가 달라 바뀐 줄이 없으면 겹침
             } // 시도 종료
             catch (error) // 로그인이 끝났거나 서버에 닿지 못함
             { // 실패 시작
-                return { ok: false, reason: error instanceof SignedOutError ? "signed-out" : "unavailable" }; // 로그인이 끝났으면 그렇게 알리고, 아니면 저장하지 못함
+                return { ok: false, reason: error instanceof SignedOutError ? "signed-out" : "unavailable" }; // 쓰지 못함
             } // 실패 종료
         }, // 함수 종료
+        readBlobs: async (accountId, hashes) => // 조각 읽기
+        { // 함수 시작
+            const found: Record<string, string> = {}; // 지문 → 내용
+            for (const group of chunk(hashes, BLOB_READ_CHUNK)) // 여러 번에 나눠
+            { // 순회 시작
+                const result = await request(`/rest/v1/${BLOB_TABLE}?select=hash,body&${mine(accountId)}&hash=in.(${group.join(",")})`); // 지문으로 읽기
+                if (result.status !== 200 || !Array.isArray(result.body)) // 읽지 못함
+                { // 조건 시작
+                    throw new Error(`blob read failed: ${result.status}`); // 연결 실패로 처리
+                } // 조건 종료
+                result.body.forEach((row) => { const record = row as { hash?: unknown; body?: unknown } | null; if (typeof record?.hash === "string" && typeof record.body === "string") { found[record.hash] = record.body; } }); // 모으기
+            } // 순회 종료
+            return found; // 읽은 조각
+        }, // 함수 종료
+        writeBlobs: async (accountId, blobs) => // 조각 쓰기(한 번에 보내는 양이 너무 크지 않게 나눔)
+        { // 함수 시작
+            let batch: Array<{ user_id: string; hash: string; body: string }> = []; // 한 번에 보낼 줄
+            let size = 0; // 그 줄들의 글자 수
+            const flush = async (): Promise<void> => // 모은 줄 보내기
+            { // 함수 시작
+                if (batch.length === 0) // 보낼 것 없음
+                { // 조건 시작
+                    return; // 생략
+                } // 조건 종료
+                const result = await request(`/rest/v1/${BLOB_TABLE}?on_conflict=user_id,hash`, { method: "POST", prefer: "resolution=ignore-duplicates,return=minimal", body: batch }); // 이미 있는 지문은 그대로 두고 넣기
+                if (result.status < 200 || result.status >= 300) // 넣지 못함
+                { // 조건 시작
+                    throw new Error(`blob write failed: ${result.status}`); // 올리기 실패로 처리
+                } // 조건 종료
+                batch = []; // 비움
+                size = 0; // 비움
+            }; // 함수 종료
+            for (const [hash, body] of Object.entries(blobs)) // 조각 순회
+            { // 순회 시작
+                if (size > 0 && size + body.length > BLOB_WRITE_CHARS) // 이번 것을 더하면 너무 큼
+                { // 조건 시작
+                    await flush(); // 먼저 보냄
+                } // 조건 종료
+                batch.push({ user_id: accountId, hash, body }); // 줄 추가
+                size += body.length; // 글자 수
+            } // 순회 종료
+            await flush(); // 남은 줄 보냄
+        }, // 함수 종료
+        deleteBlobs: async (accountId, hashes) => // 조각 지우기
+        { // 함수 시작
+            for (const group of chunk(hashes, BLOB_READ_CHUNK)) // 여러 번에 나눠
+            { // 순회 시작
+                await request(`/rest/v1/${BLOB_TABLE}?${mine(accountId)}&hash=in.(${group.join(",")})`, { method: "DELETE" }); // 지문으로 지우기
+            } // 순회 종료
+        }, // 함수 종료
+        sweepBlobs: async () => // 버려진 조각 청소(목록에 없고 하루가 지난 것. 데이터베이스 함수가 내 것만 지움)
+        { // 함수 시작
+            await request(`/rest/v1/rpc/${SWEEP_BLOBS_FUNCTION}`, { method: "POST", body: {} }); // 청소 함수 부르기
+        }, // 함수 종료
     }; // 구현 반환
+} // 함수 종료
+
+export async function readSupabaseAccessToken(config: SupabaseConfig, options: SupabaseOptions): Promise<string | null> // 서버 통로에 보낼 출입증(곧 끝나면 새로 받음. 로그인하지 않았거나 받지 못하면 없음)
+{ // 함수 시작
+    try // 읽기 시도
+    { // 시도 시작
+        return await createClient(config, options).accessToken(); // 쓸 수 있는 출입증
+    } // 시도 종료
+    catch // 로그인이 끝났거나 서비스에 닿지 못함
+    { // 실패 시작
+        return null; // 출입증 없음(서버 통로가 로그인하라고 알림)
+    } // 실패 종료
+} // 함수 종료
+
+export function createSupabaseSnapshotStore(config: SupabaseConfig, options: SupabaseOptions): SnapshotStore // Supabase 저장본 구현(조각으로 나눠 두고 바뀐 조각만 주고받음)
+{ // 함수 시작
+    return createPartedSnapshotStore(createSupabaseBackend(config, options)); // Supabase에 붙인 저장 구현
 } // 함수 종료

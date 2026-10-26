@@ -348,4 +348,9 @@ export const chat: Record<string, string> = {
     "이전·다음 턴 상태창 보기": "View the previous or next turn's status",
     "열린 창 닫기": "Close the open window",
     "현재 수정 버전과 메시지 {0}개를 삭제할까요?": "Delete this edited version and {0} messages?",
+    "오늘 보낼 수 있는 메시지를 모두 썼어요. 내일 다시 이용해 주세요.": "You have used all of today's messages. Please come back tomorrow.",
+    "오늘 서비스 전체 사용량이 가득 찼어요. 내일 다시 이용해 주세요.": "The service has reached today's total usage. Please come back tomorrow.",
+    "실제 AI는 로그인한 뒤에 쓸 수 있어요. 로그인하고 다시 시도해 주세요.": "Real AI replies are available after you sign in. Sign in and try again.",
+    "로그인을 확인하지 못했어요. 잠시 뒤 다시 시도해 주세요.": "We could not verify your sign-in. Please try again in a moment.",
+    "연습용 응답 · 로그인하면 실제 AI로 답해요": "Practice replies · sign in for real AI replies",
 };

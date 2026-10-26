@@ -26,7 +26,7 @@ export function describeResponseMode(status: ModelStatus | null): string // 응�
     const { real } = summarizeProviders(status); // 실제 AI 등급
     if (real.length === 0) // 실제 AI 없음
     { // 조건 시작
-        return t("로컬 Mock(외부 API 없음)"); // 연습용
+        return status?.loginRequired === true ? t("연습용 응답 · 로그인하면 실제 AI로 답해요") : t("로컬 Mock(외부 API 없음)"); // 로그인하면 열리는 경우와 연습용뿐인 경우
     } // 조건 종료
     return real.length === chatTiers.length ? t("실제 AI({0})", [names(real)]) : t("실제 AI({0}) · 나머지 등급은 연습용 응답", [names(real)]); // 실제 AI 등급 안내
 } // 함수 종료

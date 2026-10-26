@@ -47,6 +47,8 @@ describe("연습용 계정 지우기", () => // 연습용 탈퇴 묶음
         expect(await adapter.deleteAccount(soha.session)).toEqual({ ok: true }); // 지움
         expect(adapter.listAccounts().map((account) => account.name)).toEqual(["리안"]); // 목록에서 빠짐
         expect(await server.pull(soha.session.accountId)).toBeNull(); // 서버 저장본도 사라짐
+        expect(Object.keys(localStorage).filter((key) => key.includes(soha.session.accountId) && (key.startsWith("mateverse:v1:practice-server:") || key.startsWith("mateverse:v1:practice-blob:")))).toEqual([]); // 조각 목록과 조각이 모두 사라짐
+        expect(Object.keys(localStorage).filter((key) => key.startsWith(`mateverse:v1:practice-blob:${rian.session.accountId}:`))).toHaveLength(1); // 다른 계정의 조각은 그대로
         expect((await server.pull(rian.session.accountId))?.state).toBe("{\"b\":1}"); // 다른 계정의 저장본은 그대로
         expect(await adapter.deleteAccount(soha.session)).toEqual({ ok: true }); // 이미 없는 계정을 지워도 문제없음
     }); // 검증 종료

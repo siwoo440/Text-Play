@@ -1,5 +1,5 @@
 // 계정 데이터 맞추기: 이 기기의 앱 데이터와 서버의 저장본을 견주어 올리거나 받는다. 양쪽이 따로 바뀌었으면 겹침을 알리고 사람이 고르게 한다.
-import { SignedOutError, type RemoteSnapshot, type SnapshotStore } from "@chatbot/lib/account/snapshot-store"; // 서버 저장 계약·로그인이 끝났다는 표시
+import { SignedOutError, type RemoteSnapshot, type SnapshotHead, type SnapshotStore } from "@chatbot/lib/account/snapshot-store"; // 서버 저장 계약·로그인이 끝났다는 표시
 
 export interface SyncMeta // 이 기기의 맞춤 기록(계정마다 따로)
 { // 구조 시작
@@ -23,7 +23,7 @@ export interface SyncStatus // 화면에 알리는 상태
 { // 구조 시작
     phase: SyncPhase; // 상태
     syncedAt: string | null; // 마지막으로 맞춘 시각
-    remote?: RemoteSnapshot; // 겹쳤을 때의 서버 저장본
+    remote?: SnapshotHead; // 겹쳤을 때 서버 저장본의 머리(번호·시각·기기. 내용은 서버 것을 받기로 했을 때만 받음)
     created?: boolean; // 이번에 이 계정의 서버 저장본을 처음 만들었는지(새 계정)
 } // 구조 종료
 
@@ -75,7 +75,7 @@ export function writeSyncMeta(storage: Storage, meta: SyncMeta): void // 맞춤 
     } // 실패 종료
 } // 함수 종료
 
-export function decideSync(meta: SyncMeta, remote: RemoteSnapshot | null, localHash: string): SyncDecision // 할 일 정하기
+export function decideSync(meta: SyncMeta, remote: SnapshotHead | null, localHash: string): SyncDecision // 할 일 정하기(서버 것은 번호만 보면 됨)
 { // 함수 시작
     if (remote === null) // 서버가 비어 있음
     { // 조건 시작
@@ -95,7 +95,7 @@ export function decideSync(meta: SyncMeta, remote: RemoteSnapshot | null, localH
 
 export class AccountSyncRunner // 맞추기 도구(계정 하나, 기기 하나)
 { // 클래스 시작
-    private conflict: RemoteSnapshot | null = null; // 겹쳤을 때 본 서버 저장본
+    private conflict: SnapshotHead | null = null; // 겹쳤을 때 본 서버 저장본의 머리
     private signedOut = false; // 로그인이 끝난 것을 알았는지
 
     public constructor(private readonly store: SnapshotStore, private readonly accountId: string, private readonly local: SyncLocal, private readonly onStatus: (status: SyncStatus) => void = () => undefined, private readonly now: () => string = () => new Date().toISOString()) // 서버·계정·기기 연결·상태 알림·시각
@@ -163,14 +163,28 @@ export class AccountSyncRunner // 맞추기 도구(계정 하나, 기기 하나)
         return this.report({ phase: "saved", syncedAt }); // 받음
     } // 함수 종료
 
+    private async receive(meta: SyncMeta, protect: boolean): Promise<SyncStatus> // 서버 저장본의 내용을 받아 적용하기(이 기기와 내용이 같은 조각은 받지 않음)
+    { // 함수 시작
+        let remote: RemoteSnapshot | null = null; // 서버 저장본
+        try // 받기 시도
+        { // 시도 시작
+            remote = await this.store.pull(this.accountId, this.local.read()); // 서버 저장본 받기
+        } // 시도 종료
+        catch (error) // 서버에 닿지 못했거나 로그인이 끝남
+        { // 실패 시작
+            return error instanceof SignedOutError ? this.expired(meta) : this.failed(meta); // 로그인이 끝났으면 그렇게 알리고, 아니면 다음에 다시
+        } // 실패 종료
+        return remote === null ? this.failed(meta) : this.download(remote, meta, protect); // 그 사이 서버가 비었으면 다음에 다시, 아니면 적용
+    } // 함수 종료
+
     public async sync(): Promise<SyncStatus> // 맞추기(서버를 보고 올리거나 받음)
     { // 함수 시작
         const meta = readSyncMeta(this.local.storage); // 맞춤 기록
         this.report({ phase: "syncing", syncedAt: meta.syncedAt }); // 맞추는 중
-        let remote: RemoteSnapshot | null = null; // 서버 저장본
-        try // 받기 시도
+        let remote: SnapshotHead | null = null; // 서버 저장본의 머리
+        try // 묻기 시도
         { // 시도 시작
-            remote = await this.store.pull(this.accountId); // 서버 저장본 읽기
+            remote = await this.store.head(this.accountId); // 서버 저장본의 번호만 묻기(내용은 받을 때만)
         } // 시도 종료
         catch (error) // 서버에 닿지 못했거나 로그인이 끝남
         { // 실패 시작
@@ -184,7 +198,7 @@ export class AccountSyncRunner // 맞추기 도구(계정 하나, 기기 하나)
         } // 조건 종료
         if (decision === "download" && remote !== null) // 받기
         { // 조건 시작
-            return this.download(remote, meta, meta.revision === null); // 서버 것을 받음(이 기기에서 처음 맞출 때는 있던 데이터를 백업)
+            return this.receive(meta, meta.revision === null); // 서버 것을 받음(이 기기에서 처음 맞출 때는 있던 데이터를 백업)
         } // 조건 종료
         if (decision === "conflict" && remote !== null) // 겹침
         { // 조건 시작
@@ -203,6 +217,6 @@ export class AccountSyncRunner // 맞추기 도구(계정 하나, 기기 하나)
             return this.sync(); // 그냥 맞춤
         } // 조건 종료
         this.report({ phase: "syncing", syncedAt: meta.syncedAt, remote }); // 맞추는 중(선택 창은 끝날 때까지 그대로 둠)
-        return choice === "keep-local" ? this.upload(this.local.read(), remote.revision, meta) : this.download(remote, meta, true); // 고른 쪽으로 맞춤(서버 것을 받으면 이 기기 데이터를 백업)
+        return choice === "keep-local" ? this.upload(this.local.read(), remote.revision, meta) : this.receive(meta, true); // 고른 쪽으로 맞춤(서버 것을 받으면 이 기기 데이터를 백업)
     } // 함수 종료
 } // 클래스 종료

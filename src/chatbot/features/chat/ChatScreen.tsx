@@ -67,6 +67,22 @@ function describeChatServiceError(code: ChatServiceCode): string // 실제 AI �
     { // 조건 시작
         return t("너무 빠르게 보냈어요. 1분쯤 뒤에 다시 시도해 주세요."); // 속도 안내
     } // 조건 종료
+    if (code === "daily-limit") // 하루 한도
+    { // 조건 시작
+        return t("오늘 보낼 수 있는 메시지를 모두 썼어요. 내일 다시 이용해 주세요."); // 하루 한도 안내
+    } // 조건 종료
+    if (code === "service-limit") // 서비스 전체 한도
+    { // 조건 시작
+        return t("오늘 서비스 전체 사용량이 가득 찼어요. 내일 다시 이용해 주세요."); // 전체 한도 안내
+    } // 조건 종료
+    if (code === "login-required") // 로그인 필요
+    { // 조건 시작
+        return t("실제 AI는 로그인한 뒤에 쓸 수 있어요. 로그인하고 다시 시도해 주세요."); // 로그인 안내
+    } // 조건 종료
+    if (code === "auth-unavailable") // 로그인 확인 실패
+    { // 조건 시작
+        return t("로그인을 확인하지 못했어요. 잠시 뒤 다시 시도해 주세요."); // 확인 실패 안내
+    } // 조건 종료
     if (code === "provider-busy") // AI 회사가 바쁨
     { // 조건 시작
         return t("AI 회사의 사용 한도에 걸렸어요. 잠시 뒤에 다시 시도하거나 다른 등급을 골라 주세요."); // 한도 안내

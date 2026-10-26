@@ -9,3 +9,5 @@ allowBuilds:
   sharp: true
   # 모듈 경로 해석 모듈
   unrs-resolver: true
+
+engineStrict: true # 지원 실행 도구 범위 검사

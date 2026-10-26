@@ -1,5 +1,6 @@
 // 실제 AI 어댑터: 실제 AI를 쓸 수 있는 등급이면 서버 통로로 답과 대화 요약을 받고, 아니면(열쇠 없음·외부 AI 등급의 19세 작품·서버 없음) 연습용 AI를 쓴다. 스탯 판단도 같은 방식으로 맡긴다.
 import type { ChatReplyOptions, LLMAdapter, LLMInput, SummaryInput } from "@chatbot/lib/adapters/llm-adapter"; // 어댑터 계약
+import { getAccessTokenHeaders, type AuthHeaders } from "@chatbot/lib/account/access-token"; // 로그인 출입증 머리말
 import { loadModelStatus, type ModelStatus } from "@chatbot/lib/adapters/model-status"; // 실제 AI 상태
 import { MockLLMAdapter } from "@chatbot/lib/adapters/mock-llm-adapter"; // 연습용 AI
 import { getChatTier } from "@chatbot/features/chat/chat-tiers"; // 채팅 등급
@@ -8,7 +9,7 @@ import type { StatChange, StatJudgeInput } from "@chatbot/features/chat/stat-mod
 import type { ChatTierId, ContentRating } from "@chatbot/features/core/types"; // 도메인 타입
 import type { ChatRequest } from "@chatbot/lib/llm/prompt-builder"; // 서버 통로 요청
 
-export type ChatServiceCode = "bad-key" | "rate-limited" | "provider-busy" | "provider-error" | "model-offline" | "model-missing" | "local-only" | "bad-request" | "too-large" | "unknown"; // 실패 이유
+export type ChatServiceCode = "bad-key" | "rate-limited" | "daily-limit" | "service-limit" | "login-required" | "auth-unavailable" | "provider-busy" | "provider-error" | "model-offline" | "model-missing" | "local-only" | "bad-request" | "too-large" | "unknown"; // 실패 이유
 
 export class ChatServiceError extends Error // 실제 AI 실패(이유 코드 포함)
 { // 클래스 시작
@@ -35,7 +36,7 @@ function recentMessages(messages: ChatRequest["messages"]): ChatRequest["message
     } // 반복 종료
     return recent; // 최근 대화 반환
 } // 함수 종료
-const knownCodes = new Set<ChatServiceCode>(["bad-key", "rate-limited", "provider-busy", "provider-error", "model-offline", "model-missing", "local-only", "bad-request", "too-large"]); // 화면에 알리는 이유
+const knownCodes = new Set<ChatServiceCode>(["bad-key", "rate-limited", "daily-limit", "service-limit", "login-required", "auth-unavailable", "provider-busy", "provider-error", "model-offline", "model-missing", "local-only", "bad-request", "too-large"]); // 화면에 알리는 이유
 
 export function isMatureInput(input: Pick<LLMInput, "character" | "contentRating">): boolean // 19세 작품 여부(외부 AI 등급은 약관 때문에 연습용으로 답하고, 직접 돌리는 공개 모델 등급만 실제로 답함)
 { // 함수 시작
@@ -56,7 +57,7 @@ export function toChatRequest(input: LLMInput, options: ChatReplyOptions): ChatR
 
 export class RemoteLLMAdapter implements LLMAdapter // 실제 AI 어댑터
 { // 클래스 시작
-    public constructor(private readonly fallback: LLMAdapter = new MockLLMAdapter(), private readonly fetcher: typeof fetch = (...args) => fetch(...args), private readonly status: () => Promise<ModelStatus> = () => loadModelStatus()) // 연습용 AI·요청 함수·상태 읽기
+    public constructor(private readonly fallback: LLMAdapter = new MockLLMAdapter(), private readonly fetcher: typeof fetch = (...args) => fetch(...args), private readonly status: () => Promise<ModelStatus> = () => loadModelStatus(), private readonly authHeaders: AuthHeaders = getAccessTokenHeaders) // 연습용 AI·요청 함수·상태 읽기
     { // 생성자 시작
     } // 생성자 종료
 
@@ -69,7 +70,7 @@ export class RemoteLLMAdapter implements LLMAdapter // 실제 AI 어댑터
             yield* this.fallback.streamReply(input, signal); // 연습용 AI
             return; // 종료
         } // 조건 종료
-        const response = await this.fetcher("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(toChatRequest(input, options)), signal }); // 서버 통로 요청
+        const response = await this.fetcher("/api/chat", { method: "POST", headers: await this.requestHeaders(), body: JSON.stringify(toChatRequest(input, options)), signal }); // 서버 통로 요청(로그인해 있으면 출입증을 붙임)
         if (!response.ok || response.body === null) // 거절
         { // 조건 시작
             const body = await response.json().catch(() => null) as { error?: unknown; detail?: unknown } | null; // 이유
@@ -111,6 +112,11 @@ export class RemoteLLMAdapter implements LLMAdapter // 실제 AI 어댑터
         } // 조건 종료
     } // 함수 종료
 
+    private async requestHeaders(): Promise<Record<string, string>> // 요청 머리말(내용 형식과, 로그인해 있으면 출입증)
+    { // 함수 시작
+        return { "content-type": "application/json", ...await this.authHeaders().catch(() => ({})) }; // 출입증을 읽지 못하면 붙이지 않음
+    } // 함수 종료
+
     private async canAssist(tier: ChatTierId, contentRating: ContentRating | undefined): Promise<boolean> // 이 등급으로 보조 일(요약 등)을 실제 AI에 맡길 수 있는지
     { // 함수 시작
         const status = await this.status(); // 실제 AI 상태
@@ -128,7 +134,7 @@ export class RemoteLLMAdapter implements LLMAdapter // 실제 AI 어댑터
         const lines = input.messages.flatMap((message) => message.role === "user" ? [{ name: input.userName ?? "사용자", content: message.content }] : message.role === "assistant" ? [{ name: speakerName, content: message.content }] : []); // 이름을 붙인 대화 줄(안내 메시지 제외)
         try // 실제 AI 요약 시도
         { // 시도 시작
-            const response = await this.fetcher("/api/chat/assist", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ task: "summary", tier, contentRating: input.contentRating ?? "all", language: input.language ?? "ko", title: input.conversation.title, lines }) }); // 보조 통로 요청
+            const response = await this.fetcher("/api/chat/assist", { method: "POST", headers: await this.requestHeaders(), body: JSON.stringify({ task: "summary", tier, contentRating: input.contentRating ?? "all", language: input.language ?? "ko", title: input.conversation.title, lines }) }); // 보조 통로 요청
             const body = response.ok ? await response.json() as { summary?: unknown } : null; // 받은 답
             if (typeof body?.summary === "string" && body.summary.trim().length > 0) // 쓸 수 있는 요약
             { // 조건 시작
@@ -157,7 +163,7 @@ export class RemoteLLMAdapter implements LLMAdapter // 실제 AI 어댑터
         try // 실제 AI 판단 시도
         { // 시도 시작
             const stats = input.stats.map((stat) => ({ name: stat.name, target: stat.target, value: stat.value, min: stat.min, max: stat.max, maxChange: stat.maxChange })); // 보낼 수치(식별자는 보내지 않고 순서로 맞춤)
-            const response = await this.fetcher("/api/chat/assist", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ task: "stats", tier: context.tier, contentRating: context.contentRating, userName: context.userName, speakerName: context.speakerName, stats, userMessage: input.userMessage, reply: input.reply }), signal: stopper.signal }); // 보조 통로 요청
+            const response = await this.fetcher("/api/chat/assist", { method: "POST", headers: await this.requestHeaders(), body: JSON.stringify({ task: "stats", tier: context.tier, contentRating: context.contentRating, userName: context.userName, speakerName: context.speakerName, stats, userMessage: input.userMessage, reply: input.reply }), signal: stopper.signal }); // 보조 통로 요청
             const body = response.ok ? await response.json() as { deltas?: unknown } : null; // 받은 답
             const deltas = Array.isArray(body?.deltas) ? body.deltas as unknown[] : []; // 번호 순서의 변화
             if (deltas.length === input.stats.length && deltas.every((delta) => typeof delta === "number" && Number.isFinite(delta))) // 수치마다 변화가 하나씩 있음

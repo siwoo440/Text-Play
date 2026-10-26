@@ -325,7 +325,7 @@ describe("서버 통로", () => // 서버 통로 묶음
     { // 검증 시작
         vi.stubEnv("ENABLE_REAL_PROVIDERS", "false"); // 스위치 끔
         vi.stubEnv("ANTHROPIC_API_KEY", "key-a"); // 열쇠는 있음
-        const status = await GET(new Request("http://localhost:3002/api/chat", { headers: { host: "localhost:3002" } })).json() as { enabled: boolean; tiers: Record<string, boolean> }; // 상태
+        const status = await (await GET(new Request("http://localhost:3002/api/chat", { headers: { host: "localhost:3002" } }))).json() as { enabled: boolean; tiers: Record<string, boolean> }; // 상태
         expect(status.enabled).toBe(false); // 꺼짐
         expect(Object.values(status.tiers).some(Boolean)).toBe(false); // 모두 연습용
         const response = await post(request); // 요청
@@ -340,10 +340,10 @@ describe("서버 통로", () => // 서버 통로 묶음
         vi.stubEnv("OPENAI_API_KEY", ""); // GPT 열쇠 없음
         vi.stubEnv("CHAT_ALLOW_PUBLIC", ""); // 공개 꺼짐
         vi.stubEnv("CHAT_MODEL_OPEN", ""); // 내 컴퓨터 모델 없음
-        const status = await GET(new Request("http://localhost:3002/api/chat", { headers: { host: "localhost:3002" } })).json() as { enabled: boolean; tiers: Record<string, boolean> }; // 상태
+        const status = await (await GET(new Request("http://localhost:3002/api/chat", { headers: { host: "localhost:3002" } }))).json() as { enabled: boolean; tiers: Record<string, boolean> }; // 상태
         expect(status).toEqual({ enabled: true, tiers: { master: true, premium: true, plus: true, balance: false, smart: false, basic: false, open: false }, models: {} }); // Claude 등급만
         expect(JSON.stringify(status)).not.toContain("key-a"); // 열쇠 값은 내보내지 않음
-        const outside = await GET(new Request("http://mateverse.example/api/chat", { headers: { host: "mateverse.example" } })).json() as { enabled: boolean; tiers: Record<string, boolean> }; // 바깥에서 물음
+        const outside = await (await GET(new Request("http://mateverse.example/api/chat", { headers: { host: "mateverse.example" } }))).json() as { enabled: boolean; tiers: Record<string, boolean> }; // 바깥에서 물음
         expect(outside.enabled).toBe(false); // 바깥에는 꺼진 것으로
         expect([(await post(request, "mateverse.example")).status]).toEqual([403]); // 바깥 요청 거절
         expect(await reason(await post("{broken"))).toBe("bad-request"); // 깨진 글
@@ -382,9 +382,9 @@ describe("서버 통로", () => // 서버 통로 묶음
         vi.stubEnv("ANTHROPIC_API_KEY", ""); // 회사 열쇠 없음
         vi.stubEnv("GEMINI_API_KEY", ""); // 회사 열쇠 없음
         vi.stubEnv("OPENAI_API_KEY", ""); // 회사 열쇠 없음
-        const status = await GET(new Request("http://localhost:3002/api/chat", { headers: { host: "localhost:3002" } })).json() as { tiers: Record<string, boolean>; models: Record<string, string> }; // 상태
+        const status = await (await GET(new Request("http://localhost:3002/api/chat", { headers: { host: "localhost:3002" } }))).json() as { tiers: Record<string, boolean>; models: Record<string, string> }; // 상태
         expect([status.tiers.open, status.tiers.plus, status.models]).toEqual([true, false, { open: "qwen3:14b" }]); // 오픈챗만 실제 AI, 모델 이름 알림
-        const outside = await GET(new Request("http://mateverse.example/api/chat", { headers: { host: "mateverse.example" } })).json() as { models: Record<string, string> }; // 바깥에서 물음
+        const outside = await (await GET(new Request("http://mateverse.example/api/chat", { headers: { host: "mateverse.example" } }))).json() as { models: Record<string, string> }; // 바깥에서 물음
         expect(outside.models).toEqual({}); // 바깥에는 모델 이름도 알리지 않음
         const fetcher = vi.fn<FetchLike>(async () => sse(["data: {\"choices\":[{\"delta\":{\"content\":\"가까이 와.\"}}]}\n\ndata: [DONE]\n\n"])); // 가짜 Ollama
         vi.stubGlobal("fetch", fetcher); // 요청 함수 바꿈

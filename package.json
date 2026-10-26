@@ -2,6 +2,10 @@
   "name": "mate-text-play",
   "version": "1.0.0",
   "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=24.19.0 <25",
+    "pnpm": "11.19.0"
+  },
   "description": "Mate Verse와 연결되는 로컬 우선 텍스트 게임 프로그램",
   "scripts": {
     "test": "vitest",

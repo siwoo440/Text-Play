@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest"; // 테스트 도구
 import { readAccountServiceConfig } from "@chatbot/lib/account/account-config"; // 계정 서비스 설정
 import { SignedOutError } from "@chatbot/lib/account/snapshot-store"; // 로그인이 끝났다는 표시
-import { createSupabaseAuthAdapter, createSupabaseSnapshotStore, SUPABASE_TOKENS_KEY, SUPABASE_VERIFIER_KEY } from "@chatbot/lib/account/supabase-account"; // Supabase 연결
+import { hashBody, parseManifest } from "@chatbot/lib/account/state-parts"; // 조각의 지문과 조각 목록
+import { createSupabaseAuthAdapter, createSupabaseSnapshotStore, readSupabaseAccessToken, SUPABASE_TOKENS_KEY, SUPABASE_VERIFIER_KEY } from "@chatbot/lib/account/supabase-account"; // Supabase 연결
 
 const config = { mode: "supabase" as const, url: "https://demo.supabase.co", anonKey: "public-anon-key" }; // 시험용 설정(가짜 주소와 공개 키)
 const userId = "0a1b2c3d-1111-2222-3333-444455556666"; // 가짜 서버의 사용자 식별자
@@ -17,6 +18,8 @@ class FakeSupabase // 가짜 Supabase(로그인과 저장본 표만 흉내 냄)
     public refreshes = 0; // 출입증을 새로 받은 횟수
     public deleteReady = true; // 계정 지우기 함수를 데이터베이스에 만들어 두었는지
     public deleted = false; // 계정이 지워졌는지
+    public blobs = new Map<string, string>(); // 조각 표의 내 줄들(지문 → 내용)
+    public sweeps = 0; // 버려진 조각 청소 함수를 부른 횟수
     public refreshStatus: number | null = null; // 출입증을 새로 받을 때 돌려줄 오류 상태(없으면 평소대로)
 
     private session(email: string, provider = "email", name?: string): Record<string, unknown> // 로그인 결과
@@ -92,12 +95,38 @@ class FakeSupabase // 가짜 Supabase(로그인과 저장본 표만 흉내 냄)
             this.row = null; // 저장본도 함께 지워짐
             return new Response(null, { status: 204 }); // 완료(내용 없음)
         } // 조건 종료
+        if (url.includes("/rest/v1/mv_blobs") || url.endsWith("/rest/v1/rpc/mv_sweep_blobs")) // 조각 표와 청소 함수
+        { // 조건 시작
+            if (headers.authorization !== `Bearer ${this.accessToken}`) // 출입증이 다름
+            { // 조건 시작
+                return json(401, { message: "JWT expired" }); // 거절
+            } // 조건 종료
+            if (url.endsWith("/rest/v1/rpc/mv_sweep_blobs")) // 버려진 조각 청소
+            { // 조건 시작
+                this.sweeps += 1; // 횟수
+                return json(200, 0); // 지운 수
+            } // 조건 종료
+            const wanted = (new URL(url).searchParams.get("hash") ?? "").replace(/^in\.\(|\)$/g, "").split(",").filter((hash) => hash.length > 0); // 주소로 고른 지문
+            if (init.method === "POST") // 조각 넣기(이미 있으면 그대로 둠)
+            { // 조건 시작
+                (body as Array<{ hash: string; body: string }>).forEach((row) => { if (!this.blobs.has(row.hash)) { this.blobs.set(row.hash, row.body); } }); // 없는 것만 넣음
+                return new Response(null, { status: 201 }); // 완료
+            } // 조건 종료
+            if (init.method === "DELETE") // 조각 지우기
+            { // 조건 시작
+                wanted.forEach((hash) => this.blobs.delete(hash)); // 지움
+                return new Response(null, { status: 204 }); // 완료
+            } // 조건 종료
+            return json(200, wanted.flatMap((hash) => this.blobs.has(hash) ? [{ hash, body: this.blobs.get(hash) }] : [])); // 읽기
+        } // 조건 종료
         if (url.includes("/rest/v1/mv_snapshots")) // 저장본 표
         { // 조건 시작
             if (headers.authorization !== `Bearer ${this.accessToken}`) // 출입증이 다름
             { // 조건 시작
                 return json(401, { message: "JWT expired" }); // 거절
             } // 조건 종료
+            const columns = (new URL(url).searchParams.get("select") ?? "").split(",").filter((column) => column.length > 0); // 돌려줄 열
+            const shown = (row: Record<string, unknown>) => columns.length === 0 ? row : Object.fromEntries(columns.map((column) => [column, row[column]])); // 고른 열만
             if (init.method === "POST") // 첫 저장
             { // 조건 시작
                 if (this.row !== null) // 이미 있음
@@ -105,7 +134,7 @@ class FakeSupabase // 가짜 Supabase(로그인과 저장본 표만 흉내 냄)
                     return json(409, { code: "23505", message: "duplicate key value" }); // 겹침
                 } // 조건 종료
                 this.row = { user_id: record?.user_id ?? "", revision: Number(record?.revision), state: record?.state ?? "", device_id: record?.device_id ?? "", updated_at: "2026-10-06T01:00:00+00:00" }; // 줄 만들기
-                return json(201, [this.row]); // 만든 줄
+                return json(201, [shown(this.row)]); // 만든 줄(고른 열만)
             } // 조건 종료
             if (init.method === "PATCH") // 고쳐 저장
             { // 조건 시작
@@ -115,9 +144,9 @@ class FakeSupabase // 가짜 Supabase(로그인과 저장본 표만 흉내 냄)
                     return json(200, []); // 바뀐 줄 없음
                 } // 조건 종료
                 this.row = { ...this.row, revision: Number(record?.revision), state: record?.state ?? "", device_id: record?.device_id ?? "", updated_at: "2026-10-06T02:00:00+00:00" }; // 줄 고치기
-                return json(200, [this.row]); // 고친 줄
+                return json(200, [shown(this.row)]); // 고친 줄(고른 열만)
             } // 조건 종료
-            return json(200, this.row === null ? [] : [this.row]); // 읽기
+            return json(200, this.row === null ? [] : [shown(this.row)]); // 읽기(고른 열만)
         } // 조건 종료
         return json(404, { message: "not found" }); // 모르는 주소
     }; // 함수 종료
@@ -316,15 +345,57 @@ describe("Supabase 저장본", () => // 저장본 묶음
     it("저장본이 없으면 없다고 하고, 처음에는 새 줄을 만들고, 그다음부터는 내가 본 번호와 같을 때만 고친다", async () => // 올리기·받기 검증
     { // 검증 시작
         expect(store().mode).toBe("live"); // 실제 서비스
-        expect(await store().pull(userId)).toBeNull(); // 처음에는 없음
+        expect(await store().head(userId)).toBeNull(); // 처음에는 없음
+        expect(await store().pull(userId)).toBeNull(); // 받을 것도 없음
         expect(await store().push(userId, "{\"a\":1}", null, "device-a")).toEqual({ ok: true, revision: 1, updatedAt: "2026-10-06T01:00:00+00:00" }); // 첫 저장
-        expect(server.calls.at(-1)).toMatchObject({ method: "POST", headers: { apikey: "public-anon-key", authorization: "Bearer access-1", prefer: "return=representation" }, body: { user_id: userId, revision: 1, state: "{\"a\":1}", device_id: "device-a" } }); // 보낸 요청
-        expect(await store().pull(userId)).toEqual({ revision: 1, state: "{\"a\":1}", updatedAt: "2026-10-06T01:00:00+00:00", deviceId: "device-a" }); // 받기
+        const manifestWrite = server.calls.find((call) => call.method === "POST" && call.url.includes("/rest/v1/mv_snapshots")); // 조각 목록을 쓴 요청
+        expect(manifestWrite).toMatchObject({ headers: { apikey: "public-anon-key", authorization: "Bearer access-1", prefer: "return=representation" }, body: { user_id: userId, revision: 1, device_id: "device-a" } }); // 보낸 요청
+        expect(new URL(manifestWrite?.url ?? "").searchParams.get("select")).toBe("revision,updated_at,device_id"); // 돌려받는 것은 번호와 시각뿐(내용을 되받지 않음)
+        expect(parseManifest((manifestWrite?.body as { state: string }).state)).toEqual({ all: await hashBody("{\"a\":1}") }); // 목록 줄에는 내용이 아니라 조각의 지문이 들어감
+        expect([...server.blobs.values()]).toEqual(["{\"a\":1}"]); // 내용은 조각 표에
+        expect(await store().head(userId)).toEqual({ revision: 1, updatedAt: "2026-10-06T01:00:00+00:00", deviceId: "device-a" }); // 번호만 묻기
+        expect(new URL(server.calls.at(-1)?.url ?? "").searchParams.get("select")).toBe("revision,updated_at,device_id"); // 번호를 물을 때는 내용을 받지 않음
+        expect(await store().pull(userId)).toEqual({ revision: 1, state: "{\"a\":1}", updatedAt: "2026-10-06T01:00:00+00:00", deviceId: "device-a" }); // 받기(조각을 모아 합침)
         expect(await store().push(userId, "{\"a\":2}", 1, "device-a")).toMatchObject({ ok: true, revision: 2 }); // 번호가 맞으면 고침
-        expect(new URL(server.calls.at(-1)?.url ?? "").searchParams.get("revision")).toBe("eq.1"); // 내가 본 번호를 조건으로 보냄
-        expect(await store().push(userId, "{\"a\":3}", 1, "device-b")).toEqual({ ok: false, reason: "conflict", remote: { revision: 2, state: "{\"a\":2}", updatedAt: "2026-10-06T02:00:00+00:00", deviceId: "device-a" } }); // 번호가 다르면 겹침과 서버 것
+        expect(new URL(server.calls.find((call) => call.method === "PATCH")?.url ?? "").searchParams.get("revision")).toBe("eq.1"); // 내가 본 번호를 조건으로 보냄
+        expect([...server.blobs.values()]).toEqual(["{\"a\":2}"]); // 예전 조각은 지워짐
+        expect(await store().push(userId, "{\"a\":3}", 1, "device-b")).toEqual({ ok: false, reason: "conflict", remote: { revision: 2, updatedAt: "2026-10-06T02:00:00+00:00", deviceId: "device-a" } }); // 번호가 다르면 겹침과 서버 것의 머리
         expect(await store().push(userId, "{\"a\":4}", null, "device-b")).toMatchObject({ ok: false, reason: "conflict", remote: { revision: 2 } }); // 이미 있는데 처음이라고 올려도 겹침
-        expect(server.row?.state).toBe("{\"a\":2}"); // 서버 것은 그대로
+        expect((await store().pull(userId))?.state).toBe("{\"a\":2}"); // 서버 것은 그대로
+    }); // 검증 종료
+
+    it("바뀐 조각만 올리고, 받을 때도 이 기기와 내용이 다른 조각만 받으며, 버려진 조각 청소는 화면마다 한 번만 부른다", async () => // 바뀐 조각만 오가는지 검증
+    { // 검증 시작
+        const app = (balance: number, line: string) => JSON.stringify({ wallet: { balance }, characters: [{ id: "rian" }], stories: [], images: [], conversations: [{ id: "one" }, { id: "two" }], conversationVersions: [], messages: [{ id: "m1", conversationId: "one", content: "안녕" }, { id: "m2", conversationId: "two", content: line }] }); // 대화 두 개짜리 앱 데이터
+        const device = store(); // 한 화면에서 계속 쓰는 서버 저장
+        const blobWrites = () => server.calls.filter((call) => call.method === "POST" && call.url.includes("/rest/v1/mv_blobs")).flatMap((call) => (call.body as Array<{ body: string }>).map((row) => row.body)); // 올린 조각의 내용
+        const blobReads = () => server.calls.filter((call) => call.method === "GET" && call.url.includes("/rest/v1/mv_blobs")).length; // 조각을 읽은 횟수
+        expect(await device.push(userId, app(100, "처음"), null, "device-a")).toMatchObject({ ok: true, revision: 1 }); // 첫 저장
+        expect(blobWrites()).toHaveLength(5); // 기본·작품·그림·대화 둘
+        expect(server.blobs.size).toBe(5); // 조각 다섯
+        server.calls = []; // 기록 비움
+        expect(await device.push(userId, app(99, "바뀐 말"), 1, "device-a")).toMatchObject({ ok: true, revision: 2 }); // 한 대화와 잔액이 바뀜
+        expect(blobWrites().map((body) => Object.keys(JSON.parse(body) as object).sort().join(","))).toEqual(["characters,conversationVersions,conversations,images,messages,stories,wallet", "conversationVersions,messages"]); // 기본 조각과 그 대화 조각만 올림
+        expect(server.calls.some((call) => call.method === "GET" && call.url.includes("/rest/v1/mv_snapshots"))).toBe(false); // 방금 쓴 목록을 기억해 다시 읽지 않음
+        expect(server.blobs.size).toBe(5); // 예전 조각 둘은 지워 다섯 그대로
+        expect(server.sweeps).toBe(1); // 버려진 조각 청소는 이 화면에서 한 번
+        server.calls = []; // 기록 비움
+        expect((await store().pull(userId, app(100, "처음")))?.state).toBe(app(99, "바뀐 말")); // 예전 데이터를 가진 다른 화면이 받음
+        expect(blobReads()).toBe(1); // 조각은 한 번에 받고
+        expect(new URL(server.calls.find((call) => call.url.includes("/rest/v1/mv_blobs"))?.url ?? "").searchParams.get("hash")?.split(",")).toHaveLength(2); // 내용이 다른 두 조각만 받음
+        server.calls = []; // 기록 비움
+        expect((await store().pull(userId, app(99, "바뀐 말")))?.revision).toBe(2); // 같은 데이터를 가진 화면이 받음
+        expect(blobReads()).toBe(0); // 받을 조각이 없음
+    }); // 검증 종료
+
+    it("예전에 통째로 올린 저장본도 그대로 받고, 다음에 올릴 때 조각으로 바꾼다", async () => // 예전 저장본 검증
+    { // 검증 시작
+        server.row = { user_id: userId, revision: 3, state: "{\"old\":true}", device_id: "device-old", updated_at: "2026-10-05T00:00:00+00:00" }; // 예전 방식의 줄(내용이 통째로 들어 있음)
+        const device = store(); // 서버 저장
+        expect(await device.pull(userId)).toEqual({ revision: 3, state: "{\"old\":true}", updatedAt: "2026-10-05T00:00:00+00:00", deviceId: "device-old" }); // 그대로 받음
+        expect(await device.push(userId, "{\"old\":false}", 3, "device-a")).toMatchObject({ ok: true, revision: 4 }); // 다음 저장
+        expect(parseManifest(server.row?.state ?? "")).toEqual({ all: await hashBody("{\"old\":false}") }); // 줄이 조각 목록으로 바뀜
+        expect([...server.blobs.values()]).toEqual(["{\"old\":false}"]); // 내용은 조각 표로
     }); // 검증 종료
 
     it("출입증이 곧 끝나면 새로 받아 쓰고, 로그인하지 않았거나 서버가 받지 않으면 저장하지 못했다고 알린다", async () => // 출입증·실패 검증
@@ -336,6 +407,17 @@ describe("Supabase 저장본", () => // 저장본 묶음
         localStorage.removeItem(SUPABASE_TOKENS_KEY); // 출입증이 없음(로그인이 끝남)
         await expect(store().pull(userId)).rejects.toBeInstanceOf(SignedOutError); // 받지 못함(다시 로그인해야 한다고 알림)
         expect(await store().push(userId, "{}", null, "device-a")).toEqual({ ok: false, reason: "signed-out" }); // 올리지 못함(다시 로그인해야 함)
+    }); // 검증 종료
+
+    it("서버 통로에 보낼 출입증은 로그인해 있을 때만 돌려주고, 곧 끝나면 새로 받아 돌려준다", async () => // 출입증 읽기 검증
+    { // 검증 시작
+        const read = () => readSupabaseAccessToken(config, { storage: localStorage, fetcher: server.fetch as typeof fetch, now: () => clock }); // 출입증 읽기
+        expect(await read()).toBe("access-1"); // 로그인해 있으면 지금 출입증
+        expect(server.calls).toHaveLength(0); // 넉넉히 남았으면 서버에 묻지 않음
+        clock += 3590 * 1000; // 출입증이 10초 뒤 끝남
+        expect(await read()).toBe("access-2"); // 새로 받은 출입증
+        localStorage.removeItem(SUPABASE_TOKENS_KEY); // 로그인하지 않음
+        expect(await read()).toBeNull(); // 출입증 없음(오류를 내지 않음)
     }); // 검증 종료
 
     it("출입증을 새로 받는 일을 서버가 거절하면 로그인이 끝난 것으로 알리고, 서버가 잠시 받지 못하는 것과는 구별한다", async () => // 로그인 끝남 검증

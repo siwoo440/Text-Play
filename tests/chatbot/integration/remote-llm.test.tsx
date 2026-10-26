@@ -6,7 +6,8 @@ import { TierSelector } from "@chatbot/features/chat/TierSelector"; // 등급 �
 import { createDefaultConversationSettings } from "@chatbot/features/core/defaults"; // 기본값
 import type { LLMAdapter, LLMInput } from "@chatbot/lib/adapters/llm-adapter"; // 어댑터 계약
 import { MockImageAdapter } from "@chatbot/lib/adapters/mock-image-adapter"; // 이미지 어댑터
-import { resetModelStatus, type ModelStatus } from "@chatbot/lib/adapters/model-status"; // 실제 AI 상태
+import { loadModelStatus, resetModelStatus, type ModelStatus } from "@chatbot/lib/adapters/model-status"; // 실제 AI 상태
+import { describeResponseMode } from "@chatbot/features/settings/provider-summary"; // 응답 방식 안내
 import { ChatServiceError, RemoteLLMAdapter, REQUEST_HISTORY_MESSAGES, toChatRequest } from "@chatbot/lib/adapters/remote-llm-adapter"; // 실제 AI 어댑터
 import { mockCharacters, mockConversations, mockConversationVersions } from "@chatbot/mocks/fixtures"; // Mock 데이터
 import { renderWithApp } from "@chatbot/test/render-with-app"; // 앱 렌더 도구
@@ -149,6 +150,34 @@ describe("실제 AI 어댑터", () => // 어댑터 묶음
         expect(await new RemoteLLMAdapter(rules, (async () => { throw new TypeError("fetch failed"); }) as unknown as typeof fetch, async () => live).judgeStats(judgeInput)).toEqual(expected); // 연결이 안 돼도 연습용
     }); // 검증 종료
 
+    it("로그인해 있으면 답변·요약·스탯 판단 요청에 출입증을 함께 보내고, 상태를 물을 때도 보낸다", async () => // 출입증 전달 검증
+    { // 검증 시작
+        const fetcher = vi.fn(async (url: string) => url === "/api/chat/assist" ? Response.json({ summary: "요약", deltas: [] }) : streamed(["왔구나."])); // 서버 통로 대역
+        const adapter = new RemoteLLMAdapter(practice, fetcher as unknown as typeof fetch, async () => live, async () => ({ authorization: "Bearer member-token" })); // 로그인한 어댑터
+        expect(await collect(adapter.streamReply(input))).toBe("왔구나."); // 답변
+        await adapter.summarizeConversation({ conversation: { ...mockConversations[0], settings: { ...mockConversations[0].settings, tier: "plus" as const } }, version: mockConversationVersions[0], messages: input.messages, userName: "소하", speakerName: "리안", contentRating: "all", language: "ko" }); // 요약
+        const sent = fetcher.mock.calls.map((call) => [(call as unknown as [string, RequestInit])[0], ((call as unknown as [string, RequestInit])[1].headers as Record<string, string>).authorization]); // 보낸 곳과 출입증
+        expect(sent).toEqual([["/api/chat", "Bearer member-token"], ["/api/chat/assist", "Bearer member-token"]]); // 두 통로 모두 출입증을 붙임
+        const guest = new RemoteLLMAdapter(practice, fetcher as unknown as typeof fetch, async () => live, async () => ({})); // 손님 어댑터
+        await collect(guest.streamReply(input)); // 답변
+        expect(((fetcher.mock.calls.at(-1) as unknown as [string, RequestInit])[1].headers as Record<string, string>).authorization).toBeUndefined(); // 손님은 붙이지 않음
+        const statusFetcher = vi.fn(async () => Response.json({ enabled: false, tiers: {}, models: {}, loginRequired: true })); // 상태 통로 대역
+        const status = await loadModelStatus(statusFetcher as unknown as typeof fetch, async () => ({ authorization: "Bearer member-token" })); // 상태 읽기
+        expect((statusFetcher.mock.calls[0] as unknown as [string, RequestInit])[1].headers).toEqual({ authorization: "Bearer member-token" }); // 상태를 물을 때도 붙임
+        expect(status.loginRequired).toBe(true); // 로그인하면 된다는 표시를 읽음
+        expect(describeResponseMode(status)).toBe("연습용 응답 · 로그인하면 실제 AI로 답해요"); // 응답 방식 안내
+        expect(describeResponseMode({ enabled: false, tiers: {}, models: {} })).toBe("로컬 Mock(외부 API 없음)"); // 로그인과 상관없는 연습용은 예전 안내 그대로
+    }); // 검증 종료
+
+    it("로그인이 필요하거나 한도에 걸리면 연습용으로 넘기지 않고 이유를 담은 오류를 낸다", async () => // 한도 오류 검증
+    { // 검증 시작
+        const refused = (status: number, error: string) => new RemoteLLMAdapter(practice, (async () => Response.json({ error, detail: "" }, { status })) as unknown as typeof fetch, async () => live, async () => ({})); // 거절하는 서버 통로
+        await expect(collect(refused(401, "login-required").streamReply(input))).rejects.toMatchObject({ name: "ChatServiceError", code: "login-required" }); // 로그인 필요
+        await expect(collect(refused(429, "daily-limit").streamReply(input))).rejects.toMatchObject({ code: "daily-limit" }); // 하루 한도
+        await expect(collect(refused(429, "service-limit").streamReply(input))).rejects.toMatchObject({ code: "service-limit" }); // 서비스 전체 한도
+        await expect(collect(refused(503, "auth-unavailable").streamReply(input))).rejects.toMatchObject({ code: "auth-unavailable" }); // 로그인 확인 실패
+    }); // 검증 종료
+
     it("열쇠가 틀리거나 답이 비면 이유를 담은 오류를 낸다", async () => // 실패 검증
     { // 검증 시작
         const badKey = new RemoteLLMAdapter(practice, (async () => Response.json({ error: "bad-key", detail: "invalid" }, { status: 502 })) as unknown as typeof fetch, async () => live); // 열쇠 거절
@@ -214,5 +243,19 @@ describe("등급 선택 화면", () => // 화면 묶음
         await user.type(box, "안녕{Enter}"); // 보내기
         expect(await screen.findByText("AI 열쇠가 맞지 않아요. .env.local의 열쇠를 확인한 뒤 서버를 다시 켜 주세요.")).toBeInTheDocument(); // 이유 안내
         expect(screen.getByRole("button", { name: "다시 시도" })).toBeInTheDocument(); // 다시 시도
+    }); // 테스트 종료
+
+    it.each([ // 한도와 로그인 안내
+        ["login-required", "실제 AI는 로그인한 뒤에 쓸 수 있어요. 로그인하고 다시 시도해 주세요."], // 로그인 필요
+        ["daily-limit", "오늘 보낼 수 있는 메시지를 모두 썼어요. 내일 다시 이용해 주세요."], // 하루 한도
+        ["service-limit", "오늘 서비스 전체 사용량이 가득 찼어요. 내일 다시 이용해 주세요."], // 서비스 전체 한도
+        ["auth-unavailable", "로그인을 확인하지 못했어요. 잠시 뒤 다시 시도해 주세요."], // 로그인 확인 실패
+    ] as const)("실제 AI가 %s로 거절하면 무엇을 하면 되는지 알려 준다", async (code, text) => // 거절 안내 검증
+    { // 테스트 시작
+        const user = userEvent.setup(); // 사용자 도구 생성
+        const failing: LLMAdapter = { streamReply: () => ({ [Symbol.asyncIterator]: () => ({ next: async () => { throw new ChatServiceError(code); } }) }), summarizeConversation: async () => "" }; // 거절하는 실제 AI
+        renderWithApp(<ChatScreen characterId="rian" llm={failing} images={new MockImageAdapter()} />); // 채팅 화면 렌더
+        await user.type(screen.getByRole("textbox", { name: "메시지" }), "안녕{Enter}"); // 보내기
+        expect(await screen.findByText(text)).toBeInTheDocument(); // 이유 안내
     }); // 테스트 종료
 }); // 묶음 종료

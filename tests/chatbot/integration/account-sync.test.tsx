@@ -133,7 +133,7 @@ describe("계정 데이터를 서버와 맞추기", () => // 맞추기 묶음
     { // 검증 시작
         const user = userEvent.setup(); // 사용자 도구
         let pulls = 0; // 서버에 물은 횟수
-        const expired: SnapshotStore = { mode: "live", pull: async () => { pulls += 1; throw new SignedOutError(); }, push: async () => ({ ok: false, reason: "signed-out" }) }; // 로그인이 끝난 서버 연결
+        const expired: SnapshotStore = { mode: "live", head: async () => { pulls += 1; throw new SignedOutError(); }, pull: async () => { throw new SignedOutError(); }, push: async () => ({ ok: false, reason: "signed-out" }) }; // 로그인이 끝난 서버 연결
         const visited: string[] = []; // 이동한 주소
         new LocalStorageGateway(createScopedStorage(localStorage, session.accountId)).save(withBalance(500)); // 계정 데이터
         render(<AppProvider><AccountSync store={expired} delayMs={20} auth={createPracticeAuthAdapter(localStorage)} navigate={(href) => visited.push(href)} /><Probe /></AppProvider>); // 앱 렌더

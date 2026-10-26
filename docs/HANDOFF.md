@@ -1,20 +1,32 @@
 ---
 # 작업 인수인계
 
-이 문서는 다른 컴퓨터나 새 챗봇 세션에서 `main` 브랜치의 최신 상태를 받아 바로 작업을 이어가기 위한 기준 문서입니다. 마지막 갱신은 2026-10-08입니다.
+이 문서는 다른 컴퓨터나 새 챗봇 세션에서 `main` 브랜치의 최신 상태를 받아 바로 작업을 이어가기 위한 기준 문서입니다. 마지막 갱신은 2026-10-26입니다.
 
 ---
 ## 기준 저장소
 
 - 저장소: [siwoo440/Text-Play](https://github.com/siwoo440/Text-Play)
 - 작업 브랜치: `main` 하나만 사용
-- 기준 소스 커밋: `2115f42e214409f4b37f2758bab8561f0807244c` (`기능: exe에 최신 ChatBot 전체 기능과 왼쪽 사이드바 데스크톱 화면 추가`)
-- 포함한 ChatBot 커밋: `f802dcd` (`src/chatbot/SOURCE.md`, 확인은 `pnpm chatbot:status`)
+- 이번 작업의 시작 소스: `6892b2cd045befd902a841c9a9c7626984b39617` (`기능: 플레이 기본기 추가`)
+- 1단계 반영 커밋 확인: `git log -1 -- docs/DEVELOPMENT-SETUP.md` (문서 자체의 커밋 해시를 중복 기록하지 않음)
+- 포함한 ChatBot 커밋: `1e8403a05fb331e17369be26debbc7b6b3d0091f` (`src/chatbot/SOURCE.md`, 확인은 `corepack pnpm chatbot:status`)
 - 현재 커밋 확인: `git rev-parse HEAD`
 - 원격 동기화 확인: `git status --short --branch`
 - 확인 기준 화면: **Windows 실행 파일(exe)**. 웹 화면은 보조로 확인합니다.
 - 기본 인공지능: 외부 비밀키가 필요 없는 임시 인공지능(Mock)
 - 로컬 인공지능: 설치된 올라마 모델 조회·선택 지원, 통신 범위 `127.0.0.1:11434`로 제한
+
+---
+## 2026-10-26 기준 정리
+
+- ChatBot 원본의 미커밋 변경이 없음을 확인하고 확정 커밋 2개(`191449b`·`1e8403a`)를 동기화했습니다. 원본 작업 폴더는 변경하지 않았습니다.
+- 사용자별 서버 사용량 제한·상태 조각 저장 코드와 테스트를 가져왔습니다. EXE에서는 서버 인증·AI·서버 저장 환경이 비활성이므로 실제 서비스 연결 완료를 뜻하지 않습니다.
+- 개발 도구 기준은 Node.js 24.19.0(지원 24.19.0 이상 25 미만)과 pnpm 11.19.0입니다. 설치와 명령 실행은 `corepack pnpm`으로 통일합니다.
+- 새 복제본·프로젝트 전용 pnpm 실행기·검증 순서는 [개발 환경 안내](DEVELOPMENT-SETUP.md)를 따릅니다. `corepack pnpm exec corepack pnpm --version`으로 내부 호출 버전도 확인합니다.
+- 자동 저장 1개와 수동 저장 6개가 현재 기준입니다. 내장 AI 기반과 경량 모델 수동 적용은 구현되어 있으며 다운로드 정보·설치 자동 준비는 미완료입니다.
+- 이번 작업의 실제 검증 결과는 [개발 기록](DEVELOPMENT-LOG.md)의 2026-10-26 항목에 기록합니다. 아래의 2026-10-01·10-08 기록은 해당 시점의 이력입니다.
+- 1단계 이후 우선순위는 대표 작품 확장 → 내장 AI 다운로드·품질 → 성능·사용성 → 배포 → 온라인 서비스입니다.
 
 ---
 ## 2026-10-01 커밋 기록 정리
@@ -32,7 +44,7 @@
 | `f0ace2e` | 작업 인수인계 안내 |
 | `98b8e46` | AI 추천 답안 접기·펼치기와 명령 도크 카드 디자인 |
 | `ac5f27e` | 웹 화면 불일치 오류·응답 원문 표시 수정, 테스트·개발 환경 정리 |
-| `32f0557` | Tauri API 버전 불일치로 실패하던 exe 빌드 수정, `pnpm exe:rebuild` 추가 |
+| `32f0557` | Tauri API 버전 불일치로 실패하던 exe 빌드 수정, `corepack pnpm exe:rebuild` 추가 |
 | `70c7c23` | exe 스크롤바 제거와 창 크기 맞춤 |
 | `f54fa3f` | exe 메인 화면을 ChatBot 밝은 다채색 탐색 화면 구성으로 변경 |
 | `8fae1be` | exe 플레이 화면 명령 도크를 장면 무대 아래로 변경 |
@@ -49,16 +61,16 @@
 - 커밋 메시지는 한국어로 `기능:`·`수정:`·`문서:` 머리말을 붙이고, 본문에 이전 버전과 비교한 변경점을 `~추가`, `~수정`, `~변경`, `~삭제` 형태로 적습니다.
 - 커밋 메시지에 `Co-Authored-By: Claude …` 같은 공동 작업자 줄을 넣지 않습니다.
 - 기능·구조가 바뀌면 `docs/DEVELOPMENT-LOG.md`, `docs/PROJECT-STRUCTURE.md`, `README.md`, 이 문서를 함께 갱신합니다.
-- **exe는 ChatBot 기능을 계속 똑같이 따라갑니다.** 작업을 시작할 때 `pnpm chatbot:status`로 ChatBot(`../ChatBot`)의 새 커밋을 확인하고, 있으면 `pnpm chatbot:sync` → `pnpm test:run`·타입 검사·코드 검사·데스크톱 통합 테스트 → `pnpm exe:rebuild` 확인 → 커밋 순서로 반영합니다. `pnpm exe:rebuild`도 빌드 전에 새 커밋 여부를 알려 줍니다.
+- **exe는 ChatBot 기능을 계속 똑같이 따라갑니다.** 작업을 시작할 때 `corepack pnpm chatbot:status`로 ChatBot(`../ChatBot`)의 새 커밋을 확인하고, 있으면 `corepack pnpm chatbot:sync` → `corepack pnpm test:run`·타입 검사·코드 검사·데스크톱 통합 테스트 → `corepack pnpm exe:rebuild` 확인 → 커밋 순서로 반영합니다. `corepack pnpm exe:rebuild`도 빌드 전에 새 커밋 여부를 알려 줍니다.
 
 ---
-## 현재 구현 상태
+## 2026-10-08 구현 상세 기록
 
 ### 실행 파일 전체 구성 (`src/desktop`)
 
 - exe는 **최신 ChatBot 전체 기능 + Text-Play**를 하나의 프로그램으로 제공합니다. 웹 화면(`src/app`)은 예전 챗봇 코드를 그대로 둡니다.
 - ChatBot 기능: 메인(검색·장르·오늘의 추천·랭킹), 탐색(태그), 캐릭터 상세·만들기·수정, 대화(버전 분기·다시 생성·내보내기), 보관함, 설정 5쪽(프로필·토큰·화면·알림·개인정보), 고객 지원, 19+ 성인 인증
-- ChatBot 소스는 `src/chatbot`에 ChatBot 커밋 그대로 복사합니다(`pnpm chatbot:sync`, 현재 기준 `f802dcd` `가입 확인 메일의 링크로 돌아오면 바로 로그인하도록 추가`(2026-10-08, 직전 기준 `0c4e7c8`에서 커밋 2개: 로그인이 끝났을 때 다시 로그인 안내, 가입 확인 메일 링크 처리. 그 앞 `0c4e7c8`은 `03da2e4`에서 커밋 5개: 스토리 모드 홈 정렬·필터, 대화 화면 자동 배치·스토리 표지·캐릭터 만든 시각 수정. `03da2e4`까지는 커밋 66개: 다크 모드, 관계 스탯, 출석과 미션, 친구 초대, 한국어/영어, 실제 AI 통로, 로그인 틀 등), 기록은 `src/chatbot/SOURCE.md`). 직접 고치지 않고 ChatBot에서 고쳐 커밋한 뒤 다시 동기화합니다. ChatBot 앱 상태 버전이 오르면 exe에 저장된 ChatBot 데이터도 ChatBot 변환 규칙으로 자동 갱신됩니다(예: 9 → 10). ChatBot에 새 화면 주소가 생기면 `src/desktop/router/desktop-routes.ts`·`desktop-areas.ts`·`DesktopRoutes.tsx`에도 추가합니다(예: 스토리 모드 `/stories`, 이미지 스튜디오 `/images`). ChatBot 코드가 Next 공개 환경 값(`process.env.NEXT_PUBLIC_*`)을 새로 읽으면 Vite에는 `process`가 없어 화면이 깨지므로 `vite.desktop.config.ts`의 `define`에 같은 이름을 추가합니다(예: `NEXT_PUBLIC_SERVICE_REGION`, 기본 `kr`). ChatBot 머리 메뉴에 생긴 요소(예: 알림함)는 데스크톱 상단 바에도 둡니다. ChatBot 셸 안에서만 적용되는 스타일은 `AppShell.module.css`의 `.shell`로 감싸고 높이·바탕만 끕니다(`DesktopShell.module.css` `.chatbotHost`). ChatBot 셸(`AppShell.tsx`)이 하는 일은 exe 틀(`DesktopShell.tsx`)에도 똑같이 둡니다: 테마 적용(`data-theme`·`mateverse:theme` 저장)과 다크 모드 스위치, 이용 시간 알림, 19+ 보기 끔 안내, 받을 보상 점, 사용자 패널의 출석·미션 카드·로그아웃·19+ 보기 끄기, 계정 맞추기(`AccountSync`). 예외로 메일 링크 보내 주기(`AuthLinkForward`)는 두지 않습니다(exe는 연습용 로그인이라 메일 링크가 없고, 해시 주소를 써서 주소 뒤에 붙어 오는 값을 받을 수 없음). exe에는 Next 서버가 없어 ChatBot의 `/api/chat`(실제 AI 통로)은 닿지 않고(보안 규칙이 막음) 연습용 AI로 답합니다. 계정 서비스 환경 값도 비워 두어 로그인은 연습용으로만 동작합니다. ChatBot 테스트 준비 파일(`src/chatbot/test/setup.ts`)은 `src/test/setup.ts`가 브라우저 환경일 때 불러오고, 데스크톱 통합 테스트는 브라우저 언어를 한국어로 고정합니다(ChatBot 자동 언어).
+- ChatBot 소스는 `src/chatbot`에 ChatBot 커밋 그대로 복사합니다(`corepack pnpm chatbot:sync`, 현재 기준 `f802dcd` `가입 확인 메일의 링크로 돌아오면 바로 로그인하도록 추가`(2026-10-08, 직전 기준 `0c4e7c8`에서 커밋 2개: 로그인이 끝났을 때 다시 로그인 안내, 가입 확인 메일 링크 처리. 그 앞 `0c4e7c8`은 `03da2e4`에서 커밋 5개: 스토리 모드 홈 정렬·필터, 대화 화면 자동 배치·스토리 표지·캐릭터 만든 시각 수정. `03da2e4`까지는 커밋 66개: 다크 모드, 관계 스탯, 출석과 미션, 친구 초대, 한국어/영어, 실제 AI 통로, 로그인 틀 등), 기록은 `src/chatbot/SOURCE.md`). 직접 고치지 않고 ChatBot에서 고쳐 커밋한 뒤 다시 동기화합니다. ChatBot 앱 상태 버전이 오르면 exe에 저장된 ChatBot 데이터도 ChatBot 변환 규칙으로 자동 갱신됩니다(예: 9 → 10). ChatBot에 새 화면 주소가 생기면 `src/desktop/router/desktop-routes.ts`·`desktop-areas.ts`·`DesktopRoutes.tsx`에도 추가합니다(예: 스토리 모드 `/stories`, 이미지 스튜디오 `/images`). ChatBot 코드가 Next 공개 환경 값(`process.env.NEXT_PUBLIC_*`)을 새로 읽으면 Vite에는 `process`가 없어 화면이 깨지므로 `vite.desktop.config.ts`의 `define`에 같은 이름을 추가합니다(예: `NEXT_PUBLIC_SERVICE_REGION`, 기본 `kr`). ChatBot 머리 메뉴에 생긴 요소(예: 알림함)는 데스크톱 상단 바에도 둡니다. ChatBot 셸 안에서만 적용되는 스타일은 `AppShell.module.css`의 `.shell`로 감싸고 높이·바탕만 끕니다(`DesktopShell.module.css` `.chatbotHost`). ChatBot 셸(`AppShell.tsx`)이 하는 일은 exe 틀(`DesktopShell.tsx`)에도 똑같이 둡니다: 테마 적용(`data-theme`·`mateverse:theme` 저장)과 다크 모드 스위치, 이용 시간 알림, 19+ 보기 끔 안내, 받을 보상 점, 사용자 패널의 출석·미션 카드·로그아웃·19+ 보기 끄기, 계정 맞추기(`AccountSync`). 예외로 메일 링크 보내 주기(`AuthLinkForward`)는 두지 않습니다(exe는 연습용 로그인이라 메일 링크가 없고, 해시 주소를 써서 주소 뒤에 붙어 오는 값을 받을 수 없음). exe에는 Next 서버가 없어 ChatBot의 `/api/chat`(실제 AI 통로)은 닿지 않고(보안 규칙이 막음) 연습용 AI로 답합니다. 계정 서비스 환경 값도 비워 두어 로그인은 연습용으로만 동작합니다. ChatBot 테스트 준비 파일(`src/chatbot/test/setup.ts`)은 `src/test/setup.ts`가 브라우저 환경일 때 불러오고, 데스크톱 통합 테스트는 브라우저 언어를 한국어로 고정합니다(ChatBot 자동 언어).
 - 디자인: ChatBot과 같은 밝은 다채색·장르색을 쓰되, 웹 상단 헤더 대신 **왼쪽 사이드바(320px)**와 **상단 바**를 둡니다. 사이드바 오른쪽에 ChatBot 헤더의 여러 색 띠를 세로로 둡니다.
   - 사이드바 위→아래: 로고와 주황 `Text-Play` 표시 → 주요 메뉴(메인·탐색·내 작품·Text-Play) → **ChatBot 대화방**(ChatBot 왼쪽 창 목록 그대로: 검색·정렬·고정·묶음·턴 수·더보기 메뉴, 아래에 `ChatBot 기록 가져오기`) → **Text-Play 대화방**(Text-Play 저장 기록, 누르면 그 슬롯에서 이어하기, `＋ Text-Play 작품 고르기`) → 프로그램 메뉴(설정·고객 지원)
   - ChatBot 대화방 목록과 사용자 패널의 안쪽 모양은 ChatBot `AppShell.module.css`의 `.grid` 스타일을 그대로 쓰고, 서랍 위치·폭·그림자만 `DesktopShell.module.css`에서 덮어씁니다. ChatBot이 목록을 바꾸면 동기화만으로 모양까지 따라옵니다.
@@ -114,34 +126,34 @@
 ## 새 컴퓨터 준비 사항
 
 - Git
-- Node.js `20.9.0` 이상 (검증 환경 `24.19.0`)
+- Node.js `24.19.0` 권장 (지원 범위 `>=24.19.0 <25`)
 - pnpm `11.19.0`
 - exe 빌드: Rust(`winget install --id Rustlang.Rustup -e`, 검증 환경 `1.98.1`), Visual Studio 또는 Build Tools의 C++ 데스크톱 개발 도구, WebView2
-- 통합 테스트: `pnpm exec playwright install chromium`
-- Rust 프로젝트 선언 최소 버전은 `1.77.2`
+- 통합 테스트: `corepack pnpm exec playwright install chromium`
+- Rust 프로젝트 선언 최소 버전은 `1.77.2`이며 이 버전에서 최신 의존성 전체를 검증한 것은 아닙니다. 현재 검증 도구 버전은 개발 기록을 확인합니다.
 
 ---
 ## 처음 받아서 실행하는 순서
 
 1. `git clone https://github.com/siwoo440/Text-Play.git`
 2. `cd Text-Play`
-3. `corepack enable`
-4. `corepack prepare pnpm@11.19.0 --activate`
-5. `pnpm install --frozen-lockfile`
-6. exe로 확인: `pnpm exe:rebuild` (첫 빌드는 Rust 의존성 컴파일로 약 5~6분)
-7. 웹으로 확인: `pnpm dev --hostname 127.0.0.1 --port 3001` 후 `http://127.0.0.1:3001/text-play`
+3. `node --version`과 `corepack pnpm --version`으로 도구 확인(Corepack이 없으면 먼저 설치)
+4. `corepack pnpm install --frozen-lockfile`
+5. `corepack enable --install-directory node_modules/.bin pnpm` 후 `corepack pnpm exec corepack pnpm --version`이 11.19.0인지 확인
+6. exe로 확인: `corepack pnpm exe:rebuild` (첫 빌드 시간은 컴퓨터에 따라 다름)
+7. 웹으로 확인: `corepack pnpm dev --hostname 127.0.0.1 --port 3001` 후 `http://127.0.0.1:3001/text-play`
 
 임시 인공지능과 로컬 올라마 모드는 비밀키 없이 사용할 수 있습니다. 실제 서버 모드는 `.env.example`을 참고해 별도 계약 정보가 있을 때만 설정합니다.
 
 ---
 ## 실행 파일(exe)로 확인하며 수정하기
 
-- 실시간 수정: `pnpm tauri:dev` — 실제 실행 프로그램 창에서 화면 코드 변경이 바로 반영
-- 실행 파일 교체: `pnpm exe:rebuild` — 실행 중인 앱 종료, 실행 파일만 다시 빌드, 새 실행 파일 실행
+- 실시간 수정: `corepack pnpm tauri:dev` — 실제 실행 프로그램 창에서 화면 코드 변경이 바로 반영
+- 실행 파일 교체: `corepack pnpm exe:rebuild` — 실행 중인 앱 종료, 실행 파일만 다시 빌드, 새 실행 파일 실행
 - 실행 파일 위치: `src-tauri/target/release/mate-text-play-preview.exe` (설치 없이 실행)
-- 설치 파일: `pnpm tauri:build` → `src-tauri/target/release/bundle/nsis/MATE Text-Play Preview_0.1.0-preview.1_x64-setup.exe`
-- 소요 시간(2026-10-01 측정): 첫 빌드 약 5분 30초, 이후 `pnpm exe:rebuild` 약 1분~1분 35초
-- 브라우저로 exe 화면 확인: `pnpm desktop:dev` 후 `http://127.0.0.1:1420` (exe에 들어가는 것과 같은 화면 묶음)
+- 설치 파일: `corepack pnpm tauri:build` → `src-tauri/target/release/bundle/nsis/MATE Text-Play Preview_0.1.0-preview.1_x64-setup.exe`
+- 소요 시간(2026-10-01 측정): 첫 빌드 약 5분 30초, 이후 `corepack pnpm exe:rebuild` 약 1분~1분 35초
+- 브라우저로 exe 화면 확인: `corepack pnpm desktop:dev` 후 `http://127.0.0.1:1420` (exe에 들어가는 것과 같은 화면 묶음)
 - Tauri 자바스크립트 패키지(`@tauri-apps/api`, `@tauri-apps/cli`)와 Rust 크레이트(`tauri`)는 주·부 버전이 같아야 빌드됩니다. 단위 테스트가 이를 검사합니다.
 
 ---
@@ -157,8 +169,8 @@
 | `src/desktop/shell/TextPlayRoomPanel.tsx` | 사이드바 Text-Play 대화방(저장 기록) |
 | `src/desktop/next-compat/*` | ChatBot 사본용 Next 링크·이미지·경로 도구 |
 | `src/chatbot/SOURCE.md` | 가져온 ChatBot 커밋 기록 |
-| `scripts/sync-chatbot.mjs` | ChatBot 커밋에서 소스·테스트·자산 가져오기(`pnpm chatbot:sync`) |
-| `scripts/chatbot-status.mjs` | ChatBot 새 커밋 확인(`pnpm chatbot:status`, `--check`는 새 커밋이 있으면 실패 코드) |
+| `scripts/sync-chatbot.mjs` | ChatBot 커밋에서 소스·테스트·자산 가져오기(`corepack pnpm chatbot:sync`) |
+| `scripts/chatbot-status.mjs` | ChatBot 새 커밋 확인(`corepack pnpm chatbot:status`, `--check`는 새 커밋이 있으면 실패 코드) |
 | `src/desktop/desktop.css` | exe 창 스크롤바 숨김, 플레이 화면 전체 창 맞춤 |
 | `src/features/text-play/ui/TextPlayHome.tsx` | 메인 화면 |
 | `src/features/text-play/catalog/text-play-catalog.ts` | 작품 목록·장르·검색 |
@@ -166,7 +178,7 @@
 | `src/features/text-play/ui/ChoiceList.tsx` | AI 추천 답안 접기·펼치기 |
 | `src/features/text-play/data/demo-package.ts` | 샘플 작품 장면·선택지·엔딩 |
 | `src/lib/adapters/mock-llm-adapter.ts` | 임시 인공지능 응답 |
-| `scripts/rebuild-local-exe.ps1` | `pnpm exe:rebuild` 본체 |
+| `scripts/rebuild-local-exe.ps1` | `corepack pnpm exe:rebuild` 본체 |
 | `scripts/local-ai/local-ai-pins.mjs` | 내장 로컬 AI 고정 버전(llama.cpp 빌드·SHA-256, 공식 모델 리비전·생성 설정) |
 | `scripts/local-ai/text-play-eval.ts` | 내장 로컬 AI 평가 문맥 30개와 응답 판정 |
 | `src/features/text-play/ai/response-json-schema.ts` | 작품별 AI 응답 JSON 스키마(내장 로컬 AI 형식 강제) |
@@ -174,20 +186,20 @@
 ---
 ## 검증 명령
 
-- 단위·컴포넌트·통합 테스트: `pnpm test:run`
-- 타입 검사: `pnpm typecheck` (`next typegen`으로 `next-env.d.ts`를 먼저 생성)
-- 코드 검사: `pnpm lint`
-- 웹 운영 빌드: `pnpm build`
-- 웹 통합 테스트: `pnpm test:e2e` (운영 빌드 후 `127.0.0.1:3100`에서 실행하므로 `pnpm dev`가 켜져 있어도 동작)
-- 데스크톱 화면 빌드: `pnpm desktop:build`
-- 데스크톱 자산 검사: `pnpm desktop:verify-assets`
-- 데스크톱 통합 테스트: `pnpm test:e2e:desktop` (포트 1420을 쓰므로 `pnpm desktop:dev`를 먼저 종료, 1420 서버가 이미 떠 있으면 `node node_modules/@playwright/test/cli.js test --config playwright.desktop.config.ts`)
-- ChatBot 새 기능 확인과 가져오기: `pnpm chatbot:status`, `pnpm chatbot:sync` (ChatBot 저장소가 Text-Play 옆 `../ChatBot`에 있어야 함)
-- 내장 로컬 AI 측정 준비와 측정: `pnpm local-ai:runtime`, `pnpm local-ai:models`, `pnpm local-ai:eval` (작업 폴더 `.local-ai/`는 Git 제외, 계획 문서의 `작업 0 준비 상태` 참고). 이 PC처럼 그래픽 장치가 여럿이면 `--backends vulkan:Vulkan0,cpu`처럼 장치를 고름
-- 만든 엔진·모델을 exe에 적용: `pnpm local-ai:install`(SHA-256 확인 후 `%LOCALAPPDATA%\MATE Text-Play\{runtime,models}`로 복사) → exe `AI 모델` 화면에서 `사용하기`
+- 단위·컴포넌트·통합 테스트: `corepack pnpm test:run`
+- 타입 검사: `corepack pnpm typecheck` (`next typegen`으로 `next-env.d.ts`를 먼저 생성)
+- 코드 검사: `corepack pnpm lint`
+- 웹 운영 빌드: `corepack pnpm build`
+- 웹 통합 테스트: `corepack pnpm test:e2e` (운영 빌드 후 `127.0.0.1:3100`에서 실행하므로 `corepack pnpm dev`가 켜져 있어도 동작)
+- 데스크톱 화면 빌드: `corepack pnpm desktop:build`
+- 데스크톱 자산 검사: `corepack pnpm desktop:verify-assets`
+- 데스크톱 통합 테스트: `corepack pnpm test:e2e:desktop` (포트 1420을 쓰므로 `corepack pnpm desktop:dev`를 먼저 종료, 1420 서버가 이미 떠 있으면 `node node_modules/@playwright/test/cli.js test --config playwright.desktop.config.ts`)
+- ChatBot 새 기능 확인과 가져오기: `corepack pnpm chatbot:status`, `corepack pnpm chatbot:sync` (ChatBot 저장소가 Text-Play 옆 `../ChatBot`에 있어야 함)
+- 내장 로컬 AI 측정 준비와 측정: `corepack pnpm local-ai:runtime`, `corepack pnpm local-ai:models`, `corepack pnpm local-ai:eval` (작업 폴더 `.local-ai/`는 Git 제외, 계획 문서의 `작업 0 준비 상태` 참고). 이 PC처럼 그래픽 장치가 여럿이면 `--backends vulkan:Vulkan0,cpu`처럼 장치를 고름
+- 만든 엔진·모델을 exe에 적용: `corepack pnpm local-ai:install`(SHA-256 확인 후 `%LOCALAPPDATA%\MATE Text-Play\{runtime,models}`로 복사) → exe `AI 모델` 화면에서 `사용하기`
 - 내장 AI를 모델 없이 exe에서 확인: 가짜 서버(`node scripts/local-ai/fake-openai-server.mjs` + `MATE_TEXT_PLAY_BUNDLED_AI_URL`) 또는 가짜 엔진(`fake_llama_server` 예제 + `MATE_TEXT_PLAY_LLAMA_RUNTIME_DIR`·`MATE_TEXT_PLAY_BUNDLED_MODEL`). 화면 조작은 `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9333`으로 exe를 띄워 Playwright `connectOverCDP`로 함(계획 문서 진행 상태 참고)
-- Rust 검사: `pnpm tauri:check`
-- Windows 설치 파일 빌드: `pnpm tauri:build`
+- Rust 검사: `corepack pnpm tauri:check`
+- Windows 설치 파일 빌드: `corepack pnpm tauri:build`
 
 ---
 ## 2026-10-01 새 복제본 검증 결과
@@ -200,7 +212,7 @@
 - 데스크톱 화면 빌드와 오프라인 자산 검사 통과
 - Next.js 운영 빌드 통과, 빌드 후 작업 폴더 변경 없음
 - 작업 컴퓨터에서 데스크톱 통합 테스트 5개, 웹 통합 테스트 1개 통과
-- 작업 컴퓨터에서 `pnpm exe:rebuild`로 exe를 만들고 메인 화면 표시 확인
+- 작업 컴퓨터에서 `corepack pnpm exe:rebuild`로 exe를 만들고 메인 화면 표시 확인
 
 인수인계 문서 갱신은 제품 코드 변경이 아니므로 위 기준 소스의 검증 결과를 그대로 사용합니다.
 
@@ -208,7 +220,7 @@
 ## 확인된 주의점
 
 - Next.js 16은 같은 폴더에서 개발 서버를 하나만 허용합니다. 이미 띄운 서버가 있으면 그 주소를 사용합니다.
-- `next-env.d.ts`는 Git에서 제외했습니다. `pnpm dev`, `pnpm build`, `pnpm typecheck`가 자동으로 만듭니다.
+- `next-env.d.ts`는 Git에서 제외했습니다. `corepack pnpm dev`, `corepack pnpm build`, `corepack pnpm typecheck`가 자동으로 만듭니다.
 - 전체 테스트를 병렬로 돌리면 부하로 느려질 수 있어 테스트 시간 제한을 15초로 두었습니다.
 - Playwright의 버튼 이름 찾기는 부분 일치입니다. `이어하기`와 `바로 이어하기`처럼 겹치는 이름은 `exact: true`를 씁니다.
 - Windows PowerShell 5.1에서 실행하는 `.ps1` 스크립트에 한글 출력이 있으면 UTF-8 BOM으로 저장해야 글자가 깨지지 않습니다.
@@ -218,11 +230,11 @@
 - Windows 설치 파일은 코드 서명이 없어 SmartScreen 경고가 표시될 수 있습니다.
 - 버전 번호가 아직 `0.1.0-preview.1`이라 설치 파일만으로는 빌드를 구분할 수 없습니다.
 - `src/chatbot`과 `tests/chatbot`은 동기화할 때마다 지우고 다시 만듭니다. 이 폴더를 직접 고치면 다음 동기화에서 사라집니다.
-- 동기화는 ChatBot의 **커밋**(기본 `origin/main`)에서만 가져오고 작업 폴더의 커밋하지 않은 수정은 가져오지 않습니다. 다른 세션이 ChatBot을 고치는 중이면 `pnpm chatbot:status`가 알려 줍니다.
+- 동기화는 ChatBot의 **커밋**(기본 `origin/main`)에서만 가져오고 작업 폴더의 커밋하지 않은 수정은 가져오지 않습니다. 다른 세션이 ChatBot을 고치는 중이면 `corepack pnpm chatbot:status`가 알려 줍니다.
 - 같은 이름의 공용 이미지는 웹 화면 보호를 위해 덮어쓰지 않고 경고만 냅니다(줄바꿈 차이는 무시).
 - exe에 ChatBot 프롤로그 이미지(약 18MB)가 들어가 실행 파일이 약 44MB입니다.
 - Vite 개발 서버가 같은 파일의 연속 수정을 놓쳐 예전 코드를 보낼 때가 있습니다. 데스크톱 통합 테스트가 이상하게 실패하면 1420 서버를 다시 띄우고 확인합니다.
-- 내장 로컬 AI의 실행 엔진·모델 가중치 다운로드는 외부 실행 파일·데이터를 들여오는 작업이라 Claude 작업 세션의 자동 권한 검사에서 막힐 수 있습니다. 막히면 사용자가 `pnpm local-ai:*` 명령을 직접 실행하거나 허용한 뒤 이어서 진행합니다.
+- 내장 로컬 AI의 실행 엔진·모델 가중치 다운로드는 외부 실행 파일·데이터를 들여오는 작업이라 Claude 작업 세션의 자동 권한 검사에서 막힐 수 있습니다. 막히면 사용자가 `corepack pnpm local-ai:*` 명령을 직접 실행하거나 허용한 뒤 이어서 진행합니다.
 
 ---
 ## 이어서 진행할 작업
@@ -237,7 +249,7 @@
 4. (완료 2026-10-08) 엔딩 화면 추가(엔딩 제목·요약, `처음부터 다시 하기`·`메인으로` 버튼)와 엔딩 뒤 직접 입력 막기. 남은 것: 엔딩 장면 그림이 `장면 준비 중` 임시 그림
 5. (완료 2026-10-01) 사용자에게 보이는 내부 식별자 수정: 장면 위 장소(`FOREST-GATE`), 대사 화자(`lyra`) → 표시 이름으로 변경
 6. 콘텐츠 보강: 장면별 추천 행동 데이터, 장면에 맞는 이미지, 임시 인공지능 응답 다양화, 장면 수 확대
-7. 문서 정리: 개발 기록 누락분(게임 화면 개편·턴 이동·올라마 연결) 보충, README·로드맵의 `수동 저장 3개` 표기와 `Mock 시험판` 설명 수정
+7. (완료 2026-10-26) 기준 문서 정리: README·로드맵의 수동 저장 6개·Windows 시험판·내장 AI 진행 상태·개발 환경 안내 수정. 과거 개발 기록은 해당 날짜의 이력으로 유지
 8. 빌드마다 버전 올리기와 GitHub Release 게시
 9. `.mateplay` 콘텐츠 패키지 규격과 설치 기능
 10. 외부 결정이 필요한 작업: 웹 ChatBot과 exe 기록의 자동 동기화(서버나 공유 파일 필요), 실제 챗봇 서버 API·인증·크레딧, MSI·자동 업데이트·Windows 코드 서명
@@ -246,4 +258,4 @@
 ---
 ## 새 챗봇 세션에 전달할 문장
 
-`https://github.com/siwoo440/Text-Play` 저장소의 `main` 최신 커밋을 받아 `docs/HANDOFF.md`를 먼저 읽고 이어서 작업해 주세요. 확인 기준은 Windows 실행 파일(exe)이며 `pnpm exe:rebuild`로 고친 내용을 exe에 반영해 확인합니다. 기존 변경을 되돌리지 말고, 현재 상태와 `이어서 진행할 작업`을 확인한 뒤 수정하세요. exe는 ChatBot 기능을 계속 똑같이 따라가야 하므로 작업 시작 때 `pnpm chatbot:status`로 ChatBot 새 커밋을 확인하고, 있으면 `pnpm chatbot:sync`로 가져와 검증한 뒤 반영하세요. 모든 작업은 `main` 하나만 유지하고, 실패하는 테스트를 먼저 쓴 뒤 구현하며, 검증이 끝나면 커밋과 푸시까지 진행하세요. 답변과 문서는 한국어로 작성하고, 코드에는 Allman 스타일과 각 줄의 짧은 한글 주석 규칙을 적용하세요. 커밋 메시지는 한국어로 이전 버전 대비 변경점을 `~추가/~수정/~변경/~삭제`로 적고, Claude 공동 작업자 줄은 넣지 마세요.
+`https://github.com/siwoo440/Text-Play` 저장소의 `main` 최신 커밋을 받아 `docs/HANDOFF.md`를 먼저 읽고 이어서 작업해 주세요. 확인 기준은 Windows 실행 파일(exe)이며 `corepack pnpm exe:rebuild`로 고친 내용을 exe에 반영해 확인합니다. 기존 변경을 되돌리지 말고, 현재 상태와 `이어서 진행할 작업`을 확인한 뒤 수정하세요. exe는 ChatBot 기능을 계속 똑같이 따라가야 하므로 작업 시작 때 `corepack pnpm chatbot:status`로 ChatBot 새 커밋을 확인하고, 있으면 `corepack pnpm chatbot:sync`로 가져와 검증한 뒤 반영하세요. 모든 작업은 `main` 하나만 유지하고, 실패하는 테스트를 먼저 쓴 뒤 구현하며, 검증이 끝나면 커밋과 푸시까지 진행하세요. 답변과 문서는 한국어로 작성하고, 코드에는 Allman 스타일과 각 줄의 짧은 한글 주석 규칙을 적용하세요. 커밋 메시지는 한국어로 이전 버전 대비 변경점을 `~추가/~수정/~변경/~삭제`로 적고, Claude 공동 작업자 줄은 넣지 마세요.

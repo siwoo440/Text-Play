@@ -26,6 +26,8 @@
 
 게임 상태의 최종 결정권은 LLM이 아니라 게임 엔진이 가집니다.
 
+개발 환경과 새 복제본의 검증 순서는 [개발 환경 안내](DEVELOPMENT-SETUP.md)를 기준으로 확인합니다. Node.js는 `.node-version`과 `package.json`의 범위, pnpm은 `packageManager`, 설치 정책은 `pnpm-workspace.yaml`로 관리합니다. 자동 저장은 1개, 수동 저장은 6개입니다.
+
 웹(Next.js)과 Windows 실행 파일(exe)은 화면 구성이 다릅니다.
 
 | 실행 형태 | 진입점 | 들어 있는 화면 |
@@ -42,7 +44,9 @@
 
 ### `src/chatbot`
 
-[siwoo440/ChatBot](https://github.com/siwoo440/ChatBot) 커밋에서 가져온 소스 사본입니다. `scripts/sync-chatbot.mjs`(`pnpm chatbot:sync`)가 만들며, 가져온 커밋은 `src/chatbot/SOURCE.md`에 적혀 있습니다. `scripts/chatbot-status.mjs`(`pnpm chatbot:status`)는 ChatBot에 가져오지 않은 새 커밋이 있는지 알려 줍니다. 가져오면서 `@/` 별칭을 `@chatbot/`으로, `next/link`·`next/image`·`next/navigation`·`Route` 타입을 `src/desktop/next-compat`으로 바꿉니다. 직접 고치지 말고 ChatBot에서 고쳐 커밋한 뒤 다시 동기화합니다. 함께 가져온 ChatBot 테스트는 `tests/chatbot`에 있습니다.
+2026-10-26 동기화 기준은 `1e8403a05fb331e17369be26debbc7b6b3d0091f`입니다. 사용자별 서버 사용량 제한과 변경된 상태 조각만 저장하는 기반을 포함하지만, EXE의 실제 서버 연결은 여전히 비활성입니다. 원본의 `supabase/` 설정 SQL과 서버 운영 환경은 사본 복사 범위에 포함되지 않습니다.
+
+[siwoo440/ChatBot](https://github.com/siwoo440/ChatBot) 커밋에서 가져온 소스 사본입니다. `scripts/sync-chatbot.mjs`(`corepack pnpm chatbot:sync`)가 만들며, 가져온 커밋은 `src/chatbot/SOURCE.md`에 적혀 있습니다. `scripts/chatbot-status.mjs`(`corepack pnpm chatbot:status`)는 ChatBot에 가져오지 않은 새 커밋이 있는지 알려 줍니다. 가져오면서 `@/` 별칭을 `@chatbot/`으로, `next/link`·`next/image`·`next/navigation`·`Route` 타입을 `src/desktop/next-compat`으로 바꿉니다. 직접 고치지 말고 ChatBot에서 고쳐 커밋한 뒤 다시 동기화합니다. 함께 가져온 ChatBot 테스트는 `tests/chatbot`에 있습니다.
 
 ### `src/desktop`
 
@@ -108,7 +112,7 @@ LLM과 이미지 생성 기능을 앱에서 사용할 수 있는 공통 인터�
 
 ### `scripts`
 
-빌드·검사·ChatBot 동기화 명령의 본체입니다. 내장 로컬 AI 작업 0 도구는 `scripts/local-ai`(고정 버전 목록, 평가 문맥 30개와 응답 판정), `scripts/lib`(이어받기 다운로드·해시, 측정 요약·보고서)와 `fetch-llama-runtime.mjs`·`build-local-models.mjs`·`evaluate-local-models.mjs`(`pnpm local-ai:runtime`·`local-ai:models`·`local-ai:eval`)입니다. 받은 실행 엔진·모델과 측정 결과는 Git에서 제외한 `.local-ai/`에 둡니다.
+빌드·검사·ChatBot 동기화 명령의 본체입니다. 내장 로컬 AI 작업 0 도구는 `scripts/local-ai`(고정 버전 목록, 평가 문맥 30개와 응답 판정), `scripts/lib`(이어받기 다운로드·해시, 측정 요약·보고서)와 `fetch-llama-runtime.mjs`·`build-local-models.mjs`·`evaluate-local-models.mjs`(`corepack pnpm local-ai:runtime`·`local-ai:models`·`local-ai:eval`)입니다. 받은 실행 엔진·모델과 측정 결과는 Git에서 제외한 `.local-ai/`에 둡니다.
 
 ### `tests`
 
@@ -119,6 +123,8 @@ LLM과 이미지 생성 기능을 앱에서 사용할 수 있는 공통 인터�
 제품 설계, 작업 계획, 실행 안내와 누적 개발 기록을 보관합니다.
 
 `HANDOFF.md`는 다른 컴퓨터나 새 챗봇 세션에서 최신 `main` 작업을 이어가기 위한 준비 사항, 검증 결과와 전달 문장을 보관합니다.
+
+`DEVELOPMENT-SETUP.md`는 고정 도구 버전, Corepack 실행, 새 복제본 설치, 검사·빌드 순서와 실행 경로별 AI 지원 범위를 설명합니다.
 
 ---
 ## 데이터 분리 원칙

@@ -1,15 +1,16 @@
 ---
 # Text-Play 웹 미리보기 안내
 
-웹 미리보기와 Windows Tauri 시험판에서 같은 Text-Play 화면을 확인합니다. 현재 AI 응답은 외부 네트워크를 사용하지 않는 Mock 데이터입니다.
+웹 미리보기와 Windows Tauri 시험판에서 Text-Play를 확인합니다. 기본 응답은 임시 AI이며 EXE Text-Play에서는 별도 준비한 올라마·내장 AI도 선택할 수 있습니다. 전체 ChatBot 화면은 EXE에 포함된 사본을 기준으로 확인합니다.
 
 ---
 ## 준비
 
-Node.js와 pnpm을 준비한 뒤 저장소 루트에서 의존성을 설치합니다.
+Node.js 24.19.0과 Corepack을 준비한 뒤 저장소 루트에서 pnpm 11.19.0으로 의존성을 설치합니다. 상세 준비 순서는 [개발 환경 안내](DEVELOPMENT-SETUP.md)를 확인합니다.
 
 ```powershell
-pnpm install
+corepack pnpm install --frozen-lockfile # 잠금 의존성 설치
+corepack enable --install-directory node_modules/.bin pnpm # 내부 호출 버전 고정
 ```
 
 ---
@@ -18,7 +19,7 @@ pnpm install
 기존 웹 앱과 포트가 겹치지 않도록 3001번 포트를 사용합니다.
 
 ```powershell
-pnpm dev --hostname 127.0.0.1 --port 3001
+corepack pnpm dev --hostname 127.0.0.1 --port 3001
 ```
 
 - Text-Play 홈: `http://127.0.0.1:3001/text-play`
@@ -31,10 +32,10 @@ pnpm dev --hostname 127.0.0.1 --port 3001
 ## 자동 검증
 
 ```powershell
-pnpm test:run
-pnpm typecheck
-pnpm lint
-pnpm build
+corepack pnpm test:run
+corepack pnpm typecheck
+corepack pnpm lint
+corepack pnpm build
 ```
 
 ---
@@ -50,7 +51,7 @@ pnpm build
 - 중앙 장면 이미지와 반투명 스토리 대화 상자
 - 장면 아래 AI 추천 답안과 직접 입력 영역(Enter로 전송, Shift+Enter로 줄바꿈)
 - 상단 제목·스탯·저장·불러오기·AI·설정 표시줄
-- 다크 판타지 글래스, 미니멀 SF HUD, 클래식 비주얼 노벨 테마
+- 판타지 글래스, 미니멀 SF HUD, 클래식 비주얼 노벨 테마와 EXE 앱 다크 모드 연동
 - 화면 맞춤, 1280×720, 1600×900, 1920×1080 창 해상도
 - Mock LLM 구조화 스트리밍과 외부 네트워크 차단
 - 실패한 자유 입력의 수동 재시도
@@ -63,7 +64,7 @@ pnpm build
 
 플레이 화면 오른쪽 위 `설정`을 누르면 테마와 창 해상도를 즉시 바꿀 수 있습니다. Windows 실행 프로그램에서는 선택한 해상도가 실제 창 크기에 적용되고, 화면보다 큰 크기는 사용 가능한 화면 안으로 제한됩니다. 설정은 현재 실행 환경의 로컬 저장소에 보관됩니다.
 
-AI 선택에는 `Mock AI`와 `로컬 GPU 모델 · 연결 준비 중`이 표시됩니다. 로컬 GPU 항목은 실제 모델 연결 전이므로 비활성 상태입니다.
+웹 기본값은 임시 AI입니다. EXE에서는 설정에서 올라마 모델을 조회하거나 `AI 모델` 화면에서 준비된 내장 모델을 선택합니다. 올라마는 로컬 서비스와 모델이 필요하며 내장 AI는 엔진·GGUF 파일이 필요합니다. 현재 모델 카탈로그의 다운로드 정보는 비어 있어 설치만으로 모델이 자동 준비되지는 않습니다.
 
 ---
 ## 저장과 불러오기
@@ -73,8 +74,8 @@ AI 선택에는 `Mock AI`와 `로컬 GPU 모델 · 연결 준비 중`이 표시�
 ---
 ## 알려진 제한
 
-- 실제 AI 서버와 로컬 GPU 모델 미연결
-- 현재 실행 모드는 `MockLLMAdapter` 고정
+- 실제 서버 AI·인증·크레딧·클라우드 저장 연결 미완료
+- 내장 모델 자동 다운로드·설치 미완료, 별도 준비 필요
 - `.mateplay` 다운로드·설치 미지원
 - MSI와 자동 업데이트 미지원
 - Windows NSIS 설치 파일은 코드 서명이 없는 시험판
@@ -82,4 +83,4 @@ AI 선택에는 `Mock AI`와 `로컬 GPU 모델 · 연결 준비 중`이 표시�
 ---
 ## Windows 시험판
 
-Tauri 기반 Windows NSIS 설치 파일을 생성할 수 있습니다. 시험판은 Mock AI와 로컬 IndexedDB 저장만 사용하며, 네트워크 연결·로그인·결제·클라우드 저장은 포함하지 않습니다. 설치 파일 실행에는 Microsoft Edge WebView2 Runtime이 필요합니다.
+Tauri 기반 Windows NSIS 설치 파일을 생성할 수 있습니다. 시험판은 로컬 IndexedDB 저장과 임시 또는 준비된 로컬 AI를 사용합니다. ChatBot 로그인·대화는 연습용이며 실제 서버 인증·결제·클라우드 저장은 연결하지 않았습니다. 설치 파일 실행에는 Microsoft Edge WebView2 Runtime이 필요합니다.

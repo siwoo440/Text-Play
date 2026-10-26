@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"; // 테스트 도구
 import { AccountSyncRunner, decideSync, hashText, readSyncMeta, SYNC_META_KEY, writeSyncMeta, type SyncLocal, type SyncMeta, type SyncStatus } from "@chatbot/lib/account/account-sync"; // 계정 맞추기
-import { createPracticeSnapshotStore, PRACTICE_SERVER_PREFIX, SignedOutError, type RemoteSnapshot, type SnapshotStore } from "@chatbot/lib/account/snapshot-store"; // 서버 저장 계약
+import { createPartedSnapshotStore, createPracticeBackend, createPracticeSnapshotStore, PRACTICE_BLOB_PREFIX, PRACTICE_SERVER_PREFIX, SignedOutError, type RemoteSnapshot, type SnapshotStore } from "@chatbot/lib/account/snapshot-store"; // 서버 저장 계약
 
 const remote = (revision: number, state: string): RemoteSnapshot => ({ revision, state, updatedAt: "2026-10-06T00:00:00.000Z", deviceId: "device-other" }); // 서버에 있는 저장본
 const meta = (revision: number | null, syncedText: string | null): SyncMeta => ({ revision, syncedHash: syncedText === null ? null : hashText(syncedText), syncedAt: null, deviceId: "device-me" }); // 이 기기의 맞춤 기록
@@ -83,10 +83,35 @@ describe("연습용 서버", () => // 연습용 서버 묶음
         expect(await store.pull("practice-soha")).toBeNull(); // 처음에는 없음
         expect(await store.push("practice-soha", "첫 저장", null, "device-a")).toEqual({ ok: true, revision: 1, updatedAt: "2026-10-06T02:00:00.000Z" }); // 첫 저장
         expect(await store.push("practice-soha", "둘째 저장", 1, "device-a")).toMatchObject({ ok: true, revision: 2 }); // 번호가 맞으면 저장
-        expect(await store.push("practice-soha", "늦은 저장", 1, "device-b")).toEqual({ ok: false, reason: "conflict", remote: { revision: 2, state: "둘째 저장", updatedAt: "2026-10-06T02:00:00.000Z", deviceId: "device-a" } }); // 번호가 다르면 거절하고 서버 것을 알려 줌
+        expect(await store.push("practice-soha", "늦은 저장", 1, "device-b")).toEqual({ ok: false, reason: "conflict", remote: { revision: 2, updatedAt: "2026-10-06T02:00:00.000Z", deviceId: "device-a" } }); // 번호가 다르면 거절하고 서버 것의 머리를 알려 줌
+        expect(await store.head("practice-soha")).toEqual({ revision: 2, updatedAt: "2026-10-06T02:00:00.000Z", deviceId: "device-a" }); // 번호만 묻기
         expect((await store.pull("practice-soha"))?.state).toBe("둘째 저장"); // 서버 것은 그대로
         expect(await store.pull("practice-rian")).toBeNull(); // 계정마다 따로
-        expect(localStorage.getItem(`${PRACTICE_SERVER_PREFIX}practice-soha`)).toContain("둘째 저장"); // 저장 위치
+        expect(localStorage.getItem(`${PRACTICE_SERVER_PREFIX}practice-soha`)).not.toContain("둘째 저장"); // 목록 줄에는 내용이 아니라 조각의 지문만 있음
+        const blobKeys = Object.keys(localStorage).filter((key) => key.startsWith(`${PRACTICE_BLOB_PREFIX}practice-soha:`)); // 그 계정의 조각
+        expect(blobKeys.map((key) => localStorage.getItem(key))).toEqual(["둘째 저장"]); // 내용은 조각에 있고, 예전 조각과 거절된 조각은 남지 않음
+    }); // 검증 종료
+
+    it("조각이 그 사이 지워졌으면 목록부터 다시 읽고, 끝내 모으지 못하면 받지 못했다고 알린다", async () => // 빠진 조각 검증
+    { // 검증 시작
+        const backend = createPracticeBackend(localStorage); // 연습용 서버
+        const writer = createPartedSnapshotStore(backend); // 올리는 화면
+        await writer.push("practice-soha", "첫 저장", null, "device-a"); // 첫 저장
+        let reads = 0; // 목록을 읽은 횟수
+        const racing = createPartedSnapshotStore({ ...backend, readManifest: async (accountId) => // 목록을 읽은 직후 다른 기기가 새로 저장하는 경우
+        { // 함수 시작
+            const row = await backend.readManifest(accountId); // 지금 목록
+            reads += 1; // 횟수
+            if (reads === 1) // 처음 읽은 직후
+            { // 조건 시작
+                await writer.push("practice-soha", "둘째 저장", 1, "device-a"); // 다른 기기가 저장(예전 조각이 지워짐)
+            } // 조건 종료
+            return row; // 읽었던 목록
+        } }); // 저장 구현 종료
+        expect((await racing.pull("practice-soha"))?.state).toBe("둘째 저장"); // 목록부터 다시 읽어 새 것을 받음
+        expect(reads).toBe(2); // 두 번 읽음
+        Object.keys(localStorage).filter((key) => key.startsWith(PRACTICE_BLOB_PREFIX)).forEach((key) => localStorage.removeItem(key)); // 조각이 모두 사라진 경우
+        await expect(createPartedSnapshotStore(backend).pull("practice-soha")).rejects.toThrow("snapshot parts missing"); // 받지 못함(맞추기 도구가 다음에 다시)
     }); // 검증 종료
 }); // 묶음 종료
 
@@ -130,13 +155,13 @@ describe("계정 데이터 맞추기", () => // 맞추기 묶음
         const runner = laptop.runner(store); // 노트북의 맞추기 도구
         const conflict = await runner.sync(); // 맞추기
         expect(conflict.phase).toBe("conflict"); // 겹침
-        expect(conflict.remote?.state).toBe("휴대폰에서 바꿈"); // 서버 것을 알려 줌
+        expect(conflict.remote).toMatchObject({ revision: 2, deviceId: "device-phone" }); // 서버 것의 머리를 알려 줌(내용은 받기로 했을 때만 받음)
         expect(laptop.data).toBe("노트북에서 바꿈"); // 고르기 전에는 아무것도 바꾸지 않음
         expect(runner.hasConflict()).toBe(true); // 풀지 않은 겹침이 있음
         expect((await runner.resolve("keep-local")).phase).toBe("saved"); // 이 기기 것을 남김
         expect((await store.pull("practice-soha"))?.state).toBe("노트북에서 바꿈"); // 서버가 노트북 것으로 바뀜
         expect(runner.hasConflict()).toBe(false); // 겹침이 풀림
-        expect(laptop.statuses.at(-2)).toMatchObject({ phase: "syncing", remote: { state: "휴대폰에서 바꿈" } }); // 고른 쪽으로 맞추는 동안에도 겹친 서버 저장본을 함께 알림(선택 창 유지)
+        expect(laptop.statuses.at(-2)).toMatchObject({ phase: "syncing", remote: { revision: 2, deviceId: "device-phone" } }); // 고른 쪽으로 맞추는 동안에도 겹친 서버 저장본을 함께 알림(선택 창 유지)
         phone.data = "휴대폰에서 또 바꿈"; // 휴대폰 변경(노트북 것을 받기 전)
         const phoneRunner = phone.runner(store); // 휴대폰의 맞추기 도구
         expect((await phoneRunner.sync()).phase).toBe("conflict"); // 겹침
@@ -149,13 +174,13 @@ describe("계정 데이터 맞추기", () => // 맞추기 묶음
         const stuck = phone.runner(store); // 휴대폰의 맞추기 도구
         await stuck.sync(); // 겹침
         phone.rejectApply = true; // 받은 저장본을 쓸 수 없는 경우
-        expect(await stuck.resolve("take-remote")).toMatchObject({ phase: "conflict", remote: { state: "노트북에서 또 바꿈" } }); // 풀지 못하면 겹침을 그대로 알려 다시 고르게 함
+        expect(await stuck.resolve("take-remote")).toMatchObject({ phase: "conflict", remote: { deviceId: "device-laptop" } }); // 풀지 못하면 겹침을 그대로 알려 다시 고르게 함
         expect(stuck.hasConflict()).toBe(true); // 겹침이 남음
     }); // 검증 종료
 
     it("서버에 닿지 못하거나 받은 저장본을 쓸 수 없으면 이 기기의 데이터를 그대로 둔다", async () => // 실패 검증
     { // 검증 시작
-        const broken: SnapshotStore = { mode: "practice", pull: async () => { throw new Error("offline"); }, push: async () => ({ ok: false, reason: "unavailable" }) }; // 닿지 않는 서버
+        const broken: SnapshotStore = { mode: "practice", head: async () => { throw new Error("offline"); }, pull: async () => { throw new Error("offline"); }, push: async () => ({ ok: false, reason: "unavailable" }) }; // 닿지 않는 서버
         const phone = new Device("휴대폰", "device-phone"); // 휴대폰
         expect((await phone.runner(broken).sync()).phase).toBe("offline"); // 연결 실패
         expect(readSyncMeta(phone.storage).revision).toBeNull(); // 기록하지 않음
@@ -164,20 +189,20 @@ describe("계정 데이터 맞추기", () => // 맞추기 묶음
         phone.rejectApply = true; // 받은 저장본을 쓸 수 없음
         expect((await phone.runner(store).sync()).phase).toBe("offline"); // 맞추지 못함
         expect(phone.data).toBe("휴대폰"); // 이 기기 데이터 그대로
-        const refusing: SnapshotStore = { mode: "practice", pull: async () => null, push: async () => ({ ok: false, reason: "unavailable" }) }; // 올리기를 받지 않는 서버
+        const refusing: SnapshotStore = { mode: "practice", head: async () => null, pull: async () => null, push: async () => ({ ok: false, reason: "unavailable" }) }; // 올리기를 받지 않는 서버
         expect((await phone.runner(refusing).sync()).phase).toBe("offline"); // 올리지 못함
     }); // 검증 종료
 
     it("로그인이 끝났으면 연결 실패와 구별해 알리고, 다시 로그인할 때까지 자동으로 맞추지 않게 표시한다", async () => // 로그인 끝남 검증
     { // 검증 시작
-        const expired: SnapshotStore = { mode: "live", pull: async () => { throw new SignedOutError(); }, push: async () => ({ ok: false, reason: "signed-out" }) }; // 로그인이 끝난 서버 연결
+        const expired: SnapshotStore = { mode: "live", head: async () => { throw new SignedOutError(); }, pull: async () => { throw new SignedOutError(); }, push: async () => ({ ok: false, reason: "signed-out" }) }; // 로그인이 끝난 서버 연결
         const phone = new Device("휴대폰", "device-phone"); // 휴대폰
         const runner = phone.runner(expired); // 맞추기 도구
         expect(runner.needsLogin()).toBe(false); // 처음에는 아님
         expect((await runner.sync()).phase).toBe("signed-out"); // 받다가 로그인이 끝난 것을 앎
         expect(runner.needsLogin()).toBe(true); // 다시 로그인해야 함
         expect(phone.data).toBe("휴대폰"); // 이 기기 데이터 그대로
-        const lateExpired: SnapshotStore = { mode: "live", pull: async () => null, push: async () => ({ ok: false, reason: "signed-out" }) }; // 올릴 때 로그인이 끝난 것을 아는 경우
+        const lateExpired: SnapshotStore = { mode: "live", head: async () => null, pull: async () => null, push: async () => ({ ok: false, reason: "signed-out" }) }; // 올릴 때 로그인이 끝난 것을 아는 경우
         const laptop = new Device("노트북", "device-laptop"); // 노트북
         const second = laptop.runner(lateExpired); // 맞추기 도구
         expect((await second.sync()).phase).toBe("signed-out"); // 올리다가 앎

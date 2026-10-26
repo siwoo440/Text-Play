@@ -1,11 +1,13 @@
 // 실제 AI 상태: 어느 채팅 등급이 실제 AI로 답할 수 있는지 서버 통로에 한 번 물어 기억한다. 물어볼 수 없으면(서버 없음·오류) 모두 연습용으로 본다.
 import type { ChatTierId } from "@chatbot/features/core/types"; // 등급 식별자
+import { getAccessTokenHeaders, type AuthHeaders } from "@chatbot/lib/account/access-token"; // 로그인 출입증 머리말
 
 export interface ModelStatus // 실제 AI 상태
 { // 구조 시작
     enabled: boolean; // 실제 AI 스위치
     tiers: Partial<Record<ChatTierId, boolean>>; // 등급별 사용 가능 여부
     models: Partial<Record<ChatTierId, string>>; // 내 컴퓨터 모델의 이름(화면 표시용)
+    loginRequired?: boolean; // 로그인하면 실제 AI를 쓸 수 있는지(공개 주소에서 로그인하지 않았을 때만 참)
 } // 구조 종료
 
 export const offlineModelStatus: ModelStatus = { enabled: false, tiers: {}, models: {} }; // 모두 연습용
@@ -18,15 +20,15 @@ function normalize(value: unknown): ModelStatus // 서버 답을 상태로(모�
     { // 조건 시작
         return offlineModelStatus; // 연습용
     } // 조건 종료
-    const record = value as { enabled?: unknown; tiers?: unknown; models?: unknown }; // 서버 답
+    const record = value as { enabled?: unknown; tiers?: unknown; models?: unknown; loginRequired?: unknown }; // 서버 답
     const tiers = typeof record.tiers === "object" && record.tiers !== null ? Object.fromEntries(Object.entries(record.tiers).map(([tier, ready]) => [tier, ready === true])) : {}; // 등급별 여부
     const models = typeof record.models === "object" && record.models !== null ? Object.fromEntries(Object.entries(record.models).filter((entry): entry is [string, string] => typeof entry[1] === "string" && entry[1].length > 0)) : {}; // 모델 이름(글자만)
-    return { enabled: record.enabled === true, tiers, models }; // 상태 반환
+    return { enabled: record.enabled === true, tiers, models, ...(record.loginRequired === true ? { loginRequired: true } : {}) }; // 상태 반환
 } // 함수 종료
 
-export function loadModelStatus(fetcher: typeof fetch = (...args) => fetch(...args)): Promise<ModelStatus> // 상태 읽기(같은 화면에서는 한 번만 물음)
+export function loadModelStatus(fetcher: typeof fetch = (...args) => fetch(...args), authHeaders: AuthHeaders = getAccessTokenHeaders): Promise<ModelStatus> // 상태 읽기(같은 화면에서는 한 번만 물음. 로그인해 있으면 출입증을 함께 보냄)
 { // 함수 시작
-    cached ??= Promise.resolve().then(() => fetcher("/api/chat", { cache: "no-store" })).then((response) => response.ok ? response.json() as Promise<unknown> : null).then(normalize).catch(() => offlineModelStatus); // 실패하면 연습용
+    cached ??= Promise.resolve().then(() => authHeaders().catch(() => ({}))).then((headers) => fetcher("/api/chat", { cache: "no-store", headers })).then((response) => response.ok ? response.json() as Promise<unknown> : null).then(normalize).catch(() => offlineModelStatus); // 실패하면 연습용
     return cached; // 결과 반환
 } // 함수 종료
 

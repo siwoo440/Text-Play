@@ -1,7 +1,7 @@
 // 서버 통로: 브라우저와 AI 회사 사이에 서서 열쇠를 숨기고, 지시문을 조립해 보내고, 답을 글자 조각으로 흘려보낸다. 열쇠가 없거나 꺼져 있으면 브라우저가 연습용 AI로 답한다.
 import { getChatTier } from "@chatbot/features/chat/chat-tiers"; // 채팅 등급
-import { isChatAllowedFrom, takeChatSlot } from "@chatbot/lib/llm/chat-gate"; // 문지기
-import { readChatBody, refuse, refuseProviderFailure } from "@chatbot/lib/llm/chat-request"; // 통로 공통
+import { identifyCaller } from "@chatbot/lib/llm/chat-caller"; // 요청한 사람 확인
+import { readChatBody, refuse, refuseProviderFailure, takeUsage } from "@chatbot/lib/llm/chat-request"; // 통로 공통
 import { getLocalModelNames, getTierAvailability, isRealChatEnabled, resolveModel } from "@chatbot/lib/llm/model-catalog"; // 모델 목록
 import { buildChatPrompt, parseChatRequest } from "@chatbot/lib/llm/prompt-builder"; // 지시문 만들기
 import { streamProviderReply } from "@chatbot/lib/llm/providers"; // AI 회사 연결
@@ -9,12 +9,14 @@ import { streamProviderReply } from "@chatbot/lib/llm/providers"; // AI 회사 �
 export const runtime = "nodejs"; // 서버(Node)에서 실행
 export const dynamic = "force-dynamic"; // 요청마다 새로 실행(미리 만들어 두지 않음)
 
-export function GET(request: Request): Response // 등급별로 실제 AI를 쓸 수 있는지 알려 주기(열쇠 값은 내보내지 않음)
+export async function GET(request: Request): Promise<Response> // 등급별로 실제 AI를 쓸 수 있는지 알려 주기(열쇠 값은 내보내지 않음)
 { // 함수 시작
-    const allowed = isChatAllowedFrom(request.headers.get("host")); // 이 요청에 허용되는지
+    const caller = await identifyCaller(request); // 누가 묻는지
+    const allowed = caller.kind !== "refused"; // 이 요청에 허용되는지(내 컴퓨터이거나, 공개를 켰고 로그인한 사람)
     const availability = getTierAvailability(); // 등급별 가능 여부
     const tiers = Object.fromEntries(Object.entries(availability).map(([tier, ready]) => [tier, allowed && ready])); // 허용되지 않으면 모두 불가
-    return Response.json({ enabled: allowed && isRealChatEnabled(), tiers, models: allowed ? getLocalModelNames() : {} }, { headers: { "cache-control": "no-store" } }); // 상태 반환(내 컴퓨터 모델은 이름도 알려 줌)
+    const loginRequired = caller.kind === "refused" && caller.code === "login-required" && isRealChatEnabled() ? { loginRequired: true } : {}; // 공개를 켰는데 로그인하지 않았으면 로그인하면 된다고 알림
+    return Response.json({ enabled: allowed && isRealChatEnabled(), tiers, models: allowed ? getLocalModelNames() : {}, ...loginRequired }, { headers: { "cache-control": "no-store" } }); // 상태 반환(내 컴퓨터 모델은 이름도 알려 줌)
 } // 함수 종료
 
 export async function POST(request: Request): Promise<Response> // 답변 받기
@@ -38,9 +40,10 @@ export async function POST(request: Request): Promise<Response> // 답변 받기
     { // 조건 시작
         return refuse(503, "no-key"); // 연습용으로
     } // 조건 종료
-    if (!takeChatSlot()) // 너무 자주 보냄
+    const limited = takeUsage(body.caller, "message"); // 사용량 세기(내 컴퓨터는 서버 전체로, 로그인한 사람은 사람마다)
+    if (limited !== null) // 한도 도달
     { // 조건 시작
-        return refuse(429, "rate-limited"); // 잠시 뒤 다시
+        return limited; // 너무 자주 보냈거나 오늘 한도를 다 씀
     } // 조건 종료
     const iterator = streamProviderReply(model, buildChatPrompt(chat), fetch, request.signal)[Symbol.asyncIterator](); // 답 흐름
     let first: IteratorResult<string>; // 첫 조각

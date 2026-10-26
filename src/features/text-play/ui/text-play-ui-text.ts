@@ -149,7 +149,10 @@ export const TEXT_PLAY_UI_TEXT = defineText( // Text-Play 플레이 화면 글�
         { // 메인 시작
             playable: "플레이 가능", // 공개 작품
             preparing: "준비 중", // 준비 작품
-            plays: (count: string) => `${count} 플레이`, // 플레이 수
+            plays: (count: string) => `${count} 플레이`, // 실제 통계 연결용 예약
+            playableWorks: "플레이 가능한 작품", // 공개 작품 목록
+            upcomingWorks: "공개 예정 작품", // 예정 작품 목록
+            catalogLead: (available: number, upcoming: number) => `지금 플레이할 작품 ${available}개와 공개 예정 작품 ${upcoming}개를 만나보세요.`, // 실제 제공 범위
             newGame: "새 게임", // 새 게임
             noResume: "이어할 저장 없음", // 이어하기 없음
             resume: "이어하기", // 이어하기
@@ -328,7 +331,10 @@ export const TEXT_PLAY_UI_TEXT = defineText( // Text-Play 플레이 화면 글�
         { // 메인 시작
             playable: "Playable", // 공개 작품
             preparing: "Coming soon", // 준비 작품
-            plays: (count: string) => `${count} plays`, // 플레이 수
+            plays: (count: string) => `${count} plays`, // 실제 통계 연결용 예약
+            playableWorks: "Playable stories", // 공개 작품 목록
+            upcomingWorks: "Coming soon", // 예정 작품 목록
+            catalogLead: (available: number, upcoming: number) => `Explore ${available} playable story and ${upcoming} upcoming works.`, // 실제 제공 범위
             newGame: "New game", // 새 게임
             noResume: "No save to continue", // 이어하기 없음
             resume: "Continue", // 이어하기

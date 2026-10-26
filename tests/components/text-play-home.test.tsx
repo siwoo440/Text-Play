@@ -74,13 +74,13 @@ describe("Text-Play 홈", () => // 홈 검증 묶음
         expect(await screen.findByRole("alert")).toHaveTextContent(TEXT_PLAY_MEMORY_STORAGE_WARNING); // 표시 후 경고 확인
     }); // 테스트 종료
 
-    it("실행 프로그램용 헤더와 랭킹·전체 작품 목록을 보여 준다", () => // 메인 구성 검증
+    it("실행 프로그램용 헤더와 플레이 가능·공개 예정 목록을 보여 준다", () => // 메인 구성 검증
     { // 테스트 시작
         render(<TextPlayPlatformProvider value={createPlatform()}><TextPlayHome repository={new MemoryTextPlaySaveRepository()} showHeader /></TextPlayPlatformProvider>); // 메인 렌더
         expect(screen.getByRole("navigation", { name: "주요 메뉴" })).toBeInTheDocument(); // 헤더 메뉴 확인
         expect(screen.getByRole("heading", { name: "오늘, 어떤 이야기를 플레이할까요?" })).toBeInTheDocument(); // 페이지 제목 확인
-        expect(screen.getByRole("heading", { name: "인기 랭킹" })).toBeInTheDocument(); // 랭킹 확인
-        expect(screen.getByRole("heading", { name: "전체 작품" })).toBeInTheDocument(); // 전체 목록 확인
+        expect(screen.getByRole("heading", { name: "플레이 가능한 작품" })).toBeInTheDocument(); // 완성 작품 확인
+        expect(screen.getByRole("heading", { name: "공개 예정 작품" })).toBeInTheDocument(); // 준비 작품 확인
         expect(screen.getAllByText("준비 중").length).toBeGreaterThan(5); // Mock 작품 확인
     }); // 테스트 종료
 

@@ -8,6 +8,15 @@ import { TextPlayProvider } from "@/features/text-play/session/TextPlayProvider"
 import { MemoryTextPlaySaveRepository } from "@/features/text-play/storage/memory-save-repository"; // 메모리 저장소
 import { TextPlayScreen } from "@/features/text-play/ui/TextPlayScreen"; // 플레이 화면
 import { createPreparedTextPlaySessionState, TEST_TEXT_PLAY_PLATFORM } from "@/test/text-play-fixtures"; // 세션 픽스처
+import { MOONLIT_LAKE_CONTINUATION } from "@/test/moonlit-story-route"; // 확장된 실제 경로
+
+async function finishStory(user: ReturnType<typeof userEvent.setup>): Promise<void> // 서재 이후 이야기 완료
+{ // 함수 시작
+    for (const [, label] of MOONLIT_LAKE_CONTINUATION) // 확장 경로 순회
+    { // 순회 시작
+        await chooseTextPlayRecommendation(user, label); // 실제 화면 선택
+    } // 순회 종료
+} // 함수 종료
 
 describe("Text-Play 전체 플레이 흐름", () => // 플레이 흐름 묶음
 { // 묶음 시작
@@ -18,6 +27,7 @@ describe("Text-Play 전체 플레이 흐름", () => // 플레이 흐름 묶음
         await chooseTextPlayRecommendation(user, "달빛 등불을 든다"); // 등불 선택
         await chooseTextPlayRecommendation(user, "봉인된 서재로 간다"); // 서재 선택
         await chooseTextPlayRecommendation(user, "기록을 해독한다"); // 기록 해독
+        await finishStory(user); // 확장된 탐색과 귀환 완료
         expect(screen.getByRole("heading", { name: "기록의 진실", level: 1 })).toBeInTheDocument(); // 엔딩 장면 제목 확인
         await user.click(screen.getByRole("button", { name: "상태 패널 열기" })); // 상태 패널 열기
         expect(screen.getByText("완료: 숲 아래의 목소리")).toBeInTheDocument(); // 완료 퀘스트 확인(표시 이름)
@@ -31,17 +41,18 @@ describe("Text-Play 전체 플레이 흐름", () => // 플레이 흐름 묶음
         await chooseTextPlayRecommendation(user, "달빛 등불을 든다"); // 등불 선택
         await chooseTextPlayRecommendation(user, "봉인된 서재로 간다"); // 서재 선택
         await chooseTextPlayRecommendation(user, "기록을 해독한다"); // 기록 해독
+        await finishStory(user); // 확장된 탐색과 귀환 완료
         const ending = screen.getByRole("region", { name: "엔딩" }); // 엔딩 화면 조회
         expect(within(ending).getByRole("heading", { name: "기록의 진실", level: 2 })).toBeInTheDocument(); // 엔딩 제목 확인
         expect(within(ending).getByText("숲 아래 목소리의 정체를 밝히고 리라의 기록을 복원했다.")).toBeInTheDocument(); // 엔딩 요약 확인
-        expect(within(ending).getByText(/4턴/u)).toBeInTheDocument(); // 플레이 기록(턴 수) 확인
+        expect(within(ending).getByText(/15턴/u)).toBeInTheDocument(); // 확장된 실제 턴 수 확인
         expect(within(ending).getByRole("button", { name: "처음부터 다시 하기" })).toBeInTheDocument(); // 처음부터 버튼 확인
         expect(within(ending).getByRole("button", { name: "메인으로" })).toBeInTheDocument(); // 메인으로 버튼 확인
         expect(screen.queryByRole("textbox", { name: "행동 직접 입력" })).not.toBeInTheDocument(); // 직접 입력 막힘 확인
         expect(screen.queryByRole("button", { name: "전송" })).not.toBeInTheDocument(); // 전송 버튼 없음 확인
         expect(screen.queryByRole("button", { name: "AI 추천 답안" })).not.toBeInTheDocument(); // 추천 답안 없음 확인
         await user.click(screen.getByRole("button", { name: "이전 턴 보기" })); // 지난 턴 열람
-        expect(screen.getByRole("heading", { name: "봉인된 서재", level: 1 })).toBeInTheDocument(); // 지난 장면 확인
+        expect(screen.getByRole("heading", { name: "기록을 돌려주는 길", level: 1 })).toBeInTheDocument(); // 엔딩 직전 장면 확인
         expect(screen.getByRole("region", { name: "엔딩" })).toBeInTheDocument(); // 지난 턴을 봐도 엔딩 화면 유지
     }); // 테스트 종료
 
@@ -52,6 +63,7 @@ describe("Text-Play 전체 플레이 흐름", () => // 플레이 흐름 묶음
         await chooseTextPlayRecommendation(user, "달빛 등불을 든다"); // 등불 선택
         await chooseTextPlayRecommendation(user, "벽의 문양을 조사한다"); // 문양 조사(정신력 감소)
         await chooseTextPlayRecommendation(user, "기록을 해독한다"); // 기록 해독
+        await finishStory(user); // 확장된 탐색과 귀환 완료
         await user.click(screen.getByRole("button", { name: "처음부터 다시 하기" })); // 다시 시작
         expect(screen.getByRole("heading", { name: "달빛 숲 입구", level: 1 })).toBeInTheDocument(); // 첫 장면 확인
         expect(screen.getByLabelText("전체 턴 1")).toHaveTextContent("1"); // 턴 기록 초기화 확인
@@ -71,7 +83,7 @@ describe("Text-Play 전체 플레이 흐름", () => // 플레이 흐름 묶음
         await chooseTextPlayRecommendation(user, "숲 밖으로 후퇴한다"); // 후퇴 선택
         const ending = screen.getByRole("region", { name: "엔딩" }); // 엔딩 화면 조회
         expect(within(ending).getByRole("heading", { name: "돌아가는 길", level: 2 })).toBeInTheDocument(); // 후퇴 엔딩 제목 확인
-        expect(within(ending).getByText("달빛 숲의 입구에서 탐사를 포기하고 돌아왔다.")).toBeInTheDocument(); // 후퇴 엔딩 요약 확인
+        expect(within(ending).getByText("숲의 봉인을 남겨 두고 돌아왔다. 기억과 다음 선택의 가능성은 숲에 남아 있다.")).toBeInTheDocument(); // 두 귀환 시점에 맞는 요약
         await user.click(within(ending).getByRole("button", { name: "메인으로" })); // 메인으로 이동
         expect(navigate).toHaveBeenCalledWith("home"); // 메인 이동 확인
     }); // 테스트 종료

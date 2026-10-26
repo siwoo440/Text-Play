@@ -21,6 +21,7 @@ export interface StructuredLLMInput // 구조화 입력
     responseSchema: string; // 응답 스키마 설명
     jsonSchema?: Record<string, unknown>; // 형식 강제용 JSON 스키마(내장 AI)
     language?: "ko" | "en"; // 답변 언어(없으면 한국어)
+    mockSceneReply?: { narration: string; dialogue: { speaker: string; content: string } | null }; // 임시 AI 전용 장면 응답
 } // 구조 종료
 
 export interface LLMAdapter // 대화 어댑터

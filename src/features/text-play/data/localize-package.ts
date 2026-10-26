@@ -16,7 +16,7 @@ export function localizeTextPlayPackage(packageData: TextPlayPackage, language: 
         scenes: packageData.scenes.map((scene) => // 장면 순회
         { // 변환 시작
             const text = translation.scenes[scene.id]; // 장면 언어판
-            return text === undefined ? scene : { ...scene, title: text.title, narration: text.narration, choices: scene.choices.map((choice) => ({ ...choice, label: text.choices[choice.id] ?? choice.label })) }; // 장면 글 바꾸기
+            return text === undefined ? scene : { ...scene, title: text.title, narration: text.narration, dialogue: text.dialogue ?? scene.dialogue, objective: text.objective ?? scene.objective, observation: text.observation ?? scene.observation, freeActions: text.freeActions ?? scene.freeActions, choices: scene.choices.map((choice) => ({ ...choice, label: text.choices[choice.id] ?? choice.label })) }; // 장면별 표시 언어 적용
         }), // 변환 종료
         endings: packageData.endings.map((ending) => ({ ...ending, ...(translation.endings[ending.id] ?? {}) })), // 엔딩 글 바꾸기
     }; // 작품 종료
@@ -26,12 +26,29 @@ export function createTextTranslator(packageData: TextPlayPackage, language: App
 { // 함수 시작
     const localized = localizeTextPlayPackage(packageData, language); // 언어판 작품
     const pairs = new Map<string, string>(); // 원문 → 언어판
-    packageData.scenes.forEach((scene, index) => // 장면 순회
+    for (const source of [packageData, localizeTextPlayPackage(packageData, "en")]) // 모든 고정 언어판 순회
     { // 순회 시작
-        const target = localized.scenes[index]; // 언어판 장면
-        pairs.set(scene.narration, target.narration); // 서술
-        scene.choices.forEach((choice, choiceIndex) => pairs.set(choice.label, target.choices[choiceIndex].label)); // 선택지
-    }); // 순회 종료
+        source.scenes.forEach((scene, index) => // 같은 순서의 장면 순회
+        { // 장면 순회 시작
+            const target = localized.scenes[index]; // 목표 언어 장면
+            pairs.set(scene.narration, target.narration); // 양방향 서술 변환
+            if (scene.observation !== undefined && target.observation !== undefined) // 관찰 번역 확인
+            { // 조건 시작
+                pairs.set(scene.observation, target.observation); // 양방향 임시 AI 관찰 변환
+            } // 조건 종료
+            if (scene.dialogue !== undefined && target.dialogue !== undefined) // 고정 대사 번역 확인
+            { // 조건 시작
+                pairs.set(scene.dialogue.content, target.dialogue.content); // 양방향 고정 대사 변환
+            } // 조건 종료
+            scene.freeActions?.forEach((action, actionIndex) => pairs.set(action, target.freeActions?.[actionIndex] ?? action)); // 고정 추천 행동 번역
+            scene.choices.forEach((choice, choiceIndex) => pairs.set(choice.label, target.choices[choiceIndex].label)); // 선택지 번역
+        }); // 장면 순회 종료
+    } // 언어판 순회 종료
+    for (const legacy of packageData.legacyLogTranslations ?? []) // 이전 저장의 고정 문구
+    { // 호환 순회 시작
+        pairs.set(legacy.ko, legacy[language]); // 이전 한국어 기록 변환
+        pairs.set(legacy.en, legacy[language]); // 이전 영어 기록 변환
+    } // 호환 순회 종료
     return (text) => pairs.get(text) ?? text; // 바꾼 글 반환(모르는 글은 그대로)
 } // 함수 종료
 

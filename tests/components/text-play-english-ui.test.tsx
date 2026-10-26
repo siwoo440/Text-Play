@@ -92,7 +92,7 @@ describe("Text-Play 영어 화면", () => // 영어 화면 검증 묶음
         await user.click(screen.getByRole("button", { name: "Retreat out of the forest" })); // 후퇴 선택
         const ending = await screen.findByRole("region", { name: "Ending" }); // 엔딩 화면 조회
         expect(within(ending).getByRole("heading", { name: "The Way Back", level: 2 })).toBeInTheDocument(); // 엔딩 제목 확인
-        expect(within(ending).getByText("You gave up the expedition at the entrance of the moonlit forest and turned back.")).toBeInTheDocument(); // 엔딩 요약 확인
+        expect(within(ending).getByText("You returned with the forest's seal intact. Its memories and the chance to choose again remain.")).toBeInTheDocument(); // 두 귀환 시점의 영어 요약
         expect(within(ending).getByRole("button", { name: "Start over" })).toBeInTheDocument(); // 처음부터 버튼 확인
         expect(within(ending).getByRole("button", { name: "Back to main" })).toBeInTheDocument(); // 메인으로 버튼 확인
         expect(container.textContent ?? "").not.toMatch(HANGUL); // 화면 글자에 한글 없음

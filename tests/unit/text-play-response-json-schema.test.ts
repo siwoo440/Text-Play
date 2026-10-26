@@ -52,7 +52,7 @@ describe("Text-Play 응답 JSON 스키마", () => // 스키마 묶음
     { // 테스트 시작
         const schema = createTextPlayResponseJsonSchema(DEMO_TEXT_PLAY_PACKAGE); // 스키마 생성
         expect(getActionSchemas(schema).map((candidate) => (candidate.properties as Record<string, SchemaNode>).type.const)).toEqual(["change-stat", "add-item", "remove-item", "change-relation"]); // 액션 종류 확인(이동·퀘스트·사건은 선택지 전용)
-        expect((findActionSchema(schema, "add-item")?.properties as Record<string, SchemaNode>).itemId).toEqual({ type: "string", enum: ["moon-lantern"] }); // 아이템 목록 확인
+        expect((findActionSchema(schema, "add-item")?.properties as Record<string, SchemaNode>).itemId).toEqual({ type: "string", enum: ["moon-lantern", "record-fragment", "silver-thread", "resonance-key"] }); // 실제 단서 목록 확인
         expect((findActionSchema(schema, "change-relation")?.properties as Record<string, SchemaNode>).characterId).toEqual({ type: "string", enum: ["lyra"] }); // 인물 목록 확인
     }); // 테스트 종료
 

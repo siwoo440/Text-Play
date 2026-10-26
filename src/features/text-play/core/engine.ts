@@ -1,8 +1,18 @@
 import { applyTextPlayActions, type TextPlayEngineResult } from "@/features/text-play/core/actions"; // 액션 처리기
 import { findTextPlayScene, getAvailableChoices } from "@/features/text-play/core/conditions"; // 장면·선택지 조회
-import type { TextPlayChoice, TextPlayPackage, TextPlayState } from "@/features/text-play/core/types"; // 도메인 계약
+import type { TextPlayChoice, TextPlayLogEntry, TextPlayPackage, TextPlayScene, TextPlayState } from "@/features/text-play/core/types"; // 도메인 계약
 
 export { applyTextPlayActions, getAvailableChoices }; // 공개 엔진 함수
+
+function sceneEntries(scene: TextPlayScene, start: number, now: string): TextPlayLogEntry[] // 장면별 서술과 대사 기록
+{ // 함수 시작
+    const entries: TextPlayLogEntry[] = [{ id: `log-${start}`, kind: "narration", speaker: null, content: scene.narration, sceneId: scene.id, createdAt: now }]; // 장면 서술
+    if (scene.dialogue !== undefined) // 고정 대사 확인
+    { // 조건 시작
+        entries.push({ id: `log-${start + 1}`, kind: "dialogue", ...scene.dialogue, sceneId: scene.id, createdAt: now }); // 등장인물 대사
+    } // 조건 종료
+    return entries; // 장면 기록 반환
+} // 함수 종료
 
 export function createTextPlayState(packageData: TextPlayPackage, now: string): TextPlayState // 초기 상태 생성
 { // 함수 시작
@@ -25,16 +35,7 @@ export function createTextPlayState(packageData: TextPlayPackage, now: string): 
         completedQuestIds: [], // 빈 완료 퀘스트
         eventFlags: {}, // 빈 이벤트 상태
         endingId: initialScene.endingId, // 초기 엔딩 상태
-        log: // 초기 기록
-        [ // 기록 시작
-            { // 서술 기록 시작
-                id: "log-0", // 기록 식별자
-                kind: "narration", // 기록 종류
-                speaker: null, // 발화자 없음
-                content: initialScene.narration, // 시작 서술
-                createdAt: now, // 생성 시각
-            }, // 서술 기록 종료
-        ], // 기록 종료
+        log: sceneEntries(initialScene, 0, now), // 초기 서술과 대사
         playTimeSeconds: 0, // 초기 플레이 시간
         updatedAt: now, // 초기 갱신 시각
     }; // 상태 종료
@@ -81,13 +82,7 @@ export function selectTextPlayChoice(packageData: TextPlayPackage, state: TextPl
                 content: choice.label, // 선택 내용
                 createdAt: now, // 생성 시각
             }, // 선택 기록 종료
-            { // 장면 기록 시작
-                id: `log-${actionResult.state.log.length + 1}`, // 기록 식별자
-                kind: "narration", // 기록 종류
-                speaker: null, // 발화자 없음
-                content: targetScene.narration, // 장면 서술
-                createdAt: now, // 생성 시각
-            }, // 장면 기록 종료
+            ...sceneEntries(targetScene, actionResult.state.log.length + 1, now), // 대상 장면 서술과 대사
         ], // 기록 종료
         updatedAt: now, // 갱신 시각 적용
     }; // 상태 종료

@@ -12,5 +12,5 @@ export function getAvailableChoices(packageData: TextPlayPackage, state: TextPla
         return []; // 엔딩 선택지 차단
     } // 조건 종료
 
-    return findTextPlayScene(packageData, state.sceneId)?.choices ?? []; // 현재 장면 선택지 반환
+    return (findTextPlayScene(packageData, state.sceneId)?.choices ?? []).filter((choice) => choice.requiredItemId === undefined || (state.inventory[choice.requiredItemId] ?? 0) > 0); // 보유 조건을 만족하는 선택지 반환
 } // 함수 종료

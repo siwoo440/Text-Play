@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react"; // 리액트 도구
 import { filterTextPlayWorks, getTextPlayGenreKeyByLabel, localizeTextPlayWork, TEXT_PLAY_CATEGORIES, TEXT_PLAY_WORKS, type TextPlayWork } from "@/features/text-play/catalog/text-play-catalog"; // 작품 목록
 import type { TextPlaySaveSlot } from "@/features/text-play/core/types"; // 저장 슬롯 계약
 import { DEMO_TEXT_PLAY_PACKAGE } from "@/features/text-play/data/demo-package"; // 샘플 작품
-import { dateLocale } from "@/features/text-play/i18n/localized-text"; // 숫자 표시 지역
 import { useTextPlayPlatform } from "@/features/text-play/platform/text-play-platform"; // 플랫폼 훅
 import { useAppLanguage } from "@/features/text-play/preferences/TextPlayPreferencesProvider"; // 고른 언어
 import { TEXT_PLAY_MEMORY_STORAGE_WARNING } from "@/features/text-play/storage/browser-save-repository"; // 메모리 저장 경고
@@ -49,7 +48,7 @@ function WorkCard({ work: original, onSelect }: { work: TextPlayWork; onSelect(w
             <span className={styles.cardBody}> {/* 카드 설명 */}
                 <strong>{work.title}</strong> {/* 작품 제목 */}
                 <span>{work.summary}</span> {/* 한 줄 소개 */}
-                <small>{text.plays(work.playCount.toLocaleString(dateLocale(language)))}</small> {/* 플레이 수 */}
+                <small>{work.playable ? text.playable : text.unavailable}</small> {/* 실제 제공 상태 */}
             </span> {/* 설명 종료 */}
         </button> // 카드 종료
     ); // 반환 종료
@@ -98,8 +97,8 @@ export function TextPlayHome({ repository, showHeader = false }: TextPlayHomePro
     const defaultView = query.trim().length === 0 && category === "전체"; // 기본 화면 판정
     const featured = localizeTextPlayWork(TEXT_PLAY_WORKS.find((work) => work.playable) ?? TEXT_PLAY_WORKS[0], language); // 오늘의 작품(고른 언어)
     const detail = selectedWork === null ? null : localizeTextPlayWork(selectedWork, language); // 상세 작품(고른 언어)
-    const ranking = defaultView ? TEXT_PLAY_WORKS.slice(0, 10) : []; // 랭킹 작품
-    const browsable = defaultView ? TEXT_PLAY_WORKS.slice(10) : filtered; // 탐색 대상
+    const playableWorks = filtered.filter((work) => work.playable); // 실제 플레이 작품
+    const browsable = filtered.filter((work) => !work.playable); // 공개 예정 작품
     const visibleWorks = browsable.slice(0, visibleCount); // 현재 표시 작품
     const resumeSummary = resumeSlot === null ? null : formatTextPlaySaveSummary(resumeSlot, language); // 이어하기 요약
     const updateQuery = (value: string) => // 검색어 변경
@@ -129,7 +128,7 @@ export function TextPlayHome({ repository, showHeader = false }: TextPlayHomePro
                     </span> {/* 브랜드 종료 */}
                     <nav aria-label={text.mainMenu}> {/* 주요 메뉴 */}
                         <button type="button" className={styles.navLink} data-accent="explore" aria-current="page" onClick={() => scrollToSection("text-play-top")}>{text.explore}</button> {/* 탐색 메뉴 */}
-                        <button type="button" className={styles.navLink} data-accent="ranking" onClick={() => scrollToSection("text-play-ranking")}>{text.ranking}</button> {/* 랭킹 메뉴 */}
+                        <button type="button" className={styles.navLink} data-accent="ranking" onClick={() => scrollToSection("text-play-ranking")}>{text.playableWorks}</button> {/* 공개 작품 메뉴 */}
                         <button type="button" className={styles.navLink} data-accent="library" onClick={() => scrollToSection("text-play-catalog")}>{text.allWorks}</button> {/* 전체 메뉴 */}
                     </nav> {/* 메뉴 종료 */}
                     {resumeSlot === null ? <button type="button" className={styles.headerAction} onClick={() => platform.navigate("new")}>{text.quickStart}</button> : <button type="button" className={styles.headerAction} onClick={() => platform.navigate("resume")}>{text.quickResume}</button>} {/* 빠른 실행 */}
@@ -140,7 +139,7 @@ export function TextPlayHome({ repository, showHeader = false }: TextPlayHomePro
                     <div> {/* 소개 문구 */}
                         <span className={styles.eyebrow}>{text.eyebrow}</span> {/* 상단 문구 */}
                         <h1 id="text-play-title">{text.titleBefore}<span className={styles.titleHighlight}>{text.titleHighlight}</span>{text.titleAfter}</h1> {/* 페이지 제목 */}
-                        <p className={styles.heroLead}>{text.lead(TEXT_PLAY_WORKS.length)}</p> {/* 페이지 설명 */}
+                        <p className={styles.heroLead}>{text.catalogLead(TEXT_PLAY_WORKS.filter((work) => work.playable).length, TEXT_PLAY_WORKS.filter((work) => !work.playable).length)}</p> {/* 실제 작품과 예정 작품 구분 */}
                     </div> {/* 문구 종료 */}
                     <div className={styles.searchBox}> {/* 검색 영역 */}
                         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg> {/* 검색 아이콘 */}
@@ -164,22 +163,22 @@ export function TextPlayHome({ repository, showHeader = false }: TextPlayHomePro
                         <span className={styles.featuredCover}><WorkCover work={featured} priority /></span> {/* 작품 표지 */}
                     </section> // 오늘의 작품 종료
                 ) : null} {/* 오늘의 작품 종료 */}
-                {ranking.length > 0 ? ( // 랭킹 확인
-                    <section id="text-play-ranking" className={styles.ranking} aria-labelledby="ranking-title"> {/* 랭킹 영역 */}
+                {playableWorks.length > 0 ? ( // 실제 공개 작품 확인
+                    <section id="text-play-ranking" className={styles.ranking} aria-labelledby="ranking-title"> {/* 공개 작품 영역 */}
                         <div className={styles.sectionHeading}> {/* 제목 묶음 */}
                             <div> {/* 제목 문구 */}
-                                <span>{text.rankingLead}</span> {/* 제목 설명 */}
-                                <h2 id="ranking-title">{text.ranking}</h2> {/* 랭킹 제목 */}
+                                <span>{text.playable}</span> {/* 실제 상태 */}
+                                <h2 id="ranking-title">{text.playableWorks}</h2> {/* 공개 작품 제목 */}
                             </div> {/* 문구 종료 */}
-                            <strong>TOP 10</strong> {/* 순위 범위 */}
+                            <strong>{playableWorks.length}</strong> {/* 실제 작품 수 */}
                         </div> {/* 제목 종료 */}
                         <ol className={styles.rankingGrid}> {/* 랭킹 목록 */}
-                            {ranking.map((work, index) => <li key={work.id} className={styles.rankingItem}><span className={styles.rankBadge} data-rank={index < 3 ? index + 1 : undefined}>{text.rank(index + 1)}</span><WorkCard work={work} onSelect={setSelectedWork} /></li>)} {/* 랭킹 항목 */}
+                            {playableWorks.map((work) => <li key={work.id} className={styles.rankingItem}><WorkCard work={work} onSelect={setSelectedWork} /></li>)} {/* 플레이 가능 작품 */}
                         </ol> {/* 목록 종료 */}
                     </section> // 랭킹 종료
                 ) : null} {/* 랭킹 종료 */}
-                <section id="text-play-catalog" className={styles.rail} aria-labelledby="catalog-title"> {/* 작품 목록 */}
-                    <h2 id="catalog-title">{defaultView ? text.allWorks : text.searchResults}</h2> {/* 목록 제목 */}
+                <section id="text-play-catalog" className={styles.rail} aria-label={text.upcomingWorks}> {/* 공개 예정 목록 */}
+                    <h2 id="catalog-title">{defaultView ? text.upcomingWorks : text.searchResults}</h2> {/* 예정 작품 또는 검색 결과 */}
                     <div className={styles.grid}>{visibleWorks.map((work) => <WorkCard key={work.id} work={work} onSelect={setSelectedWork} />)}</div> {/* 작품 카드 */}
                     {visibleWorks.length < browsable.length ? <button type="button" className={styles.loadMore} onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}>{text.more}</button> : null} {/* 더 보기 */}
                     {filtered.length === 0 ? <p className={styles.empty} role="status">{text.empty}</p> : null} {/* 빈 결과 */}
@@ -192,7 +191,7 @@ export function TextPlayHome({ repository, showHeader = false }: TextPlayHomePro
                         <div> {/* 상세 설명 */}
                             <span className={styles.featuredLabel}>{language === "ko" || detail.genre === "other" ? detail.genreLabel : text.genreNames[detail.genre]}</span> {/* 장르 표시 */}
                             <h2 id="work-detail-title">{detail.title}</h2> {/* 작품 제목 */}
-                            <p className={styles.detailLead}>{text.leadInfo(detail.leadName, text.plays(detail.playCount.toLocaleString(dateLocale(language))))}</p> {/* 작품 정보 */}
+                            <p className={styles.detailLead}>{text.leadInfo(detail.leadName, detail.playable ? text.playable : text.preparing)}</p> {/* 실제 제공 상태 */}
                             <p id="work-detail-description">{detail.description}</p> {/* 상세 소개 */}
                             <ul className={styles.tagList} aria-label={text.tags}>{detail.tags.map((tag) => <li key={tag}>#{tag}</li>)}</ul> {/* 태그 목록 */}
                             {detail.playable ? playActions(true) : <div className={styles.actions}><button type="button" className={styles.primary} disabled>{text.unavailable}</button></div>} {/* 상세 동작 */}

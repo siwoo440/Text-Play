@@ -18,6 +18,7 @@ export interface TextPlayLogEntry // 플레이 기록 구조
     speaker: string | null; // 발화자 이름
     content: string; // 표시 내용
     createdAt: string; // 생성 시각
+    sceneId?: string; // 연결 장면 식별자(이전 저장은 생략 가능)
 } // 구조 종료
 
 export interface TextPlayChoice // 선택지 구조
@@ -26,6 +27,7 @@ export interface TextPlayChoice // 선택지 구조
     label: string; // 선택지 문구
     targetSceneId: string; // 이동 장면
     actions: TextPlayAction[]; // 적용 액션
+    requiredItemId?: string; // 선택에 필요한 보유 아이템
 } // 구조 종료
 
 export interface TextPlayScene // 장면 구조
@@ -34,6 +36,10 @@ export interface TextPlayScene // 장면 구조
     title: string; // 장면 제목
     locationId: string; // 장소 식별자
     narration: string; // 기본 서술
+    dialogue?: { speaker: string; content: string }; // 장면 고정 대사
+    objective?: string; // 현재 장면 목표
+    observation?: string; // 임시 AI의 장면 관찰
+    freeActions?: string[]; // 장면별 관찰 추천
     imagePath: string | null; // 정적 이미지 경로
     choices: TextPlayChoice[]; // 선택지 목록
     endingId: string | null; // 엔딩 식별자
@@ -78,7 +84,7 @@ export interface TextPlayPackageTranslation // 작품 다른 언어판(식별자
 { // 구조 시작
     title: string; // 작품 제목
     description: string; // 작품 설명
-    scenes: Record<string, { title: string; narration: string; choices: Record<string, string> }>; // 장면 제목·서술·선택지 문구
+    scenes: Record<string, { title: string; narration: string; choices: Record<string, string>; dialogue?: { speaker: string; content: string }; objective?: string; observation?: string; freeActions?: string[] }>; // 장면별 언어판
     endings: Record<string, { title: string; summary: string }>; // 엔딩 제목·요약
     glossary: TextPlayGlossary; // 용어 이름과 소개
 } // 구조 종료
@@ -101,6 +107,7 @@ export interface TextPlayPackage // 작품 패키지 구조
     characterIds: string[]; // 캐릭터 식별자 목록
     glossary?: TextPlayGlossary; // 표시 이름과 소개(없으면 식별자 그대로)
     translations?: { en?: TextPlayPackageTranslation }; // 다른 언어판(없으면 원문)
+    legacyLogTranslations?: { ko: string; en: string }[]; // 이전 저장에 남은 고정 문구의 언어 쌍
     scenes: TextPlayScene[]; // 장면 목록
     endings: TextPlayEnding[]; // 엔딩 목록
 } // 구조 종료

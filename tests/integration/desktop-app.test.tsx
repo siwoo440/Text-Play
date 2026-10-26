@@ -311,7 +311,7 @@ describe("데스크톱 앱", () => // 데스크톱 앱 묶음
         expect(screen.getByLabelText("AI 연결")).toHaveTextContent("임시 인공지능"); // 임시 인공지능 표시 확인
         await user.type(screen.getByRole("textbox", { name: "행동 직접 입력" }), "문양을 살핀다"); // 자유 행동 입력
         await user.click(screen.getByRole("button", { name: "전송" })); // 자유 행동 전송
-        expect(await screen.findByText("그 선택을 기억할게.")).toBeInTheDocument(); // Mock 응답 완료 확인
+        expect(await screen.findByText("등불 가까이의 이끼만 은빛으로 반짝인다. 숲의 흔적은 빛이 닿는 곳부터 확인할 수 있다.")).toBeInTheDocument(); // 장면 관찰 응답 확인
         expect(fetchSpy).not.toHaveBeenCalled(); // 네트워크 미사용 확인
         await user.click(screen.getByRole("button", { name: "메인으로 돌아가기: 달빛 숲의 기록" })); // 홈 복귀
         expect(await screen.findByRole("button", { name: "새 게임" })).toBeInTheDocument(); // 홈 화면 확인

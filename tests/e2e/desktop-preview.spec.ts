@@ -19,6 +19,7 @@ async function blockExternalRequests(page: Page): Promise<string[]> // 외부 �
 
 async function chooseRecommendation(page: Page, label: string): Promise<void> // 추천 답안 선택 도우미
 { // 함수 시작
+    await expect(page.getByRole("textbox", { name: "행동 직접 입력" })).toBeEnabled(); // 진행 중 응답 완료 대기
     const toggle = page.getByRole("button", { name: "AI 추천 답안" }); // 펼침 버튼 조회
     if (await toggle.getAttribute("aria-expanded") !== "true") // 접힘 상태 확인
     { // 조건 시작
@@ -41,6 +42,77 @@ test("Mock 플레이를 저장하고 새 세션에서 이어간다", async ({ pa
     await expect(resumedPage.getByLabel("AI 연결")).toHaveText("임시 인공지능"); // 임시 인공지능 표시 확인
 }); // 테스트 종료
 
+for (const branch of ["호수", "종탑"]) // 대표 작품의 두 탐색 경로
+{ // 분기 검증 시작
+    test(`${branch} 탐색을 저장·복원하고 그림과 진실 엔딩을 확인한다`, async ({ page }) => // 확장 작품 종단 검증
+    { // 테스트 시작
+        await page.setViewportSize({ width: 960, height: 640 }); // 최소 창 크기
+        await page.goto("/#/text-play"); // 작품 메인 진입
+        await page.getByRole("button", { name: "새 게임" }).click(); // 이야기 시작
+        for (const label of ["달빛 등불을 든다", "봉인된 서재로 간다", "기록을 해독한다", "편지의 지도를 따라간다"]) // 공통 도입부
+        { // 도입 순회
+            await chooseRecommendation(page, label); // 장면 진행
+        } // 도입 종료
+        const lake = branch === "호수"; // 경로 구분
+        await chooseRecommendation(page, lake ? "호수에 남은 기억을 따라간다" : "종탑의 신호를 조사한다"); // 탐색 분기
+        const image = page.getByRole("region", { name: "장면 무대" }).locator("img"); // 실제 장면 이미지
+        await expect(image).toHaveAttribute("src", new RegExp(`${lake ? "lake" : "tower"}\\.png$`, "u")); // 분기 이미지
+        expect(await image.evaluate((element) => (element as HTMLImageElement).complete && (element as HTMLImageElement).naturalWidth > 0)).toBe(true); // 이미지 로딩 확인
+        await page.getByRole("button", { name: "저장 슬롯 열기" }).click(); // 저장 패널
+        await page.getByRole("group", { name: "수동 저장 슬롯 1" }).getByRole("button", { name: "저장" }).click(); // 분기 저장
+        await page.getByRole("button", { name: "닫기" }).click(); // 패널 닫기
+        await page.reload(); // 새 화면 생성
+        await page.getByRole("button", { name: "불러오기 슬롯 열기" }).click(); // 저장 복원 패널
+        page.once("dialog", async (dialog) => // 덮어쓰기 확인
+        { // 확인 시작
+            await dialog.accept(); // 저장 복원 승인
+        }); // 확인 종료
+        await page.getByRole("group", { name: "수동 저장 슬롯 1" }).getByRole("button", { name: "불러오기" }).click(); // 분기 복원
+        await expect(page.getByRole("heading", { name: lake ? "거울 호수" : "무너진 종탑" })).toBeVisible(); // 복원 장면
+        await page.getByRole("button", { name: "1턴 보기" }).click(); // 지난 장면 열람
+        await expect(image).toHaveAttribute("src", /forest\.png$/u); // 과거 이미지 복원
+        await page.getByRole("button", { name: "6턴 보기" }).click(); // 저장된 최신 장면 복귀
+        for (const label of [lake ? "수면에 남은 발자국을 읽는다" : "종의 떨림에 귀를 기울인다", lake ? "은빛 실을 받아 계단으로 간다" : "공명 열쇠를 들고 계단으로 간다", "등불을 앞세워 내려간다"]) // 분기 단서 획득
+        { // 탐색 순회
+            await chooseRecommendation(page, label); // 실제 선택
+        } // 탐색 종료
+        await page.getByRole("button", { name: "AI 추천 답안" }).click(); // 조건 선택지 열기
+        await expect(page.getByRole("button", { name: lake ? "공명 열쇠로 문을 연다" : "은빛 실로 끊어진 문양을 잇는다" })).toHaveCount(0); // 미획득 단서 선택 숨김
+        await chooseRecommendation(page, lake ? "은빛 실로 끊어진 문양을 잇는다" : "공명 열쇠로 문을 연다"); // 획득 단서 사용
+        for (const label of ["리라의 마지막 기록을 읽는다", "리라와 함께 숲의 심장으로 간다", "흩어진 이름을 차례로 맞춘다", "기록을 밖으로 가져간다", "사라진 이름들을 세상에 전한다"]) // 진실 완결
+        { // 결말 순회
+            await chooseRecommendation(page, label); // 장면 진행
+        } // 결말 종료
+        await expect(page.getByRole("region", { name: "엔딩" }).getByRole("heading", { name: "기록의 진실" })).toBeVisible(); // 정상 엔딩
+        await expect(page.getByLabel("전체 턴 15")).toBeVisible(); // 실제 콘텐츠 길이
+        await expect(image).toHaveAttribute("src", /truth\.png$/u); // 엔딩 전용 그림
+        expect(await measureFit(page)).toEqual({ documentScrolls: false, contentOverflows: false }); // 확장 진행 UI 창 맞춤
+        await page.screenshot({ path: `test-results/representative-${lake ? "lake" : "tower"}-ending.png`, animations: "disabled" }); // 등장 효과 완료 화면 검토
+    }); // 테스트 종료
+} // 분기 검증 종료
+
+test("영어로 저장한 고정 임시 응답을 한국어로 전환한다", async ({ page }) => // 독립 검토 수정의 실제 화면 검증
+{ // 테스트 시작
+    await page.goto("/#/text-play"); // 작품 메인 진입
+    await page.getByRole("button", { name: "새 게임" }).click(); // 새 이야기
+    await page.getByRole("button", { name: "게임 설정 열기" }).click(); // 설정 열기
+    await page.getByRole("combobox", { name: "언어 / Language" }).selectOption("en"); // 영어로 전환
+    await page.getByRole("button", { name: "Close", exact: true }).click(); // 설정 닫기
+    await page.getByRole("textbox", { name: "Type an action" }).fill("Examine the lantern"); // 영어 행동 입력
+    await page.getByRole("button", { name: "Send", exact: true }).click(); // 임시 응답 요청
+    await expect(page.getByText("Only the moss beside the lantern glints silver. The forest's traces are clearest where its light reaches.")).toBeVisible(); // 영어 관찰 확인
+    await expect(page.getByRole("textbox", { name: "Type an action" })).toBeEnabled(); // 응답 완료
+    await page.getByRole("button", { name: "Open game settings" }).click(); // 다시 설정
+    await page.getByRole("combobox", { name: "언어 / Language" }).selectOption("ko"); // 한국어로 전환
+    await page.getByRole("button", { name: "닫기", exact: true }).click(); // 설정 닫기
+    await expect(page.getByText("등불 가까이의 이끼만 은빛으로 반짝인다. 숲의 흔적은 빛이 닿는 곳부터 확인할 수 있다.")).toBeVisible(); // 저장 관찰 역방향 번역
+    await expect(page.getByText("거기 누구인가요? 제 이름은 리라예요. 등불을 들어 주면, 당신에게 길을 보여 줄 수 있어요.")).toBeVisible(); // 저장 대사 역방향 번역
+    await page.getByRole("button", { name: "메인으로 돌아가기: 달빛 숲의 기록" }).click(); // 새 게임 경로 종료
+    await page.reload(); // 메인 화면 재시작
+    await page.getByRole("button", { name: "이어하기", exact: true }).click(); // 자동 저장 복원
+    await expect(page.getByText("등불 가까이의 이끼만 은빛으로 반짝인다. 숲의 흔적은 빛이 닿는 곳부터 확인할 수 있다.")).toBeVisible(); // 재시작 이후 번역 유지
+}); // 테스트 종료
+
 test("자유 입력을 외부 네트워크 없이 처리한다", async ({ page }) => // 오프라인 AI 검증
 { // 테스트 시작
     const externalRequests = await blockExternalRequests(page); // 외부 요청 차단
@@ -48,7 +120,7 @@ test("자유 입력을 외부 네트워크 없이 처리한다", async ({ page }
     await page.getByRole("button", { name: "새 게임" }).click(); // 새 게임 시작
     await page.getByRole("textbox", { name: "행동 직접 입력" }).fill("문양을 자세히 살핀다"); // 자유 행동 입력
     await page.getByRole("button", { name: "전송" }).click(); // 자유 행동 전송
-    await expect(page.getByText("그 선택을 기억할게.")).toBeVisible(); // Mock 응답 확인
+    await expect(page.getByText("등불 가까이의 이끼만 은빛으로 반짝인다. 숲의 흔적은 빛이 닿는 곳부터 확인할 수 있다.")).toBeVisible(); // 현재 장면 관찰 응답
     expect(externalRequests).toEqual([]); // 외부 요청 부재 확인
 }); // 테스트 종료
 
@@ -60,12 +132,12 @@ test("Enter로 행동을 보내고 엔딩 화면에서 처음부터 다시 시�
     const input = page.getByRole("textbox", { name: "행동 직접 입력" }); // 입력칸 조회
     await input.fill("문양을 자세히 살핀다"); // 자유 행동 입력
     await input.press("Enter"); // Enter로 전송
-    await expect(page.getByText("그 선택을 기억할게.")).toBeVisible(); // Mock 응답 확인
+    await expect(page.getByText("등불 가까이의 이끼만 은빛으로 반짝인다. 숲의 흔적은 빛이 닿는 곳부터 확인할 수 있다.")).toBeVisible(); // 현재 장면 관찰 응답
     await expect(input).toHaveValue(""); // 입력칸 비움 확인
     await chooseRecommendation(page, "숲 밖으로 후퇴한다"); // 후퇴 엔딩으로 이동
     const ending = page.getByRole("region", { name: "엔딩" }); // 엔딩 화면 조회
     await expect(ending.getByRole("heading", { name: "돌아가는 길" })).toBeVisible(); // 엔딩 제목 확인
-    await expect(ending.getByText("달빛 숲의 입구에서 탐사를 포기하고 돌아왔다.")).toBeVisible(); // 엔딩 요약 확인
+    await expect(ending.getByText("숲의 봉인을 남겨 두고 돌아왔다. 기억과 다음 선택의 가능성은 숲에 남아 있다.")).toBeVisible(); // 귀환 엔딩 요약
     await expect(page.getByRole("textbox", { name: "행동 직접 입력" })).toHaveCount(0); // 직접 입력 막힘 확인
     const endingBox = await ending.boundingBox(); // 엔딩 화면 위치
     expect((endingBox?.y ?? 0) + (endingBox?.height ?? 0)).toBeLessThanOrEqual(720); // 엔딩 화면이 창 안에 들어옴
@@ -189,7 +261,7 @@ test("최소 창 960×640에서 메인은 스크롤바 없이 스크롤하고 �
         return area === null || area === undefined ? -1 : area.scrollHeight - area.clientHeight; // 넘침 높이 반환
     }); // 측정 종료
     expect(overflow).toBe(0); // 추천 영역 스크롤 부재 확인
-    await expect(page.getByRole("button", { name: "주변을 자세히 살핀다" })).toBeVisible(); // 세 번째 답안 표시 확인
+    await expect(page.getByRole("button", { name: "달빛 숲 입구의 단서를 자세히 살핀다" })).toBeVisible(); // 장면별 세 번째 답안 확인
 }); // 테스트 종료
 
 for (const size of [{ width: 960, height: 640 }, { width: 1280, height: 720 }, { width: 1920, height: 1080 }]) // 검증 창 크기 순회

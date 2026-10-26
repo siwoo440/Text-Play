@@ -114,7 +114,7 @@ function describeLogEntry(words: ContextWords, translate: (text: string) => stri
     } // 조건 종료
     if (entry.kind === "dialogue") // 대사 확인
     { // 조건 시작
-        return `${name(entry.speaker ?? "")}: ${entry.content}`; // 대사 줄(표시 이름)
+        return `${name(entry.speaker ?? "")}: ${translate(entry.content)}`; // 고정 대사를 고른 언어로 전달
     } // 조건 종료
     return `${words.narration}: ${translate(entry.content)}`; // 서술 줄
 } // 함수 종료
@@ -147,6 +147,7 @@ export function buildTextPlayContext(packageData: TextPlayPackage, state: TextPl
 { // 함수 시작
     const localized = localizeTextPlayPackage(packageData, language); // 고른 언어의 작품
     const words = WORDS[language]; // 언어별 문구
+    const scene = findTextPlayScene(localized, state.sceneId); // 현재 언어의 장면
     return { // 구조화 입력 반환
         system: words.rules(localized.title, characterName(localized, localized.characterIds[0] ?? "")).join("\n"), // 이야기꾼 규칙
         context: createContext(createSpeakerNamer(packageData, language), localized, state, words, createTextTranslator(packageData, language)), // 쉬운 말 장면 문맥
@@ -154,5 +155,6 @@ export function buildTextPlayContext(packageData: TextPlayPackage, state: TextPl
         responseSchema: "{ narration: string, dialogue: { speaker: string, content: string } | null, proposedActions: ({ type: \"change-stat\", stat: \"hp\" | \"sanity\" | \"gold\", amount: number } | { type: \"add-item\" | \"remove-item\", itemId: string, quantity: number } | { type: \"change-relation\", characterId: string, amount: number })[] }", // 응답 형식 설명(형식 강제가 없는 AI용)
         jsonSchema: createTextPlayResponseJsonSchema(localized, language), // 형식 강제 스키마(발화자는 고른 언어 이름)
         language, // 답변 언어
+        ...(scene?.observation === undefined ? {} : { mockSceneReply: { narration: scene.observation, dialogue: scene.dialogue ?? null } }), // 오프라인 관찰용 문맥
     }; // 입력 종료
 } // 함수 종료

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"; // 테스트 도구
 import { applyTextPlayActions, createTextPlayState, getAvailableChoices, selectTextPlayChoice } from "@/features/text-play/core/engine"; // 엔진 함수
 import { DEMO_TEXT_PLAY_PACKAGE } from "@/features/text-play/data/demo-package"; // 샘플 패키지
+import { MOONLIT_LAKE_CONTINUATION } from "@/test/moonlit-story-route"; // 확장 경로
 
 describe("Text-Play Engine", () => // 엔진 검증 묶음
 { // 묶음 시작
@@ -52,7 +53,12 @@ describe("Text-Play Engine", () => // 엔진 검증 묶음
         const initial = createTextPlayState(DEMO_TEXT_PLAY_PACKAGE, "2026-09-25T00:00:00.000Z"); // 초기 상태 생성
         const lantern = selectTextPlayChoice(DEMO_TEXT_PLAY_PACKAGE, initial, "take-lantern", "2026-09-25T00:01:00.000Z"); // 등불 선택
         const study = selectTextPlayChoice(DEMO_TEXT_PLAY_PACKAGE, lantern.state, "enter-study", "2026-09-25T00:02:00.000Z"); // 서재 선택
-        const ending = selectTextPlayChoice(DEMO_TEXT_PLAY_PACKAGE, study.state, "decode-records", "2026-09-25T00:03:00.000Z"); // 기록 해독
+        let ending = selectTextPlayChoice(DEMO_TEXT_PLAY_PACKAGE, study.state, "decode-records", "2026-09-25T00:03:00.000Z"); // 기록 해독
+        for (const [id] of MOONLIT_LAKE_CONTINUATION) // 실제 이야기 경로
+        { // 순회 시작
+            ending = selectTextPlayChoice(DEMO_TEXT_PLAY_PACKAGE, ending.state, id, ending.state.updatedAt); // 확장 선택 적용
+            expect(ending.ok, id).toBe(true); // 단계별 성공 확인
+        } // 순회 종료
         expect(study.state.activeQuestIds).toEqual(["voices-below"]); // 진행 퀘스트 확인
         expect(ending.ok).toBe(true); // 엔딩 처리 성공 확인
         expect(ending.state.sceneId).toBe("truth-ending"); // 엔딩 장면 확인

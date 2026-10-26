@@ -39,7 +39,7 @@ function appendAIResponse(state: TextPlayState, input: string, narration: string
     const entries: TextPlayLogEntry[] = // 추가 기록 목록
     [ // 목록 시작
         { id: `log-${state.log.length}`, kind: "system", speaker: null, content: input, createdAt: now }, // 사용자 입력 기록
-        { id: `log-${state.log.length + 1}`, kind: "narration", speaker: null, content: narration, createdAt: now }, // AI 서술 기록
+        { id: `log-${state.log.length + 1}`, kind: "narration", speaker: null, content: narration, sceneId: state.sceneId, createdAt: now }, // AI 서술과 현재 장면 기록
     ]; // 목록 종료
     if (dialogue !== null) // 대사 존재 확인
     { // 조건 시작

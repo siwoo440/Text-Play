@@ -77,7 +77,7 @@ describe("Text-Play 플레이 화면", () => // 플레이 검증 묶음
         expect(screen.getByRole("button", { name: "상태 패널 열기" })).toHaveAttribute("aria-controls", "text-play-state-panel"); // 패널 제어 확인
         expect(screen.getByRole("region", { name: "시스템 안내" })).toHaveAttribute("aria-live", "polite"); // 안내 영역 확인
         expect(screen.getByLabelText("AI 연결")).toHaveTextContent("임시 인공지능"); // 공급자 상태 확인
-        expect(screen.getByTestId("scene-image")).toHaveTextContent("/images/scenes/moon-library.svg"); // 플랫폼 이미지 확인
+        expect(screen.getByTestId("scene-image")).toHaveTextContent("/images/text-play/moonlit/forest.png"); // 제작 이미지 확인
     }); // 테스트 종료
 
     it("실패한 자유 입력을 같은 내용으로 다시 시도한다", async () => // 재시도 검증
@@ -117,11 +117,11 @@ describe("Text-Play 플레이 화면", () => // 플레이 검증 묶음
         await chooseTextPlayRecommendation(user, "달빛 등불을 든다"); // 다음 장면 생성
         expect(screen.getByLabelText("현재 턴 2")).toHaveTextContent("2"); // 최신 현재 턴 확인
         expect(screen.getByLabelText("전체 턴 2")).toHaveTextContent("2"); // 생성된 전체 턴 확인
-        expect(screen.getByTestId("scene-image")).toHaveTextContent("/images/scenes/dawn-letter.svg"); // 최신 이미지 확인
+        expect(screen.getByTestId("scene-image")).toHaveTextContent("/images/text-play/moonlit/hall.png"); // 최신 이미지 확인
         await user.click(screen.getByRole("button", { name: "이전 턴 보기" })); // 이전 턴 이동
         expect(screen.getByLabelText("현재 턴 1")).toHaveTextContent("1"); // 이동한 현재 턴 확인
         expect(screen.getByLabelText("전체 턴 2")).toHaveTextContent("2"); // 전체 턴 유지 확인
-        expect(screen.getByTestId("scene-image")).toHaveTextContent("/images/scenes/moon-library.svg"); // 이전 이미지 확인
+        expect(screen.getByTestId("scene-image")).toHaveTextContent("/images/text-play/moonlit/forest.png"); // 이전 이미지 확인
         expect(screen.getByText("은빛 안개 너머에서 낡은 등불이 희미하게 빛난다.")).toBeInTheDocument(); // 이전 이야기 확인
         expect(screen.getByRole("button", { name: "1턴 보기" })).toHaveAttribute("aria-current", "step"); // 현재 위치 점 확인
         await chooseTextPlayRecommendation(user, "봉인된 서재로 간다"); // 과거 열람 중 새 장면 생성
@@ -143,7 +143,7 @@ describe("Text-Play 플레이 화면", () => // 플레이 검증 묶음
         const list = screen.getByRole("list", { name: "AI 추천 답안 목록" }); // 답안 목록 조회
         const answers = within(list).getAllByRole("button"); // 답안 버튼 조회
         expect(answers).toHaveLength(3); // 답안 3개 확인
-        expect(answers.map((answer) => answer.textContent)).toEqual(["달빛 등불을 든다", "숲 밖으로 후퇴한다", "주변을 자세히 살핀다"]); // 답안 순서 확인
+        expect(answers.map((answer) => answer.textContent)).toEqual(["달빛 등불을 든다", "숲 밖으로 후퇴한다", "달빛 숲 입구의 단서를 자세히 살핀다"]); // 장면별 추천 확인
         expect(toggle.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy(); // 제목 아래 목록 확인
         await user.click(screen.getByRole("button", { name: "달빛 등불을 든다" })); // 답안 선택
         expect(screen.getByRole("button", { name: "AI 추천 답안" })).toHaveAttribute("aria-expanded", "false"); // 새 턴 접힘 확인
@@ -171,9 +171,9 @@ describe("Text-Play 플레이 화면", () => // 플레이 검증 묶음
         }; // 객체 종료
         render(<TextPlayPlatformProvider value={createPlatform()}><TextPlayPreferencesProvider><TextPlayProvider initialState={createPreparedTextPlaySessionState()} repository={new MemoryTextPlaySaveRepository()} llm={adapter}><TextPlayScreen /></TextPlayProvider></TextPlayPreferencesProvider></TextPlayPlatformProvider>); // 화면 렌더
         await user.click(screen.getByRole("button", { name: "AI 추천 답안" })); // 추천 펼치기
-        await user.click(screen.getByRole("button", { name: "주변을 자세히 살핀다" })); // 자유 행동 추천 선택
+        await user.click(screen.getByRole("button", { name: "달빛 숲 입구의 단서를 자세히 살핀다" })); // 장면 관찰 선택
         expect(await screen.findByText("주변을 살폈다")).toBeInTheDocument(); // 응답 기록 확인
-        expect(inputs).toEqual(["주변을 자세히 살핀다"]); // 자유 입력 전달 확인
+        expect(inputs).toEqual(["달빛 숲 입구의 단서를 자세히 살핀다"]); // 장면 관찰 전달 확인
     }); // 테스트 종료
 
     it("서버 첫 렌더의 플레이 화면에는 저장 경고를 넣지 않는다", () => // 화면 불일치 방지 검증

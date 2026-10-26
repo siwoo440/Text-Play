@@ -13,6 +13,7 @@ const requiredAssets = // 필수 장면 자산
     "images/characters/harin.webp", // ChatBot 캐릭터 이미지
     "images/characters/prologues/harin-prologue-v1.png", // ChatBot 프롤로그 이미지
     "images/text-play/moonlit-forest-cover.svg", // Text-Play 작품 표지
+    ...["forest", "hall", "study", "lake", "tower", "stairs", "archive", "heart", "truth", "retreat"].map((name) => `images/text-play/moonlit/${name}.png`), // 대표 작품의 제작 이미지
 ]; // 목록 종료
 const forbiddenStrings = ["MATEVERSE_LLM_API_TOKEN", "/api/llm"]; // 금지 문자열 목록
 

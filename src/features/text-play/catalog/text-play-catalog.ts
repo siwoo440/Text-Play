@@ -71,8 +71,8 @@ const demoWork = createWork( // 실제 샘플 작품
     summary: DEMO_TEXT_PLAY_PACKAGE.description, // 한 줄 소개
     description: "달빛 등불을 들고 사라진 기록을 따라가 숲 아래에서 들려오는 목소리의 정체를 밝히는 판타지 미스터리입니다. 선택지와 직접 입력으로 이야기를 이어 갑니다.", // 상세 소개
     tags: ["판타지", "미스터리", "기록"], // 검색 태그
-    coverImage: "/images/text-play/moonlit-forest-cover.svg", // 대표 이미지
-    playCount: 212400, // 플레이 수
+    coverImage: "/images/text-play/moonlit/forest.png", // 제작 대표 이미지
+    playCount: 0, // 실제 통계 미연결
     playable: true, // 플레이 가능
 }); // 작품 종료
 
@@ -87,7 +87,7 @@ const baseWorkTitles: Readonly<Record<string, { title: string; leadName: string 
     yuna: { title: "옥상 밴드의 미완성 노래", leadName: "유나" }, // 유나 작품
 }; // 제목 종료
 
-const baseWorks = mockCharacters.filter((character) => baseWorkTitles[character.id] !== undefined).map((character, index) => createWork( // 기본 캐릭터 작품 변환
+const baseWorks = mockCharacters.filter((character) => baseWorkTitles[character.id] !== undefined).map((character) => createWork( // 기본 캐릭터 작품 변환
 { // 작품 시작
     id: `work-${character.id}`, // 작품 식별자
     title: baseWorkTitles[character.id].title, // 작품 제목
@@ -96,7 +96,7 @@ const baseWorks = mockCharacters.filter((character) => baseWorkTitles[character.
     description: `${character.description} ${character.worldSetting}`, // 상세 소개
     tags: [...character.tags], // 검색 태그
     coverImage: character.coverImage, // 대표 이미지
-    playCount: 184000 - index * 9600, // 플레이 수
+    playCount: 0, // 예정 작품 통계 없음
     playable: false, // 준비 중
 })); // 변환 종료
 
@@ -109,11 +109,11 @@ const conceptWorks = rankingCharacterConcepts.slice(0, 43).map((concept, index) 
     description: `${concept.setting}에서 ${concept.role} ${withKoreanParticle(concept.name, "를", "을")} 만나 ${concept.signature}에 얽힌 사건을 선택과 직접 입력으로 풀어 갑니다.`, // 상세 소개
     tags: [...concept.tags], // 검색 태그
     coverImage: `/images/characters/rank-${String(index + 8).padStart(3, "0")}.webp`, // 대표 이미지
-    playCount: 112000 - index * 1730, // 플레이 수
+    playCount: 0, // 예정 작품 통계 없음
     playable: false, // 준비 중
 })); // 변환 종료
 
-export const TEXT_PLAY_WORKS: TextPlayWork[] = [demoWork, ...baseWorks, ...conceptWorks].sort((left, right) => right.playCount - left.playCount); // 전체 작품 목록
+export const TEXT_PLAY_WORKS: TextPlayWork[] = [demoWork, ...baseWorks, ...conceptWorks]; // 실제 작품 우선·예정 작품 후순위
 
 export function filterTextPlayWorks(works: readonly TextPlayWork[], query: string, category: string): TextPlayWork[] // 작품 필터
 { // 함수 시작

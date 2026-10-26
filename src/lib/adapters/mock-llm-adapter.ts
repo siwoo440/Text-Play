@@ -59,7 +59,8 @@ export class MockLLMAdapter implements LLMAdapter // Mock 대화 어댑터
         const key = `${input.system}|${input.context}|${input.userInput}|${input.responseSchema}|${this.seed}`; // 결정 키
         const english = input.language === "en"; // 영어 답변 여부
         const narrations = english ? englishNarrations : structuredNarrations; // 언어별 서술 목록
-        const response = JSON.stringify({ narration: narrations[hash(key) % narrations.length], dialogue: { speaker: "lyra", content: english ? "I will remember that choice." : "그 선택을 기억할게." }, proposedActions: [{ type: "change-relation", characterId: "lyra", amount: 1 }] }); // 구조화 응답 생성
+        const reply = input.mockSceneReply ?? { narration: narrations[hash(key) % narrations.length], dialogue: { speaker: "lyra", content: english ? "I will remember that choice." : "그 선택을 기억할게." } }; // 현재 장면의 관찰 우선
+        const response = JSON.stringify({ ...reply, proposedActions: input.mockSceneReply === undefined ? [{ type: "change-relation", characterId: "lyra", amount: 1 }] : [] }); // 장면 관찰의 상태 변경 방지
         const words = response.split(" "); // 단어 분리
         for (const [index, word] of words.entries()) // 단어 순회
         { // 순회 시작

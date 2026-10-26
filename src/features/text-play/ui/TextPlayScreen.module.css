@@ -511,6 +511,23 @@
     color: var(--accent); /* 발화자 색상 */
 } /* 발화자 종료 */
 
+.progressSummary /* 현재 진행 요약 */
+{ /* 요약 시작 */
+    display: flex; /* 한 줄 배치 */
+    flex-wrap: wrap; /* 작은 화면 줄바꿈 */
+    gap: 4px 18px; /* 정보 사이 간격 */
+    align-items: center; /* 세로 가운데 */
+    color: var(--muted-text); /* 보조 글자 */
+    font-size: .72rem; /* 간결한 정보 크기 */
+    line-height: 1.45; /* 읽기 간격 */
+} /* 요약 종료 */
+
+.progressSummary strong /* 현재 목표 */
+{ /* 목표 시작 */
+    color: var(--accent); /* 강조 글자 */
+    font-weight: 650; /* 읽기 강조 */
+} /* 목표 종료 */
+
 .commandDock /* 명령 도크 */
 { /* 도크 시작 */
     display: grid; /* 세로 배치 */

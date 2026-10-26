@@ -13,10 +13,10 @@ describe("Text-Play 작품 목록", () => // 작품 목록 묶음
         expect(TEXT_PLAY_WORKS.every((work) => work.coverImage.startsWith("/images/"))).toBe(true); // 대표 이미지 확인
     }); // 테스트 종료
 
-    it("플레이 수 내림차순으로 정렬한다", () => // 정렬 검증
+    it("실제 집계 전 임의의 플레이 수를 만들지 않는다", () => // 통계 정직성 검증
     { // 테스트 시작
         const counts = TEXT_PLAY_WORKS.map((work) => work.playCount); // 플레이 수 목록
-        expect(counts).toEqual([...counts].sort((left, right) => right - left)); // 내림차순 확인
+        expect(counts.every((count) => count === 0)).toBe(true); // 가상 인기 수치 부재
     }); // 테스트 종료
 
     it("태그의 첫 장르를 대표 장르로 고른다", () => // 장르 판정 검증

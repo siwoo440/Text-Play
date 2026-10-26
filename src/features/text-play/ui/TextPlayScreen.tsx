@@ -42,12 +42,15 @@ export function TextPlayScreen() // Text-Play 플레이 화면
     const viewedPage = storyPages[viewedTurnIndex]; // 현재 페이지 조회
     const scene = useMemo(() => work.scenes.find((candidate) => candidate.id === viewedPage.sceneId) ?? work.scenes[0], [viewedPage.sceneId, work]); // 열람 장면 조회
     const locationName = work.glossary?.locations[scene.locationId] ?? scene.locationId; // 장소 표시 이름
-    const viewedEntries = useMemo(() => viewedPage.entries.map((entry) => ({ ...entry, content: entry.kind === "dialogue" ? entry.content : translate(entry.content), speaker: entry.speaker === null ? null : nameSpeaker(entry.speaker) })), [nameSpeaker, translate, viewedPage.entries]); // 고른 언어로 보이는 기록
-    const recommendations = useMemo(() => buildTextPlayRecommendations(getAvailableChoices(work, state.game), text.choices.freeActions), [state.game, text, work]); // 현재 추천 답안 생성
+    const viewedEntries = useMemo(() => viewedPage.entries.map((entry) => ({ ...entry, content: translate(entry.content), speaker: entry.speaker === null ? null : nameSpeaker(entry.speaker) })), [nameSpeaker, translate, viewedPage.entries]); // 고정 대사를 포함한 언어별 기록
+    const currentScene = work.scenes.find((candidate) => candidate.id === state.game.sceneId); // 실제 진행 장면
+    const recommendations = useMemo(() => buildTextPlayRecommendations(getAvailableChoices(work, state.game), currentScene?.freeActions ?? text.choices.freeActions), [currentScene, state.game, text, work]); // 실제 장면에 맞춘 추천
     const [expandedTurn, setExpandedTurn] = useState<string | null>(null); // 추천 펼침 턴 상태
     const recommendationsExpanded = expandedTurn === state.game.updatedAt; // 현재 턴 펼침 여부
     const ended = state.game.endingId !== null; // 엔딩 도달 여부
     const ending = useMemo(() => work.endings.find((candidate) => candidate.id === state.game.endingId) ?? null, [state.game.endingId, work]); // 도달한 엔딩(고른 언어)
+    const heldItems = Object.entries(state.game.inventory).filter(([, count]) => count > 0).map(([id, count]) => `${work.glossary?.items[id] ?? id} ×${count}`).join(" · "); // 현재 보유 단서
+    const questNames = [...state.game.activeQuestIds, ...state.game.completedQuestIds].map((id) => work.glossary?.quests[id] ?? id).join(" · "); // 진행과 완료 퀘스트
     const startRequest = (value: string) => // 자유 입력 요청 시작
     { // 함수 시작
         if (ended) // 엔딩 뒤 입력 확인
@@ -145,6 +148,11 @@ export function TextPlayScreen() // Text-Play 플레이 화면
                     </section> {/* 스토리 상자 종료 */}
                 </section> {/* 장면 무대 종료 */}
                 <aside className={styles.commandDock} aria-label={text.screen.commands}> {/* 명령 도크 */}
+                    <section className={styles.progressSummary} aria-label={language === "ko" ? "현재 진행" : "Current progress"}> {/* 실제 진행 상태 요약 */}
+                        <strong title={currentScene?.objective}>{currentScene?.objective}</strong> {/* 현재 목표 */}
+                        <span title={heldItems}>{text.status.inventory}: {heldItems || text.status.noItems}</span> {/* 현재 보유 단서 */}
+                        {questNames.length === 0 ? null : <span>{state.game.completedQuestIds.length > 0 ? text.status.completed : text.status.active} · {questNames}</span>} {/* 퀘스트 변화 */}
+                    </section> {/* 진행 요약 종료 */}
                     {ended ? ( // 엔딩 도달 확인
                         <div className={styles.endingDock}> {/* 엔딩 영역(추천 답안과 직접 입력 대신 표시) */}
                             <section className={styles.endingPanel} aria-label={text.ending.region}> {/* 엔딩 화면 */}

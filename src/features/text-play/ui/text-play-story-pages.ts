@@ -25,7 +25,8 @@ export function buildTextPlayStoryPages(entries: TextPlayLogEntry[], packageData
     let activeSceneId = packageData.initialSceneId; // 시작 장면 설정
     const pages = groupedEntries.map((pageEntries) => // 페이지 변환
     { // 변환 시작
-        const matchedScene = packageData.scenes.find((scene) => pageEntries.some((entry) => entry.kind === "narration" && entry.content === scene.narration)); // 장면 서술 연결
+        const explicitId = pageEntries.find((entry) => entry.sceneId !== undefined)?.sceneId; // 저장된 장면 식별자
+        const matchedScene = packageData.scenes.find((scene) => scene.id === explicitId) ?? packageData.scenes.find((scene) => pageEntries.some((entry) => entry.kind === "narration" && entry.content === scene.narration)); // 새 기록 우선·이전 서술 호환
         if (matchedScene !== undefined) // 연결 장면 확인
         { // 조건 시작
             activeSceneId = matchedScene.id; // 연결 장면 갱신

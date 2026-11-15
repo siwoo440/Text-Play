@@ -51,7 +51,7 @@ describe("실행 방식 해석", () => // 실행 방식 묶음
 
     it("로컬 전용 주소·일회용 키·단일 슬롯으로 실행 인자를 만든다", () => // 실행 인자 검증
     { // 테스트 시작
-        const common = ["-m", "m.gguf", "--host", "127.0.0.1", "--port", "4321", "--api-key", "k", "-c", "4096", "-np", "1", "--no-webui", "--jinja", "-t", "8"]; // 공통 인자
+        const common = ["-m", "m.gguf", "--host", "127.0.0.1", "--port", "4321", "--api-key", "k", "-c", "4096", "-np", "1", "--no-webui", "--jinja", "-t", "8", "-lv", "4"]; // 버퍼 측정 로그 포함
         expect(buildLlamaServerArgs({ modelPath: "m.gguf", port: 4321, apiKey: "k", contextLength: 4096, backend: { kind: "vulkan", device: "Vulkan0" }, threads: 8 })).toEqual([...common, "-ngl", "999", "--device", "Vulkan0"]); // 그래픽 실행 인자
         expect(buildLlamaServerArgs({ modelPath: "m.gguf", port: 4321, apiKey: "k", contextLength: 4096, backend: { kind: "cpu", device: null }, threads: 8 })).toEqual([...common, "-ngl", "0"]); // CPU 실행 인자
     }); // 테스트 종료
@@ -89,6 +89,7 @@ describe("측정 요약", () => // 요약 묶음
     it("실행 엔진 기록에서 그래픽·주 메모리 사용량을 더한다", () => // 메모리 합계 검증
     { // 테스트 시작
         expect(summarizeBufferSizes(SERVER_LOG)).toEqual({ gpuMiB: 1992.75, cpuMiB: 230.01 }); // 합계 확인
+        expect(summarizeBufferSizes("기록 없음")).toEqual({ gpuMiB: null, cpuMiB: null }); // 미측정 값을 0으로 오인 방지
     }); // 테스트 종료
 
     it("가까운 순위 방식으로 백분위를 구한다", () => // 백분위 검증

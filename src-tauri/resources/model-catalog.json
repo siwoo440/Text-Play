@@ -6,36 +6,39 @@
       "label": "가벼움 · Mi:dm 2.0 Mini",
       "role": "light",
       "file": "midm-2.0-mini-Q4_K_M.gguf",
-      "sizeBytes": 1426272800,
+      "sizeBytes": 1426272640,
       "license": "MIT",
       "contextLength": 4096,
       "generation": { "temperature": 0.8, "top_p": 0.75, "top_k": 20 },
       "chatTemplateKwargs": null,
-      "download": null
+      "source": { "baseModel": "https://huggingface.co/K-intelligence/Midm-2.0-Mini-Instruct", "publisher": "mykor", "revision": "152690816d5f03763fa32869c651c99a6d7c300f", "licenseUrl": "https://huggingface.co/mykor/Midm-2.0-Mini-Instruct-gguf/blob/152690816d5f03763fa32869c651c99a6d7c300f/LICENSE.txt" },
+      "download": { "url": "https://huggingface.co/mykor/Midm-2.0-Mini-Instruct-gguf/resolve/152690816d5f03763fa32869c651c99a6d7c300f/Midm-2.0-Mini-Instruct-Q4_K_M.gguf", "sha256": "7a945a20ceae202ab7a96d461fa9c3710e62deaffd6654c2106ab5e813fd8225" }
     },
     {
       "id": "qwen3.5-4b",
       "label": "표준 · Qwen3.5-4B",
       "role": "standard",
       "file": "qwen3.5-4b-Q4_K_M.gguf",
-      "sizeBytes": 2900000000,
+      "sizeBytes": 2740937888,
       "license": "Apache-2.0",
       "contextLength": 4096,
       "generation": { "temperature": 0.7, "top_p": 0.8, "top_k": 20, "min_p": 0, "presence_penalty": 1.5 },
       "chatTemplateKwargs": { "enable_thinking": false },
-      "download": null
+      "source": { "baseModel": "https://huggingface.co/Qwen/Qwen3.5-4B", "publisher": "unsloth", "revision": "e87f176479d0855a907a41277aca2f8ee7a09523", "licenseUrl": "https://huggingface.co/Qwen/Qwen3.5-4B/blob/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a/LICENSE" },
+      "download": { "url": "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/e87f176479d0855a907a41277aca2f8ee7a09523/Qwen3.5-4B-Q4_K_M.gguf", "sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4" }
     },
     {
       "id": "qwen3.5-9b",
       "label": "고성능 · Qwen3.5-9B",
       "role": "high",
       "file": "qwen3.5-9b-Q4_K_M.gguf",
-      "sizeBytes": 5900000000,
+      "sizeBytes": 5680522464,
       "license": "Apache-2.0",
       "contextLength": 4096,
       "generation": { "temperature": 0.7, "top_p": 0.8, "top_k": 20, "min_p": 0, "presence_penalty": 1.5 },
       "chatTemplateKwargs": { "enable_thinking": false },
-      "download": null
+      "source": { "baseModel": "https://huggingface.co/Qwen/Qwen3.5-9B", "publisher": "unsloth", "revision": "3885219b6810b007914f3a7950a8d1b469d598a5", "licenseUrl": "https://huggingface.co/Qwen/Qwen3.5-9B/blob/c202236235762e1c871ad0ccb60c8ee5ba337b9a/LICENSE" },
+      "download": { "url": "https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/resolve/3885219b6810b007914f3a7950a8d1b469d598a5/Qwen3.5-9B-Q4_K_M.gguf", "sha256": "03b74727a860a56338e042c4420bb3f04b2fec5734175f4cb9fa853daf52b7e8" }
     }
   ]
 }

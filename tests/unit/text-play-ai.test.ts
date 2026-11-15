@@ -9,6 +9,13 @@ import { localizeTextPlayPackage } from "@/features/text-play/data/localize-pack
 
 describe("Text-Play AI 응답", () => // 응답 검증 묶음
 { // 묶음 시작
+    it("첫 장면의 AI 문맥에 후반부 인물의 비밀을 미리 넣지 않는다", () => // 장면 밖 스포일러 차단
+    { // 검사 시작
+        const state = createTextPlayState(DEMO_TEXT_PLAY_PACKAGE, "2026-10-26T00:00:00Z"); // 첫 장면
+        const { context } = buildTextPlayContext(DEMO_TEXT_PLAY_PACKAGE, state, "리라는 누구인가요"); // 첫 대화 문맥
+        expect(context).not.toContain("돌아오지 못했고"); // 후반 사연 비공개
+        expect(context).not.toContain("돌아갈 몸이 없다는"); // 결말 대사 비공개
+    }); // 검사 종료
     it("잘못된 JSON을 거부한다", () => // JSON 오류 검증
     { // 테스트 시작
         expect(parseTextPlayResponse("not-json")).toEqual({ ok: false, reason: "invalid-json" }); // JSON 거부 확인

@@ -19,3 +19,6 @@ next-env.d.ts
 .env.production.local
 !.env.example
 .local-ai/
+src-tauri/resources/llama-runtime/*
+!src-tauri/resources/llama-runtime/.gitkeep
+src-tauri/resources/licenses/model-catalog.json

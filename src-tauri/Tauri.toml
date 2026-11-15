@@ -3,9 +3,9 @@ version = "0.1.0-preview.1" # 제품 버전
 identifier = "com.mateverse.textplay.preview" # 앱 식별자
 
 [build] # 프런트엔드 빌드 설정
-beforeDevCommand = "pnpm desktop:dev" # 개발 서버 명령
+beforeDevCommand = "pnpm local-ai:bundle && pnpm desktop:dev" # 새 복제본의 실행 엔진 준비 후 개발 서버
 devUrl = "http://127.0.0.1:1420" # 개발 서버 주소
-beforeBuildCommand = "pnpm desktop:build && pnpm desktop:verify-assets" # 배포 빌드 명령
+beforeBuildCommand = "pnpm desktop:build && pnpm desktop:verify-assets && pnpm local-ai:bundle" # 화면과 내장 실행 엔진 준비
 frontendDist = "../desktop-dist" # 배포 자산 폴더
 
 [app] # 앱 설정
@@ -35,6 +35,7 @@ publisher = "MATE Verse" # 게시자 이름
 shortDescription = "임시 응답과 올라마를 지원하는 Text-Play 시험판" # 짧은 설명
 longDescription = "외부 서비스 없이 임시 응답 또는 로컬 올라마 모델로 실행되는 MATE Text-Play 시험판" # 긴 설명
 icon = ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico"] # 앱 아이콘 목록
+resources = { "resources/llama-runtime/" = "llama-runtime/", "resources/licenses/" = "licenses/" } # 서버·의존 DLL과 저작권 고지
 
 [bundle.windows] # Windows 설치 설정
 allowDowngrades = false # 이전 버전 설치 차단

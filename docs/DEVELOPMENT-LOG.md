@@ -4,6 +4,18 @@
 이 문서는 현재 구현 상태와 검증 결과를 누적 기록합니다. 기능 커밋마다 날짜, 변경 파일, 사용자에게 보이는 기능, 테스트 결과와 남은 작업을 갱신합니다.
 
 ---
+## 2026-11-15 — 3단계 진행분과 로컬 경로 저장
+
+사용자 요청에 따라 미커밋 상태로 남아 있던 내장 AI 연결 작업을 체크포인트로 저장합니다. 3단계 전체 완료 기록은 아닙니다.
+
+- 세 모델의 고정 다운로드 계약과 개발용 준비 도구, 실행 엔진·라이선스 번들 연결을 포함합니다.
+- 모델 관리 화면의 다운로드 재진입·취소·중복 선택과 Rust의 무결성·선택/삭제 경합 처리, 43개 실제 장면 평가 문맥을 포함합니다.
+- `docs/HANDOFF.md`에 현재 저장소·주요 소스·개발 모델·실행 엔진·측정 기록·EXE의 위치와 Git 포함 여부를 기록했습니다. 사용자가 이후 파일과 경로를 수정할 때 확인할 코드 위치도 명시했습니다.
+- 이번 저장 전 관련 검사: `corepack pnpm test:run tests/unit/local-ai-distribution.test.ts tests/unit/text-play-ai.test.ts tests/unit/text-play-eval.test.ts tests/unit/local-model-eval.test.ts tests/components/ai-models-screen.test.tsx --maxWorkers=2` — 5개 파일, 46개 통과. `cargo test --locked --manifest-path src-tauri/Cargo.toml` — Rust 46개 통과. `git diff --check` 통과.
+- 전체 테스트의 최종 재실행, 새 소스 폴더 검증, 고성능 CPU 평가, 최종 EXE·실제 화면 검증은 인수인계의 남은 작업을 따릅니다. 앞선 전체 재검증에는 작업자 종료 시간 초과가 기록되어 있습니다.
+- 모델 GGUF·생성 실행 엔진·캐시·측정 기록·EXE·로컬 세이브는 커밋에 포함하지 않습니다. 다른 위치로 옮길 때 별도 보존하거나 다시 준비해야 합니다.
+
+---
 ## 2026-10-26 — 2단계 대표 작품 확장
 
 ---

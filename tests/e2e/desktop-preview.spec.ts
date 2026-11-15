@@ -57,7 +57,7 @@ for (const branch of ["호수", "종탑"]) // 대표 작품의 두 탐색 경로
         await chooseRecommendation(page, lake ? "호수에 남은 기억을 따라간다" : "종탑의 신호를 조사한다"); // 탐색 분기
         const image = page.getByRole("region", { name: "장면 무대" }).locator("img"); // 실제 장면 이미지
         await expect(image).toHaveAttribute("src", new RegExp(`${lake ? "lake" : "tower"}\\.png$`, "u")); // 분기 이미지
-        expect(await image.evaluate((element) => (element as HTMLImageElement).complete && (element as HTMLImageElement).naturalWidth > 0)).toBe(true); // 이미지 로딩 확인
+        await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).complete && (element as HTMLImageElement).naturalWidth > 0)).toBe(true); // 실제 이미지 로딩 완료 대기
         await page.getByRole("button", { name: "저장 슬롯 열기" }).click(); // 저장 패널
         await page.getByRole("group", { name: "수동 저장 슬롯 1" }).getByRole("button", { name: "저장" }).click(); // 분기 저장
         await page.getByRole("button", { name: "닫기" }).click(); // 패널 닫기

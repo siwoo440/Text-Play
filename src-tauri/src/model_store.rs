@@ -211,6 +211,7 @@ pub struct ModelStore // 모델 보관함
     pub(crate) catalog: Catalog, // 모델 목록
     allow_loopback: bool, // 개발용 로컬 주소 허용
     active: Mutex<Option<String>>, // 사용 중 모델
+    selection_revision: Mutex<u64>, // 화면 이동과 무관한 선택·삭제 요청 순서
     downloads: Mutex<HashMap<String, Arc<AtomicBool>>>, // 받는 중 모델과 취소 표시
 } // 구조 종료
 
@@ -220,7 +221,7 @@ impl ModelStore // 보관함 동작
     { // 함수 시작
         let saved: StoreFile = std::fs::read_to_string(directory.join("store.json")).ok().and_then(|text| serde_json::from_str(&text).ok()).unwrap_or_default(); // 저장된 선택
         let active = saved.active_model_id.filter(|id| catalog.models.iter().any(|model| &model.id == id)); // 목록에 있는 선택만
-        Self { directory, catalog, allow_loopback, active: Mutex::new(active), downloads: Mutex::new(HashMap::new()) } // 보관함 반환
+        Self { directory, catalog, allow_loopback, active: Mutex::new(active), selection_revision: Mutex::new(0), downloads: Mutex::new(HashMap::new()) } // 보관함 반환
     } // 함수 종료
 
     pub fn directory(&self) -> &std::path::Path // 모델 폴더
@@ -370,13 +371,19 @@ impl ModelStore // 보관함 동작
             let started = Instant::now(); // 시작 시각
             let mut last_emit: Option<Instant> = None; // 마지막 알림
             let mut stream = response.bytes_stream(); // 응답 스트림
-            while let Some(part_bytes) = stream.next().await // 조각 순회
+            loop // 조각 수신과 취소 감시
             { // 반복 시작
                 if cancel.load(Ordering::SeqCst) // 취소 확인
                 { // 조건 시작
                     return Err(CANCELLED_DOWNLOAD.to_string()); // 취소(받은 부분은 이어받기용으로 둠)
                 } // 조건 종료
-                let bytes = part_bytes.map_err(|_| "받는 중 연결이 끊겼습니다. 다시 받으면 이어서 받습니다.".to_string())?; // 조각
+                let part_bytes = match tokio::time::timeout(PROGRESS_INTERVAL, stream.next()).await // 멈춘 연결에서도 취소 확인
+                { // 대기 결과 시작
+                    Ok(Some(bytes)) => bytes, // 받은 조각
+                    Ok(None) => break, // 수신 종료
+                    Err(_) => continue, // 짧은 대기 후 취소 재확인
+                }; // 대기 결과 종료
+                let bytes = part_bytes.map_err(|_| "받는 중 연결이 끊겼습니다. 다시 받으면 이어서 받습니다.".to_string())?; // 연결 오류 안내
                 received = received.saturating_add(bytes.len() as u64); // 받은 크기
                 if received > model.size_bytes // 크기 초과 확인
                 { // 조건 시작
@@ -425,13 +432,17 @@ impl ModelStore // 보관함 동작
         } // 조건 종료
     } // 함수 종료
 
-    pub fn delete(&self, id: &str) -> Result<bool, String> // 모델 삭제(선택 모델이었는지 반환)
+    fn delete_with<F: FnOnce(bool)>(&self, id: &str, before_delete: F) -> Result<bool, String> // 선택과 경합하지 않는 모델 삭제
     { // 함수 시작
         let model = self.model(id).ok_or_else(|| "모델을 찾을 수 없습니다.".to_string())?.clone(); // 모델
+        let mut revision = self.selection_revision.lock().map_err(|_| "모델 작업 상태를 확인하지 못했습니다.".to_string())?; // 선택 완료와 삭제 직렬화
         if self.downloads.lock().map(|downloads| downloads.contains_key(id)).unwrap_or(false) // 받는 중 확인
         { // 조건 시작
             return Err("받는 중에는 지울 수 없습니다. 먼저 취소해 주세요.".to_string()); // 받는 중 오류
         } // 조건 종료
+        *revision = revision.wrapping_add(1); // 이전 검사 결과 무효화
+        let was_active = self.is_active(id); // 잠금 안에서 실제 선택 확인
+        before_delete(was_active); // 선택한 모델의 실행 엔진 종료
         for path in [self.final_path(&model), self.part_path(&model)] // 파일 순회
         { // 반복 시작
             if path.exists() // 파일 확인
@@ -439,7 +450,6 @@ impl ModelStore // 보관함 동작
                 std::fs::remove_file(&path).map_err(|_| "모델 파일을 지우지 못했습니다(사용 중일 수 있음).".to_string())?; // 파일 삭제
             } // 조건 종료
         } // 반복 종료
-        let was_active = self.active_id().as_deref() == Some(id); // 선택 모델 여부
         if was_active // 선택 해제 확인
         { // 조건 시작
             self.save_active(None)?; // 선택 해제 저장
@@ -447,22 +457,66 @@ impl ModelStore // 보관함 동작
         Ok(was_active) // 결과 반환
     } // 함수 종료
 
+    #[cfg(test)] // 단위 테스트의 파일 삭제 경로
+    pub fn delete(&self, id: &str) -> Result<bool, String> // 엔진 없는 시험 삭제
+    { // 함수 시작
+        self.delete_with(id, |_| {}) // 같은 삭제 거래 사용
+    } // 함수 종료
+
+    fn verify_model_file(path: &std::path::Path, model: &CatalogModel) -> Result<(), String> // 선택과 재시작 전 파일 무결성
+    { // 함수 시작
+        if std::fs::metadata(path).map(|metadata| metadata.len()).ok() != Some(model.size_bytes) // 실제 파일 크기 확인
+        { // 조건 시작
+            return Err("먼저 모델을 받아 주세요.".to_string()); // 누락 또는 잘린 파일
+        } // 조건 종료
+        if let Some(download) = &model.download // 고정 배포 파일 확인
+        { // 조건 시작
+            if sha256_file(path)? != download.sha256 // 내용까지 검사
+            { // 조건 시작
+                return Err("모델 SHA-256이 다릅니다. 모델을 삭제한 뒤 다시 받아 주세요.".to_string()); // 손상 파일 실행 차단
+            } // 조건 종료
+        } // 조건 종료
+        Ok(()) // 무결성 확인
+    } // 함수 종료
+
+    fn begin_selection(&self) -> Result<u64, String> // 모델 선택 요청 식별자
+    { // 함수 시작
+        let mut revision = self.selection_revision.lock().map_err(|_| "모델 작업 상태를 확인하지 못했습니다.".to_string())?; // 요청 순서 잠금
+        *revision = revision.wrapping_add(1); // 최신 요청 식별자
+        Ok(*revision) // 검사에 연결할 순서 반환
+    } // 함수 종료
+
+    fn finish_selection<F: FnOnce(ModelSpec)>(&self, model: &CatalogModel, revision: u64, apply: F) -> Result<(), String> // 검사된 모델 선택과 엔진 반영
+    { // 함수 시작
+        let current = self.selection_revision.lock().map_err(|_| "모델 작업 상태를 확인하지 못했습니다.".to_string())?; // 선택 저장과 엔진 적용 거래
+        if *current != revision || !self.is_installed(model) // 최신 요청과 파일 유지 확인
+        { // 조건 시작
+            return Err("다른 모델 작업이 시작되어 이전 선택을 중단했습니다. 사용할 모델을 다시 확인해 주세요.".to_string()); // 오래된 검사 결과 거부
+        } // 조건 종료
+        self.save_active(Some(model.id.clone()))?; // 선택 저장
+        apply(self.spec(model)); // 실행 설정 반영
+        Ok(()) // 선택 완료
+    } // 함수 종료
+
+    #[cfg(test)] // 동기 검사 경로는 단위 테스트 전용
     pub fn select(&self, id: &str) -> Result<ModelSpec, String> // 사용할 모델 선택
     { // 함수 시작
         let model = self.model(id).ok_or_else(|| "모델을 찾을 수 없습니다.".to_string())?.clone(); // 모델
+        let revision = self.begin_selection()?; // 선택 요청 시작
         if !self.is_installed(&model) // 설치 확인
         { // 조건 시작
             return Err("먼저 모델을 받아 주세요.".to_string()); // 미설치 오류
         } // 조건 종료
-        self.save_active(Some(model.id.clone()))?; // 선택 저장
-        Ok(self.spec(&model)) // 모델 정보 반환
+        Self::verify_model_file(&self.final_path(&model), &model)?; // 크기가 같아도 내용 검사
+        self.finish_selection(&model, revision, |_| {})?; // 검사 후 선택 저장
+        Ok(self.spec(&model)) // 테스트 선택 결과
     } // 함수 종료
 
     pub fn active_spec(&self) -> Option<ModelSpec> // 사용 중이고 설치된 모델 정보
     { // 함수 시작
         let id = self.active_id()?; // 선택 식별자
         let model = self.model(&id)?; // 모델
-        self.is_installed(model).then(|| self.spec(model)) // 설치된 경우만 반환
+        Self::verify_model_file(&self.final_path(model), model).ok().map(|_| self.spec(model)) // 다시 시작할 때 손상 모델 제외
     } // 함수 종료
 
     pub fn store_view(&self) -> StoreView // 화면용 보관함 정보
@@ -497,18 +551,24 @@ pub fn cancel_model_download(model_id: String, store: State<'_, ModelStore>) // 
 #[tauri::command] // Tauri 명령 표시
 pub fn delete_model(model_id: String, store: State<'_, ModelStore>, runtime: State<'_, LocalRuntimeManager>) -> Result<(), String> // 모델 삭제 명령
 { // 함수 시작
-    if store.is_active(&model_id) // 사용 중 모델 확인
-    { // 조건 시작
-        runtime.set_model(None); // 엔진 끄고 모델 해제(파일 잠금 풀기)
-    } // 조건 종료
-    store.delete(&model_id).map(|_| ()) // 삭제
+    store.delete_with(&model_id, |was_active| // 선택 완료와 함께 보호한 삭제
+    { // 처리 시작
+        if was_active // 실제 선택 모델 확인
+        { // 조건 시작
+            runtime.set_model(None); // 파일 삭제 전 엔진 종료
+        } // 조건 종료
+    }).map(|_| ()) // 삭제 완료
 } // 함수 종료
 
 #[tauri::command] // Tauri 명령 표시
-pub fn select_model(model_id: String, store: State<'_, ModelStore>, runtime: State<'_, LocalRuntimeManager>) -> Result<(), String> // 모델 선택 명령
+pub async fn select_model(model_id: String, store: State<'_, ModelStore>, runtime: State<'_, LocalRuntimeManager>) -> Result<(), String> // 모델 선택 명령
 { // 함수 시작
-    let spec = store.select(&model_id)?; // 선택
-    runtime.set_model(Some(spec)); // 엔진에 반영(켜져 있으면 끄고 다음 요청에 새 모델로)
+    let model = store.model(&model_id).ok_or_else(|| "모델을 찾을 수 없습니다.".to_string())?.clone(); // 선택할 모델 계약
+    let revision = store.begin_selection()?; // 비동기 검사 전 요청 식별
+    let path = store.final_path(&model); // 실제 모델 파일
+    let checked = model.clone(); // 검사 스레드의 독립 계약
+    tauri::async_runtime::spawn_blocking(move || ModelStore::verify_model_file(&path, &checked)).await.map_err(|_| "모델을 검사하지 못했습니다.".to_string())??; // 화면을 멈추지 않는 무결성 검사
+    store.finish_selection(&model, revision, |spec| runtime.set_model(Some(spec)))?; // 검사와 요청 확인 후 엔진 반영
     Ok(()) // 완료
 } // 함수 종료
 
@@ -720,6 +780,78 @@ mod tests // 단위 테스트 모듈
         assert!(store.active_spec().is_none()); // 선택 해제 확인
         assert_eq!(store.view(&HardwareInfo::default(), None)[0].status, "not-installed"); // 상태 확인
     } // 함수 종료
+
+    #[test] // 테스트 표시
+    fn selecting_same_size_tampered_model_is_rejected() // 같은 크기 파일 위변조 거부
+    { // 검사 시작
+        let original = vec![5u8; 50]; // 정상 모델 내용
+        let (store, directory) = store_for(Some("http://127.0.0.1:9/model.gguf"), &original); // 해시가 있는 배포 계약
+        std::fs::write(directory.join("light.gguf"), vec![6u8; 50]).expect("잘못된 파일"); // 크기만 같은 손상 파일
+        assert!(store.select("light-model").is_err()); // 선택 전 무결성 검사
+        assert!(store.active_spec().is_none()); // 손상 모델 활성화 차단
+    } // 검사 종료
+
+    #[test] // 테스트 표시
+    fn older_selection_cannot_override_a_newer_model_choice() // 느린 이전 선택의 최신 선택 덮기 차단
+    { // 검사 시작
+        let directory = temp_dir(); // 독립 모델 폴더
+        let mut catalog = parse_catalog(&catalog_json(None, "", 50), true).expect("목록"); // 작은 시험 모델
+        catalog.models[1].size_bytes = 50; // 두 번째 모델도 작은 파일
+        let store = ModelStore::new(directory.clone(), catalog, true); // 보관함 생성
+        std::fs::write(directory.join("light.gguf"), [1u8; 50]).expect("첫 파일"); // 검사할 첫 모델
+        std::fs::write(directory.join("standard.gguf"), [2u8; 50]).expect("다음 파일"); // 새로 선택할 모델
+        let older = store.begin_selection().expect("이전 요청"); // 느린 해시 검사 시작
+        store.select("standard-model").expect("최신 선택"); // 사용자의 새 선택 완료
+        let mut applied = false; // 이전 엔진 적용 여부
+        let result = store.finish_selection(store.model("light-model").expect("모델"), older, |_| applied = true); // 늦게 끝난 이전 검사
+        assert!(result.is_err()); // 오래된 요청 거부
+        assert!(!applied); // 이전 엔진 재적용 차단
+        assert_eq!(store.active_id().as_deref(), Some("standard-model")); // 최신 사용자 선택 유지
+    } // 검사 종료
+
+    #[test] // 테스트 표시
+    fn deleted_model_cannot_be_activated_by_an_inflight_check() // 검사 중 삭제된 모델 재활성화 차단
+    { // 검사 시작
+        let (store, directory) = store_for(None, &[5u8; 50]); // 작은 시험 보관함
+        std::fs::write(directory.join("light.gguf"), [5u8; 50]).expect("파일"); // 검사할 파일
+        let revision = store.begin_selection().expect("검사 요청"); // 느린 검사 시작
+        store.delete("light-model").expect("새 삭제 요청"); // 검사 중 사용자 삭제
+        let mut applied = false; // 삭제된 엔진 적용 여부
+        let result = store.finish_selection(store.model("light-model").expect("모델"), revision, |_| applied = true); // 늦은 검사 완료
+        assert!(result.is_err()); // 삭제된 모델 선택 거부
+        assert!(!applied); // 삭제된 경로 실행 차단
+        assert!(store.active_id().is_none()); // 선택 해제 유지
+    } // 검사 종료
+
+    #[test] // 테스트 표시
+    fn cancelling_stalled_body_does_not_wait_for_the_next_chunk() // 멈춘 연결 취소 응답성
+    { // 검사 시작
+        let listener = TcpListener::bind("127.0.0.1:0").expect("서버"); // 로컬 시험 서버
+        let address = format!("http://{}/model.gguf", listener.local_addr().expect("주소")); // 개발용 받기 주소
+        std::thread::spawn(move || // 첫 조각 이후 멈추는 서버
+        { // 서버 시작
+            let (mut socket, _) = listener.accept().expect("연결"); // 다운로드 연결
+            let mut request = [0u8; 2048]; // 요청 버퍼
+            let _ = socket.read(&mut request); // 요청 수신
+            socket.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 100\r\nConnection: close\r\n\r\n\x09").expect("첫 조각"); // 첫 바이트 전달
+            socket.flush().expect("전달"); // 즉시 진행 사건 발생
+            std::thread::sleep(Duration::from_secs(2)); // 다음 조각 지연
+            let _ = socket.write_all(&[9u8; 99]); // 남은 데이터
+        }); // 서버 종료
+        let (store, _) = store_for(Some(&address), &[9u8; 100]); // 검증 해시가 있는 보관함
+        let store = Arc::new(store); // 취소와 수신 공유
+        let cancel = store.clone(); // 취소용 참조
+        let started = Instant::now(); // 취소 응답 시간
+        let result = tauri::async_runtime::block_on(store.download("light-model", None, move |event| // 실제 수신
+        { // 사건 시작
+            if matches!(event, DownloadEvent::Progress { .. }) // 첫 진행 사건
+            { // 조건 시작
+                cancel.cancel("light-model"); // 멈춘 연결 취소
+            } // 조건 종료
+        })); // 수신 종료
+        assert!(result.expect_err("취소").starts_with("DOWNLOAD_CANCELLED")); // 취소 종류 유지
+        assert!(started.elapsed() < Duration::from_secs(1)); // 다음 조각을 기다리지 않는 취소
+    } // 검사 종료
 
     #[test] // 테스트 표시
     fn view_reports_fitness_room_and_availability() // 화면용 정보 검증

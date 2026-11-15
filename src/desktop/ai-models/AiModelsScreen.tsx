@@ -29,7 +29,33 @@ export function AiModelsScreen({ client }: AiModelsScreenProps): ReactElement //
     const [progress, setProgress] = useState<Record<string, DownloadProgress>>({}); // 받는 중 모델
     const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null); // 삭제 확인 중 모델
     const [notice, setNotice] = useState<string | null>(null); // 안내 문구
+    const [acting, setActing] = useState(false); // 모델 검사·선택·삭제 경합 차단
     const load = useCallback(() => Promise.all([client.getStore(), client.getRuntimeStatus()]), [client]); // 보관함·엔진 조회
+    const receiving = Object.keys(progress).length > 0 || (store?.models.some((model) => model.status === "downloading") ?? false); // 다른 화면의 받기 포함
+    useEffect(() => // 받는 동안 실제 보관함 상태 갱신
+    { // 효과 시작
+        if (!receiving) // 진행 중 받기 확인
+        { // 조건 시작
+            return; // 유휴 조회 생략
+        } // 조건 종료
+        let disposed = false; // 화면 종료 표시
+        const timer = window.setInterval(() => // 복귀한 받기의 진행 확인
+        { // 주기 시작
+            void load().then(([nextStore, nextRuntime]) => // 최신 보관함과 엔진
+            { // 갱신 시작
+                if (!disposed) // 화면 유지 확인
+                { // 조건 시작
+                    setStore(nextStore); // 받은 분량과 완료 반영
+                    setRuntime(nextRuntime); // 실제 실행 방식 반영
+                } // 조건 종료
+            }, () => undefined); // 일시 조회 실패는 다음 주기에 재시도
+        }, 1_000); // 초당 한 번 조회
+        return () => // 화면 종료 정리
+        { // 정리 시작
+            disposed = true; // 늦은 응답 무시
+            window.clearInterval(timer); // 주기 조회 종료
+        }; // 정리 종료
+    }, [load, receiving]); // 진행 중인 경우만 감시
     const refresh = async () => // 정보 다시 읽기
     { // 함수 시작
         try // 조회 시도
@@ -101,6 +127,11 @@ export function AiModelsScreen({ client }: AiModelsScreenProps): ReactElement //
     }; // 함수 종료
     const runAction = async (action: () => Promise<void>, done: string) => // 선택·삭제·끄기 공통 처리
     { // 함수 시작
+        if (acting) // 이미 진행하는 작업 확인
+        { // 조건 시작
+            return; // 중복 선택과 삭제 생략
+        } // 조건 종료
+        setActing(true); // 검사와 적용 작업 시작
         setNotice(null); // 안내 지우기
         try // 실행 시도
         { // 시도 시작
@@ -113,10 +144,12 @@ export function AiModelsScreen({ client }: AiModelsScreenProps): ReactElement //
         } // 실패 종료
         setConfirmingDelete(null); // 삭제 확인 닫기
         await refresh(); // 정보 다시 읽기
+        setActing(false); // 다른 모델 작업 허용
     }; // 함수 종료
     const renderActions = (model: ModelView): ReactElement => // 모델 카드 버튼
     { // 함수 시작
-        const current = progress[model.id]; // 받는 중 상태
+        const ownProgress = progress[model.id]; // 이 화면이 받은 실시간 상태
+        const current = ownProgress ?? (model.status === "downloading" ? { receivedBytes: model.downloadedBytes, totalBytes: model.sizeBytes, bytesPerSecond: 0, verifying: false } : undefined); // 화면 복귀 시 보관함 진행률 사용
         if (current !== undefined) // 받는 중 확인
         { // 조건 시작
             const shown = formatProgress(current.receivedBytes, current.totalBytes || model.sizeBytes, current.bytesPerSecond, language); // 진행률 표시
@@ -124,7 +157,7 @@ export function AiModelsScreen({ client }: AiModelsScreenProps): ReactElement //
                 <div className={styles.progress}> {/* 진행률 묶음 */}
                     <div className={styles.progressTrack} role="progressbar" aria-label={text.progressLabel(modelDisplayName(model.label, language))} aria-valuemin={0} aria-valuemax={100} aria-valuenow={shown.percent}><span style={{ width: `${shown.percent}%` }} /></div> {/* 진행 막대 */}
                     <p>{current.verifying ? text.verifying : shown.text}</p> {/* 진행 문구 */}
-                    <button type="button" className={styles.secondary} onClick={() => void client.cancel(model.id)}>{text.cancel}</button> {/* 취소 */}
+                    <button type="button" className={styles.secondary} onClick={() => void (ownProgress === undefined ? runAction(() => client.cancel(model.id), text.cancelled) : client.cancel(model.id))}>{text.cancel}</button> {/* 화면 복귀 후에도 취소 */}
                 </div> // 진행률 종료
             ); // 반환 종료
         } // 조건 종료
@@ -132,10 +165,10 @@ export function AiModelsScreen({ client }: AiModelsScreenProps): ReactElement //
         { // 조건 시작
             return ( // 설치된 모델 버튼
                 <div className={styles.actions}> {/* 버튼 묶음 */}
-                    {model.active ? null : <button type="button" className={styles.primary} onClick={() => void runAction(() => client.select(model.id), text.selected(modelDisplayName(model.label, language)))}>{text.use}</button>} {/* 사용하기 */}
+                    {model.active ? null : <button type="button" disabled={acting} className={styles.primary} onClick={() => void runAction(() => client.select(model.id), text.selected(modelDisplayName(model.label, language)))}>{text.use}</button>} {/* 모델 검사 중 중복 선택 차단 */}
                     {confirmingDelete === model.id // 삭제 확인 중 확인
-                        ? <><span className={styles.confirm}>{text.confirmDelete}</span><button type="button" className={styles.danger} onClick={() => void runAction(() => client.remove(model.id), text.removed(modelDisplayName(model.label, language)))}>{text.deleteConfirm}</button><button type="button" className={styles.secondary} onClick={() => setConfirmingDelete(null)}>{text.keep}</button></> // 삭제 확인
-                        : <button type="button" className={styles.secondary} onClick={() => setConfirmingDelete(model.id)}>{text.remove}</button>} {/* 삭제 */}
+                        ? <><span className={styles.confirm}>{text.confirmDelete}</span><button type="button" disabled={acting} className={styles.danger} onClick={() => void runAction(() => client.remove(model.id), text.removed(modelDisplayName(model.label, language)))}>{text.deleteConfirm}</button><button type="button" className={styles.secondary} onClick={() => setConfirmingDelete(null)}>{text.keep}</button></> // 삭제 확인
+                        : <button type="button" disabled={acting} className={styles.secondary} onClick={() => setConfirmingDelete(model.id)}>{text.remove}</button>} {/* 검사 중 삭제 차단 */}
                 </div> // 버튼 묶음 종료
             ); // 반환 종료
         } // 조건 종료

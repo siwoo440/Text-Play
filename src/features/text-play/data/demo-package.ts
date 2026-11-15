@@ -24,7 +24,7 @@ export const DEMO_TEXT_PLAY_PACKAGE: TextPlayPackage = // 대표 작품 패키�
     ], // 호환 번역 종료
     glossary: // 한국어 용어
     { // 용어 시작
-        characters: { lyra: { name: "리라", description: "달빛 숲의 기록관. 구조 신호를 조사하다 돌아오지 못했고 지금은 희미한 목소리로 곁에 머문다. 현재 장면에서 드러난 기억만 이야기하며 결말을 미리 말하지 않는다. 차분하고 조심스러운 말투." } }, // 인물 소개
+        characters: { lyra: { name: "리라", description: "달빛 숲의 기록관. 잃어버린 기록을 찾는 당신에게 조용히 말을 건넨다. 현재 장면과 최근 기록에서 드러난 사실만 이야기하며 자신의 과거와 결말을 미리 말하지 않는다. 차분하고 조심스러운 말투." } }, // 현재 공개된 인물 정보
         items: { "moon-lantern": "달빛 등불", "record-fragment": "기록 조각", "silver-thread": "은빛 실", "resonance-key": "공명 열쇠" }, // 단서 이름
         locations: Object.fromEntries(MOONLIT_SCENES.map((entry) => [entry.id, entry.title])), // 장면 표시 이름
         quests: { "voices-below": "숲 아래의 목소리" }, // 퀘스트 이름
@@ -50,7 +50,7 @@ export const DEMO_TEXT_PLAY_PACKAGE: TextPlayPackage = // 대표 작품 패키�
             }, // 엔딩 종료
             glossary: // 영어 용어
             { // 용어 시작
-                characters: { lyra: { name: "Lyra", description: "The archivist of the moonlit forest. She never returned from investigating a call for help, and remains as a faint voice. She speaks calmly and shares only memories revealed in the current scene, never future events." } }, // 인물 소개
+                characters: { lyra: { name: "Lyra", description: "The archivist of the moonlit forest. She speaks quietly to you as you search for lost records. She shares only facts revealed in the current scene and recent log, never her hidden past or future events." } }, // 현재 공개된 영어 인물 정보
                 items: { "moon-lantern": "Moon Lantern", "record-fragment": "Record Fragment", "silver-thread": "Silver Thread", "resonance-key": "Resonance Key" }, // 아이템 이름
                 locations: Object.fromEntries(Object.entries(MOONLIT_ENGLISH_SCENES).map(([id, entry]) => [id, entry.title])), // 위치 이름
                 quests: { "voices-below": "Voices Beneath the Forest" }, // 퀘스트 이름

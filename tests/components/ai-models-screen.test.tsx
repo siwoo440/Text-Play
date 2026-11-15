@@ -8,6 +8,37 @@ import { DEFAULT_TEXT_PLAY_PREFERENCES, saveTextPlayPreferences } from "@/featur
 
 const GIB = 1_073_741_824; // 1GiB
 
+describe("백그라운드 모델 다운로드", () => // 화면 복귀 후 받기 관리
+{ // 묶음 시작
+    it("모델 검사와 적용 중에는 다른 모델을 동시에 선택하지 않는다", async () => // 느린 무결성 검사 중 중복 선택 차단
+    { // 검사 시작
+        const user = userEvent.setup(); // 사용자 동작
+        const { client } = createClient([model({ status: "installed" }), model({ id: "qwen3.5-4b", label: "표준 · Qwen3.5-4B", role: "standard", status: "installed" })]); // 설치된 두 모델
+        client.select.mockImplementation(() => new Promise<void>(() => undefined)); // 검사 진행 중 상태
+        render(<AiModelsScreen client={client} />); // 화면 렌더
+        const buttons = await screen.findAllByRole("button", { name: "사용하기" }); // 두 모델 선택 동작
+        await user.click(buttons[0]); // 첫 모델 검사 시작
+        expect(buttons[1]).toBeDisabled(); // 다른 선택 경합 차단
+        expect(screen.getAllByRole("button", { name: "삭제" }).every((button) => (button as HTMLButtonElement).disabled)).toBe(true); // 검사 중 파일 삭제 차단
+    }); // 검사 종료
+
+    it("다시 열린 화면에서도 진행률과 취소를 제공하고 이어받기로 전환한다", async () => // 재진입 회귀
+    { // 검사 시작
+        const user = userEvent.setup(); // 사용자 동작
+        const { client } = createClient([model({ status: "downloading", downloadedBytes: 800_000_000 })]); // 다른 화면에서 시작한 받기
+        client.cancel.mockResolvedValue(undefined); // 백그라운드 취소 성공
+        render(<AiModelsScreen client={client} />); // 모델 화면 재진입
+        const progress = await screen.findByRole("progressbar"); // 복귀한 받기 진행률
+        expect(progress).toHaveAttribute("aria-valuenow", "50"); // 기존 받은 분량 유지
+        const stopped = await client.getStore(); // 취소 이후 상태
+        stopped.models[0].status = "not-installed"; // 이어받기 가능
+        client.getStore.mockResolvedValue(stopped); // 다음 조회 결과
+        await user.click(screen.getByRole("button", { name: "취소" })); // 백그라운드 다운로드 취소
+        expect(client.cancel).toHaveBeenCalledWith("midm-2.0-mini"); // 정확한 받기 취소
+        expect(await screen.findByRole("button", { name: "이어받기" })).toBeEnabled(); // 이어받기 경로 복구
+    }); // 검사 종료
+}); // 묶음 종료
+
 function model(overrides: Partial<ModelView>): ModelView // 시험 모델
 { // 함수 시작
     return { id: "midm-2.0-mini", label: "가벼움 · Mi:dm 2.0 Mini", role: "light", license: "MIT", sizeBytes: 1_600_000_000, status: "not-installed", downloadedBytes: 0, available: true, fitness: "recommended", hasRoom: true, active: false, ...overrides }; // 모델 반환

@@ -38,7 +38,7 @@ export function pickSingleDevice(devices) // 그래픽 장치가 하나일 때�
 export function buildLlamaServerArgs(options) // llama-server 실행 인자
 { // 함수 시작
     const { modelPath, port, apiKey, contextLength, backend, threads } = options; // 실행 설정
-    const args = ["-m", modelPath, "--host", "127.0.0.1", "--port", String(port), "--api-key", apiKey, "-c", String(contextLength), "-np", "1", "--no-webui", "--jinja", "-t", String(threads)]; // 공통 인자(로컬 전용·일회용 키·단일 슬롯)
+    const args = ["-m", modelPath, "--host", "127.0.0.1", "--port", String(port), "--api-key", apiKey, "-c", String(contextLength), "-np", "1", "--no-webui", "--jinja", "-t", String(threads), "-lv", "4"]; // 로컬 실행과 측정 로그
     if (backend.kind === "cpu") // CPU 실행 확인
     { // 조건 시작
         return [...args, "-ngl", "0"]; // 그래픽 층 없음
@@ -95,8 +95,10 @@ export function summarizeBufferSizes(logText) // 실행 엔진 기록의 메모�
 { // 함수 시작
     let gpu = 0; // 그래픽 메모리
     let cpu = 0; // 주 메모리
+    let measured = false; // 실제 버퍼 기록 여부
     for (const match of logText.matchAll(/(\S+) (?:model|KV|RS|compute|output) buffer size =\s*([\d.]+) MiB/gu)) // 버퍼 줄 순회
     { // 반복 시작
+        measured = true; // 적어도 한 버퍼 확인
         if (GPU_DEVICE.test(match[1])) // 그래픽 장치 확인
         { // 조건 시작
             gpu += Number(match[2]); // 그래픽 메모리 누적
@@ -106,7 +108,7 @@ export function summarizeBufferSizes(logText) // 실행 엔진 기록의 메모�
             cpu += Number(match[2]); // 주 메모리 누적
         } // 조건 종료
     } // 반복 종료
-    return { gpuMiB: round2(gpu), cpuMiB: round2(cpu) }; // 합계 반환
+    return { gpuMiB: measured ? round2(gpu) : null, cpuMiB: measured ? round2(cpu) : null }; // 기록이 없으면 미측정 반환
 } // 함수 종료
 
 export function percentile(values, fraction) // 가까운 순위 백분위

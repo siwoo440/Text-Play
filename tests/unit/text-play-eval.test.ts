@@ -6,19 +6,19 @@ import { createTextPlayEvalCases, createTextPlayEvalRequests, judgeTextPlayEvalO
 
 describe("로컬 모델 평가 문맥", () => // 평가 문맥 묶음
 { // 묶음 시작
-    it("서로 다른 30개 문맥을 만든다", () => // 문맥 개수 검증
+    it("서로 다른 43개 문맥을 만든다", () => // 확장 작품 평가 개수
     { // 테스트 시작
         const cases = createTextPlayEvalCases(); // 문맥 생성
-        expect(cases).toHaveLength(30); // 개수 확인
-        expect(new Set(cases.map((item) => item.id)).size).toBe(30); // 식별자 중복 확인
+        expect(cases).toHaveLength(43); // 기존 30개와 후반 13개
+        expect(new Set(cases.map((item) => item.id)).size).toBe(43); // 식별자 중복 확인
         expect(cases.every((item) => item.input.trim().length > 0 && item.category.length > 0 && item.stateLabel.length > 0)).toBe(true); // 필수 내용 확인
     }); // 테스트 종료
 
-    it("엔딩 전 장면 세 곳의 실제 게임 상태를 쓴다", () => // 상태 유효성 검증
+    it("엔딩 전 모든 장면의 실제 게임 상태를 쓴다", () => // 후반부 평가 누락 차단
     { // 테스트 시작
         const cases = createTextPlayEvalCases(); // 문맥 생성
         expect(cases.every((item) => item.state.endingId === null && findTextPlayScene(DEMO_TEXT_PLAY_PACKAGE, item.state.sceneId) !== null)).toBe(true); // 진행 장면 확인
-        expect(new Set(cases.map((item) => item.state.sceneId))).toEqual(new Set(["forest-gate", "moonlit-hall", "sealed-study"])); // 장면 범위 확인
+        expect(new Set(cases.map((item) => item.state.sceneId))).toEqual(new Set(DEMO_TEXT_PLAY_PACKAGE.scenes.filter((scene) => scene.endingId === null).map((scene) => scene.id))); // 두 분기와 모든 진행 장면
     }); // 테스트 종료
 
     it("규칙을 어기라는 입력을 4개 이상 넣고 막아야 할 행동을 적어 둔다", () => // 규칙 위반 문맥 검증
@@ -32,7 +32,7 @@ describe("로컬 모델 평가 문맥", () => // 평가 문맥 묶음
     { // 테스트 시작
         const requests = createTextPlayEvalRequests(); // 요청 생성
         const first = requests[0]; // 첫 요청
-        expect(requests).toHaveLength(30); // 요청 개수 확인
+        expect(requests).toHaveLength(43); // 확장된 요청 개수
         expect(first.messages[0].role).toBe("system"); // 시스템 메시지 확인
         expect(first.messages[0].content).toContain("응답 형식:"); // 응답 형식 안내 확인
         expect(first.messages[1].content.endsWith(`사용자 행동:\n${first.input}`)).toBe(true); // 사용자 입력 위치 확인

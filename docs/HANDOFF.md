@@ -1,7 +1,7 @@
 ---
 # 작업 인수인계
 
-이 문서는 다른 컴퓨터나 새 챗봇 세션에서 `main` 브랜치의 최신 상태를 받아 바로 작업을 이어가기 위한 기준 문서입니다. 마지막 갱신은 2026-10-26입니다.
+이 문서는 다른 컴퓨터나 새 챗봇 세션에서 `main` 브랜치의 최신 상태를 받아 바로 작업을 이어가기 위한 기준 문서입니다. 마지막 갱신은 2026-11-15입니다.
 
 ---
 ## 기준 저장소
@@ -16,6 +16,62 @@
 - 확인 기준 화면: **Windows 실행 파일(exe)**. 웹 화면은 보조로 확인합니다.
 - 기본 인공지능: 외부 비밀키가 필요 없는 임시 인공지능(Mock)
 - 로컬 인공지능: 설치된 올라마 모델 조회·선택 지원, 통신 범위 `127.0.0.1:11434`로 제한
+
+---
+## 2026-11-15 — 3단계 진행 중 작업 저장
+
+사용자 요청에 따라 현재 3단계 구현과 남은 작업을 함께 저장합니다. 기준 커밋은 `2a101cf96b4d839d9e84816e60e8d70ca2bd4514`입니다. 이번 저장은 개발 중인 변경의 체크포인트이며 3단계 전체 완료 기록이 아닙니다. 사용자는 이후 로컬 파일과 파일 위치를 수정할 예정입니다.
+
+---
+### 현재 반영한 내용
+
+- 세 모델의 고정 GGUF 다운로드 주소·배포 리비전·정확한 크기·SHA-256·원본과 배포자 정보를 연결했습니다. 개발용 다운로드 명령은 `corepack pnpm local-ai:fetch`이며 여러 모델은 `--models midm-2.0-mini,qwen3.5-4b,qwen3.5-9b`로 지정합니다.
+- `corepack pnpm local-ai:bundle`이 고정 llama.cpp Vulkan·CPU 실행 엔진과 라이선스를 설치 자산으로 준비합니다. Tauri 개발 실행과 배포 빌드의 준비 명령에 연결했습니다. 바이너리를 받지 않은 새 소스에서도 리소스 경로가 존재하도록 `.gitkeep`을 포함했습니다.
+- 모델 관리 화면에 백그라운드 다운로드의 진행률·취소 복귀와 선택 중 중복 작업 차단을 추가했습니다. Rust에서는 모델 선택·재시작 시 해시를 검사하고, 이전 선택 결과가 최신 선택이나 삭제 결과를 덮지 않도록 요청 순서를 관리합니다.
+- 데이터 수신이 멈춘 상태에서도 취소를 확인하고, 이야기 초반의 AI 문맥에서 후반 인물 사연을 제거했습니다. 평가 문맥은 43개로 늘려 엔딩 전 모든 진행 장면을 포함합니다.
+- 2026-11-15 이번 저장 전 확인: 관련 단위·화면 테스트 5개 파일, 46개 통과. `cargo test --locked --manifest-path src-tauri/Cargo.toml`도 46개 통과. 전체 테스트·최종 EXE 검증 상태는 아래 남은 작업과 구분합니다.
+
+---
+### 남은 작업과 이어갈 순서
+
+1. 파일 위치를 바꾸기 전에 이 문서의 현재 경로를 기준으로 소스·모델·측정 결과·실행 파일을 구분합니다. Git에서 제외한 모델·캐시·세이브는 별도로 보존합니다.
+2. 경로 변경 후 개발 도구와 실행기 경로를 점검합니다. 프로젝트 경로 계산은 `scripts/lib/local-ai-files.mjs`, 모델·엔진 설치 위치는 `src-tauri/src/main.rs`와 `src-tauri/src/local_runtime.rs`, 설치 리소스 매핑은 `src-tauri/Tauri.toml`을 확인합니다. `ChatBot` 동기화는 기본적으로 옆 폴더 `../ChatBot`을 찾습니다.
+3. 바이너리 없는 새 소스 폴더에서 개발 실행·Rust 검사와 배포 자산 준비를 검증합니다. 독립 검토에서 발견한 경로 문제의 코드와 회귀 테스트는 반영했지만 별도 새 폴더 실행 검증은 남아 있습니다.
+4. 전체 테스트·타입·린트·웹과 데스크톱 사용자 흐름을 다시 검증합니다. 직전 전체 테스트 재실행에는 작업자 종료 시간 초과가 기록되어 있으므로 전체 통과로 간주하지 않습니다. 데스크톱 테스트의 이미지 로딩 대기 수정 후 재검증도 필요합니다.
+5. 실제 Windows EXE에서 모델 다운로드·취소·이어받기·선택·실제 AI 대화·재시작·실패 안내를 확인합니다. 기존 사용자 세이브에 영향을 주지 않는 별도 테스트 프로필을 사용합니다. 컴퓨터 조작 도구의 시간 초과 때문에 해당 실제 화면 검증은 완료하지 못했습니다.
+6. 모델 성능 평가를 마무리합니다. 현재 `.local-ai/results/stage-three-final/results.json`에는 가벼움 GPU/CPU, 표준 GPU/CPU, 고성능 GPU의 5개 실행 결과가 각각 43개 사례로 저장되어 있습니다. 고성능 CPU 전체 결과는 없습니다. 실행 환경과 초기 적재·준비 시간을 포함해 결과를 검토하고 한국어 자연스러움과 설정 밖 사실 생성은 별도로 평가합니다.
+7. 최종 EXE·NSIS를 다시 빌드하고 해시와 검증 결과를 개발 기록에 남깁니다. 앞서 생성된 EXE가 현재 소스와 일치하는 최종 검증본이라고 가정하지 않습니다. 설치 직후 자동 모델 준비 마법사, 코드 서명과 설치·업데이트·제거 검증은 후속 배포 범위입니다.
+
+---
+### 현재 로컬 파일과 위치
+
+아래 상대 경로의 기준 루트는 `C:/Users/user/OneDrive/문서/ChatGPT/홈페이지 및 챗봇 서비스/Text-Play`입니다. 이 경로는 이번 저장 시점의 PC 위치이며 다른 PC의 필수 설치 위치가 아닙니다.
+
+| 구분 | 현재 위치 | Git 포함 여부 |
+| --- | --- | --- |
+| Text-Play 저장소 | 위 기준 루트 | 소스와 문서 포함 |
+| 별도 ChatBot 저장소 | `C:/Users/user/OneDrive/문서/ChatGPT/홈페이지 및 챗봇 서비스/ChatBot` | 별도 저장소 |
+| Text-Play에 포함한 ChatBot 사본 | `src/chatbot/` | 포함 |
+| 3단계 계획 | `docs/plans/2026-10-26-local-ai-stage-three.md` | 포함 |
+| 모델 다운로드 계약 | `src-tauri/resources/model-catalog.json` | 포함 |
+| 모델 다운로드·실행 엔진 준비 도구 | `scripts/fetch-local-models.mjs`, `scripts/prepare-local-ai-bundle.mjs` | 포함 |
+| 모델 다운로드·선택·삭제 제어 | `src-tauri/src/model_store.rs` | 포함 |
+| 실행 엔진 경로와 실행 방식 | `src-tauri/src/main.rs`, `src-tauri/src/local_runtime.rs`, `src-tauri/Tauri.toml` | 포함 |
+| 모델 관리 화면 | `src/desktop/ai-models/AiModelsScreen.tsx` | 포함 |
+| 배포 출처와 라이선스 | `src-tauri/resources/licenses/` | 원문 고지 포함, 생성 카탈로그 제외 |
+| 개발용 GGUF 파일과 목록 | `.local-ai/models/` 및 `manifest.json` | 제외, 별도 보존 또는 다시 다운로드 |
+| 가벼운 모델 | `.local-ai/models/midm-2.0-mini-Q4_K_M.gguf` | 제외 |
+| 표준 모델 | `.local-ai/models/qwen3.5-4b-Q4_K_M.gguf` | 제외 |
+| 고성능 모델 | `.local-ai/models/qwen3.5-9b-Q4_K_M.gguf` | 제외 |
+| 검증된 개발용 실행 엔진 | `.local-ai/runtime/b11146/vulkan/`, `.local-ai/runtime/b11146/cpu/` | 제외 |
+| 생성하는 설치용 실행 엔진 | `src-tauri/resources/llama-runtime/` | `.gitkeep`만 포함, 나머지 제외 |
+| 실제 모델 측정 결과 | `.local-ai/results/stage-three-final/` | 제외, 별도 보존 |
+| 웹·EXE 프런트엔드 빌드 | `.next/`, `desktop-dist/` | 제외, 다시 빌드 |
+| 로컬 실행 EXE | `src-tauri/target/release/mate-text-play-preview.exe` | 제외, 다시 빌드 |
+| NSIS 설치 EXE | `src-tauri/target/release/bundle/nsis/MATE Text-Play Preview_0.1.0-preview.1_x64-setup.exe` | 제외, 다시 빌드 |
+| 작업 중 임시 기록 | `.superpowers/sdd/local-ai-stage-three/` | 제외, 이 문서에 남은 작업 요약 |
+
+앱이 사용하는 기본 모델 보관 위치는 `%LOCALAPPDATA%/MATE Text-Play/models`이며 개발 캐시 `.local-ai/models/`와 별개입니다. 사용자 폴더의 실행 엔진 대체 위치는 `%LOCALAPPDATA%/MATE Text-Play/runtime`입니다. 이는 코드의 기본 위치이며 해당 폴더에 모델 설치를 완료했다는 의미는 아닙니다. 개발·확인용으로 `MATE_TEXT_PLAY_LLAMA_RUNTIME_DIR`과 `MATE_TEXT_PLAY_BUNDLED_MODEL` 환경 변수도 사용합니다. 소스 폴더를 이동하더라도 앱 데이터와 IndexedDB 세이브가 자동으로 함께 이동하지 않습니다.
 
 ---
 ## 2026-10-26 대표 작품 확장

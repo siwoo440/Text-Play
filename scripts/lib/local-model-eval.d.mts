@@ -61,7 +61,7 @@ export function pickSingleDevice(devices: ListedDevice[]): string | null; // 장
 export function buildLlamaServerArgs(options: LlamaServerArgsOptions): string[]; // 실행 인자
 export function buildChatRequestBody(options: ChatRequestBodyOptions): Record<string, unknown>; // 요청 본문
 export function createSseDecoder(): { push(text: string): (Record<string, unknown> | "[DONE]")[] }; // SSE 해석기
-export function summarizeBufferSizes(logText: string): { gpuMiB: number; cpuMiB: number }; // 메모리 버퍼 합계
+export function summarizeBufferSizes(logText: string): { gpuMiB: number | null; cpuMiB: number | null }; // 미측정과 실제 0 구분
 export function percentile(values: number[], fraction: number): number | null; // 백분위
 export function summarizeRuns(runs: Record<string, unknown>[]): EvalRunSummary; // 측정 요약
 export function renderEvalReport(report: Record<string, unknown>): string; // 보고서
